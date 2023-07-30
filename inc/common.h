@@ -11,6 +11,7 @@
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/tokenizer.hpp>
+#include <memory>
 #include "nlohmann/json.hpp"
 
 using boost::heap::fibonacci_heap;
@@ -29,12 +30,14 @@ using std::pair;
 using std::make_pair;
 using std::list;
 using std::cout;
+using std::cerr;
 using std::endl;
 using std::ostream;
 using std::string;
 using std::max;
 using std::min;
 using std::priority_queue;
+using std::shared_ptr;
 
 //#include <boost/graph/adjacency_list.hpp>
 //typedef boost::adjacency_list_traits<int, int, boost::undirectedS > confilctGraph_t;

@@ -52,7 +52,7 @@ IF(PYTHON)
 ELSE()
     message(STATUS "Python support is disabled")
     
-    file(GLOB SOURCES "src/*.cpp")
+    file(GLOB_RECURSE SOURCES "src/**.cpp")
 
     add_executable(lifelong ${SOURCES} )
     target_link_libraries(lifelong ${Boost_LIBRARIES})

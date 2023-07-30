@@ -2,7 +2,7 @@
 #include <ctime>
 #include "SharedEnv.h"
 #include "ActionModel.h"
-
+#include "RHCR/interface/RHCRSolver.h"
 
 class MAPFPlanner
 {
@@ -26,7 +26,5 @@ public:
     std::list<pair<int,int>> getNeighbors(int location, int direction);
     bool validateMove(int loc,int loc2);
 
-
-
-
+    shared_ptr<RHCR::RHCRSolver> solver; 
 };
