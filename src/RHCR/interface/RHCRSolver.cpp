@@ -17,26 +17,52 @@ vector<State> convert_states_type(const vector<::State> & states){
     return new_states;
 }
 
-Action get_action_from_states(const State & state, const State & next_state){
+Action get_action_from_states(const State & state, const State & next_state, bool consider_rotation){
     assert(state.timestep+1==next_state.timestep);
     // TODO: assert consider_rotation
 
-    if (state.location==next_state.location){
-        // either turn or wait
-        if (state.orientation==next_state.orientation) {
-            return Action::W;
-        } else if ((state.orientation-next_state.orientation+4)%4==1) {
-            return Action::CR;
-        } else if ((state.orientation-next_state.orientation+4)%4==3) {
-            return Action::CCR;
-        } else {
-            assert(false);
-            return Action::W;
+    if (consider_rotation){
+        if (state.location==next_state.location){
+            // either turn or wait
+            if (state.orientation==next_state.orientation) {
+                return Action::W;
+            } else if ((state.orientation-next_state.orientation+4)%4==1) {
+                return Action::CR;
+            } else if ((state.orientation-next_state.orientation+4)%4==3) {
+                return Action::CCR;
+            } else {
+                assert(false);
+                return Action::W;
+            }
         }
+        else {
+            return Action::FW;
+        }
+    } else {
+        // TODO
+        assert(false);
+        return Action::W;
     }
-    else {
-        return Action::FW;
+}
+
+void debug_agent(int agent,const vector<State> &starts,const vector< vector<pair<int, int> > > & goal_locations) {
+    cerr<<"plan for agent "<<agent<<": ";
+    cerr<<"start: "<<starts[agent].location<<". ";
+    cerr<<"goals:";
+    const vector<pair<int,int> > & goal_location=goal_locations[agent];
+    for (int i=0;i<goal_location.size();++i){
+        cerr<<" ["<<goal_location[i].second<<"]"<<goal_location[i].first;
     }
+    cerr<<"."<<endl;
+}
+
+void debug_agent_path(int agent,const vector<Path> & paths,int start_timestep=0) {
+    cerr<<"planed path for agent "<<agent<<" since timestep "<<start_timestep<<":";
+    const Path & path=paths[agent];
+    for (int i=start_timestep;i<paths[agent].size();++i){
+        cerr<<" "<<path[i].location<<","<<path[i].orientation;
+    }
+    cerr<<endl;
 }
 
 void RHCRSolver::start_plan_task(){
@@ -60,7 +86,8 @@ void RHCRSolver::update_goal_locations(const SharedEnvironment & env){
     for (int i=0;i<num_of_drives;++i){
         goal_locations[i].clear();
         for (int j=0;j<env.goal_locations[i].size();++j){
-            goal_locations[i].emplace_back(env.goal_locations[i][j].first,env.goal_locations[i][j].second-timestep);
+            // we require path of at least length one, even the start and the goal are the same.
+            goal_locations[i].emplace_back(env.goal_locations[i][j].first,max(env.goal_locations[i][j].second-timestep,1));
         }
     }
 }
@@ -80,42 +107,38 @@ void RHCRSolver::plan(const SharedEnvironment & env){
         }
         need_replan=true;
     } else {
-        // TODO check whether the move is the same as planned. if not, we need to clean the plan and then replan somehow.
         // for (int i=0;i<num_of_drives;++i) {
-        //     if (paths[i][timestep]!=_curr_states[i]) {
-        //         cerr<<"not same!!!"<<endl;
-        //         need_replan=true;
-        //         paths[i][timestep]=_curr_states[i];
-        //     }
+        //     assert(paths[i].size()>timestep);
+        //     // if the move is not the same as planned (it actually means the last planned move is not valid), then we need to replan
+        //     // if (paths[i][timestep]!=_curr_states[i]) {
+        //     //     need_replan=true;
+        //     //     paths[i][timestep]=_curr_states[i];
+        //     // }
+        //     // TODO: if goal changes, we need to replan
         // }
-
-        // TODO remove it. currently we replan for every timestep.
         need_replan=true;
-
-        if (need_replan) {
-            // clear the previous plan
-            for (int i=0;i<num_of_drives;++i) {
-                paths[i].resize(timestep+1);
-            }           
-        }
     }
 
-    update_start_locations();
+    if (need_replan) {
+        // clear the previous plan
+        for (int i=0;i<num_of_drives;++i) {
+            paths[i].resize(timestep+1);
+        }           
 
-    // TODO if we want to use hold_endpoints or dummy_paths, we need to copy codes from KivaSystem::update_goal_locations()!
-    // the timestep is not correct in my understanding
-    // goal_locations=env.goal_locations;
-    update_goal_locations(env);
+        update_start_locations();
 
-    // plan
-    solve();
+        // TODO if we want to use hold_endpoints or dummy_paths, we need to adapt codes from KivaSystem::update_goal_locations()!
+        update_goal_locations(env);
 
-    // for (int i=0;i<paths[2].size();++i){
-    //     cerr<<paths[2][i].location<<","<<paths[2][i].orientation<<" ";
-    // }
-    // cerr<<endl;
+        // plan
+        solve();
 
-    cout<<"RHCRSolver solved for timestep "<<timestep<<endl;
+        int agent=7;
+        debug_agent(agent,starts,goal_locations);
+        debug_agent_path(agent,paths,timestep);
+
+        cout<<"RHCRSolver solved for timestep "<<timestep<<endl;
+    }
 }
 
 void RHCRSolver::get_step_actions(const SharedEnvironment & env, vector<Action> & actions){
@@ -124,8 +147,11 @@ void RHCRSolver::get_step_actions(const SharedEnvironment & env, vector<Action> 
 
     for (int i=0;i<num_of_drives;++i) {
         // we will get action indexed at timestep+1
-        assert(paths[i].size()>timestep+1);
-        actions.push_back(get_action_from_states(paths[i][timestep],paths[i][timestep+1]));
+        if (paths[i].size()<=timestep+1){
+            cerr<<"wierd error for agent "<<i<<". path length: "<<paths[i].size()<<", "<<"timestep+1: "<<timestep+1<<endl;
+            assert(false);
+        }
+        actions.push_back(get_action_from_states(paths[i][timestep],paths[i][timestep+1],consider_rotation));
     }
 
     // check if not valid, this should not happen in general if the algorithm is correct? but maybe there exist deadlocks.
