@@ -39,5 +39,8 @@ public:
     int cols;
     vector<vector<double> > weights; // (directed) weighted 4-neighbor grid
     bool consider_rotation;
+
+    inline int get_row(int position) const {return position/cols;};
+    inline int get_col(int position) const {return position%cols;};
 };
 } // end namespace RHCR

@@ -20,27 +20,30 @@ CompetitionGraph::CompetitionGraph(const Grid & grid){
     types.resize(n_grids);
     weights.resize(n_grids);
 
-    for (int i=0;i<rows;++i) {
-        for (int j=0;j<cols;++j) {
-            int idx=cols*i+j;
-            weights[idx].resize(5,WEIGHT_MAX);
-            if (grid.map[idx]) {
-                // obstacle
-                types[idx]="Obstacle";
-            } else {
-                types[idx]="Travel";
-                // cost of wait
-                weights[idx][4] = 1;
+    for (int idx=0;idx<rows*cols;++idx) {
+        weights[idx].resize(5,WEIGHT_MAX);
+        if (grid.map[idx]) {
+            // obstacle
+            types[idx]="Obstacle";
+        } else {
+            types[idx]="Travel";
+            // cost of wait
+            weights[idx][4] = 1;
+        }
+    }
 
-                // cost of feasible move
-                for (int dir=0;dir<4;++dir) {
-                    if (0 <= i + move[dir] && i + move[dir] < cols * rows && 
-                        get_Manhattan_distance(i, i + move[dir]) <= 1 && 
-                        types[i + move[dir]] != "Obstacle") {
-                        weights[i][dir] = 1;  
-                    }         
-                }
-            }
+    for (int idx=0;idx<rows*cols;++idx) {
+        if (types[idx] == "Obstacle")
+        {
+            continue;
+        }
+        // cost of feasible move
+        for (int dir=0;dir<4;++dir) {
+            if (0 <= idx + move[dir] && idx + move[dir] < cols * rows && 
+                get_Manhattan_distance(idx, idx + move[dir]) <= 1 && 
+                types[idx + move[dir]] != "Obstacle") {
+                weights[idx][dir] = 1;  
+            }         
         }
     }
 }

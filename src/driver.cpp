@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
 
     signal(SIGINT, sigint_handler);
 
-    RHCR::init_RHCR_solver(planner,grid,vm);
+    RHCR::init_RHCR_solver(planner,grid,vm,model,team_size);
 
     system_ptr->simulate(vm["simulationTime"].as<int>());
 

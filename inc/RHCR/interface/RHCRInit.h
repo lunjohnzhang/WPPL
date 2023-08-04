@@ -12,6 +12,7 @@
 #include "RHCR/interface/RHCRSolver.h"
 #include "RHCR/interface/CompetitionGraph.h"
 #include "common.h"
+#include "ActionModel.h"
 
 namespace RHCR {
 namespace po = boost::program_options;
@@ -34,7 +35,7 @@ void add_RHCR_options(po::options_description & desc){
 		        "the planner outputs plans with first planning_window timesteps collision-free")
 		("potential_function", po::value<string>()->default_value("NONE"), "potential function (NONE, SOC, IC)")
 		("potential_threshold", po::value<double>()->default_value(0), "potential threshold")
-		("rotation", po::value<bool>()->default_value(false), "consider rotation")
+		("rotation", po::value<bool>()->default_value(true), "consider rotation")
 		("robust", po::value<int>()->default_value(0), "k-robust (for now, only work for PBS)")
 		("CAT", po::value<bool>()->default_value(false), "use conflict-avoidance table")
 		// ("PG", po::value<bool>()->default_value(false),
@@ -49,19 +50,41 @@ void add_RHCR_options(po::options_description & desc){
 		;
 }
 
+void set_parameters(BasicSystem& system, const boost::program_options::variables_map& vm,int team_size)
+{
+	// TODO check
+	system.outfile = vm["output"].as<std::string>();
+	system.screen = vm["screen"].as<int>();
+	system.log = vm["log"].as<bool>();
+	// system.num_of_drives = vm["agentNum"].as<int>();
+	system.num_of_drives = team_size;
+	system.time_limit = vm["cutoffTime"].as<int>();
+	system.simulation_window = vm["simulation_window"].as<int>();
+	system.planning_window = vm["planning_window"].as<int>();
+	system.travel_time_window = vm["travel_time_window"].as<int>();
+	system.consider_rotation = vm["rotation"].as<bool>();
+	system.k_robust = vm["robust"].as<int>();
+	system.hold_endpoints = vm["hold_endpoints"].as<bool>();
+	system.useDummyPaths = vm["dummy_paths"].as<bool>();
+	if (vm.count("seed"))
+		system.seed = vm["seed"].as<int>();
+	else
+		system.seed = (int)time(0);
+	srand(system.seed);
+}
 
-shared_ptr<MAPFSolver> build_solver(const BasicGraph& G, const boost::program_options::variables_map& vm)
+MAPFSolver* set_solver(const BasicGraph& G, const boost::program_options::variables_map& vm)
 {
 	string solver_name = vm["single_agent_solver"].as<string>();
-	shared_ptr<SingleAgentSolver> path_planner;
-	shared_ptr<MAPFSolver> mapf_solver;
+	SingleAgentSolver* path_planner;
+	MAPFSolver* mapf_solver;
 	if (solver_name == "ASTAR")
 	{
-		path_planner = make_shared<StateTimeAStar>();
+		path_planner = new StateTimeAStar();
 	}
 	else if (solver_name == "SIPP")
 	{
-		path_planner = make_shared<SIPP>();
+		path_planner = new SIPP();
 	}
 	else
 	{
@@ -72,7 +95,7 @@ shared_ptr<MAPFSolver> build_solver(const BasicGraph& G, const boost::program_op
 	solver_name = vm["solver"].as<string>();
 	if (solver_name == "ECBS")
 	{
-		auto ecbs = make_shared<ECBS>(G, *path_planner);
+		ECBS* ecbs = new ECBS(G, *path_planner);
 		ecbs->potential_function = vm["potential_function"].as<string>();
 		ecbs->potential_threshold = vm["potential_threshold"].as<double>();
 		ecbs->suboptimal_bound = vm["suboptimal_bound"].as<double>();
@@ -80,7 +103,7 @@ shared_ptr<MAPFSolver> build_solver(const BasicGraph& G, const boost::program_op
 	}
 	else if (solver_name == "PBS")
 	{
-		auto pbs = make_shared<PBS>(G, *path_planner);
+		PBS* pbs = new PBS(G, *path_planner);
 		pbs->lazyPriority = vm["lazyP"].as<bool>();
         auto prioritize_start = vm["prioritize_start"].as<bool>();
         if (vm["hold_endpoints"].as<bool>() or vm["dummy_paths"].as<bool>())
@@ -91,11 +114,11 @@ shared_ptr<MAPFSolver> build_solver(const BasicGraph& G, const boost::program_op
 	}
 	else if (solver_name == "WHCA")
 	{
-		mapf_solver = make_shared<WHCAStar>(G, *path_planner);
+		mapf_solver = new WHCAStar(G, *path_planner);
 	}
 	else if (solver_name == "LRA")
 	{
-		mapf_solver = make_shared<LRAStar>(G, *path_planner);
+		mapf_solver = new LRAStar(G, *path_planner);
 	}
 	else
 	{
@@ -105,7 +128,7 @@ shared_ptr<MAPFSolver> build_solver(const BasicGraph& G, const boost::program_op
 
 	if (vm["id"].as<bool>())
 	{
-		return make_shared<ID>(G, *path_planner, *mapf_solver);
+		return new ID(G, *path_planner, *mapf_solver);
 	}
 	else
 	{
@@ -114,7 +137,7 @@ shared_ptr<MAPFSolver> build_solver(const BasicGraph& G, const boost::program_op
 }
 
 
-void init_RHCR_solver(MAPFPlanner * planner, Grid & grid, po::variables_map & vm){
+void init_RHCR_solver(MAPFPlanner * planner, Grid & grid, po::variables_map & vm, ActionModelWithRotate * model,int team_size){
 	// sanity check for parameters
     if (vm["hold_endpoints"].as<bool>() or vm["dummy_paths"].as<bool>())
     {
@@ -146,15 +169,16 @@ void init_RHCR_solver(MAPFPlanner * planner, Grid & grid, po::variables_map & vm
 		boost::filesystem::create_directories(dir2);
 	}
 
+	// TODO when to free the graph and the MAPF solver?
     // set up map
-    auto graph = make_shared<CompetitionGraph>(grid);
-    graph->preprocessing(true);
+    auto graph = new CompetitionGraph(grid);
 
     // set up MAPF solver
-    auto mapf_solver = build_solver(*graph,vm);
+    auto mapf_solver = set_solver(*graph,vm);
 
 	// set up lifelong MAPF solver
-	auto rhcr_solver = make_shared<RHCRSolver>(mapf_solver,graph);
+	auto rhcr_solver = make_shared<RHCRSolver>(*graph,*model,*mapf_solver);
+	set_parameters(*rhcr_solver,vm,team_size);
 	planner->solver = rhcr_solver;
 }
 }

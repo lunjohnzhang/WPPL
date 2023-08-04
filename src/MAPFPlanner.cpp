@@ -1,6 +1,6 @@
 #include <MAPFPlanner.h>
 #include <random>
-
+#include "RHCR/interface/CompetitionGraph.h"
 
 struct AstarNode {
     int location;
@@ -26,45 +26,58 @@ struct cmp {
 
 
 void MAPFPlanner::initialize(int preprocess_time_limit) {
-    cout << "planner initialize done" << endl;
+    cout << "planner initialization begins" << endl;
+    solver->initialize();
+    cout << "planner initialization ends" << endl;
 }
 
 
 // plan using simple A* that ignores the time dimension
 void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
 {
-    actions = std::vector<Action>(env->curr_states.size(), Action::W);
-    for (int i = 0; i < env->num_of_agents; i++) 
-    {
-        list<pair<int,int>> path;
-        if (env->goal_locations[i].empty()) 
-        {
-            path.push_back({env->curr_states[i].location, env->curr_states[i].orientation});
-        } 
-        else 
-        {
-            path = single_agent_plan(env->curr_states[i].location,
-                                    env->curr_states[i].orientation,
-                                    env->goal_locations[i].front().first);
-        }
-        if (path.front().first != env->curr_states[i].location)
-        {
-            actions[i] = Action::FW; //forward action
-        } 
-        else if (path.front().second!= env->curr_states[i].orientation)
-        {
-            int incr = path.front().second - env->curr_states[i].orientation;
-            if (incr == 1 || incr == -3)
-            {
-                actions[i] = Action::CR; //C--counter clockwise rotate
-            } 
-            else if (incr == -1 || incr == 3)
-            {
-                actions[i] = Action::CCR; //CCR--clockwise rotate
-            } 
-        }
+    // NOTE we need to return within time_limit, but we can exploit this time duration as much as possible
 
-    }
+    // check if we need to restart a plan task (thread)
+    // if so, we need to stop the current one and then restart
+    // we also need to clean the current action plan if restart
+
+    // TODO if time_limit approachs, just return a valid move, e.g. all actions are wait.
+
+    solver->plan(*env);
+    // this function also checks whether it is a valid move.
+    solver->get_step_actions(*env, actions);
+
+    // for (int i = 0; i < env->num_of_agents; i++) 
+    // {
+    //     list<pair<int,int>> path;
+    //     if (env->goal_locations[i].empty()) 
+    //     {
+    //         path.push_back({env->curr_states[i].location, env->curr_states[i].orientation});
+    //     } 
+    //     else 
+    //     {
+    //         path = single_agent_plan(env->curr_states[i].location,
+    //                                 env->curr_states[i].orientation,
+    //                                 env->goal_locations[i].front().first);
+    //     }
+    //     if (path.front().first != env->curr_states[i].location)
+    //     {
+    //         actions[i] = Action::FW; //forward action
+    //     } 
+    //     else if (path.front().second!= env->curr_states[i].orientation)
+    //     {
+    //         int incr = path.front().second - env->curr_states[i].orientation;
+    //         if (incr == 1 || incr == -3)
+    //         {
+    //             actions[i] = Action::CR; //C--counter clockwise rotate
+    //         } 
+    //         else if (incr == -1 || incr == 3)
+    //         {
+    //             actions[i] = Action::CCR; //CCR--clockwise rotate
+    //         } 
+    //     }
+
+    // }
 
 
   return;
