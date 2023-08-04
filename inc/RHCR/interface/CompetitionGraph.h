@@ -13,5 +13,7 @@ public:
     bool load_map(string fname);
     // preprocessing the map, e.g., computing heuristics for later planning.
     void preprocessing(bool consider_rotation=true);
+    // NOTE: in this competition, we only need to deal with grid-like graphs, so we just use BFS to compute shortest paths to all other locations. 
+    vector<double> compute_heuristics(int root_location);
 };
 }
