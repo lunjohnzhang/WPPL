@@ -26,6 +26,7 @@ find_package( Boost 1.49.0 REQUIRED COMPONENTS program_options system filesystem
 
 include_directories( ${Boost_INCLUDE_DIRS} )
 
+find_package(OpenMP REQUIRED)
 
 IF(PYTHON)
     message(STATUS "Python support is enabled")
@@ -56,6 +57,7 @@ ELSE()
 
     add_executable(lifelong ${SOURCES} )
     target_link_libraries(lifelong ${Boost_LIBRARIES})
+    target_link_libraries(lifelong OpenMP::OpenMP_CXX)
 ENDIF()
 
 

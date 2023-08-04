@@ -1,5 +1,6 @@
 #include "RHCR/interface/CompetitionGraph.h"
 #include "common.h"
+#include <omp.h>
 
 namespace RHCR {
 
@@ -74,29 +75,46 @@ void CompetitionGraph::preprocessing(bool consider_rotation){
 	}
 	if (!succ)
 	{
+        int nthreads=omp_get_num_threads();
+        cerr<<"thre"<<nthreads<<endl;
+        // use parallel execution here
+        vector<int> idxs;
         int total=0;
 		for (int idx=0;idx<rows*cols;++idx)
 		{
             if (types[idx]!="Obstacle"){
 			    ++total;
+                idxs.push_back(idx);
             }
 		}        
-        int step=100;
-        int ctr=0;
-        double s=clock();
-		for (int idx=0;idx<rows*cols;++idx)
+        // int step=100;
+        // int ctr=0;
+        // double s=clock();
+		// for (int idx=0;idx<rows*cols;++idx)
+		// {
+        //     if (types[idx]!="Obstacle"){
+		// 	    heuristics[idx] = compute_heuristics(idx);
+        //         ++ctr;
+        //         if (ctr%step==0){
+        //             double elapse=(clock()-s)/CLOCKS_PER_SEC;
+        //             double estimated_remain=elapse/ctr*(total-ctr);
+        //             cout<<ctr<<"/"<<total<<" completed in "<<elapse<<"s. estimated time to finish all: "<<estimated_remain<<"s."<<endl;
+        //         }
+        //     }
+
+		// }
+
+        #pragma omp parallel for
+        for (int idx=0;idx<rows*cols;++idx)
 		{
             if (types[idx]!="Obstacle"){
 			    heuristics[idx] = compute_heuristics(idx);
-                ++ctr;
-                if (ctr%step==0){
-                    double elapse=(clock()-s)/CLOCKS_PER_SEC;
-                    double estimated_remain=elapse/ctr*(total-ctr);
-                    cout<<ctr<<"/"<<total<<" completed in "<<elapse<<"s. estimated time to finish all: "<<estimated_remain<<"s."<<endl;
-                }
+                //cerr<<idx<<endl;
             }
 
 		}
+
+
 		save_heuristics_table(fname);
 	}
 
