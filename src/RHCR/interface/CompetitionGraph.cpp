@@ -75,8 +75,6 @@ void CompetitionGraph::preprocessing(bool consider_rotation){
 	}
 	if (!succ)
 	{
-        int nthreads=omp_get_num_threads();
-        cerr<<"thre"<<nthreads<<endl;
         // use parallel execution here
         vector<int> idxs;
         int total=0;
@@ -104,17 +102,31 @@ void CompetitionGraph::preprocessing(bool consider_rotation){
 
 		// }
 
+        int ctr=0;
+        int step=100;
+        double s=clock();
         #pragma omp parallel for
-        for (int idx=0;idx<rows*cols;++idx)
+        for (int i=0;i<idxs.size();++i)
 		{
-            if (types[idx]!="Obstacle"){
-			    heuristics[idx] = compute_heuristics(idx);
-                //cerr<<idx<<endl;
+            if (i==0) {
+                int nthreads=omp_get_num_threads();
+                cerr<<"number of threads used for heuristic computation: "<<nthreads<<endl;
             }
 
+            int idx=idxs[i];
+            heuristics[idx] = compute_heuristics(idx);
+
+            #pragma omp critical
+            {
+                ++ctr;
+                if (ctr%step==0){
+                    double elapse=(clock()-s)/CLOCKS_PER_SEC;
+                    double estimated_remain=elapse/ctr*(total-ctr);
+                    cout<<ctr<<"/"<<total<<" completed in "<<elapse<<"s. estimated time to finish all: "<<estimated_remain<<"s."<<endl;
+                }
+            }
 		}
-
-
+        
 		save_heuristics_table(fname);
 	}
 
@@ -164,6 +176,61 @@ vector<double> CompetitionGraph::compute_heuristics(int root_location){
     }
 
     return res;
+}
+
+bool CompetitionGraph::load_heuristics_table(std::ifstream& myfile)
+{
+    boost::char_separator<char> sep(",");
+    boost::tokenizer< boost::char_separator<char> >::iterator beg;
+    std::string line;
+    
+    getline(myfile, line); //skip "table_size"
+    getline(myfile, line);
+    boost::tokenizer< boost::char_separator<char> > tok(line, sep);
+    beg = tok.begin();
+	int N = atoi ( (*beg).c_str() ); // read number of cols
+	beg++;
+	int M = atoi ( (*beg).c_str() ); // read number of rows
+	if (M != this->size())
+	    return false;
+	for (int i = 0; i < N; i++)
+	{
+		getline (myfile, line);
+        int loc = atoi(line.c_str());
+        getline (myfile, line);        
+        boost::tokenizer< boost::char_separator<char> > tok(line, sep);
+	    beg = tok.begin();
+        std::vector<double> h_table(this->size());
+        for (int j = 0; j < this->size(); j++)
+        {
+            h_table[j] = atof((*beg).c_str());
+            // jh: why this line? I'll remove it.
+            // if (h_table[j] >= INT_MAX && types[j] != "Obstacle")
+            //     types[j] = "Obstacle";
+            beg++;
+        }
+        heuristics[loc] = h_table;
+    }
+	return true;
+}
+
+
+void CompetitionGraph::save_heuristics_table(std::string fname)
+{
+    std::ofstream myfile;
+	myfile.open (fname);
+	myfile << "table_size" << std::endl << 
+        heuristics.size() << "," << this->size() << std::endl;
+	for (auto h_values: heuristics) 
+	{
+        myfile << h_values.first << std::endl;
+		for (double h : h_values.second) 
+		{
+            myfile << h << ",";
+		}
+		myfile << std::endl;
+	}
+	myfile.close();
 }
 
 }

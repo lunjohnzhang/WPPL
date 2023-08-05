@@ -15,5 +15,8 @@ public:
     void preprocessing(bool consider_rotation=true);
     // NOTE: in this competition, we only need to deal with grid-like graphs, so we just use BFS to compute shortest paths to all other locations. 
     vector<double> compute_heuristics(int root_location);
+
+    void save_heuristics_table(std::string fname);
+    bool load_heuristics_table(std::ifstream& myfile);
 };
 }
