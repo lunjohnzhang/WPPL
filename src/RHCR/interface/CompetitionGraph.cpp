@@ -66,7 +66,7 @@ void CompetitionGraph::preprocessing(bool consider_rotation){
 		fname = map_name + "_rotation_heuristics_table.txt";
 	else
 		fname = map_name + "_heuristics_table.txt";
-	std::ifstream myfile(fname.c_str());
+	std::ifstream myfile(fname.c_str(),std::ios::binary|std::ios::in);
 	bool succ = false;
 	if (myfile.is_open())
 	{
@@ -179,37 +179,57 @@ vector<double> CompetitionGraph::compute_heuristics(int root_location){
 
 bool CompetitionGraph::load_heuristics_table(std::ifstream& myfile)
 {
-    boost::char_separator<char> sep(",");
-    boost::tokenizer< boost::char_separator<char> >::iterator beg;
-    std::string line;
-    
-    getline(myfile, line); //skip "table_size"
-    getline(myfile, line);
-    boost::tokenizer< boost::char_separator<char> > tok(line, sep);
-    beg = tok.begin();
-	int N = atoi ( (*beg).c_str() ); // read number of cols
-	beg++;
-	int M = atoi ( (*beg).c_str() ); // read number of rows
-	if (M != this->size())
-	    return false;
-	for (int i = 0; i < N; i++)
-	{
-		getline (myfile, line);
-        int loc = atoi(line.c_str());
-        getline (myfile, line);        
-        boost::tokenizer< boost::char_separator<char> > tok(line, sep);
-	    beg = tok.begin();
+    // N is the size of the heuristic table, M is the size of the map
+    int N,M;
+
+    myfile.read((char*)&N,sizeof(int));
+    myfile.read((char*)&M,sizeof(int));
+    assert(M==this->size());
+
+    for (int i=0;i<N;++i){
+        int loc;
         std::vector<double> h_table(this->size());
-        for (int j = 0; j < this->size(); j++)
-        {
-            h_table[j] = atof((*beg).c_str());
-            // jh: why this line? I'll remove it.
-            // if (h_table[j] >= INT_MAX && types[j] != "Obstacle")
-            //     types[j] = "Obstacle";
-            beg++;
+        myfile.read((char*)&loc,sizeof(int));
+        for (int j=0;j<M;++j){
+            unsigned short v;
+            myfile.read((char*)&v,sizeof(unsigned short));
+            h_table.push_back((double)v);
         }
-        heuristics[loc] = h_table;
+        heuristics[loc]=h_table;
     }
+
+    // boost::char_separator<char> sep(",");
+    // boost::tokenizer< boost::char_separator<char> >::iterator beg;
+    // std::string line;
+    
+    // getline(myfile, line); //skip "table_size"
+    // getline(myfile, line);
+    // boost::tokenizer< boost::char_separator<char> > tok(line, sep);
+    // beg = tok.begin();
+	// int N = atoi ( (*beg).c_str() ); // read number of cols
+	// beg++;
+	// int M = atoi ( (*beg).c_str() ); // read number of rows
+	// if (M != this->size())
+	//     return false;
+	// for (int i = 0; i < N; i++)
+	// {
+	// 	getline (myfile, line);
+    //     int loc = atoi(line.c_str());
+    //     getline (myfile, line);        
+    //     boost::tokenizer< boost::char_separator<char> > tok(line, sep);
+	//     beg = tok.begin();
+    //     std::vector<double> h_table(this->size());
+    //     for (int j = 0; j < this->size(); j++)
+    //     {
+    //         h_table[j] = atof((*beg).c_str());
+
+    //         // jh: why this line? I'll remove it.
+    //         // if (h_table[j] >= INT_MAX && types[j] != "Obstacle")
+    //         //     types[j] = "Obstacle";
+    //         beg++;
+    //     }
+    //     heuristics[loc] = h_table;
+    // }
 	return true;
 }
 
@@ -217,19 +237,42 @@ bool CompetitionGraph::load_heuristics_table(std::ifstream& myfile)
 void CompetitionGraph::save_heuristics_table(std::string fname)
 {
     std::ofstream myfile;
-	myfile.open (fname);
-	myfile << "table_size" << std::endl << 
-        heuristics.size() << "," << this->size() << std::endl;
-	for (auto h_values: heuristics) 
-	{
-        myfile << h_values.first << std::endl;
-		for (double h : h_values.second) 
-		{
-            myfile << h << ",";
-		}
-		myfile << std::endl;
-	}
-	myfile.close();
+	myfile.open(fname,std::ios::binary|std::ios::out);
+    int size;
+    size=heuristics.size();
+    myfile.write((char*)&size,sizeof(int));
+    size=this->size();
+    myfile.write((char*)&size,sizeof(int));
+    for (auto h_values: heuristics){
+        int loc=h_values.first;
+            myfile.write((char*)&loc,sizeof(int));
+        for (double h: h_values.second){
+            unsigned short v;
+            if (h>=USHRT_MAX){
+                v=USHRT_MAX;
+            } else {
+                v=(unsigned short)h;
+            }
+            myfile.write((char*)&v,sizeof(unsigned short));
+        }
+    }
+    myfile.close();
+
+//     std::ofstream myfile;
+// 	myfile.open (fname);
+// 	myfile << "table_size" << std::endl << 
+//         heuristics.size() << "," << this->size() << std::endl;
+// 	for (auto h_values: heuristics) 
+// 	{
+//         myfile << h_values.first << std::endl;
+// 		for (double h : h_values.second) 
+// 		{
+//             myfile << h << ",";
+// 		}
+// 		myfile << std::endl;
+// 	}
+// 	myfile.close();
+
 }
 
 }
