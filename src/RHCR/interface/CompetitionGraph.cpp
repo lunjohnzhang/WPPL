@@ -114,15 +114,14 @@ void CompetitionGraph::preprocessing(bool consider_rotation){
             }
 
             int idx=idxs[i];
-            heuristics[idx] = compute_heuristics(idx);
-
             #pragma omp critical
             {
+                heuristics[idx] = compute_heuristics(idx);
                 ++ctr;
                 if (ctr%step==0){
                     double elapse=(clock()-s)/CLOCKS_PER_SEC;
                     double estimated_remain=elapse/ctr*(total-ctr);
-                    cout<<ctr<<"/"<<total<<" completed in "<<elapse<<"s. estimated time to finish all: "<<estimated_remain<<"s."<<endl;
+                    cout<<ctr<<"/"<<total<<" completed in "<<elapse<<"s. estimated time to finish all: "<<estimated_remain<<"s.  estimated qtotal time: "<<(estimated_remain+elapse)<<"s."<<endl;
                 }
             }
 		}
