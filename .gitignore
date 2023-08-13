@@ -2,3 +2,4 @@ build
 .vscode
 Dockerfile
 **heuristics_table.txt
+test.json/
