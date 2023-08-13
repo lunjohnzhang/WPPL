@@ -65,7 +65,7 @@ void CompetitionGraph::preprocessing(bool consider_rotation){
     assert(consider_rotation);
 
     std::cout << "*** PreProcessing map ***" << std::endl;
-	clock_t t = std::clock();
+    auto pp_start = std::chrono::steady_clock::now();
 	this->consider_rotation = consider_rotation;
 	std::string fname;
 	if (consider_rotation)
@@ -148,7 +148,8 @@ void CompetitionGraph::preprocessing(bool consider_rotation){
 		save_heuristics_table(fname);
 	}
 
-	double runtime = double(std::clock() - t) / CLOCKS_PER_SEC;
+    auto pp_end = std::chrono::steady_clock::now();
+	double runtime = std::chrono::duration<double>(pp_end-pp_start).count();
 	std::cout << "Done! (" << runtime << " s)" << std::endl;
 }
 
@@ -220,9 +221,11 @@ void CompetitionGraph::compute_heuristics(
 
 bool CompetitionGraph::load_heuristics_table(std::ifstream& myfile)
 {
+    auto start = std::chrono::steady_clock::now();
+
     // TODO: we need to test the loading speed for compressed & uncompressed version.
     boost::iostreams::filtering_streambuf<boost::iostreams::input> inbuf;
-    inbuf.push(boost::iostreams::gzip_decompressor());
+    inbuf.push(boost::iostreams::zlib_decompressor());
     inbuf.push(myfile);
 
     std::istream in(&inbuf);
@@ -235,21 +238,47 @@ bool CompetitionGraph::load_heuristics_table(std::ifstream& myfile)
     assert(M==this->size());
 
     // load non-obstacle locations
-    vector<int> locs;
+    auto locs= new int[N];
+    in.read((char*)locs,sizeof(int)*N);
+
+    auto end = std::chrono::steady_clock::now();
+	double runtime = std::chrono::duration<double>(end-start).count();
+    std::cout << "read in locs (" << runtime << " s)" << std::endl;
+
     for (int i=0;i<N;++i){
-        int loc;
-        in.read((char*)&loc,sizeof(int));
-        locs.push_back(loc);
-        heuristics[loc]=std::vector<double>(M,DBL_MAX);
+        heuristics[locs[i]]=std::vector<double>(M,DBL_MAX);
     }
+
+    end = std::chrono::steady_clock::now();
+	runtime = std::chrono::duration<double>(end-start).count();
+    std::cout << "init heuristics table (" << runtime << " s)" << std::endl;
 
     // load dists from one non-obstacle location to another
     // NOTE(hj): currently, the heuristic table in the memory is still N*M size double-type.
-    for (int loc1:locs){
-        for (int loc2:locs){
-            if (loc1<=loc2){
-                unsigned short v;
-                in.read((char*)&v,sizeof(unsigned short));
+    // TODO(hj): the same wierd bug in save_heuristics_table function also happens here! it seems that we are not allowed to create a too large array at a time, but who restrict this?
+    // but heuristics table is also large, why it is allowed?
+    int n_threads=omp_get_max_threads();              
+    auto buff=new unsigned short[N*n_threads];
+    end = std::chrono::steady_clock::now();
+	runtime = std::chrono::duration<double>(end-start).count();
+
+    int n_batch=(N+n_threads-1)/n_threads;
+
+    for (int batch_id=0;batch_id<n_batch;++batch_id){
+        int start_idx=batch_id*n_threads;
+        int end_idx=(batch_id+1)*n_threads;
+        if (end_idx>N){
+            end_idx=N;
+        }
+        int batch_size=end_idx-start_idx;
+        in.read((char*)buff,sizeof(unsigned short)*N*batch_size);
+        #pragma omp parallel for
+        for (int i=start_idx;i<end_idx;++i){
+            for (int j=0;j<N;++j){
+                int idx=i-start_idx;
+                int loc1=locs[i];
+                int loc2=locs[j];
+                unsigned short v=buff[idx*N+j];
                 double h;
                 if (v==USHRT_MAX){
                     h=DBL_MAX;
@@ -257,10 +286,10 @@ bool CompetitionGraph::load_heuristics_table(std::ifstream& myfile)
                     h=(double) v;
                 }
                 heuristics[loc1][loc2]=h;
-                heuristics[loc2][loc1]=h;
             }
         }
     }
+    std::cout << "read in heuristics (" << runtime << " s)" << std::endl;
 
     // boost::char_separator<char> sep(",");
     // boost::tokenizer< boost::char_separator<char> >::iterator beg;
@@ -296,65 +325,87 @@ bool CompetitionGraph::load_heuristics_table(std::ifstream& myfile)
     // }
 
     boost::iostreams::close(inbuf);
+
+    delete [] buff;
+    delete [] locs;
+
 	return true;
 }
 
 
 void CompetitionGraph::save_heuristics_table(std::string fname)
 {
+    auto start = std::chrono::steady_clock::now();
+
     std::ofstream myfile;
 	myfile.open(fname,std::ios::binary|std::ios::out);
 
     boost::iostreams::filtering_streambuf<boost::iostreams::output> outbuf;
-    outbuf.push(boost::iostreams::gzip_compressor());
+    outbuf.push(boost::iostreams::zlib_compressor(boost::iostreams::zlib::best_speed));
     outbuf.push(myfile);
     
     std::ostream out(&outbuf);
 
     // save table size.
-    int size;
-    size=heuristics.size();
-    out.write((char*)&size,sizeof(int));
-    size=this->size();
-    out.write((char*)&size,sizeof(int));
+    int N=heuristics.size();
+    out.write((char*)&N,sizeof(int));
+    int M=this->size();
+    out.write((char*)&M,sizeof(int));
 
     // save non-obstacle locations
-    vector<int> locs;
-    for (int idx=0;idx<types.size();++idx){
-        if (types[idx]!="Obstacle"){
-            out.write((char*)&idx,sizeof(int));
-            locs.push_back(idx);
+    auto locs=new int[N];
+    int idx=0;
+    for (int loc=0;loc<types.size();++loc){
+        if (types[loc]!="Obstacle"){
+            locs[idx]=loc;
+            ++idx;
         }
     }
+    out.write((char*)locs,sizeof(int)*N);
 
+    auto end = std::chrono::steady_clock::now();
+	double runtime = std::chrono::duration<double>(end-start).count();
+    std::cerr << "write out locs (" << runtime << " s)" << std::endl;
+
+    // TODO(hj): a wired bug encountered: if I create a N*N buff, the following lines in this function will be skipped.
+    // However, it doesn't report an memory error, such as out-of-memery. 
+    // auto buff=new unsinged short[N*N];
+    auto buff=new unsigned short[N];
     // save dists from one non-obstacle location to another
-    for (int loc1:locs){
-        for (int loc2:locs){
+    for (int i=0;i<N;++i){
+        for (int j=0;j<N;++j){
+            int loc1=locs[i];
+            int loc2=locs[j];
             // NOTE: we assume symmetry.
-            if (loc1<=loc2){
-                double h=heuristics[loc1][loc2];
-                unsigned short v;
-                if (h==DBL_MAX){
-                    v=USHRT_MAX;
-                }
-                else if (h>USHRT_MAX && h<DBL_MAX){
-                    auto & G=*this;
-                    // TODO(hj): this is a protection. if not true, we probably need to consider other data type.
-                    cerr<<"h value("<<h<<") from loc1("<<G.get_row(loc1)<<","<<G.get_col(loc1)<<") to loc2("<<G.get_row(loc2)<<","<<G.get_col(loc2)<<") exceeds the unsigned short limit("<<USHRT_MAX<<")!"<<endl;
-                    // NOTE(hj): assert only works when DBEUG is set! probably need better assertion and logging tools.
-                    assert(!"failed");
-                    v=USHRT_MAX;
-                } else{
-                    v=(unsigned short)h;
-                }
-
-                out.write((char*)&v,sizeof(unsigned short));
+            double h=heuristics[loc1][loc2];
+            unsigned short v;
+            if (h==DBL_MAX){
+                v=USHRT_MAX;
             }
+            else if (h>USHRT_MAX && h<DBL_MAX){
+                auto & G=*this;
+                // TODO(hj): this is a protection. if not true, we probably need to consider other data type.
+                cerr<<"h value("<<h<<") from loc1("<<G.get_row(loc1)<<","<<G.get_col(loc1)<<") to loc2("<<G.get_row(loc2)<<","<<G.get_col(loc2)<<") exceeds the unsigned short limit("<<USHRT_MAX<<")!"<<endl;
+                // NOTE(hj): assert only works when DBEUG is set! probably need better assertion and logging tools.
+                assert(!"failed");
+                v=USHRT_MAX;
+            } else{
+                v=(unsigned short)h;
+            }
+            buff[j]=v;
         }
+        out.write((char*)buff,sizeof(unsigned short)*N);
     }
+
+    end = std::chrono::steady_clock::now();
+	runtime = std::chrono::duration<double>(end-start).count();
+    std::cerr << "write out heuristics table (" << runtime << " s)" << std::endl;
 
     boost::iostreams::close(outbuf);
     myfile.close();
+
+    delete [] buff;
+    delete [] locs;
 
     // std::ofstream myfile;
 	// myfile.open (fname);
