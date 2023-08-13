@@ -1,6 +1,8 @@
 #include "RHCR/interface/RHCRSolver.h"
 #include "States.h"
 #include "ActionModel.h"
+#include <chrono>
+#include <thread>
 
 namespace RHCR {
 
@@ -93,9 +95,8 @@ void RHCRSolver::update_goal_locations(const SharedEnvironment & env){
 }
 
 void RHCRSolver::plan(const SharedEnvironment & env){
-    // TODO(hj): it is possible we cannot rely env.curr_timestep, which is true timestep, if the planning takes too long.
-    // instead we should keep record of the path index.
-    timestep=env.curr_timestep;
+    // sleep for test purpose
+    // std::this_thread::sleep_for (std::chrono::milliseconds(1000));
 
     auto _curr_states=convert_states_type(env.curr_states);
     bool need_replan=false;
@@ -138,7 +139,7 @@ void RHCRSolver::plan(const SharedEnvironment & env){
         // int agent=7;
         // debug_agent(agent,starts,goal_locations);
         // debug_agent_path(agent,paths,timestep);
-
+ 
         cout<<"RHCRSolver solved for timestep "<<timestep<<endl;
     }
 }
@@ -165,6 +166,9 @@ void RHCRSolver::get_step_actions(const SharedEnvironment & env, vector<Action> 
 #else
         actions.resize(num_of_drives, Action::W);
 #endif
+    } else {
+        // NOTE: only successfully executing a planned step will increase this internal timestep, which is different from the real timestep used in the simulation system.
+        timestep+=1;
     }
 
 }
