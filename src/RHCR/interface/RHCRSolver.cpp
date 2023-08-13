@@ -93,6 +93,8 @@ void RHCRSolver::update_goal_locations(const SharedEnvironment & env){
 }
 
 void RHCRSolver::plan(const SharedEnvironment & env){
+    // TODO(hj): it is possible we cannot rely env.curr_timestep, which is true timestep, if the planning takes too long.
+    // instead we should keep record of the path index.
     timestep=env.curr_timestep;
 
     auto _curr_states=convert_states_type(env.curr_states);
@@ -133,9 +135,9 @@ void RHCRSolver::plan(const SharedEnvironment & env){
         // plan
         solve();
 
-        int agent=7;
-        debug_agent(agent,starts,goal_locations);
-        debug_agent_path(agent,paths,timestep);
+        // int agent=7;
+        // debug_agent(agent,starts,goal_locations);
+        // debug_agent_path(agent,paths,timestep);
 
         cout<<"RHCRSolver solved for timestep "<<timestep<<endl;
     }
