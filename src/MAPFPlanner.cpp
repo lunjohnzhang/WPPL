@@ -27,7 +27,7 @@ struct cmp {
 
 void MAPFPlanner::initialize(int preprocess_time_limit) {
     cout << "planner initialization begins" << endl;
-    solver->initialize();
+    solver->initialize(*env);
     cout << "planner initialization ends" << endl;
 }
 

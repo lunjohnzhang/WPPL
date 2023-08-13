@@ -3,3 +3,4 @@ build
 Dockerfile
 **heuristics_table.txt
 test.json/
+large_files/

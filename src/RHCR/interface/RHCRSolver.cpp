@@ -79,8 +79,8 @@ void RHCRSolver::stop_plan_task(){
     // }
 }
 
-void RHCRSolver::initialize(){
-    graph.preprocessing(consider_rotation);
+void RHCRSolver::initialize(const SharedEnvironment & env){
+    graph.preprocessing(consider_rotation,env.file_storage_path);
     initialize_solvers();
 }
 

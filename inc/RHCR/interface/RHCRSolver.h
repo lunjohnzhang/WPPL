@@ -44,7 +44,7 @@ public:
     //     this->map=map;
     // };
 
-    void initialize();
+    void initialize(const SharedEnvironment & env);
     void update_goal_locations(const SharedEnvironment & env);
 };
 }

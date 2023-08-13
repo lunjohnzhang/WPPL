@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cstring>
 #include <algorithm>
+#include <boost/filesystem.hpp>
 
 namespace RHCR {
 
@@ -60,18 +61,26 @@ bool CompetitionGraph::load_map(string fname){
     return true;
 }
 
-void CompetitionGraph::preprocessing(bool consider_rotation){
+string get_file_name(const string & path){
+    return path.substr(path.find_last_of("/\\") + 1);
+}
+
+void CompetitionGraph::preprocessing(bool consider_rotation, const string & file_storage_path){
     // currently only support this setting.
     assert(consider_rotation);
 
     std::cout << "*** PreProcessing map ***" << std::endl;
     auto pp_start = std::chrono::steady_clock::now();
 	this->consider_rotation = consider_rotation;
-	std::string fname;
+	std::string fname=get_file_name(map_name);
+    std::string folder=file_storage_path;
+    if (folder[-1]!=boost::filesystem::path::preferred_separator){
+        folder+=boost::filesystem::path::preferred_separator;
+    }
 	if (consider_rotation)
-		fname = map_name + "_rotation_heuristics_table.gz";
+		fname = folder + fname + "_rotation_heuristics_table.gz";
 	else
-		fname = map_name + "_heuristics_table.gz";
+		fname = folder + fname + "_heuristics_table.gz";
 	std::ifstream myfile(fname.c_str(),std::ios::binary|std::ios::in);
 	bool succ = false;
 	if (myfile.is_open())
