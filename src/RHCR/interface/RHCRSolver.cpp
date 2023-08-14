@@ -3,6 +3,7 @@
 #include "ActionModel.h"
 #include <chrono>
 #include <thread>
+#include "nlohmann/json.hpp"
 
 namespace RHCR {
 
@@ -79,7 +80,32 @@ void RHCRSolver::stop_plan_task(){
     // }
 }
 
+void RHCRSolver::set_parameters(const string & map_name){
+    // load configs
+	string config_path="configs/"+map_name.substr(0,map_name.find_last_of("."))+".json";
+	cerr<<config_path<<endl;
+
+    nlohmann::json data;
+    std::ifstream f(config_path);
+    try
+    {
+        data = nlohmann::json::parse(f);
+    }
+    catch (nlohmann::json::parse_error error)
+    {
+        std::cerr << "Failed to load " << config_path << std::endl;
+        std::cerr << "Message: " << error.what() << std::endl;
+        exit(1);
+    }
+
+	int planning_window=read_param_json<int>(data,"planning_window");
+    this->planning_window=planning_window;
+}
+
 void RHCRSolver::initialize(const SharedEnvironment & env){
+    // set parameters according to the specific map
+    // TODO(hj): move everything about configuration and initialization here
+    set_parameters(env.map_name);
     graph.preprocessing(consider_rotation,env.file_storage_path);
     initialize_solvers();
 }

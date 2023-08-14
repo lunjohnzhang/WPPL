@@ -45,5 +45,6 @@ public:
 
     void initialize(const SharedEnvironment & env);
     void update_goal_locations(const SharedEnvironment & env);
+    void set_parameters(const string & map_name);
 };
 }
