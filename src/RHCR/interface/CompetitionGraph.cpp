@@ -72,9 +72,9 @@ void CompetitionGraph::preprocessing(bool consider_rotation, const string & file
     std::cout << "*** PreProcessing map ***" << std::endl;
     auto pp_start = std::chrono::steady_clock::now();
 	this->consider_rotation = consider_rotation;
-	std::string fname=get_file_name(map_name);
+	std::string fname=map_name.substr(0,map_name.size()-4);
     std::string folder=file_storage_path;
-    if (folder[-1]!=boost::filesystem::path::preferred_separator){
+    if (folder[folder.size()-1]!=boost::filesystem::path::preferred_separator){
         folder+=boost::filesystem::path::preferred_separator;
     }
 	if (consider_rotation)
