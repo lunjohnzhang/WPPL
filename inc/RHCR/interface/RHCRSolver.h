@@ -22,10 +22,9 @@ public:
     // bool stop_flag;
 
     CompetitionGraph& graph;
-    ActionModelWithRotate & model;
 
     //***** functions *****//
-    RHCRSolver(CompetitionGraph & graph, ActionModelWithRotate & model, MAPFSolver & mapf_solver): BasicSystem(graph,mapf_solver),model(model),graph(graph) {
+    RHCRSolver(CompetitionGraph & graph, MAPFSolver & mapf_solver): BasicSystem(graph,mapf_solver), graph(graph) {
     };
 
     void start_plan_task();

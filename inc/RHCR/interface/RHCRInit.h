@@ -137,7 +137,7 @@ MAPFSolver* set_solver(const BasicGraph& G, const boost::program_options::variab
 }
 
 
-void init_RHCR_solver(MAPFPlanner * planner, Grid & grid, po::variables_map & vm, ActionModelWithRotate * model,int team_size){
+void init_RHCR_solver(MAPFPlanner * planner, Grid & grid, po::variables_map & vm, int team_size){
 	// sanity check for parameters
     if (vm["hold_endpoints"].as<bool>() or vm["dummy_paths"].as<bool>())
     {
@@ -177,7 +177,7 @@ void init_RHCR_solver(MAPFPlanner * planner, Grid & grid, po::variables_map & vm
     auto mapf_solver = set_solver(*graph,vm);
 
 	// set up lifelong MAPF solver
-	auto rhcr_solver = make_shared<RHCRSolver>(*graph,*model,*mapf_solver);
+	auto rhcr_solver = make_shared<RHCRSolver>(*graph,*mapf_solver);
 	set_parameters(*rhcr_solver,vm,team_size);
 	planner->solver = rhcr_solver;
 }
