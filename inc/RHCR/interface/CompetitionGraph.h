@@ -1,14 +1,14 @@
 #pragma once
 #include "RHCR/main/BasicGraph.h"
 #include "Grid.h"
+#include "SharedEnv.h"
 
 namespace RHCR {
 
 class CompetitionGraph: public BasicGraph {
 // for simplicity, just make everything public. but attributes or functions start with _ are supposed to use privately in general cases.
-public:
-    CompetitionGraph(const Grid & grid);
-    
+public:    
+    CompetitionGraph(const SharedEnvironment & env);
     // a dummy function.
     bool load_map(string fname);
     // preprocessing the map, e.g., computing heuristics for later planning.

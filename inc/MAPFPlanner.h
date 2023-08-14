@@ -3,6 +3,18 @@
 #include "SharedEnv.h"
 #include "ActionModel.h"
 #include "RHCR/interface/RHCRSolver.h"
+#include "nlohmann/json.hpp"
+#include "RHCR/main/SingleAgentSolver.h"
+#include "RHCR/main/MAPFSolver.h"
+#include "RHCR/main/WHCAStar.h"
+#include "RHCR/main/ECBS.h"
+#include "RHCR/main/LRAStar.h"
+#include "RHCR/main/PBS.h"
+#include "RHCR/main/ID.h"
+#include "RHCR/interface/RHCRSolver.h"
+#include "RHCR/interface/CompetitionGraph.h"
+#include "common.h"
+#include <memory>
 
 class MAPFPlanner
 {
@@ -26,5 +38,9 @@ public:
     std::list<pair<int,int>> getNeighbors(int location, int direction);
     bool validateMove(int loc,int loc2);
 
-    shared_ptr<RHCR::RHCRSolver> solver; 
+    std::shared_ptr<RHCR::RHCRSolver> solver; 
+    nlohmann::json config;
+    void load_configs();
+    RHCR::MAPFSolver* build_mapf_solver(RHCR::CompetitionGraph & graph);
+    void config_solver();
 };

@@ -7,7 +7,6 @@
 #include <signal.h>
 #include <climits>
 #include <memory>
-#include "RHCR/interface/RHCRInit.h"
 
 
 #ifdef PYTHON
@@ -55,9 +54,6 @@ int main(int argc, char **argv)
         ("planTimeLimit", po::value<int>()->default_value(INT_MAX), "the time limit for planner in seconds")
         ("preprocessTimeLimit", po::value<int>()->default_value(INT_MAX), "the time limit for preprocessing in seconds")
         ("logFile,l", po::value<std::string>(), "issue log file name");
-
-    RHCR::add_RHCR_options(desc);
-    
     clock_t start_time = clock();
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
@@ -164,8 +160,6 @@ int main(int argc, char **argv)
     system_ptr->set_num_tasks_reveal(read_param_json<int>(data, "numTasksReveal", 1));
 
     signal(SIGINT, sigint_handler);
-
-    RHCR::init_RHCR_solver(planner,grid,vm,team_size);
 
     system_ptr->simulate(vm["simulationTime"].as<int>());
 

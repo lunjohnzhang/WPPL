@@ -23,10 +23,120 @@ struct cmp {
     }
 };
 
+void MAPFPlanner::load_configs() {
+    // load configs
+	string config_path="configs/"+env->map_name.substr(0,env->map_name.find_last_of("."))+".json";
+    std::ifstream f(config_path);
+    try
+    {
+        config = nlohmann::json::parse(f);
+    }
+    catch (nlohmann::json::parse_error error)
+    {
+        std::cerr << "Failed to load " << config_path << std::endl;
+        std::cerr << "Message: " << error.what() << std::endl;
+        exit(1);
+    }
+}
 
+RHCR::MAPFSolver* MAPFPlanner::build_mapf_solver(RHCR::CompetitionGraph & graph) {
+    // build single agent solver
+    string solver_name = read_param_json<string>(config,"single_agent_solver");
+	RHCR::SingleAgentSolver* path_planner;
+	RHCR::MAPFSolver* mapf_solver;
+	if (solver_name == "ASTAR")
+	{
+		path_planner = new RHCR::StateTimeAStar();
+	}
+	else if (solver_name == "SIPP")
+	{
+		path_planner = new RHCR::SIPP();
+	}
+	else
+	{
+		cout << "Single-agent solver " << solver_name << "does not exist!" << endl;
+		exit(-1);
+	}
+
+    // build multi-agent solver
+	solver_name = read_param_json<string>(config,"solver");
+	if (solver_name == "ECBS")
+	{
+		RHCR::ECBS* ecbs = new RHCR::ECBS(graph, *path_planner);
+		ecbs->potential_function = read_param_json<string>(config,"potential_function");
+		ecbs->potential_threshold = read_param_json<double>(config,"potential_threshold");
+		ecbs->suboptimal_bound = read_param_json<double>(config,"suboptimal_bound");
+		mapf_solver = ecbs;
+	}
+	else if (solver_name == "PBS")
+	{
+		RHCR::PBS* pbs = new RHCR::PBS(graph, *path_planner);
+		pbs->lazyPriority = read_param_json<bool>(config,"lazyP");
+        auto prioritize_start = read_param_json<bool>(config,"prioritize_start");
+        auto hold_endpoints = read_param_json<bool>(config,"hold_endpoints");
+        auto dummy_paths = read_param_json<bool>(config,"dummy_paths");
+        if (hold_endpoints || dummy_paths)
+            prioritize_start = false;
+        pbs->prioritize_start = prioritize_start;
+        auto CAT = read_param_json<bool>(config,"CAT");
+        pbs->setRT(CAT, prioritize_start);
+		mapf_solver = pbs;
+	}
+	else if (solver_name == "WHCA")
+	{
+		mapf_solver = new RHCR::WHCAStar(graph, *path_planner);
+	}
+	else if (solver_name == "LRA")
+	{
+		mapf_solver = new RHCR::LRAStar(graph, *path_planner);
+	}
+	else
+	{
+		cout << "Solver " << solver_name << "does not exist!" << endl;
+		exit(-1);
+	}
+
+    auto id = read_param_json<bool>(config,"id");
+	if (id)
+	{
+		return new RHCR::ID(graph, *path_planner, *mapf_solver);
+	}
+	else
+	{
+		return mapf_solver;
+	}
+}
+
+void MAPFPlanner::config_solver() {
+    solver->outfile = read_param_json<string>(config,"output");
+    solver->screen = read_param_json<int>(config,"screen");
+    solver->log = read_param_json<bool>(config,"log");
+    solver->num_of_drives = env->num_of_agents;
+    solver->time_limit = read_param_json<int>(config,"cutoffTime");
+    solver->simulation_window = read_param_json<int>(config,"simulation_window");
+    solver->planning_window = read_param_json<int>(config,"planning_window");
+    solver->travel_time_window = read_param_json<int>(config,"travel_time_window");
+    solver->consider_rotation = read_param_json<bool>(config,"consider_rotation");
+    solver->k_robust = read_param_json<int>(config,"robust");
+    solver->hold_endpoints = read_param_json<bool>(config,"hold_endpoints");
+    solver->useDummyPaths = read_param_json<bool>(config,"dummy_paths");
+    auto seed = read_param_json<int>(config,"seed");
+    if (seed>=0) {
+        solver->seed = seed;
+    } else {
+        solver->seed = (int)time(0);
+    }
+    srand(solver->seed);
+}
 
 void MAPFPlanner::initialize(int preprocess_time_limit) {
     cout << "planner initialization begins" << endl;
+    load_configs();
+    // TODO(hj): memory management is a disaster here...
+    auto graph = new RHCR::CompetitionGraph(*env);
+    auto mapf_solver=build_mapf_solver(*graph);
+    solver = std::make_shared<RHCR::RHCRSolver>(*graph,*mapf_solver);
+    config_solver();
     solver->initialize(*env);
     cout << "planner initialization ends" << endl;
 }

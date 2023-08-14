@@ -1,3 +1,4 @@
+// NOTE(hj): this file is useles now, but we can take a look at RHCR options.
 #pragma once
 #include <boost/program_options.hpp>
 #include "MAPFPlanner.h"

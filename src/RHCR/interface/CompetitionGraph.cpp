@@ -12,11 +12,11 @@
 namespace RHCR {
 
 // this contructor directly convert Grid to CompetitionGraph
-CompetitionGraph::CompetitionGraph(const Grid & grid){
-    map_name=grid.map_name;
+CompetitionGraph::CompetitionGraph(const SharedEnvironment & env){
+    map_name=env.map_name;
     
-    rows=grid.rows;
-    cols=grid.cols;
+    rows=env.rows;
+    cols=env.cols;
 
     move[0] = 1; // move east
     move[1] = -cols; // move north 
@@ -30,7 +30,7 @@ CompetitionGraph::CompetitionGraph(const Grid & grid){
 
     for (int idx=0;idx<rows*cols;++idx) {
         weights[idx].resize(5,WEIGHT_MAX);
-        if (grid.map[idx]) {
+        if (env.map[idx]) {
             // obstacle
             types[idx]="Obstacle";
         } else {
