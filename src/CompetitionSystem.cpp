@@ -4,6 +4,7 @@
 #include "nlohmann/json.hpp"
 #include <functional>
 #include <Logger.h>
+#include "Timer.h"
 
 using json = nlohmann::ordered_json;
 
@@ -174,7 +175,12 @@ void BaseSystem::simulate(int simulation_time)
 {
     //init logger
     //Logger* log = new Logger();
+
+    g_timer.record_p("simulate_start");
+
     initialize();
+
+    g_timer.record_d("simulate_start","initialize_end","initialization");
     int num_of_tasks = 0;
 
     for (; timestep < simulation_time; )
@@ -246,6 +252,9 @@ void BaseSystem::simulate(int simulation_time)
             break;
         }
     }
+    g_timer.record_d("initialize_end","simulate_end","simulation");
+
+    g_timer.print_all_d();
 
     cout << std::endl << "Done!" << std::endl;
 }
