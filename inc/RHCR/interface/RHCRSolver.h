@@ -8,6 +8,7 @@
 #include <thread>
 #include <future>
 #include <mutex>
+#include "RHCR/interface/CompetitionActionModel.h"
 
 namespace RHCR {
 class RHCRSolver: public BasicSystem{
@@ -22,9 +23,10 @@ public:
     // bool stop_flag;
 
     CompetitionGraph& graph;
+    CompetitionActionModelWithRotate model;
 
     //***** functions *****//
-    RHCRSolver(CompetitionGraph & graph, MAPFSolver & mapf_solver): BasicSystem(graph,mapf_solver), graph(graph) {
+    RHCRSolver(CompetitionGraph & graph, MAPFSolver & mapf_solver, SharedEnvironment * env): BasicSystem(graph,mapf_solver), graph(graph), model(env) {
     };
 
     void start_plan_task();

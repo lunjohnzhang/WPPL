@@ -135,7 +135,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     // TODO(hj): memory management is a disaster here...
     auto graph = new RHCR::CompetitionGraph(*env);
     auto mapf_solver=build_mapf_solver(*graph);
-    solver = std::make_shared<RHCR::RHCRSolver>(*graph,*mapf_solver);
+    solver = std::make_shared<RHCR::RHCRSolver>(*graph,*mapf_solver,env);
     config_solver();
     solver->initialize(*env);
     cout << "planner initialization ends" << endl;
