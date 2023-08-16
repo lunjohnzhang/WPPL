@@ -83,6 +83,7 @@ void RHCRSolver::stop_plan_task(){
 void RHCRSolver::initialize(const SharedEnvironment & env){
     graph.preprocessing(consider_rotation,env.file_storage_path);
     initialize_solvers();
+    need_replan = true;
 }
 
 void RHCRSolver::update_goal_locations(const SharedEnvironment & env){
@@ -100,7 +101,6 @@ void RHCRSolver::plan(const SharedEnvironment & env){
     // std::this_thread::sleep_for (std::chrono::milliseconds(1000));
 
     auto _curr_states=convert_states_type(env.curr_states);
-    bool need_replan=false;
     if (paths.size()==0) {
         // initialize paths
         starts.resize(num_of_drives);
@@ -109,19 +109,7 @@ void RHCRSolver::plan(const SharedEnvironment & env){
         for (int i=0;i<num_of_drives;++i) {
             paths[i].push_back(_curr_states[i]);
         }
-        need_replan=true;
-    } else {
-        // for (int i=0;i<num_of_drives;++i) {
-        //     assert(paths[i].size()>timestep);
-        //     // if the move is not the same as planned (it actually means the last planned move is not valid), then we need to replan
-        //     // if (paths[i][timestep]!=_curr_states[i]) {
-        //     //     need_replan=true;
-        //     //     paths[i][timestep]=_curr_states[i];
-        //     // }
-        //     // TODO: if goal changes, we need to replan
-        // }
-        need_replan=true;
-    }
+    } 
 
     if (need_replan) {
         // clear the previous plan
@@ -137,11 +125,21 @@ void RHCRSolver::plan(const SharedEnvironment & env){
         // plan
         solve();
 
-        // int agent=7;
+        total_feasible_timestep = timestep + simulation_window;
+
+        // cerr<<paths[0].size()<<" "<<paths[1].size()<<endl;
+
+        // int agent=117;
         // debug_agent(agent,starts,goal_locations);
-        // debug_agent_path(agent,paths,timestep);
+        // debug_agent_path(agent,paths,5);
+        // agent=4;
+        // debug_agent(agent,starts,goal_locations);
+        // debug_agent_path(agent,paths,5);
  
         cout<<"RHCRSolver solved for timestep "<<timestep<<endl;
+    }
+    else{
+        cout<<"skip planning"<<endl;
     }
 }
 
@@ -163,7 +161,7 @@ void RHCRSolver::get_step_actions(const SharedEnvironment & env, vector<Action> 
     // TODO(hj) detect deadlock?
     if (!model.is_valid(env.curr_states,actions)){
         cerr<<"planed actions are not valid in timestep "<<timestep+1<<"!"<<endl;
-#ifdef STRICT
+#ifdef DEV
         exit(-1);
 #else
         actions.resize(num_of_drives, Action::W);
@@ -173,5 +171,25 @@ void RHCRSolver::get_step_actions(const SharedEnvironment & env, vector<Action> 
         timestep+=1;
     }
 
+
+    // TODO(hj): when we need to replan?
+    need_replan=false;
+
+    // 1. exceed simulation window
+    if (timestep==total_feasible_timestep){
+        need_replan=true;
+    }
+    
+    // 2. goal changes: there different ways to check this. let's just keep the old goal and compare.
+    for (int i=0;i<goal_locations.size();++i) {
+        if (paths[i][timestep].location==goal_locations[i][0].first) {
+            // arrive goal locations
+            need_replan=true;
+            break;
+        }
+    }
+    
+    // need_replan=true;
+    
 }
 }

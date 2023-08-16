@@ -115,6 +115,11 @@ void MAPFPlanner::config_solver() {
     solver->time_limit = read_param_json<int>(config,"cutoffTime");
     solver->simulation_window = read_param_json<int>(config,"simulation_window");
     solver->planning_window = read_param_json<int>(config,"planning_window");
+    if (solver->simulation_window>solver->planning_window){
+        cerr<<boost::format("Error: the simulation window %d can not be larger than the planning window %d!")% \
+        solver->simulation_window % solver->planning_window<<endl;
+        exit(1);
+    }
     solver->travel_time_window = read_param_json<int>(config,"travel_time_window");
     solver->consider_rotation = read_param_json<bool>(config,"consider_rotation");
     solver->k_robust = read_param_json<int>(config,"robust");

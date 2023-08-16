@@ -24,10 +24,11 @@ public:
 
     CompetitionGraph& graph;
     CompetitionActionModelWithRotate model;
+    bool need_replan = true;
+    int total_feasible_timestep = 0;
 
     //***** functions *****//
-    RHCRSolver(CompetitionGraph & graph, MAPFSolver & mapf_solver, SharedEnvironment * env): BasicSystem(graph,mapf_solver), graph(graph), model(env) {
-    };
+    RHCRSolver(CompetitionGraph & graph, MAPFSolver & mapf_solver, SharedEnvironment * env): BasicSystem(graph,mapf_solver), graph(graph), model(env) {};
 
     void start_plan_task();
     void stop_plan_task();

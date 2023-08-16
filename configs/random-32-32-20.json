@@ -8,7 +8,7 @@
     "screen": 1,
     "lazyP": false,
     "simulation_time": 5000,
-    "simulation_window": 5,
+    "simulation_window": 1,
     "travel_time_window": 0,
     "potential_function": "None",
     "potential_threshold": 0,
