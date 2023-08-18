@@ -1,0 +1,3 @@
+[submodule "viz"]
+	path = viz
+	url = git@github.com:DiligentPanda/MAPF2023Competition_PlanViz.git
