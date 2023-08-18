@@ -1,3 +1,10 @@
+#!/bin/bash
+
+if [ ! -d large_files ]
+then
+    mkdir large_files
+fi
+
 cd build && make -j && cd ..
 
 # export OMP_NUM_THREADS=128
