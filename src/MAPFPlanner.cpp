@@ -137,12 +137,29 @@ void MAPFPlanner::config_solver() {
 void MAPFPlanner::initialize(int preprocess_time_limit) {
     cout << "planner initialization begins" << endl;
     load_configs();
+
+    lifelong_solver_name=read_param_json<string>(config,"lifelong_solver_name");
+
     // TODO(hj): memory management is a disaster here...
     auto graph = new RHCR::CompetitionGraph(*env);
-    auto mapf_solver=build_mapf_solver(*graph);
-    solver = std::make_shared<RHCR::RHCRSolver>(*graph,*mapf_solver,env);
-    config_solver();
-    solver->initialize(*env);
+    // graph->preprocessing(consider_rotation,env->file_storage_path);
+
+    // if (lifelong_solver_name=="RHCR") {
+        auto mapf_solver=build_mapf_solver(*graph);
+        solver = std::make_shared<RHCR::RHCRSolver>(*graph,*mapf_solver,env);
+        config_solver();
+        solver->initialize(*env);
+        cout<<"RHCRSolver initialized"<<endl;
+    // } else if (lifelong_solver_name=="PIBT") {
+        // TODO(hj): configure random seed
+        pibt_solver = std::make_shared<PIBT::PIBTSolver>(*graph,env,0);
+        pibt_solver->initialize(*env);
+        cout<<"PIBTSolver initialized"<<endl;
+    // } else {
+    //     cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
+    //     exit(-1);
+    // }
+
     cout << "planner initialization ends" << endl;
 }
 
@@ -158,9 +175,17 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
 
     // TODO if time_limit approachs, just return a valid move, e.g. all actions are wait.
 
-    solver->plan(*env);
-    // this function also checks whether it is a valid move.
-    solver->get_step_actions(*env, actions);
+
+    if (lifelong_solver_name=="RHCR") {
+        solver->plan(*env);
+        solver->get_step_actions(*env, actions);
+    } else if (lifelong_solver_name=="PIBT") {
+        pibt_solver->plan(*env);
+        pibt_solver->get_step_actions(*env,actions);
+    } else {
+        cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
+        exit(-1);
+    }
 
     // for (int i = 0; i < env->num_of_agents; i++) 
     // {

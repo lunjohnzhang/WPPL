@@ -15,6 +15,7 @@
 #include "RHCR/interface/CompetitionGraph.h"
 #include "common.h"
 #include <memory>
+#include "PIBT/PIBTSolver.h"
 
 class MAPFPlanner
 {
@@ -38,7 +39,10 @@ public:
     std::list<pair<int,int>> getNeighbors(int location, int direction);
     bool validateMove(int loc,int loc2);
 
+    bool consider_rotation=true;
+    string lifelong_solver_name;
     std::shared_ptr<RHCR::RHCRSolver> solver; 
+    std::shared_ptr<PIBT::PIBTSolver> pibt_solver;
     nlohmann::json config;
     void load_configs();
     RHCR::MAPFSolver* build_mapf_solver(RHCR::CompetitionGraph & graph);
