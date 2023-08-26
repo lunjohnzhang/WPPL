@@ -15,9 +15,41 @@ bool CompetitionActionModelWithRotate::is_valid(const vector<State>& prev, const
     for (int i = 0; i < prev.size(); i ++) 
     {
 
+        if (prev[i].location == next[i].location)
+        {
+            // check if the rotation is not larger than 90 degree
+            if (abs(prev[i].orientation - next[i].orientation) == 2)
+            {
+                cout << "ERROR: agent " << i << " over-rotates. " << endl;
+                errors.push_back(make_tuple("over-rotate",i,-1,next[i].timestep));
+                return false;
+            }
+        }
+        else
+        {
+            if (prev[i].orientation != next[i].orientation)
+            {
+                cout << "ERROR: agent " << i << " moves and rotates at the same time. " << endl;
+                errors.push_back(make_tuple("unallowed move",i,-1,next[i].timestep));
+                return false;
+            }
+            if (next[i].location - prev[i].location != moves[prev[i].orientation])
+            {
+                cout << "ERROR: agent " << i << " moves in a wrong direction. " << endl;
+                errors.push_back(make_tuple("unallowed move",i,-1,next[i].timestep));
+                return false;
+            }
+            if (abs(next[i].location / cols - prev[i].location/cols) + abs(next[i].location % cols - prev[i].location %cols) > 1)
+            {
+                cout << "ERROR: agent " << i << " moves more than 1 steps. " << endl;
+                errors.push_back(make_tuple("unallowed move",i,-1,next[i].timestep));
+                return false;
+            }
+        }
+
         if (env->map[next[i].location] == 1)
         {
-            cout << "ERROR: agent " << i << " moves to an obstacle. " << endl;
+            cout << "ERROR: agent " << i << " moves to an obstacle. state:"<< prev[i]<<" action:"<<actions[i]<< endl;
             errors.push_back(make_tuple("unallowed move",i,-1,next[i].timestep));
             return false;
         }

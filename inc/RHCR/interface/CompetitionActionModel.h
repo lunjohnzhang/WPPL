@@ -6,6 +6,7 @@
 #include "SharedEnv.h"
 #include "ActionModel.h"
 
+// TODO(hj): move it outside the RHCR
 class CompetitionActionModelWithRotate
 {
 public:
@@ -31,21 +32,92 @@ public:
         return next;
     };
 
+    vector<State> get_state_neighbors(const State & curr,bool no_forward) {
+        vector<State> neighbors;
 
-protected:
+        int x=curr.location%env->cols;
+        int y=curr.location/env->cols;
+
+        if (!no_forward){
+            const auto & next_state=result_state(curr,Action::FW,true);
+
+            // if won't go out of map
+            if (next_state.location!=-1) {
+                neighbors.push_back(result_state(curr,Action::FW));
+            }
+        }
+        neighbors.push_back(result_state(curr,Action::CR));
+        neighbors.push_back(result_state(curr,Action::CCR));
+        neighbors.push_back(result_state(curr,Action::W));
+
+        return neighbors;
+    }
+
+    vector<State> get_loc_neighbors(const State & curr) {
+        vector<State> neighbors;
+
+        int x=curr.location%env->cols;
+        int y=curr.location/env->cols;
+
+        for (int i=0;i<4;++i) {
+            int new_location=curr.location+moves[i];
+            int new_orientation=i;
+
+            int nx=new_location%env->cols;
+            int ny=new_location/env->cols;
+
+            // if run out of map
+            if (abs(nx- x) + abs(ny- y) > 1) {
+                continue;
+            }
+
+            // if in the map but blocked
+            if (env->map[new_location]) {
+                continue;
+            }
+
+            neighbors.push_back(State(new_location,curr.timestep+1,new_orientation));
+        }
+
+        return neighbors;
+    }
+
     SharedEnvironment * env=nullptr;
     int rows;
     int cols;
     int moves[4];
     Logger* logger = nullptr;
 
-    State result_state(const State & prev, Action action)
+    State result_state(const State & prev, Action action, bool check=false)
     {
         int new_location = prev.location;
         int new_orientation = prev.orientation;
         if (action == Action::FW)
         {
             new_location = new_location += moves[prev.orientation];
+            if (check) {
+                int x=prev.location%env->cols;
+                int y=prev.location/env->cols;
+
+                int nx=new_location%env->cols;
+                int ny=new_location/env->cols;
+
+                // if run out of map
+                if (abs(nx- x) + abs(ny- y) > 1) {
+                    return State(-1,prev.timestep+1,new_orientation=prev.orientation);
+                }
+
+                // if in the map but blocked
+                if (env->map[new_location]) {
+                    return State(-1,prev.timestep+1,new_orientation=prev.orientation);
+                }
+
+                // if ((x==env->cols-1 && prev.orientation==0) || (y==env->rows-1 && prev.orientation==1) || (x==0 && prev.orientation==2) || (y==0 && prev.orientation==3)) {
+                //     // std::cerr<<"cannot forward: "<<(x==env->cols-1 && prev.orientation==0)<< (y==env->rows-1 && prev.orientation==1) << (x==0 && prev.orientation==2) << (y==0 )<<endl;
+                //     // std::cerr<<"pos"<<x<<","<<y<<endl;
+                //     return State(-1,prev.timestep+1,new_orientation=prev.orientation);
+                // }
+            }
         }
         else if (action == Action::CR)
         {
