@@ -15,6 +15,12 @@ bool CompetitionActionModelWithRotate::is_valid(const vector<State>& prev, const
     for (int i = 0; i < prev.size(); i ++) 
     {
 
+        if (next[i].location<0 or next[i].location>=env->map.size()){
+            cout << "ERROR: agent " << i << "up or down out-of-boundary." << endl;
+            errors.push_back(make_tuple("up/down OOB",i,-1,next[i].timestep));
+            return false; 
+        }
+
         if (prev[i].location == next[i].location)
         {
             // check if the rotation is not larger than 90 degree
@@ -41,8 +47,8 @@ bool CompetitionActionModelWithRotate::is_valid(const vector<State>& prev, const
             }
             if (abs(next[i].location / cols - prev[i].location/cols) + abs(next[i].location % cols - prev[i].location %cols) > 1)
             {
-                cout << "ERROR: agent " << i << " moves more than 1 steps. " << endl;
-                errors.push_back(make_tuple("unallowed move",i,-1,next[i].timestep));
+                cout << "ERROR: agent " << i << " moves more than 1 steps. or left or right out-of-boundary" << endl;
+                errors.push_back(make_tuple("unallowed move or left/right OOB",i,-1,next[i].timestep));
                 return false;
             }
         }

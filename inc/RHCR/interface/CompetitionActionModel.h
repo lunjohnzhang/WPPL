@@ -63,11 +63,7 @@ public:
             int new_location=curr.location+moves[i];
             int new_orientation=i;
 
-            int nx=new_location%env->cols;
-            int ny=new_location/env->cols;
-
-            // if run out of map
-            if (abs(nx- x) + abs(ny- y) > 1) {
+            if ((x==env->cols-1 && i==0) || (y==env->rows-1 && i==1) || (x==0 && i==2) || (y==0 && i==3)) {
                 continue;
             }
 
@@ -102,8 +98,9 @@ public:
                 int nx=new_location%env->cols;
                 int ny=new_location/env->cols;
 
-                // if run out of map
-                if (abs(nx- x) + abs(ny- y) > 1) {
+                if ((x==env->cols-1 && prev.orientation==0) || (y==env->rows-1 && prev.orientation==1) || (x==0 && prev.orientation==2) || (y==0 && prev.orientation==3)) {
+                    // std::cerr<<"cannot forward: "<<(x==env->cols-1 && prev.orientation==0)<< (y==env->rows-1 && prev.orientation==1) << (x==0 && prev.orientation==2) << (y==0 )<<endl;
+                    // std::cerr<<"pos"<<x<<","<<y<<endl;
                     return State(-1,prev.timestep+1,new_orientation=prev.orientation);
                 }
 
@@ -111,12 +108,6 @@ public:
                 if (env->map[new_location]) {
                     return State(-1,prev.timestep+1,new_orientation=prev.orientation);
                 }
-
-                // if ((x==env->cols-1 && prev.orientation==0) || (y==env->rows-1 && prev.orientation==1) || (x==0 && prev.orientation==2) || (y==0 && prev.orientation==3)) {
-                //     // std::cerr<<"cannot forward: "<<(x==env->cols-1 && prev.orientation==0)<< (y==env->rows-1 && prev.orientation==1) << (x==0 && prev.orientation==2) << (y==0 )<<endl;
-                //     // std::cerr<<"pos"<<x<<","<<y<<endl;
-                //     return State(-1,prev.timestep+1,new_orientation=prev.orientation);
-                // }
             }
         }
         else if (action == Action::CR)
