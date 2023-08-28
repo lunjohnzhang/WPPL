@@ -4,7 +4,8 @@
 #include "nlohmann/json.hpp"
 #include <functional>
 #include <Logger.h>
-#include "Timer.h"
+#include "util/Timer.h"
+#include "util/Analyzer.h"
 
 using json = nlohmann::ordered_json;
 
@@ -198,9 +199,19 @@ void BaseSystem::simulate(int simulation_time)
 
         vector<Action> actions = plan();
 
+        ONLYDEV(
+            if (actions.size()==num_of_agents) {
+                analyzer.data["moving_steps"]=analyzer.data["moving_steps"].get<int>()+1;
+            } else if (actions.size()!=0) {
+                exit(-1);
+            }
+        )
+
         auto end = std::chrono::steady_clock::now();
 
         timestep += 1;
+        ONLYDEV(analyzer.data["timesteps"]=timestep;)
+
         for (int a = 0; a < num_of_agents; a++)
         {
             if (!env->goal_locations[a].empty())
@@ -231,6 +242,8 @@ void BaseSystem::simulate(int simulation_time)
         }
         cout << num_of_tasks << " tasks has been finished by far in total" << std::endl;
 
+        ONLYDEV(analyzer.data["finished_tasks"]=num_of_tasks;)
+
         update_tasks();
 
         bool complete_all = false;
@@ -257,6 +270,8 @@ void BaseSystem::simulate(int simulation_time)
     g_timer.print_all_d();
 
     cout << std::endl << "Done!" << std::endl;
+
+    ONLYDEV(analyzer.dump();)
 }
 
 

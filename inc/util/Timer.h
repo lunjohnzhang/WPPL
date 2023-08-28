@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <chrono>
+#include "util/Dev.h"
 
 using std::string;
 using std::cerr;
