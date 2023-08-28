@@ -1,6 +1,7 @@
 #include <MAPFPlanner.h>
 #include <random>
 #include "RHCR/interface/CompetitionGraph.h"
+#include "util/MyLogger.h"
 
 struct AstarNode {
     int location;
@@ -135,6 +136,9 @@ void MAPFPlanner::config_solver() {
 }
 
 void MAPFPlanner::initialize(int preprocess_time_limit) {
+    g_logger.set_logfile("test.log");
+    g_logger.log_info("hello, this is a test!");
+
     cout << "planner initialization begins" << endl;
     load_configs();
 
