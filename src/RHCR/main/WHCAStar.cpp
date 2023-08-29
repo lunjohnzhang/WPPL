@@ -41,7 +41,9 @@ bool WHCAStar::run(const vector<State>& starts,
         std::random_shuffle(priorities.begin(), priorities.end());
 
         solution_cost = 0;
-        solution = initial_solution;
+        // solution = initial_solution;
+        solution.clear();
+        solution.resize(num_of_agents);
         bool succ = true;
         for (int i : priorities)
         {

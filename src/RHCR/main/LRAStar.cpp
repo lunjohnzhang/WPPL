@@ -19,9 +19,15 @@ bool LRAStar::run(const vector<State>& starts, const vector< vector<pair<int, in
 		if (runtime > time_limit)
 			return false;
 		shortest_paths[i] = find_shortest_path(starts[i], goal_locations[i]);
+		cerr<<"agent "<<i<<" find shortest path "<<shortest_paths[i].size()<<endl;
 	}
 	// resolve conflicts
 	resolve_conflicts(shortest_paths);
+
+	for (int i = 0; i < num_of_agents; i++)
+	{
+		cerr<<"agent "<<i<<" find shortest path "<<solution[i].size()<<endl;
+	}
 	runtime = (std::clock() - start) * 1.0 / CLOCKS_PER_SEC;
 	return true;
 }
@@ -36,6 +42,7 @@ Path LRAStar::find_shortest_path(const State& start, const vector<pair<int, int>
 		{
 			size_t loc_hash = std::hash<int>()(n->state.location);
 			size_t ori_hash = std::hash<int>()(n->state.orientation);
+			// todo probably (loc_has<<1)^(ori_hash)
 			return (loc_hash ^ (ori_hash << 1));
 		}
 	};
@@ -47,7 +54,8 @@ Path LRAStar::find_shortest_path(const State& start, const vector<pair<int, int>
 		{
 			return (n1 == n2) ||
 				(n1 && n2 && n1->state.location == n2->state.location && 
-				n1->state.orientation == n2->state.orientation && n1->goal_id == n2->goal_id);
+				n1->state.orientation == n2->state.orientation && n1->state.timestep == n2->state.timestep
+				&& n1->goal_id == n2->goal_id);
 		}
 	};
 
@@ -79,6 +87,7 @@ Path LRAStar::find_shortest_path(const State& start, const vector<pair<int, int>
 				Path path(curr->state.timestep + 1);
 				for (int t = curr->state.timestep; t >= 0; t--)
 				{
+					cout<<t<<":"<<curr->state<<endl;
 					path[t] = curr->state;
 					curr = curr->parent;
 				}

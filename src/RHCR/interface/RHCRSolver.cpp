@@ -150,6 +150,7 @@ void RHCRSolver::get_step_actions(const SharedEnvironment & env, vector<Action> 
     for (int i=0;i<num_of_drives;++i) {
         // we will get action indexed at timestep+1
         if (paths[i].size()<=timestep+1){
+            cerr<<i<<" "<<paths[i].size()<<endl;
             cerr<<"wierd error for agent "<<i<<". path length: "<<paths[i].size()<<", "<<"timestep+1: "<<timestep+1<<endl;
             assert(false);
         }
