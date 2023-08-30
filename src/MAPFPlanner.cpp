@@ -3,6 +3,7 @@
 #include "RHCR/interface/CompetitionGraph.h"
 #include "util/Analyzer.h"
 #include "util/MyLogger.h"
+#include "boost/format.hpp"
 
 struct AstarNode {
     int location;
