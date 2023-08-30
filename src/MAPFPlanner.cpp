@@ -1,6 +1,7 @@
 #include <MAPFPlanner.h>
 #include <random>
 #include "RHCR/interface/CompetitionGraph.h"
+#include "PIBT/HeuristicTable.h"
 #include "util/Analyzer.h"
 #include "util/MyLogger.h"
 
@@ -148,18 +149,22 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     lifelong_solver_name=read_param_json<string>(config,"lifelong_solver_name");
 
     // TODO(hj): memory management is a disaster here...
-    auto graph = new RHCR::CompetitionGraph(*env);
+    // auto graph = new RHCR::CompetitionGraph(*env);
     // graph->preprocessing(consider_rotation,env->file_storage_path);
 
-    // if (lifelong_solver_name=="RHCR") {
-        auto mapf_solver=build_mapf_solver(*graph);
-        solver = std::make_shared<RHCR::RHCRSolver>(*graph,*mapf_solver,env);
-        config_solver();
-        solver->initialize(*env);
-        cout<<"RHCRSolver initialized"<<endl;
-    // } else if (lifelong_solver_name=="PIBT") {
-        // TODO(hj): configure random seed
-        pibt_solver = std::make_shared<PIBT::PIBTSolver>(*graph,env,0);
+    // // if (lifelong_solver_name=="RHCR") {
+    //     auto mapf_solver=build_mapf_solver(*graph);
+    //     solver = std::make_shared<RHCR::RHCRSolver>(*graph,*mapf_solver,env);
+    //     config_solver();
+    //     solver->initialize(*env);
+    //     cout<<"RHCRSolver initialized"<<endl;
+
+    auto heuristics = new HeuristicTable(env);
+    heuristics->preprocess();
+
+    // // } else if (lifelong_solver_name=="PIBT") {
+    //     // TODO(hj): configure random seed
+        pibt_solver = std::make_shared<PIBT::PIBTSolver>(*heuristics,env,0);
         pibt_solver->initialize(*env);
         cout<<"PIBTSolver initialized"<<endl;
     // } else {
