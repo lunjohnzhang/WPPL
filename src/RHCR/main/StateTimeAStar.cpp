@@ -188,24 +188,30 @@ Path StateTimeAStar::run(const BasicGraph& G, const State& start,
         // update FOCAL if min f-val increased
         if (open_list.empty())  // in case OPEN is empty, no path found
         {
-            // This is correct only when k_robust <= 1. Otherwise, agents might not be able to
-            // wait at its start locations due to initial constraints caused by the previous actions
-            // of other agents.
-            auto timesteps = rt.getConstrainedTimesteps(start.location);
-            auto wait_cost = G.get_weight(start.location, start.location);
-            auto h = compute_h_value(G, start.location, 0, goal_location);
-            for (int t : timesteps)
-            {
-                State s(start.location, t, start.orientation);
-                auto node2 = new StateTimeAStarNode(s, t * wait_cost, h, root, 0);
-                num_generated++;
-                node2->open_handle = open_list.push(node2);
-                node2->in_openlist = true;
-                allNodes_table.insert(node2);
+            if (prioritize_start){
+                // This is correct only when k_robust <= 1. Otherwise, agents might not be able to
+                // wait at its start locations due to initial constraints caused by the previous actions
+                // of other agents.
+                auto timesteps = rt.getConstrainedTimesteps(start.location);
+                auto wait_cost = G.get_weight(start.location, start.location);
+                auto h = compute_h_value(G, start.location, 0, goal_location);
+                for (int t : timesteps)
+                {
+                    State s(start.location, t, start.orientation);
+                    auto node2 = new StateTimeAStarNode(s, t * wait_cost, h, root, 0);
+                    if (analyzer.data.contains("agent") && analyzer.data["agent"]==28)
+                    cerr<<"insert "<<node2->state<<endl;
+                    num_generated++;
+                    node2->open_handle = open_list.push(node2);
+                    node2->in_openlist = true;
+                    allNodes_table.insert(node2);
+                }
+                min_f_val = open_list.top()->getFVal();
+                lower_bound = min_f_val;
+                open_list.top()->focal_handle = focal_list.push(open_list.top());
+            } else {
+                break;
             }
-            min_f_val = open_list.top()->getFVal();
-            lower_bound = min_f_val;
-            open_list.top()->focal_handle = focal_list.push(open_list.top());
         }
         else
         {
