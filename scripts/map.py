@@ -27,7 +27,7 @@ class Map:
                 assert len(line)==self.width
                 for col,loc in enumerate(line):
                     # obstacle
-                    if loc=="@":
+                    if loc=="@" or loc=="T":
                         self.graph[row,col]=1
         # self.print_graph(self.graph)
                         
