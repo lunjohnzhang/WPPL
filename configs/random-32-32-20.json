@@ -21,5 +21,6 @@
     "prioritize_start": true,
     "suboptimal_bound": 1,
     "log": false,
-    "output": "temp.txt"
+    "output": "temp.txt",
+    "analysis_output": "analysis/test.csv"
 }

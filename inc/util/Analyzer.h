@@ -26,6 +26,10 @@ public:
         data["details"]="";
     };
 
+    void set_dump_path(const string & path) {
+        dump_path=path;
+    }
+
     void init_from_config(const nlohmann::json & config) {
         data["lifelong_solver"]=config.at("lifelong_solver_name");
         data["mapf_solver"]=config.at("solver");

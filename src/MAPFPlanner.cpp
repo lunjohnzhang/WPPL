@@ -144,6 +144,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     ONLYDEV(
         analyzer.timestamp();
         analyzer.init_from_config(config);
+        analyzer.set_dump_path(config["analysis_output"].get<string>());
     )
 
     lifelong_solver_name=read_param_json<string>(config,"lifelong_solver_name");
