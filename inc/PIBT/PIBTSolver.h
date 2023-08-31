@@ -63,6 +63,18 @@ public:
         const Agent & a=agents[i];
         const Agent & b=agents[j];
 
+        double d1=DBL_MAX,d2=DBL_MAX;
+        auto iter=graph.heuristics.find(a.curr_state.location);
+        if (iter!=graph.heuristics.end()){
+            d1=iter->second[a.goal_location];
+        }
+        iter=graph.heuristics.find(b.curr_state.location);
+        if (iter!=graph.heuristics.end()){
+            d2=iter->second[b.goal_location];
+        }
+
+        if (d1!=d2) return d1<d2;
+
         if (a.elapsed != b.elapsed) return a.elapsed > b.elapsed;
         return a.tie_breaker > b.tie_breaker;
     }
