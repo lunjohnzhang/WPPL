@@ -1,5 +1,8 @@
 {
     "lifelong_solver_name": "PIBT",
+    "PIBT": {
+        "prior_type": "short_dist"
+    },
     "planning_window": 5,
     "solver": "PBS",
     "single_agent_solver": "SIPP",

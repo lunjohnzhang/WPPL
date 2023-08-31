@@ -162,6 +162,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     // } else if (lifelong_solver_name=="PIBT") {
         // TODO(hj): configure random seed
         pibt_solver = std::make_shared<PIBT::PIBTSolver>(*graph,env,0);
+        pibt_solver->set_prior_type(config["PIBT"]["prior_type"].get<string>());
         pibt_solver->initialize(*env);
         cout<<"PIBTSolver initialized"<<endl;
     // } else {

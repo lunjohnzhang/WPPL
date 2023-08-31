@@ -5,6 +5,7 @@
 #include "States.h"
 #include "RHCR/interface/CompetitionActionModel.h"
 #include <random>
+#include "common.h"
 
 namespace PIBT {
 
@@ -22,7 +23,6 @@ public:
 };
 
 
-
 class PIBTSolver{
 public:
     RHCR::CompetitionGraph& graph;
@@ -30,6 +30,14 @@ public:
     std::mt19937* const MT;   // seed for randomness
     std::vector<int> execution_order;
     vector<Agent> agents;
+
+    enum PRIOR_TYPE {
+        EARLY_TIME,
+        SHORT_DIST
+    };
+
+    // hyper-params
+    PRIOR_TYPE prior_type=EARLY_TIME;
     
     // each list is a group of interacting agents, the key is the agent with the highest priority.
     vector<list<int>> agent_groups;
@@ -49,6 +57,17 @@ public:
         delete MT;
     };
 
+    void set_prior_type(const string & prior_type) {
+        if (prior_type=="short_dist") {
+            this->prior_type=SHORT_DIST;
+        } else if (prior_type=="early_time") {
+            this->prior_type=EARLY_TIME;
+        } else {
+            std::cerr<<"PIBT prior type "<<prior_type<<"doesn't exist"<<endl;
+            exit(-1);
+        }
+    }
+
     void initialize(const SharedEnvironment & env);
     void plan(const SharedEnvironment & env);
     void get_step_actions(const SharedEnvironment & env, vector<Action> & actions);
@@ -63,17 +82,19 @@ public:
         const Agent & a=agents[i];
         const Agent & b=agents[j];
 
-        double d1=DBL_MAX,d2=DBL_MAX;
-        auto iter=graph.heuristics.find(a.curr_state.location);
-        if (iter!=graph.heuristics.end()){
-            d1=iter->second[a.goal_location];
-        }
-        iter=graph.heuristics.find(b.curr_state.location);
-        if (iter!=graph.heuristics.end()){
-            d2=iter->second[b.goal_location];
-        }
+        if (prior_type==SHORT_DIST){
+            double d1=DBL_MAX,d2=DBL_MAX;
+            auto iter=graph.heuristics.find(a.curr_state.location);
+            if (iter!=graph.heuristics.end()){
+                d1=iter->second[a.goal_location];
+            }
+            iter=graph.heuristics.find(b.curr_state.location);
+            if (iter!=graph.heuristics.end()){
+                d2=iter->second[b.goal_location];
+            }
 
-        if (d1!=d2) return d1<d2;
+            if (d1!=d2) return d1<d2;
+        }
 
         if (a.elapsed != b.elapsed) return a.elapsed > b.elapsed;
         return a.tie_breaker > b.tie_breaker;
