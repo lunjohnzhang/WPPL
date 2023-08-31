@@ -6,6 +6,7 @@
 #include <fstream>
 #include "util/Dev.h"
 #include <ctime>
+#include <algorithm>
 
 class Analyzer {
 public:
@@ -36,6 +37,11 @@ public:
         data["single_agent_solver"]=config.at("single_agent_solver");
         data["planning_window"]=config.at("planning_window");
         data["simulation_window"]=config.at("simulation_window");
+        string s=config.dump();
+        std::replace(s.begin(),s.end(),',','|');
+        // TODO(hj): why not work?
+        // std::replace(s.begin(),s.end(),'\\',' ');
+        data["details"]=s;
         // TODO
     }
 
@@ -72,7 +78,8 @@ public:
             {"simulation_window","%d"},
             {"finished_tasks","%d"},
             {"timesteps","%d"},
-            {"moving_steps","%d"}
+            {"moving_steps","%d"},
+            {"details","%s"}
         };
 
 
