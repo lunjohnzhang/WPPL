@@ -147,7 +147,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         analyzer.set_dump_path(config["analysis_output"].get<string>());
     )
 
-    lifelong_solver_name=read_param_json<string>(config,"lifelong_solver_name");
+    lifelong_solver_name=read_conditional_value(config,"lifelong_solver_name",env->num_of_agents).get<string>();
 
     // TODO(hj): memory management is a disaster here...
     auto graph = new RHCR::CompetitionGraph(*env);
@@ -187,9 +187,11 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
 
 
     if (lifelong_solver_name=="RHCR") {
+        cout<<"using RHCR"<<endl;
         rhcr_solver->plan(*env);
         rhcr_solver->get_step_actions(*env, actions);
     } else if (lifelong_solver_name=="PIBT") {
+        cout<<"using PIBT"<<endl;
         pibt_solver->plan(*env);
         pibt_solver->get_step_actions(*env,actions);
     } else {
