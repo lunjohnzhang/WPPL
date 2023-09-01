@@ -33,10 +33,11 @@ public:
 
     void init_from_config(const nlohmann::json & config) {
         data["lifelong_solver"]=config.at("lifelong_solver_name");
-        data["mapf_solver"]=config.at("solver");
-        data["single_agent_solver"]=config.at("single_agent_solver");
-        data["planning_window"]=config.at("planning_window");
-        data["simulation_window"]=config.at("simulation_window");
+        auto & rhcr_config=config.at("RHCR");
+        data["mapf_solver"]=rhcr_config.at("solver");
+        data["single_agent_solver"]=rhcr_config.at("single_agent_solver");
+        data["planning_window"]=rhcr_config.at("planning_window");
+        data["simulation_window"]=rhcr_config.at("simulation_window");
         string s=config.dump();
         std::replace(s.begin(),s.end(),',','|');
         // TODO(hj): why not work?

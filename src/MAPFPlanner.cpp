@@ -42,7 +42,7 @@ void MAPFPlanner::load_configs() {
     }
 }
 
-RHCR::MAPFSolver* MAPFPlanner::build_mapf_solver(RHCR::CompetitionGraph & graph) {
+RHCR::MAPFSolver* MAPFPlanner::rhcr_build_mapf_solver(nlohmann::json & config, RHCR::CompetitionGraph & graph) {
     // build single agent solver
     string solver_name = read_param_json<string>(config,"single_agent_solver");
 	RHCR::SingleAgentSolver* path_planner;
@@ -95,7 +95,7 @@ RHCR::MAPFSolver* MAPFPlanner::build_mapf_solver(RHCR::CompetitionGraph & graph)
 	}
 	else
 	{
-		cout << "Solver " << solver_name << "does not exist!" << endl;
+		cout << "Solver " << solver_name << " does not exist!" << endl;
 		exit(-1);
 	}
 
@@ -110,7 +110,7 @@ RHCR::MAPFSolver* MAPFPlanner::build_mapf_solver(RHCR::CompetitionGraph & graph)
 	}
 }
 
-void MAPFPlanner::config_solver() {
+void MAPFPlanner::rhcr_config_solver(std::shared_ptr<RHCR::RHCRSolver> & solver,nlohmann::json & config) {
     solver->outfile = read_param_json<string>(config,"output");
     solver->screen = read_param_json<int>(config,"screen");
     solver->log = read_param_json<bool>(config,"log");
@@ -154,10 +154,10 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     // graph->preprocessing(consider_rotation,env->file_storage_path);
 
     // if (lifelong_solver_name=="RHCR") {
-        auto mapf_solver=build_mapf_solver(*graph);
-        solver = std::make_shared<RHCR::RHCRSolver>(*graph,*mapf_solver,env);
-        config_solver();
-        solver->initialize(*env);
+        auto mapf_solver=rhcr_build_mapf_solver(config["RHCR"],*graph);
+        rhcr_solver = std::make_shared<RHCR::RHCRSolver>(*graph,*mapf_solver,env);
+        rhcr_config_solver(rhcr_solver,config["RHCR"]);
+        rhcr_solver->initialize(*env);
         cout<<"RHCRSolver initialized"<<endl;
     // } else if (lifelong_solver_name=="PIBT") {
         // TODO(hj): configure random seed
@@ -187,8 +187,8 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
 
 
     if (lifelong_solver_name=="RHCR") {
-        solver->plan(*env);
-        solver->get_step_actions(*env, actions);
+        rhcr_solver->plan(*env);
+        rhcr_solver->get_step_actions(*env, actions);
     } else if (lifelong_solver_name=="PIBT") {
         pibt_solver->plan(*env);
         pibt_solver->get_step_actions(*env,actions);

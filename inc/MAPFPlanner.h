@@ -41,10 +41,10 @@ public:
 
     bool consider_rotation=true;
     string lifelong_solver_name;
-    std::shared_ptr<RHCR::RHCRSolver> solver; 
+    std::shared_ptr<RHCR::RHCRSolver> rhcr_solver; 
     std::shared_ptr<PIBT::PIBTSolver> pibt_solver;
     nlohmann::json config;
     void load_configs();
-    RHCR::MAPFSolver* build_mapf_solver(RHCR::CompetitionGraph & graph);
-    void config_solver();
+    RHCR::MAPFSolver* rhcr_build_mapf_solver(nlohmann::json & config, RHCR::CompetitionGraph & graph);
+    void rhcr_config_solver(std::shared_ptr<RHCR::RHCRSolver> & solver,nlohmann::json & config);
 };
