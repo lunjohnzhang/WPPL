@@ -47,14 +47,4 @@ public:
     void load_configs();
     RHCR::MAPFSolver* rhcr_build_mapf_solver(nlohmann::json & config, RHCR::CompetitionGraph & graph);
     void rhcr_config_solver(std::shared_ptr<RHCR::RHCRSolver> & solver,nlohmann::json & config);
-    nlohmann::json read_conditional_value(const nlohmann::json & config, const string & key, int n_agents) {
-        nlohmann::json values=config.at(key);
-        for (auto & value: values) {
-            if (value.at("n_agents")>=n_agents) {
-                return value.at("value");
-            }
-        }
-        cerr<<"n_agents "<<n_agents<<" satisfies no condition. please check!"<<endl;
-        exit(-1);
-    }
 };

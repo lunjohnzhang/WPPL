@@ -4,6 +4,7 @@
 #include "util/Analyzer.h"
 #include "util/MyLogger.h"
 #include "boost/format.hpp"
+#include "util/MyCommon.h"
 
 struct AstarNode {
     int location;
@@ -33,6 +34,10 @@ void MAPFPlanner::load_configs() {
     try
     {
         config = nlohmann::json::parse(f);
+        string s=config.dump();
+        std::replace(s.begin(),s.end(),',','|');
+        config["details"]=s;
+        config["lifelong_solver_name"]=read_conditional_value(config,"lifelong_solver_name",env->num_of_agents);
     }
     catch (nlohmann::json::parse_error error)
     {
@@ -147,7 +152,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         analyzer.set_dump_path(config["analysis_output"].get<string>());
     )
 
-    lifelong_solver_name=read_conditional_value(config,"lifelong_solver_name",env->num_of_agents).get<string>();
+    lifelong_solver_name=config["lifelong_solver_name"];
 
     // TODO(hj): memory management is a disaster here...
     auto graph = new RHCR::CompetitionGraph(*env);
