@@ -174,6 +174,9 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     //     cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
     //     exit(-1);
     // }
+    lacam_solver = std::make_shared<LaCAM::LaCAMSolver>(*graph,env);
+    lacam_solver->initialize(*env);
+    cout<<"LaCAMSolver initialized"<<endl;
 
     cout << "planner initialization ends" << endl;
 }
@@ -199,6 +202,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         cout<<"using PIBT"<<endl;
         pibt_solver->plan(*env);
         pibt_solver->get_step_actions(*env,actions);
+    } else if (lifelong_solver_name=="LaCAM") {
+        cout<<"using LaCAM"<<endl;
+        lacam_solver->plan(*env);
+        lacam_solver->get_step_actions(*env,actions);
     } else {
         cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
         exit(-1);
