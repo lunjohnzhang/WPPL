@@ -114,16 +114,32 @@ Solution Planner::solve()
     // do not pop here!
     S = OPEN.top();
 
-    // check goal condition
-    if (is_same_config(S->C, ins->goals)) {
-      // backtrack
-      while (S != nullptr) {
-        solution.push_back(S->C);
-        S = S->parent;
+    // check goal condition: only require someone to arrive in lifelong case
+    bool someone_arrived = false;
+    for (int i=0;i<N;++i) {
+      if (S->C[i]->id == ins->goals[i]->id){
+        // backtrack
+        while (S != nullptr) {
+          solution.push_back(S->C);
+          S = S->parent;
+        }
+        std::reverse(solution.begin(), solution.end());
+        someone_arrived = true;
+        break;
       }
-      std::reverse(solution.begin(), solution.end());
-      break;
     }
+
+    if (someone_arrived) break;
+
+    // if (is_same_config(S->C, ins->goals)) {
+    //   // backtrack
+    //   while (S != nullptr) {
+    //     solution.push_back(S->C);
+    //     S = S->parent;
+    //   }
+    //   std::reverse(solution.begin(), solution.end());
+    //   break;
+    // }
 
     // low-level search end
     if (S->search_tree.empty()) {

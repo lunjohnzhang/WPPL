@@ -17,6 +17,7 @@ Instance LaCAMSolver::build_instance(const SharedEnvironment & env) {
         starts.push_back(env.curr_states[i].location);
         assert(env.goal_locations[i].size()>0);
         goals.push_back(env.goal_locations[i][0].first);
+        // cerr<<"0\trandom-32-32-20.map\t32\t32\t"<<starts[i]%32<<"\t"<<starts[i]/32<<"\t"<<goals[i]%32<<"\t"<<goals[i]/32<<"\t0"<<endl;
     }
     return Instance(*G, starts, goals);
 }
@@ -55,24 +56,24 @@ void LaCAMSolver::plan(const SharedEnvironment & env){
 
     if (need_replan) {
         const int verbose = 10;
-        const int time_limit_sec = 1;
+        const int time_limit_sec = 10;
         auto instance = build_instance(env);
         const auto deadline = Deadline(time_limit_sec * 1000);
         auto planner = Planner(&instance,&deadline,MT,0);
         const auto solution=planner.solve();
         const auto comp_time_ms = deadline.elapsed_ms();
 
-        // failure
-        if (solution.empty()) {
-            info(1, verbose, "failed to solve");
-            exit(1);
-        }
+        // // failure
+        // if (solution.empty()) {
+        //     info(1, verbose, "failed to solve");
+        //     exit(1);
+        // }
 
-        // check feasibility
-        if (!is_feasible_solution(instance, solution, verbose)) {
-            info(0, verbose, "invalid solution");
-            exit(2);
-        }
+        // // check feasibility
+        // if (!is_feasible_solution(instance, solution, verbose)) {
+        //     info(0, verbose, "invalid solution");
+        //     exit(2);
+        // }
 
         // post processing
         print_stats(verbose, instance, solution, comp_time_ms);
