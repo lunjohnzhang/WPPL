@@ -11,6 +11,16 @@
 namespace LaCAM {
 
 class LaCAMSolver {
+
+struct Agent {
+public:
+    int goal_location;
+    float elapsed;
+    float tie_breaker;
+
+    Agent():goal_location(-1),elapsed(-1),tie_breaker(-1){};
+};
+
 public:
     // [start] the following lines should be abstracted away.
     std::vector<Path> paths;
@@ -28,6 +38,9 @@ public:
     std::shared_ptr<Graph> G; // graph
     std::shared_ptr<HeuristicTable> H; // instance
     Config next_config;
+
+    vector<Agent> agents;
+
     Instance build_instance(const SharedEnvironment & env);
     int get_neighbor_orientation(int loc1,int loc2);
 

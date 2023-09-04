@@ -39,7 +39,7 @@ Graph::Graph(const SharedEnvironment & env): V(Vertices()), width(env.cols), hei
       auto v = new Vertex(V.size(), idx);
       V.push_back(v);
       U[idx] = v;
-      cout<<"vertex id "<<U[idx]->id<<" "<<U[idx]->index<<endl;
+      // cout<<"vertex id "<<U[idx]->id<<" "<<U[idx]->index<<endl;
     }
   }
 

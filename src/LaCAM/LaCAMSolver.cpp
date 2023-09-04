@@ -1,25 +1,35 @@
 #include "LaCAM/LaCAMSolver.h"
 #include "util/MyLogger.h"
 #include "LaCAM/post_processing.h"
+#include "PIBT/util.h"
 
 namespace LaCAM {
 
 void LaCAMSolver::initialize(const SharedEnvironment & env) {
     paths.resize(env.num_of_agents);
-    cerr<<env.map.size()<<endl;
+    agents.resize(env.num_of_agents);
     G = std::make_shared<Graph>(env);
 }
 
 Instance LaCAMSolver::build_instance(const SharedEnvironment & env) {
     auto starts=vector<int>();
     auto goals=vector<int>();
+    auto priorties=vector<int>();
     for (int i=0;i<env.num_of_agents;++i) {
         starts.push_back(env.curr_states[i].location);
         assert(env.goal_locations[i].size()>0);
-        goals.push_back(env.goal_locations[i][0].first);
+        int goal_location=env.goal_locations[i][0].first;
+        goals.push_back(goal_location);
+        auto & agent=agents[i];
         // cerr<<"0\trandom-32-32-20.map\t32\t32\t"<<starts[i]%32<<"\t"<<starts[i]/32<<"\t"<<goals[i]%32<<"\t"<<goals[i]/32<<"\t0"<<endl;
+        if (goal_location!=agent.goal_location){
+            agent.goal_location=goal_location;
+            agent.elapsed=0;
+            agent.tie_breaker=getRandomFloat(0,1,MT);
+        }
+        priorties.push_back(agent.elapsed+agent.tie_breaker);
     }
-    return Instance(*G, starts, goals);
+    return Instance(*G, starts, goals, priorties);
 }
 
 int LaCAMSolver::get_neighbor_orientation(int loc1,int loc2) {
@@ -124,12 +134,6 @@ void LaCAMSolver::plan(const SharedEnvironment & env){
                     } else {
                         next_orient=(curr_orient+1+4)%4;
                     }
-
-
-                    if (i==14) {
-                        cerr<<d1<<" "<<d2<<" "<<curr_orient<<" "<<next_orient<<endl;
-                    }
-
                     paths[i].emplace_back(curr_state.location,curr_state.timestep+1,next_orient);
                 }
             }
@@ -163,10 +167,10 @@ void LaCAMSolver::get_step_actions(const SharedEnvironment & env, vector<Action>
         actions.push_back(get_action_from_states(paths[i][timestep],paths[i][timestep+1]));
     }
 
-    for (int i=0;i<env.num_of_agents;++i) {
-        cout<<actions[i]<<" ";
-    }
-    cout<<endl;
+    // for (int i=0;i<env.num_of_agents;++i) {
+    //     cout<<actions[i]<<" ";
+    // }
+    // cout<<endl;
 
     // TODO(hj) we probably still want to check the validness. so we need construct model or implement is_valid by ourselves.
     // check if not valid, this should not happen in general if the algorithm is correct? but maybe there exist deadlocks.

@@ -27,17 +27,26 @@ Node::Node(Config _C, const std::shared_ptr<HeuristicTable> & H, const Instance 
   const auto N = C.size();
 
   // set priorities
-  if (parent == nullptr) {
-    // initialize
-    for (size_t i = 0; i < N; ++i) priorities[i] = (float)(H->get(C[i]->index,ins->goals[i]->index))/N;
-  } else {
-    // dynamic priorities, akin to PIBT
-    for (size_t i = 0; i < N; ++i) {
-      if (C[i]->index != ins->goals[i]->index) {
-        priorities[i] = parent->priorities[i] + 1;
-      } else {
-        priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
-      }
+  // if (parent == nullptr) {
+  //   // initialize
+  //   for (size_t i = 0; i < N; ++i) priorities[i] = (float)(H->get(C[i]->index,ins->goals[i]->index))/N;
+  // } else {
+  //   // dynamic priorities, akin to PIBT
+  //   for (size_t i = 0; i < N; ++i) {
+  //     if (C[i]->index != ins->goals[i]->index) {
+  //       priorities[i] = parent->priorities[i] + 1;
+  //     } else {
+  //       priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
+  //     }
+  //   }
+  // }
+
+
+  for (size_t i = 0; i < N; ++i) {
+    if (C[i]->index != ins->goals[i]->index) {
+      priorities[i] = ins->priorities[i];
+    } else {
+      priorities[i] = 0;
     }
   }
 
