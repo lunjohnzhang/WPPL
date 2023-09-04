@@ -1,6 +1,7 @@
 #include <MAPFPlanner.h>
 #include <random>
 #include "RHCR/interface/CompetitionGraph.h"
+#include "PIBT/HeuristicTable.h"
 #include "util/Analyzer.h"
 #include "util/MyLogger.h"
 #include "boost/format.hpp"
@@ -155,28 +156,33 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     lifelong_solver_name=config["lifelong_solver_name"];
 
     // TODO(hj): memory management is a disaster here...
-    auto graph = new RHCR::CompetitionGraph(*env);
-    // graph->preprocessing(consider_rotation,env->file_storage_path);
-
-    // if (lifelong_solver_name=="RHCR") {
+    if (lifelong_solver_name=="RHCR") {
+        auto graph = new RHCR::CompetitionGraph(*env);
+        graph->preprocessing(consider_rotation,env->file_storage_path);
         auto mapf_solver=rhcr_build_mapf_solver(config["RHCR"],*graph);
         rhcr_solver = std::make_shared<RHCR::RHCRSolver>(*graph,*mapf_solver,env);
         rhcr_config_solver(rhcr_solver,config["RHCR"]);
         rhcr_solver->initialize(*env);
         cout<<"RHCRSolver initialized"<<endl;
-    // } else if (lifelong_solver_name=="PIBT") {
+    } else if (lifelong_solver_name=="PIBT") {
+        auto heuristics = new HeuristicTable(env);
+        heuristics->preprocess();
         // TODO(hj): configure random seed
-        pibt_solver = std::make_shared<PIBT::PIBTSolver>(*graph,env,0);
+        pibt_solver = std::make_shared<PIBT::PIBTSolver>(*heuristics,env,0);
         pibt_solver->set_prior_type(config["PIBT"]["prior_type"].get<string>());
         pibt_solver->initialize(*env);
         cout<<"PIBTSolver initialized"<<endl;
-    // } else {
-    //     cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
-    //     exit(-1);
-    // }
-    lacam_solver = std::make_shared<LaCAM::LaCAMSolver>(*graph,env);
-    lacam_solver->initialize(*env);
-    cout<<"LaCAMSolver initialized"<<endl;
+    } else if (lifelong_solver_name=="LaCAM") {
+        auto heuristics = std::make_shared<HeuristicTable>(env);
+        heuristics->preprocess();
+        lacam_solver = std::make_shared<LaCAM::LaCAMSolver>(heuristics,env,0);
+        lacam_solver->initialize(*env);
+        cout<<"LaCAMSolver initialized"<<endl;
+    }
+    else {
+        cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
+        exit(-1);
+    }
 
     cout << "planner initialization ends" << endl;
 }

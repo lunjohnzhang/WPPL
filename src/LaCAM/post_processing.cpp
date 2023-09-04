@@ -1,5 +1,4 @@
 #include "LaCAM/post_processing.h"
-#include "LaCAM/dist_table.h"
 
 namespace LaCAM {
 
@@ -92,33 +91,32 @@ int get_sum_of_loss(const Solution& solution)
   return c;
 }
 
-int get_makespan_lower_bound(const Instance& ins, DistTable& dist_table)
+double get_makespan_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& H)
 {
-  int c = 0;
+  double c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
-    c = std::max(c, dist_table.get(i, ins.starts[i]));
+    c = std::max(c, H->get(ins.starts[i]->index, ins.goals[i]->index));
   }
   return c;
 }
 
-int get_sum_of_costs_lower_bound(const Instance& ins, DistTable& dist_table)
+double get_sum_of_costs_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& H)
 {
-  int c = 0;
+  double c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
-    c += dist_table.get(i, ins.starts[i]);
+    c += H->get(ins.starts[i]->index, ins.goals[i]->index);
   }
   return c;
 }
 
-void print_stats(const int verbose, const Instance& ins,
+void print_stats(const int verbose, const Instance& ins, const std::shared_ptr<HeuristicTable> & H,
                  const Solution& solution, const double comp_time_ms)
 {
   auto ceil = [](float x) { return std::ceil(x * 100) / 100; };
-  auto dist_table = DistTable(ins);
   const auto makespan = get_makespan(solution);
-  const auto makespan_lb = get_makespan_lower_bound(ins, dist_table);
+  const auto makespan_lb = get_makespan_lower_bound(ins, H);
   const auto sum_of_costs = get_sum_of_costs(solution);
-  const auto sum_of_costs_lb = get_sum_of_costs_lower_bound(ins, dist_table);
+  const auto sum_of_costs_lb = get_sum_of_costs_lower_bound(ins, H);
   const auto sum_of_loss = get_sum_of_loss(solution);
   info(1, verbose, "solved: ", comp_time_ms, "ms", "\tmakespan: ", makespan,
        " (lb=", makespan_lb, ", ub=", ceil((float)makespan / makespan_lb), ")",
@@ -131,7 +129,7 @@ void print_stats(const int verbose, const Instance& ins,
 // for log of map_name
 static const std::regex r_map_name = std::regex(R"(.+/(.+))");
 
-void make_log(const Instance& ins, const Solution& solution,
+void make_log(const Instance& ins, const std::shared_ptr<HeuristicTable> & H, const Solution& solution,
               const std::string& output_name, const double comp_time_ms,
               const std::string& map_name, const int seed, const bool log_short)
 {
@@ -140,9 +138,6 @@ void make_log(const Instance& ins, const Solution& solution,
   const auto map_recorded_name =
       (std::regex_match(map_name, results, r_map_name)) ? results[1].str()
                                                         : map_name;
-
-  // for instance-specific values
-  auto dist_table = DistTable(ins);
 
   // log for visualizer
   auto get_x = [&](int k) { return k % ins.G.width; };
@@ -154,11 +149,11 @@ void make_log(const Instance& ins, const Solution& solution,
   log << "solver=planner\n";
   log << "solved=" << !solution.empty() << "\n";
   log << "soc=" << get_sum_of_costs(solution) << "\n";
-  log << "soc_lb=" << get_sum_of_costs_lower_bound(ins, dist_table) << "\n";
+  log << "soc_lb=" << get_sum_of_costs_lower_bound(ins, H) << "\n";
   log << "makespan=" << get_makespan(solution) << "\n";
-  log << "makespan_lb=" << get_makespan_lower_bound(ins, dist_table) << "\n";
+  log << "makespan_lb=" << get_makespan_lower_bound(ins, H) << "\n";
   log << "sum_of_loss=" << get_sum_of_loss(solution) << "\n";
-  log << "sum_of_loss_lb=" << get_sum_of_costs_lower_bound(ins, dist_table)
+  log << "sum_of_loss_lb=" << get_sum_of_costs_lower_bound(ins, H)
       << "\n";
   log << "comp_time=" << comp_time_ms << "\n";
   log << "seed=" << seed << "\n";

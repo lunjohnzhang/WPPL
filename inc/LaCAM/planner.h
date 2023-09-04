@@ -3,10 +3,11 @@
  */
 #pragma once
 
-#include "LaCAM/dist_table.h"
 #include "LaCAM/graph.h"
 #include "LaCAM/instance.h"
 #include "LaCAM/utils.h"
+#include "PIBT/HeuristicTable.h"
+#include <memory>
 
 namespace LaCAM {
 
@@ -29,8 +30,9 @@ struct Node {
   std::vector<float> priorities;
   std::vector<int> order;
   std::queue<Constraint*> search_tree;
+  const Instance * ins;
 
-  Node(Config _C, DistTable& D, Node* _parent = nullptr);
+  Node(Config _C, const std::shared_ptr<HeuristicTable> & H, const Instance * ins, Node* _parent = nullptr);
   ~Node();
 };
 using Nodes = std::vector<Node*>;
@@ -56,14 +58,15 @@ struct Planner {
   // solver utils
   const int N;  // number of agents
   const int V_size;
-  DistTable D;
+
+  std::shared_ptr<HeuristicTable> H;
   Candidates C_next;                // next location candidates
   std::vector<float> tie_breakers;  // random values, used in PIBT
   Agents A;
   Agents occupied_now;   // for quick collision checking
   Agents occupied_next;  // for quick collision checking
 
-  Planner(const Instance* _ins, const Deadline* _deadline, std::mt19937* _MT,
+  Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & H, const Deadline* _deadline, std::mt19937* _MT,
           int _verbose = 0);
   // Planner(const Graph & G, int N, const Deadline* _deadline, std::mt19937* _MT, int _verbose=0);
 

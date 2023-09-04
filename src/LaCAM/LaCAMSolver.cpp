@@ -56,10 +56,10 @@ void LaCAMSolver::plan(const SharedEnvironment & env){
 
     if (need_replan) {
         const int verbose = 10;
-        const int time_limit_sec = 10;
+        const int time_limit_sec = 2;
         auto instance = build_instance(env);
         const auto deadline = Deadline(time_limit_sec * 1000);
-        auto planner = Planner(&instance,&deadline,MT,0);
+        auto planner = Planner(&instance,H,&deadline,MT,0);
         const auto solution=planner.solve();
         const auto comp_time_ms = deadline.elapsed_ms();
 
@@ -76,7 +76,7 @@ void LaCAMSolver::plan(const SharedEnvironment & env){
         // }
 
         // post processing
-        print_stats(verbose, instance, solution, comp_time_ms);
+        print_stats(verbose, instance, H, solution, comp_time_ms);
 
         cout<<"solution length:"<<solution.size()<<endl;
         

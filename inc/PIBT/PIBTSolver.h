@@ -6,6 +6,7 @@
 #include "RHCR/interface/CompetitionActionModel.h"
 #include <random>
 #include "common.h"
+#include "PIBT/HeuristicTable.h"
 
 namespace PIBT {
 
@@ -25,7 +26,8 @@ public:
 
 class PIBTSolver{
 public:
-    RHCR::CompetitionGraph& graph;
+    // RHCR::CompetitionGraph& graph;
+    HeuristicTable & heuristics;
     std::vector<Path> paths;
     std::mt19937* const MT;   // seed for randomness
     std::vector<int> execution_order;
@@ -52,7 +54,7 @@ public:
 
     
     // TODO: to make seed configurable
-    PIBTSolver(RHCR::CompetitionGraph & graph,SharedEnvironment * env,uint random_seed=0):graph(graph),action_model(env),MT(new std::mt19937(random_seed)){};
+    PIBTSolver(HeuristicTable & heuristics,SharedEnvironment * env,uint random_seed=0):heuristics(heuristics),action_model(env),MT(new std::mt19937(random_seed)){};
     ~PIBTSolver(){
         delete MT;
     };
@@ -83,15 +85,19 @@ public:
         const Agent & b=agents[j];
 
         if (prior_type==SHORT_DIST){
-            double d1=DBL_MAX,d2=DBL_MAX;
-            auto iter=graph.heuristics.find(a.curr_state.location);
-            if (iter!=graph.heuristics.end()){
-                d1=iter->second[a.goal_location];
-            }
-            iter=graph.heuristics.find(b.curr_state.location);
-            if (iter!=graph.heuristics.end()){
-                d2=iter->second[b.goal_location];
-            }
+            // double d1=DBL_MAX,d2=DBL_MAX;
+            // auto iter=graph.heuristics.find(a.curr_state.location);
+            // if (iter!=graph.heuristics.end()){
+            //     d1=iter->second[a.goal_location];
+            // }
+            // iter=graph.heuristics.find(b.curr_state.location);
+            // if (iter!=graph.heuristics.end()){
+            //     d2=iter->second[b.goal_location];
+            // }
+
+
+            double d1=heuristics.get(a.curr_state.location,a.curr_state.orientation,a.goal_location);
+            double d2=heuristics.get(b.curr_state.location,b.curr_state.orientation,b.goal_location);
 
             if (d1!=d2) return d1<d2;
         }
@@ -106,15 +112,8 @@ public:
         // cerr<<"compare starts"<<endl;
         const auto & agent = agents[idx];
 
-        double d1=DBL_MAX,d2=DBL_MAX;
-        auto iter=graph.heuristics.find(s1.location);
-        if (iter!=graph.heuristics.end()){
-            d1=iter->second[agent.goal_location];
-        }
-        iter=graph.heuristics.find(s2.location);
-        if (iter!=graph.heuristics.end()){
-            d2=iter->second[agent.goal_location];
-        }
+        double d1=heuristics.get(s1.location,s1.orientation,agent.goal_location);
+        double d2=heuristics.get(s2.location,s2.orientation,agent.goal_location);
 
         // if (idx==8)
         // cerr<<"emm:"<<s1.location<<" "<<d1<<" "<<s2.location<<" "<<d2<<endl;
@@ -125,10 +124,13 @@ public:
         // we need to think about the orientation
         // int best_orient=get_best_orientation(idx,agent.curr_state);
 
+        
+        if (d1!=d2) return d1<d2;
+
         // if (idx==8)
         // cerr<<"dsd"<<best_orient<<endl;
-        // int rot_d1=get_rotation_dist(agent.curr_state,s1.orientation);
-        // int rot_d2=get_rotation_dist(agent.curr_state,s2.orientation);
+        int rot_d1=get_rotation_dist(agent.curr_state,s1.orientation);
+        int rot_d2=get_rotation_dist(agent.curr_state,s2.orientation);
 
         // int a1=get_action_from_states(agent.curr_state,s1);
         // int a2=get_action_from_states(agent.curr_state,s2);
@@ -136,7 +138,7 @@ public:
         // if (idx==8)
         // cerr<<agent.curr_state.orientation<<" "<<"a1:"<<a1<<" rd1:"<<rot_d1<<" a2:"<<a2<<" rd2:"<<rot_d2<<endl;
 
-        // if (rot_d1!=rot_d2) return rot_d1<rot_d2;
+        if (rot_d1!=rot_d2) return rot_d1<rot_d2;
 
         // d1+=rot_d1;
         // d2+=rot_d2;
@@ -145,9 +147,7 @@ public:
         //     cerr<<s1<<" "<<d1<<" "<<s2<<" "<<d2<<endl;
         // }
 
-        if (d1!=d2) return d1<d2;
-
-        return s1.orientation<s2.orientation;
+        // return s1.orientation<s2.orientation;
 
         // tie break: not occupied in the previous step is better.
         // if (occupied_now.find(s1.location)!=occupied_now.end() && occupied_now.find(s2.location)==occupied_now.end()) {
@@ -157,6 +157,8 @@ public:
         // if (occupied_now.find(s1.location)==occupied_now.end() && occupied_now.find(s2.location)!=occupied_now.end()) {
         //     return true;
         // }
+
+        return s1.orientation<s2.orientation;
 
         return false;
 
@@ -170,41 +172,41 @@ public:
         return d1<d2?d1:d2;
     }
 
-    int get_best_orientation(const int idx, const State & s) {
-        const auto & agent = agents[idx];
+    // int get_best_orientation(const int idx, const State & s) {
+    //     const auto & agent = agents[idx];
 
-        // get location neighbors
-        int curr_location=s.location;
-        int x=s.location%action_model.env->cols;
-        int y=s.location/action_model.env->cols;
+    //     // get location neighbors
+    //     int curr_location=s.location;
+    //     int x=s.location%action_model.env->cols;
+    //     int y=s.location/action_model.env->cols;
 
-        bool conditions[4];
-        conditions[0]=(x==action_model.env->cols-1);
-        conditions[1]=(y==action_model.env->rows-1);
-        conditions[2]=(x==0);
-        conditions[3]=(y==0);
+    //     bool conditions[4];
+    //     conditions[0]=(x==action_model.env->cols-1);
+    //     conditions[1]=(y==action_model.env->rows-1);
+    //     conditions[2]=(x==0);
+    //     conditions[3]=(y==0);
 
-        // find the next location we want to go, and thus, the orientation.
-        int best_orientation=0;
-        double best_dist=DBL_MAX;
-        for (int i=0;i<4;++i){
-            if (!conditions[i]){
-                int next_location=curr_location+action_model.moves[i];
-                auto iter=graph.heuristics.find(next_location);
-                if (iter!=graph.heuristics.end()){
-                    double dist=graph.heuristics[next_location][agent.goal_location];
-                    // if (idx==8) {
-                    //     cerr<<i<<" "<<dist<<endl;
-                    // }
-                    if (dist<best_dist) {
-                        best_dist=dist;
-                        best_orientation=i;
-                    }
-                }
-            }
-        }
-        return best_orientation;
-    }
+    //     // find the next location we want to go, and thus, the orientation.
+    //     int best_orientation=0;
+    //     double best_dist=DBL_MAX;
+    //     for (int i=0;i<4;++i){
+    //         if (!conditions[i]){
+    //             int next_location=curr_location+action_model.moves[i];
+    //             auto iter=graph.heuristics.find(next_location);
+    //             if (iter!=graph.heuristics.end()){
+    //                 double dist=graph.heuristics[next_location][agent.goal_location];
+    //                 // if (idx==8) {
+    //                 //     cerr<<i<<" "<<dist<<endl;
+    //                 // }
+    //                 if (dist<best_dist) {
+    //                     best_dist=dist;
+    //                     best_orientation=i;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return best_orientation;
+    // }
 
     Action get_action_from_states(const State & state, const State & next_state){
         assert(state.timestep+1==next_state.timestep);

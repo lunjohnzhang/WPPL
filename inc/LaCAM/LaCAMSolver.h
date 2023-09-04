@@ -1,19 +1,18 @@
 #pragma once
 
-#include "RHCR/interface/CompetitionGraph.h"
 #include "RHCR/interface/CompetitionActionModel.h"
 #include <random>
 #include "graph.h"
 #include "instance.h"
 #include "planner.h"
 #include <memory>
+#include "PIBT/HeuristicTable.h"
 
 namespace LaCAM {
 
 class LaCAMSolver {
 public:
     // [start] the following lines should be abstracted away.
-    RHCR::CompetitionGraph& graph;
     std::vector<Path> paths;
     CompetitionActionModelWithRotate action_model;
     std::mt19937* MT;   // seed for randomness
@@ -27,11 +26,12 @@ public:
     // [end]
 
     std::shared_ptr<Graph> G; // graph
+    std::shared_ptr<HeuristicTable> H; // instance
     Config next_config;
     Instance build_instance(const SharedEnvironment & env);
     int get_neighbor_orientation(int loc1,int loc2);
 
-    LaCAMSolver(RHCR::CompetitionGraph & graph,SharedEnvironment * env,uint random_seed=0):graph(graph),action_model(env),MT(new std::mt19937(random_seed)){};
+    LaCAMSolver(const std::shared_ptr<HeuristicTable> & H,SharedEnvironment * env,uint random_seed=0):H(H),action_model(env),MT(new std::mt19937(random_seed)){};
     ~LaCAMSolver(){
         delete MT;
     };

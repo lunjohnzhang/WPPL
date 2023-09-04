@@ -84,6 +84,7 @@ void RHCRSolver::initialize(const SharedEnvironment & env){
     graph.preprocessing(consider_rotation,env.file_storage_path);
     initialize_solvers();
     need_replan = true;
+    timestep=0;
 }
 
 void RHCRSolver::update_goal_locations(const SharedEnvironment & env){

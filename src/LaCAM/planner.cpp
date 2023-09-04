@@ -15,8 +15,9 @@ Constraint::Constraint(Constraint* parent, int i, Vertex* v)
 
 Constraint::~Constraint(){};
 
-Node::Node(Config _C, DistTable& D, Node* _parent)
+Node::Node(Config _C, const std::shared_ptr<HeuristicTable> & H, const Instance * ins, Node* _parent)
     : C(_C),
+      ins(ins),
       parent(_parent),
       priorities(C.size(), 0),
       order(C.size(), 0),
@@ -28,11 +29,11 @@ Node::Node(Config _C, DistTable& D, Node* _parent)
   // set priorities
   if (parent == nullptr) {
     // initialize
-    for (size_t i = 0; i < N; ++i) priorities[i] = (float)D.get(i, C[i]) / N;
+    for (size_t i = 0; i < N; ++i) priorities[i] = (float)(H->get(C[i]->index,ins->goals[i]->index))/N;
   } else {
     // dynamic priorities, akin to PIBT
     for (size_t i = 0; i < N; ++i) {
-      if (D.get(i, C[i]) != 0) {
+      if (C[i]->index != ins->goals[i]->index) {
         priorities[i] = parent->priorities[i] + 1;
       } else {
         priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
@@ -54,7 +55,7 @@ Node::~Node()
   }
 }
 
-Planner::Planner(const Instance* _ins, const Deadline* _deadline,
+Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & H, const Deadline* _deadline,
                  std::mt19937* _MT, int _verbose)
     : ins(_ins),
       deadline(_deadline),
@@ -62,7 +63,7 @@ Planner::Planner(const Instance* _ins, const Deadline* _deadline,
       verbose(_verbose),
       N(ins->N),
       V_size(ins->G.size()),
-      D(DistTable(ins)),
+      H(H),
       C_next(Candidates(N, std::array<Vertex*, 5>())),
       tie_breakers(std::vector<float>(V_size, 0)),
       A(Agents(N, nullptr)),
@@ -100,7 +101,7 @@ Solution Planner::solve()
   std::vector<Constraint*> GC;  // garbage collection of constraints
 
   // insert initial node
-  auto S = new Node(ins->starts, D);
+  auto S = new Node(ins->starts, H, ins);
   OPEN.push(S);
   CLOSED[S->C] = S;
 
@@ -174,7 +175,7 @@ Solution Planner::solve()
     }
 
     // insert new search node
-    auto S_new = new Node(C, D, S);
+    auto S_new = new Node(C, H, ins, S);
     OPEN.push(S_new);
     CLOSED[S_new->C] = S_new;
   }
@@ -252,8 +253,8 @@ bool Planner::funcPIBT(Agent* ai)
   // sort, note: K + 1 is sufficient
   std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
             [&](Vertex* const v, Vertex* const u) {
-              return D.get(i, v) + tie_breakers[v->id] <
-                     D.get(i, u) + tie_breakers[u->id];
+              return H->get(v->index,ins->goals[i]->index) + tie_breakers[v->id] <
+                     H->get(u->index,ins->goals[i]->index) + tie_breakers[u->id];
             });
 
   for (size_t k = 0; k < K + 1; ++k) {
@@ -287,11 +288,11 @@ bool Planner::funcPIBT(Agent* ai)
   return false;
 }
 
-Solution solve(const Instance& ins, const int verbose, const Deadline* deadline,
+Solution solve(const Instance& ins, const std::shared_ptr<HeuristicTable> & H, int verbose, const Deadline* deadline,
                std::mt19937* MT)
 {
   info(1, verbose, "elapsed:", elapsed_ms(deadline), "ms\tpre-processing");
-  auto planner = Planner(&ins, deadline, MT, verbose);
+  auto planner = Planner(&ins, H, deadline, MT, verbose);
   return planner.solve();
 }
 
