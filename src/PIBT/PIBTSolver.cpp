@@ -34,6 +34,8 @@ void PIBTSolver::init_plan(const SharedEnvironment & env) {
             agent.goal_location=goal_location;
             agent.elapsed=0;
             agent.tie_breaker=getRandomFloat(0,1,MT);
+        } else {
+            agent.elapsed+=1;
         }
     }
     for (int i=0;i<agents.size();++i) {
