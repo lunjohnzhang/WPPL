@@ -95,9 +95,9 @@ void PIBTSolver::plan(const SharedEnvironment & env) {
         // cerr<<endl;
     }
 
-    for (int i=0;i<env.num_of_agents;++i) {
-        cerr<<i<<" "<<paths[i][paths[i].size()-2]<<" "<<paths[i][paths[i].size()-1]<<endl;
-    }
+    // for (int i=0;i<env.num_of_agents;++i) {
+    //     cerr<<i<<" "<<paths[i][paths[i].size()-2]<<" "<<paths[i][paths[i].size()-1]<<endl;
+    // }
 
 //    exit(-1);
 
@@ -194,10 +194,10 @@ void PIBTSolver::plan_for_single_step(const SharedEnvironment & env) {
     // this is an adaption of pibt algorithm on the action model with rotation.
     std::sort(this->execution_order.begin(),this->execution_order.end(),std::bind(&PIBTSolver::prior_to,this,std::placeholders::_1,std::placeholders::_2));
 
-    for (int i=0;i<agents.size();++i) {
-        int idx=execution_order[i];
-        cerr<<i<<" "<<idx<<endl;
-    }
+    // for (int i=0;i<agents.size();++i) {
+    //     int idx=execution_order[i];
+    //     cerr<<i<<" "<<idx<<endl;
+    // }
 
 
 
