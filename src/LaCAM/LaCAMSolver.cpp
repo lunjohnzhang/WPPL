@@ -7,29 +7,29 @@ namespace LaCAM {
 
 void LaCAMSolver::initialize(const SharedEnvironment & env) {
     paths.resize(env.num_of_agents);
-    agents.resize(env.num_of_agents);
+    agent_infos.resize(env.num_of_agents);
     G = std::make_shared<Graph>(env);
 }
 
 Instance LaCAMSolver::build_instance(const SharedEnvironment & env) {
     auto starts=vector<int>();
     auto goals=vector<int>();
-    auto priorties=vector<int>();
     for (int i=0;i<env.num_of_agents;++i) {
         starts.push_back(env.curr_states[i].location);
         assert(env.goal_locations[i].size()>0);
         int goal_location=env.goal_locations[i][0].first;
         goals.push_back(goal_location);
-        auto & agent=agents[i];
+        auto & agent_info=agent_infos[i];
         // cerr<<"0\trandom-32-32-20.map\t32\t32\t"<<starts[i]%32<<"\t"<<starts[i]/32<<"\t"<<goals[i]%32<<"\t"<<goals[i]/32<<"\t0"<<endl;
-        if (goal_location!=agent.goal_location){
-            agent.goal_location=goal_location;
-            agent.elapsed=0;
-            agent.tie_breaker=getRandomFloat(0,1,MT);
+        if (goal_location!=agent_info.goal_location){
+            agent_info.goal_location=goal_location;
+            agent_info.elapsed=0;
+            agent_info.tie_breaker=getRandomFloat(0,1,MT);
+        } else {
+            agent_info.elapsed+=1;
         }
-        priorties.push_back(agent.elapsed+agent.tie_breaker);
     }
-    return Instance(*G, starts, goals, priorties);
+    return Instance(*G, starts, goals, agent_infos);
 }
 
 int LaCAMSolver::get_neighbor_orientation(int loc1,int loc2) {
@@ -95,59 +95,79 @@ void LaCAMSolver::plan(const SharedEnvironment & env){
         } else {  
             next_config=solution[1];
         }
-    
     }
 
-    bool ready_to_forward = true;
+    vector<State> planned_next_states;
+    vector<State> next_states;
     for (int i=0;i<env.num_of_agents;++i) {
-        auto & curr_state = paths[i][timestep];
-        if (curr_state.location!=next_config[i]->index) {
-            int expected_orient = get_neighbor_orientation(curr_state.location,next_config[i]->index);
-            int curr_orient = curr_state.orientation;
-            if (expected_orient!=curr_orient){
-                ready_to_forward = false;
-                break;
-            }
+        planned_next_states.emplace_back(next_config[i]->index,-1,-1);
+        next_states.emplace_back(-1,-1,-1);
+    }
+
+    executor.execute(&(env.curr_states),&planned_next_states,&next_states);
+
+    for (int i=0;i<env.num_of_agents;++i) {
+        if (next_states[i].timestep!=env.curr_states[i].timestep+1) {
+            std::cerr<<i<<" "<<next_states[i].timestep<<" "<<env.curr_states[i].timestep<<endl;
+            exit(-1);
         }
+
+        paths[i].emplace_back(next_states[i]);
+        // std::cerr<<i<<" "<<env.curr_states[i]<<" "<<next_states[i]<<endl;
+    }
+
+
+
+    // bool ready_to_forward = true;
+    // for (int i=0;i<env.num_of_agents;++i) {
+    //     auto & curr_state = paths[i][timestep];
+    //     if (curr_state.location!=next_config[i]->index) {
+    //         int expected_orient = get_neighbor_orientation(curr_state.location,next_config[i]->index);
+    //         int curr_orient = curr_state.orientation;
+    //         if (expected_orient!=curr_orient){
+    //             ready_to_forward = false;
+    //             break;
+    //         }
+    //     }
         
-    }
+    // }
 
-    cout<<"ready to forward: "<<ready_to_forward<<endl;
+    // cout<<"ready to forward: "<<ready_to_forward<<endl;
 
-    if (!ready_to_forward) {
-        for (int i=0;i<env.num_of_agents;++i) {
-            auto & curr_state = paths[i][timestep];
-            if (curr_state.location==next_config[i]->index) {
-                paths[i].emplace_back(curr_state.location,curr_state.timestep+1,curr_state.orientation);
-            } else {
-                int expected_orient = get_neighbor_orientation(curr_state.location,next_config[i]->index);
-                int curr_orient = curr_state.orientation;
-                if (expected_orient==curr_orient){
-                    paths[i].emplace_back(curr_state.location,curr_state.timestep+1,expected_orient);
-                } else {
-                    int d1=(curr_orient+4-expected_orient)%4;
-                    int d2=(expected_orient+4-curr_orient)%4;
+    // if (!ready_to_forward) {
+    //     for (int i=0;i<env.num_of_agents;++i) {
+    //         auto & curr_state = paths[i][timestep];
+    //         if (curr_state.location==next_config[i]->index) {
+    //             paths[i].emplace_back(curr_state.location,curr_state.timestep+1,curr_state.orientation);
+    //         } else {
+    //             int expected_orient = get_neighbor_orientation(curr_state.location,next_config[i]->index);
+    //             int curr_orient = curr_state.orientation;
+    //             if (expected_orient==curr_orient){
+    //                 paths[i].emplace_back(curr_state.location,curr_state.timestep+1,expected_orient);
+    //             } else {
+    //                 int d1=(curr_orient+4-expected_orient)%4;
+    //                 int d2=(expected_orient+4-curr_orient)%4;
 
-                    int next_orient=-1;
-                    if (d1<d2) {
-                        next_orient=(curr_orient-1+4)%4;
-                    } else {
-                        next_orient=(curr_orient+1+4)%4;
-                    }
-                    paths[i].emplace_back(curr_state.location,curr_state.timestep+1,next_orient);
-                }
-            }
-        }
-    } else {
-        for (int i=0;i<env.num_of_agents;++i) {
-            auto & curr_state = paths[i][timestep];
-            if (curr_state.location==next_config[i]->index) {
-                paths[i].emplace_back(curr_state.location,curr_state.timestep+1,curr_state.orientation);
-            } else {
-                paths[i].emplace_back(next_config[i]->index,curr_state.timestep+1,curr_state.orientation);
-            }
-        }
-    }
+    //                 int next_orient=-1;
+    //                 if (d1<d2) {
+    //                     next_orient=(curr_orient-1+4)%4;
+    //                 } else {
+    //                     next_orient=(curr_orient+1+4)%4;
+    //                 }
+    //                 paths[i].emplace_back(curr_state.location,curr_state.timestep+1,next_orient);
+    //             }
+    //         }
+    //     }
+    // } else {
+    //     for (int i=0;i<env.num_of_agents;++i) {
+    //         auto & curr_state = paths[i][timestep];
+    //         if (curr_state.location==next_config[i]->index) {
+    //             paths[i].emplace_back(curr_state.location,curr_state.timestep+1,curr_state.orientation);
+    //         } else {
+    //             paths[i].emplace_back(next_config[i]->index,curr_state.timestep+1,curr_state.orientation);
+    //         }
+    //     }
+    // }
 
     // total_feasible_timestep+=1;
 
@@ -216,7 +236,7 @@ void LaCAMSolver::get_step_actions(const SharedEnvironment & env, vector<Action>
         }
     }
     
-    // need_replan=true;
+    need_replan=true;
     
 }
 

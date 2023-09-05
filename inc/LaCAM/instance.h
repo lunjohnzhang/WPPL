@@ -11,12 +11,22 @@
 
 namespace LaCAM {
 
+struct AgentInfo {
+public:
+    int goal_location;
+    float elapsed;
+    float tie_breaker;
+
+    AgentInfo():goal_location(-1),elapsed(-1),tie_breaker(-1){};
+};
+
+
 struct Instance {
   const Graph & G;  // graph
   Config starts;  // initial configuration
   Config goals;   // goal configuration
   const uint N;   // number of agents
-  vector<int> priorities;
+  const vector<AgentInfo> & agent_infos;
 
   // // for testing
   // Instance(const std::string& map_filename,
@@ -31,7 +41,7 @@ struct Instance {
   Instance(const Graph & G,
           const std::vector<int>& start_indexes,
           const std::vector<int>& goal_indexes,
-          const std::vector<int>& priorities);
+          const std::vector<AgentInfo> & agent_infos);
   ~Instance() {}
 
   // simple feasibility check of instance

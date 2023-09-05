@@ -7,15 +7,15 @@ Instance::Instance(
     const Graph & G,
     const std::vector<int>& start_indexes,
     const std::vector<int>& goal_indexes,
-    const std::vector<int>& priorities
+    const std::vector<AgentInfo>& agent_infos
   ): 
     G(G), 
     starts(Config()), 
     goals(Config()), 
-    N(start_indexes.size()) {
+    N(start_indexes.size()),
+    agent_infos(agent_infos) {
   for (auto k : start_indexes) starts.push_back(G.U[k]);
   for (auto k : goal_indexes) goals.push_back(G.U[k]);
-  for (auto p : priorities) this->priorities.push_back(p);
 }
 
 // Instance::Instance(const std::string& map_filename,

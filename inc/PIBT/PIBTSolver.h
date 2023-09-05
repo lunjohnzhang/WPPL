@@ -112,8 +112,8 @@ public:
         // cerr<<"compare starts"<<endl;
         const auto & agent = agents[idx];
 
-        double d1=heuristics.get(s1.location,s1.orientation,agent.goal_location);
-        double d2=heuristics.get(s2.location,s2.orientation,agent.goal_location);
+        double d1=heuristics.get(s1.location,agent.goal_location);
+        double d2=heuristics.get(s2.location,agent.goal_location);
 
         // if (idx==8)
         // cerr<<"emm:"<<s1.location<<" "<<d1<<" "<<s2.location<<" "<<d2<<endl;
@@ -129,8 +129,8 @@ public:
 
         // if (idx==8)
         // cerr<<"dsd"<<best_orient<<endl;
-        int rot_d1=get_rotation_dist(agent.curr_state,s1.orientation);
-        int rot_d2=get_rotation_dist(agent.curr_state,s2.orientation);
+        // int rot_d1=get_rotation_dist(agent.curr_state,s1.orientation);
+        // int rot_d2=get_rotation_dist(agent.curr_state,s2.orientation);
 
         // int a1=get_action_from_states(agent.curr_state,s1);
         // int a2=get_action_from_states(agent.curr_state,s2);
@@ -138,7 +138,7 @@ public:
         // if (idx==8)
         // cerr<<agent.curr_state.orientation<<" "<<"a1:"<<a1<<" rd1:"<<rot_d1<<" a2:"<<a2<<" rd2:"<<rot_d2<<endl;
 
-        if (rot_d1!=rot_d2) return rot_d1<rot_d2;
+        // if (rot_d1!=rot_d2) return rot_d1<rot_d2;
 
         // d1+=rot_d1;
         // d2+=rot_d2;

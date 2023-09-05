@@ -7,19 +7,11 @@
 #include "planner.h"
 #include <memory>
 #include "PIBT/HeuristicTable.h"
+#include "LaCAM/executor.h"
 
 namespace LaCAM {
 
 class LaCAMSolver {
-
-struct Agent {
-public:
-    int goal_location;
-    float elapsed;
-    float tie_breaker;
-
-    Agent():goal_location(-1),elapsed(-1),tie_breaker(-1){};
-};
 
 public:
     // [start] the following lines should be abstracted away.
@@ -39,12 +31,14 @@ public:
     std::shared_ptr<HeuristicTable> H; // instance
     Config next_config;
 
-    vector<Agent> agents;
+    vector<AgentInfo> agent_infos;
+
+    Executor executor;
 
     Instance build_instance(const SharedEnvironment & env);
     int get_neighbor_orientation(int loc1,int loc2);
 
-    LaCAMSolver(const std::shared_ptr<HeuristicTable> & H,SharedEnvironment * env,uint random_seed=0):H(H),action_model(env),MT(new std::mt19937(random_seed)){};
+    LaCAMSolver(const std::shared_ptr<HeuristicTable> & H,SharedEnvironment * env,uint random_seed=0):H(H),action_model(env),executor(env),MT(new std::mt19937(random_seed)){};
     ~LaCAMSolver(){
         delete MT;
     };

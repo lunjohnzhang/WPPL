@@ -42,18 +42,30 @@ Node::Node(Config _C, const std::shared_ptr<HeuristicTable> & H, const Instance 
   // }
 
 
-  for (size_t i = 0; i < N; ++i) {
-    if (C[i]->index != ins->goals[i]->index) {
-      priorities[i] = ins->priorities[i];
-    } else {
-      priorities[i] = 0;
-    }
-  }
+  // for (size_t i = 0; i < N; ++i) {
+  //   if (C[i]->index != ins->goals[i]->index) {
+  //     priorities[i] = ins->priorities[i];
+  //   } else {
+  //     priorities[i] = 0;
+  //   }
+  // }
 
   // set order
   std::iota(order.begin(), order.end(), 0);
-  std::sort(order.begin(), order.end(),
-            [&](int i, int j) { return priorities[i] > priorities[j]; });
+  std::sort(order.begin(), order.end(), [&](int i, int j) { 
+        const AgentInfo & a=ins->agent_infos[i];
+        const AgentInfo & b=ins->agent_infos[j];
+
+        if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
+
+        return a.tie_breaker>b.tie_breaker;
+  });
+  
+  // for (int i=0;i<order.size();++i) {
+  //   cerr<<i<<" "<<order[i]<<endl;
+  // }
+
+
 }
 
 Node::~Node()
@@ -127,7 +139,7 @@ Solution Planner::solve()
     // check goal condition: only require someone to arrive in lifelong case
     bool someone_arrived = false;
     for (int i=0;i<N;++i) {
-      if (S->C[i]->id == ins->goals[i]->id){
+      if (S->C[i]->id == ins->goals[i]->id || loop_cnt>1){
         // backtrack
         while (S != nullptr) {
           solution.push_back(S->C);
@@ -139,7 +151,7 @@ Solution Planner::solve()
       }
     }
 
-    if (someone_arrived) break;
+    if (someone_arrived || loop_cnt>1) break;
 
     // if (is_same_config(S->C, ins->goals)) {
     //   // backtrack
@@ -245,6 +257,36 @@ bool Planner::get_new_config(Node* S, Constraint* M)
   return true;
 }
 
+
+int get_neighbor_orientation(const Graph & G, int loc1, int loc2) {
+
+    // 0:east, 1:south, 2:west, 3:north
+
+    if (loc1+1==loc2) {
+        return 0;
+    }
+
+    if (loc1+G.width==loc2) {
+        return 1;
+    }
+
+    if (loc1-1==loc2) {
+        return 2;
+    }
+
+    if (loc1-G.width==loc2) {
+        return 3;
+    }
+
+    if (loc1==loc2) {
+      return 5;
+    }
+
+    std::cerr<<"loc1 and loc2 are not neighbors: "<<loc1<<", "<<loc2<<endl;
+    exit(-1);
+
+}
+
 bool Planner::funcPIBT(Agent* ai)
 {
   const auto i = ai->id;
@@ -260,11 +302,22 @@ bool Planner::funcPIBT(Agent* ai)
   C_next[i][K] = ai->v_now;
 
   // sort, note: K + 1 is sufficient
-  std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
-            [&](Vertex* const v, Vertex* const u) {
-              return H->get(v->index,ins->goals[i]->index) + tie_breakers[v->id] <
-                     H->get(u->index,ins->goals[i]->index) + tie_breakers[u->id];
-            });
+  std::sort(C_next[i].begin(), C_next[i].begin() + K + 1, [&](Vertex* const v, Vertex* const u) {
+
+
+    double d1=H->get(v->index,ins->goals[i]->index);
+    double d2=H->get(u->index,ins->goals[i]->index);
+
+    if (d1!=d2) return d1<d2;
+
+    int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index);
+    int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index);
+
+    return o1<o2;
+
+
+    return false;
+  });
 
   for (size_t k = 0; k < K + 1; ++k) {
     auto u = C_next[i][k];
