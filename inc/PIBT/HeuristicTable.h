@@ -11,6 +11,7 @@
 #include "util/Dev.h"
 #include "util/Timer.h"
 #include "util/MyLogger.h"
+#include "boost/format.hpp"
 
 class HeuristicTable {
 public:
