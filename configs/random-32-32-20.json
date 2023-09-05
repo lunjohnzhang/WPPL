@@ -1,12 +1,8 @@
 {
     "lifelong_solver_name": [
         {
-            "n_agents": 200,
-            "value": "RHCR"
-        },
-        {
             "n_agents": 1000000,
-            "value": "PIBT"
+            "value": "LaCAM"
         }
     ],
     "PIBT": {
