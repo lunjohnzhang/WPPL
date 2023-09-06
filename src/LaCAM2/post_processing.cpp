@@ -1,6 +1,6 @@
-#include "LaCAM/post_processing.h"
+#include "LaCAM2/post_processing.hpp"
 
-namespace LaCAM {
+namespace LaCAM2 {
 
 bool is_feasible_solution(const Instance& ins, const Solution& solution,
                           const int verbose)
@@ -58,7 +58,7 @@ int get_makespan(const Solution& solution)
   return solution.size() - 1;
 }
 
-int get_path_cost(const Solution& solution, int i)
+int get_path_cost(const Solution& solution, uint i)
 {
   const auto makespan = solution.size();
   const auto g = solution.back()[i];
@@ -91,32 +91,32 @@ int get_sum_of_loss(const Solution& solution)
   return c;
 }
 
-int get_makespan_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& H)
+int get_makespan_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT)
 {
   uint c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
-    c = std::max(c, H->get(ins.starts[i]->index, ins.goals[i]->index));
+    c = std::max(c, HT->get(ins.starts[i]->index,ins.goals[i]->index));
   }
   return c;
 }
 
-int get_sum_of_costs_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& H)
+int get_sum_of_costs_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT)
 {
-  uint c = 0;
+  int c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
-    c += H->get(ins.starts[i]->index, ins.goals[i]->index);
+    c += HT->get(ins.starts[i]->index,ins.goals[i]->index);
   }
   return c;
 }
 
-void print_stats(const int verbose, const Instance& ins, const std::shared_ptr<HeuristicTable> & H,
+void print_stats(const int verbose, const Instance& ins, const std::shared_ptr<HeuristicTable>& HT,
                  const Solution& solution, const double comp_time_ms)
 {
   auto ceil = [](float x) { return std::ceil(x * 100) / 100; };
   const auto makespan = get_makespan(solution);
-  const auto makespan_lb = get_makespan_lower_bound(ins, H);
+  const auto makespan_lb = get_makespan_lower_bound(ins, HT);
   const auto sum_of_costs = get_sum_of_costs(solution);
-  const auto sum_of_costs_lb = get_sum_of_costs_lower_bound(ins, H);
+  const auto sum_of_costs_lb = get_sum_of_costs_lower_bound(ins, HT);
   const auto sum_of_loss = get_sum_of_loss(solution);
   info(1, verbose, "solved: ", comp_time_ms, "ms", "\tmakespan: ", makespan,
        " (lb=", makespan_lb, ", ub=", ceil((float)makespan / makespan_lb), ")",
@@ -129,9 +129,10 @@ void print_stats(const int verbose, const Instance& ins, const std::shared_ptr<H
 // for log of map_name
 static const std::regex r_map_name = std::regex(R"(.+/(.+))");
 
-void make_log(const Instance& ins, const std::shared_ptr<HeuristicTable> & H, const Solution& solution,
+void make_log(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT, const Solution& solution,
               const std::string& output_name, const double comp_time_ms,
-              const std::string& map_name, const int seed, const bool log_short)
+              const std::string& map_name, const int seed,
+              const std::string& additional_info, const bool log_short)
 {
   // map name
   std::smatch results;
@@ -149,14 +150,15 @@ void make_log(const Instance& ins, const std::shared_ptr<HeuristicTable> & H, co
   log << "solver=planner\n";
   log << "solved=" << !solution.empty() << "\n";
   log << "soc=" << get_sum_of_costs(solution) << "\n";
-  log << "soc_lb=" << get_sum_of_costs_lower_bound(ins, H) << "\n";
+  log << "soc_lb=" << get_sum_of_costs_lower_bound(ins, HT) << "\n";
   log << "makespan=" << get_makespan(solution) << "\n";
-  log << "makespan_lb=" << get_makespan_lower_bound(ins, H) << "\n";
+  log << "makespan_lb=" << get_makespan_lower_bound(ins, HT) << "\n";
   log << "sum_of_loss=" << get_sum_of_loss(solution) << "\n";
-  log << "sum_of_loss_lb=" << get_sum_of_costs_lower_bound(ins, H)
+  log << "sum_of_loss_lb=" << get_sum_of_costs_lower_bound(ins, HT)
       << "\n";
   log << "comp_time=" << comp_time_ms << "\n";
   log << "seed=" << seed << "\n";
+  log << additional_info;
   if (log_short) return;
   log << "starts=";
   for (size_t i = 0; i < ins.N; ++i) {
@@ -180,4 +182,4 @@ void make_log(const Instance& ins, const std::shared_ptr<HeuristicTable> & H, co
   log.close();
 }
 
-}
+}  // namespace LaCAM2

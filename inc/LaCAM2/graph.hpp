@@ -2,33 +2,33 @@
  * graph definition
  */
 #pragma once
-#include "LaCAM/utils.h"
+#include "LaCAM2/utils.hpp"
 #include "SharedEnv.h"
 
-namespace LaCAM {
+namespace LaCAM2 {
 
 struct Vertex {
-  const int id;     // index for V in Graph
-  const int index;  // index for U (width * y + x) in Graph
+  const uint id;     // index for V in Graph
+  const uint index;  // index for U, width * y + x, in Graph
   std::vector<Vertex*> neighbor;
 
-  Vertex(int _id, int _index);
+  Vertex(uint _id, uint _index);
 };
 using Vertices = std::vector<Vertex*>;
-using Config = std::vector<Vertex*>;  // locations for all agents
+using Config = std::vector<Vertex*>;  // a set of locations for all agents
 
 struct Graph {
-  Vertices V;  // without nullptr
-  Vertices U;  // with nullptr, i.e., |U| = width * height
-  int width;   // grid width
-  int height;  // grid height
+  Vertices V;                          // without nullptr
+  Vertices U;                          // with nullptr
+  uint width;                          // grid width
+  uint height;                         // grid height
   Graph();
   Graph(const std::string& filename);  // taking map filename
   // for competition
   Graph(const SharedEnvironment & env);
   ~Graph();
 
-  int size() const;  // the number of vertices, |V|
+  uint size() const;  // the number of vertices
 };
 
 bool is_same_config(
@@ -43,5 +43,6 @@ struct ConfigHasher {
 };
 
 std::ostream& operator<<(std::ostream& os, const Vertex* v);
+std::ostream& operator<<(std::ostream& os, const Config& config);
 
-}
+}  // namespace LaCAM2

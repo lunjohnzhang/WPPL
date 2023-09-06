@@ -27,6 +27,9 @@ public:
     size_t loc_size=0;
     size_t state_size;
 
+    // divide by 16 in case of overlow
+    const uint MAX_HEURISTIC=UINT_MAX/16;
+
     HeuristicTable(SharedEnvironment * _env):env(*_env),action_model(_env){
         loc_size=0;
         for (int i=0;i<env.map.size();++i) {
@@ -196,24 +199,24 @@ public:
     }
     
     // TODO(hj) add check
-    inline double get(int loc1, int loc2) {
+    inline uint get(int loc1, int loc2) {
         int loc_idx1=loc_idxs[loc1];
         int loc_idx2=loc_idxs[loc2];
 
         if (loc_idx1==-1 || loc_idx2==-1) {
-            return DBL_MAX;
+            return MAX_HEURISTIC;
         }
 
         size_t idx=loc_idx1*loc_size+loc_idx2;
         return main_heuristics[idx];
     }
 
-    inline double get(int loc1, int orient1, int loc2) {
+    inline uint get(int loc1, int orient1, int loc2) {
         int loc_idx1=loc_idxs[loc1];
         int loc_idx2=loc_idxs[loc2];
 
         if (loc_idx1==-1 || loc_idx2==-1) {
-            return DBL_MAX;
+            return MAX_HEURISTIC;
         }
 
         size_t idx=((loc_idx1*loc_size+loc_idx2)*n_orientations+orient1)*n_orientations;
@@ -226,12 +229,12 @@ public:
         return min_v+main_heuristics[loc_idx1*loc_size+loc_idx2];
     } 
 
-    inline double get(int loc1, int orient1, int loc2, int orient2) {
+    inline uint get(int loc1, int orient1, int loc2, int orient2) {
         int loc_idx1=loc_idxs[loc1];
         int loc_idx2=loc_idxs[loc2];
 
         if (loc_idx1==-1 || loc_idx2==-1) {
-            return DBL_MAX;
+            return MAX_HEURISTIC;
         }
 
         size_t idx=((loc_idx1*loc_size+loc_idx2)*n_orientations+orient1)*n_orientations+orient2;

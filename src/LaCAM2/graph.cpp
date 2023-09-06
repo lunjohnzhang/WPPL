@@ -1,8 +1,8 @@
-#include "LaCAM/graph.h"
+#include "LaCAM2/graph.hpp"
 
-namespace LaCAM {
+namespace LaCAM2 {
 
-Vertex::Vertex(int _id, int _index)
+Vertex::Vertex(uint _id, uint _index)
     : id(_id), index(_index), neighbor(Vertices())
 {
 }
@@ -97,11 +97,11 @@ Graph::Graph(const std::string& filename) : V(Vertices()), width(0), height(0)
   U = Vertices(width * height, nullptr);
 
   // create vertices
-  int y = 0;
+  uint y = 0;
   while (getline(file, line)) {
     // for CRLF coding
     if (*(line.end() - 1) == 0x0d) line.pop_back();
-    for (int x = 0; x < width; ++x) {
+    for (uint x = 0; x < width; ++x) {
       char s = line[x];
       if (s == 'T' or s == '@') continue;  // object
       auto index = width * y + x;
@@ -114,8 +114,8 @@ Graph::Graph(const std::string& filename) : V(Vertices()), width(0), height(0)
   file.close();
 
   // create edges
-  for (int y = 0; y < height; ++y) {
-    for (int x = 0; x < width; ++x) {
+  for (uint y = 0; y < height; ++y) {
+    for (uint x = 0; x < width; ++x) {
       auto v = U[width * y + x];
       if (v == nullptr) continue;
       // left
@@ -142,7 +142,7 @@ Graph::Graph(const std::string& filename) : V(Vertices()), width(0), height(0)
   }
 }
 
-int Graph::size() const { return V.size(); }
+uint Graph::size() const { return V.size(); }
 
 bool is_same_config(const Config& C1, const Config& C2)
 {
@@ -156,9 +156,7 @@ bool is_same_config(const Config& C1, const Config& C2)
 uint ConfigHasher::operator()(const Config& C) const
 {
   uint hash = C.size();
-  for (auto& v : C) {
-    hash ^= v->id + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-  }
+  for (auto& v : C) hash ^= v->id + 0x9e3779b9 + (hash << 6) + (hash >> 2);
   return hash;
 }
 
@@ -168,4 +166,16 @@ std::ostream& operator<<(std::ostream& os, const Vertex* v)
   return os;
 }
 
+std::ostream& operator<<(std::ostream& os, const Config& config)
+{
+  os << "<";
+  const auto N = config.size();
+  for (size_t i = 0; i < N; ++i) {
+    if (i > 0) os << ",";
+    os << std::setw(5) << config[i];
+  }
+  os << ">";
+  return os;
 }
+
+}  // namespace LaCAM2
