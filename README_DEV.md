@@ -13,3 +13,7 @@ TODO: please see the viz, need more improvement.
 TODO: we need to add licenses of PIBT and LaCAM!
 
 NOTE: LaCAM is designed for one-shot MAPF. But in Lifelong MAPF, multiple agents might have the same goals, if directly ask LaCAM for planning solution, it may fail.
+
+# LaCAM2Solver
+
+NOTE: if one-step LaCAM2 and LaCAM have some difference, the problem may stem from the swap operation.
