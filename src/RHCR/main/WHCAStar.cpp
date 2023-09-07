@@ -37,11 +37,14 @@ bool WHCAStar::run(const vector<State>& starts,
     while (runtime < time_limit)
     {
         num_restarts++;
+        // cerr<<num_restarts<<endl;
         // generate random priority order
         std::random_shuffle(priorities.begin(), priorities.end());
 
         solution_cost = 0;
-        solution = initial_solution;
+        // solution = initial_solution;
+        solution.clear();
+        solution.resize(num_of_agents);
         bool succ = true;
         for (int i : priorities)
         {
@@ -55,6 +58,7 @@ bool WHCAStar::run(const vector<State>& starts,
             runtime = (std::clock() - start) * 1.0  / CLOCKS_PER_SEC;
             if (solution[i].empty() || runtime >= time_limit)
             {
+                // cerr<<i<<" "<<solution[i].empty()<<" "<<runtime<<" "<<time_limit<<endl;
                 succ = false;
                 break;
             }
