@@ -45,7 +45,7 @@ public:
     set<int> getConstrainedTimesteps(int location) const;
 
 	ReservationTable(const BasicGraph& G): G(G) {}
-private:
+
 	const BasicGraph& G;
 	// Constraint Table (CT)
 	unordered_map<size_t, list<pair<int, int> > > ct; // location/edge -> time range

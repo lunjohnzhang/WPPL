@@ -107,7 +107,10 @@ class StateTimeAStar: public SingleAgentSolver
 public:
     // find path by time-space A* search
     Path run(const BasicGraph& G, const State& start, const vector<pair<int, int> >& goal_location,
-                  ReservationTable& RT);
+                  ReservationTable& RT, const unordered_map<int, int>& approximate_goals);
+
+    Path run(const BasicGraph& G, const State& start, const vector<pair<int, int> >& goal_location,
+                ReservationTable& RT);
 
 	string getName() const { return "AStar"; }
     void findTrajectory(const BasicGraph& G,

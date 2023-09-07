@@ -52,13 +52,24 @@ Path SIPP::updatePath(const BasicGraph& G, const SIPPNode* goal)
 }
 
 
+Path SIPP::run(const BasicGraph& G, const State& start, 
+	const vector<pair<int, int> >& goal_location, ReservationTable& rt)
+{
+    unordered_map<int, int> approximate_goals;
+    return run(G, start, goal_location, rt, approximate_goals);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // return true if a path found (and updates vector<int> path) or false if no path exists
 // after max_timestep, switch from time-space A* search to normal A* search
 Path SIPP::run(const BasicGraph& G, const State& start,
                const vector<pair<int, int> >& goal_location,
-               ReservationTable& rt)
+               ReservationTable& rt, const unordered_map<int, int>& approximate_goals)
 {
+
+    focal_list.clear();
+    open_list.clear(); 
+
     num_expanded = 0;
     num_generated = 0;
     runtime = 0;
@@ -100,6 +111,12 @@ Path SIPP::run(const BasicGraph& G, const State& start,
 	int earliest_holding_time = 0;
 	if (hold_endpoints)
 		earliest_holding_time = rt.getHoldingTimeFromSIT(goal_location.back().first);
+
+
+    SIPPNode * curr_best_h_node=nullptr;
+
+    const int max_expanded=1000;
+
     while (!focal_list.empty())
     {
         SIPPNode* curr = focal_list.top(); focal_list.pop();
@@ -107,15 +124,26 @@ Path SIPP::run(const BasicGraph& G, const State& start,
         curr->in_openlist = false;
         num_expanded++;
 
+        if (curr_best_h_node==nullptr || curr->h_val< curr_best_h_node->h_val)
+            curr_best_h_node=curr;
+
          // update goal id
-        if (curr->state.location == goal_location[curr->goal_id].first &&
-			curr->state.timestep >= goal_location[curr->goal_id].second) // reach the goal location after its release time
-        {
-            curr->goal_id++;
-			if (curr->goal_id == (int)goal_location.size() &&
-				earliest_holding_time > curr->state.timestep)
-				curr->goal_id--;
+        if (approximate_goals.empty()){
+            if (curr->state.location == goal_location[curr->goal_id].first && 
+                curr->state.timestep >= goal_location[curr->goal_id].second &&
+                !(curr->goal_id == (int)goal_location.size() - 1 &&
+                    earliest_holding_time > curr->state.timestep))
+                curr->goal_id++;
+        } else {
+            auto iter = approximate_goals.find(curr->state.location);
+            if (iter!=approximate_goals.end()) {
+                if (curr->state.timestep >= iter->second &&
+                    !(curr->goal_id == (int)goal_location.size() - 1 &&
+                        earliest_holding_time > curr->state.timestep))
+                    curr->goal_id++;
+            }
         }
+
 		// check if the popped node is a goal
 		if (curr->goal_id == (int)goal_location.size())
 		{
@@ -126,6 +154,11 @@ Path SIPP::run(const BasicGraph& G, const State& start,
 			runtime = (std::clock() - t) * 1.0 / CLOCKS_PER_SEC;
 			return path;
 		}
+
+        if (num_expanded >= max_expanded)
+        {
+            break;
+        }
 
 
         // expand the nodes
@@ -223,11 +256,13 @@ Path SIPP::run(const BasicGraph& G, const State& start,
 
     }  // end while loop
 
+	Path path = updatePath(G, curr_best_h_node);
+
     // no path found
     releaseClosedListNodes();
     open_list.clear();
     focal_list.clear();
-    return Path();
+    return path;
 }
 
 

@@ -5,6 +5,82 @@ namespace RHCR {
 WHCAStar::WHCAStar(const BasicGraph &G, SingleAgentSolver& path_planner) : MAPFSolver(G, path_planner) {}
 
 
+
+
+vector<int> get_neighbors(const BasicGraph& G, int curr) {
+    vector<int> neighbors;
+    int x=curr%G.cols;
+    int y=curr/G.cols;
+
+    if (x<G.cols-1) {
+        neighbors.push_back(curr+1);
+    }
+    if (y<G.rows-1) {
+        neighbors.push_back(curr+G.cols);
+    }
+    if (x>0) {
+        neighbors.push_back(curr-1);
+    }
+    if (y>0) {
+        neighbors.push_back(curr-G.cols);
+    }
+    // cerr<<"neighbors:"<<neighbors.size()<<endl;
+    return neighbors;
+
+}
+
+void WHCAStar::build_approximate_goals(unordered_map<int,int> & approximate_goals, const pair<int,int> & goal, unordered_set<int> & reservered_locations) {
+    // we need a priortized queue to do a backward search.
+    std::vector<bool> visited(G.size(),false);;
+    std::vector<int> dists(G.size(),INT_MAX);;
+    std::queue<int> Q;
+
+    int start=goal.first;
+    Q.push(start);
+    visited[start]=1;
+    dists[start]=0;
+
+    bool found=false;
+    int found_dist=-1;
+
+    int cnt=0;
+    while (!Q.empty()) {
+        int curr=Q.front();
+        Q.pop();
+        ++cnt;
+        // cerr<<cnt<<" "<<curr<<endl;
+
+        // check availability
+        if (!found){
+            if (reservered_locations.find(curr)==reservered_locations.end()) {
+                found=true;
+                found_dist=dists[curr];
+                approximate_goals.insert({curr,found_dist});
+            }
+        } else {
+            if (dists[curr]==found_dist) {
+                approximate_goals.insert({curr,found_dist});
+            } else if (dists[curr]>found_dist) {
+                break;
+            }
+        }
+
+        for (auto &neighbor: get_neighbors(G,curr)) {
+            if (G.weights[neighbor][4]<=1 && !visited[neighbor]) {
+                visited[neighbor]=true;
+                dists[neighbor]=dists[curr]+1;
+                Q.push(neighbor);
+            }
+        }
+    }
+
+    // the timestep limit: no arrival before
+    for (auto & p: approximate_goals) {
+        p.second=max(goal.second-p.second,1);
+    }
+
+}
+
 bool WHCAStar::run(const vector<State>& starts,
                    const vector< vector<pair<int, int> > >& goal_locations,
                    int time_limit)
@@ -37,7 +113,7 @@ bool WHCAStar::run(const vector<State>& starts,
     while (runtime < time_limit)
     {
         num_restarts++;
-        // cerr<<num_restarts<<endl;
+        // cerr<<"restart: "<<num_restarts<<endl;
         // generate random priority order
         std::random_shuffle(priorities.begin(), priorities.end());
 
@@ -46,22 +122,86 @@ bool WHCAStar::run(const vector<State>& starts,
         solution.clear();
         solution.resize(num_of_agents);
         bool succ = true;
-        for (int i : priorities)
+
+        for (int idx=0;idx<priorities.size();++idx)
         {
+            auto i= priorities[idx];
+            // cerr<<"plan for agent "<<i<<" from "<<starts[i]<<" to goal:"<<goal_locations[i][0].first<<","<<goal_locations[i][0].second<<endl;
 			rt.copy(initial_rt);
             rt.build(solution, initial_constraints, i);
-			solution[i] = path_planner.run(G, starts[i], goal_locations[i], rt);
+            
+            unordered_set<int> reservered_locations;
+            for (int jdx=idx+1;jdx<priorities.size();++jdx)
+            {
+                auto j = priorities[jdx];
+                rt.ct[starts[j].location].emplace_back(0,INT_MAX);
+                reservered_locations.insert(starts[j].location);
+            }
+
+            auto & goal_location=goal_locations[i][0];
+            unordered_map<int,int> approximate_goals;
+            build_approximate_goals(approximate_goals, goal_location, reservered_locations);
+
+            // cerr<<"approximate goals for goal "<<goal_location.first<<","<<goal_location.second<<":"<<endl;
+            // for (auto & p: approximate_goals) {
+            //     cerr<<p.first<<" "<<p.second<<"; ";
+            // }
+            // cerr<<endl;
+
+			solution[i] = path_planner.run(G, starts[i], goal_locations[i], rt, approximate_goals);
             solution_cost += path_planner.path_cost;
-            rt.clear();
+
             num_expanded += path_planner.num_expanded;
             num_generated += path_planner.num_generated;
             runtime = (std::clock() - start) * 1.0  / CLOCKS_PER_SEC;
+
+            if (solution[i].size()==1 ) {
+                solution[i].emplace_back(starts[i].wait());
+//                 cerr<<"who fails sol? ["<<idx<<"] agent "<<i<<" "<<solution[i].size()<<" "<<runtime<<" "<<time_limit<<" "<<path_planner.num_expanded<<endl;
+//                 cerr<<"approximate goals for goal "<<goal_location.first<<","<<goal_location.second<<" from "<<starts[i]<<":"<<endl;
+//                 for (auto & p: approximate_goals) {
+//                     cerr<<p.first<<" "<<p.second<<"; ";
+//                 }
+//                 cerr<<endl;
+// cerr<<"reservation table:";
+//                 for (auto & p: rt.ct) {
+//                     cerr<<p.first<<":";
+//                     for (auto & q: p.second) {
+//                         cerr<<"("<<q.first<<","<<q.second<<"),";
+//                     }
+//                     cerr<<";"<<endl;
+//                 }
+//                 cerr<<endl;
+//                 exit(-1);                
+            }
+
+
+
+
             if (solution[i].empty() || runtime >= time_limit)
             {
-                // cerr<<i<<" "<<solution[i].empty()<<" "<<runtime<<" "<<time_limit<<endl;
+                if (true) {
+                cerr<<"who fails? ["<<idx<<"] agent "<<i<<" "<<solution[i].size()<<" "<<runtime<<" "<<time_limit<<" "<<path_planner.num_expanded<<endl;
+                cerr<<"approximate goals for goal "<<goal_location.first<<","<<goal_location.second<<":"<<endl;
+                for (auto & p: approximate_goals) {
+                    cerr<<p.first<<" "<<p.second<<"; ";
+                }
+                cerr<<endl;
+                cerr<<"reservation table:";
+                for (auto & p: rt.ct) {
+                    cerr<<p.first<<":";
+                    for (auto & q: p.second) {
+                        cerr<<"("<<q.first<<","<<q.second<<"),";
+                    }
+                    cerr<<";"<<endl;
+                }
+                cerr<<endl;
+                }
                 succ = false;
+                rt.clear();
                 break;
             }
+            rt.clear();
         }
         if (succ)
         {

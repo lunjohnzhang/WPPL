@@ -2,6 +2,8 @@
 #include "SIPP.h"
 #include "MAPFSolver.h"
 #include <ctime>
+#include "common.h"
+#include <queue>
 
 namespace RHCR {
 // WHCA* with random restart
@@ -31,6 +33,7 @@ public:
     WHCAStar(const BasicGraph& G, SingleAgentSolver& path_planner);
     ~WHCAStar() {}
 
+    void build_approximate_goals(unordered_map<int,int> &approximate_goals, const pair<int,int> & goal, unordered_set<int> & reservered_locations);
 
 private:
     void print_results() const;

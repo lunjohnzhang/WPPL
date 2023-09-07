@@ -87,6 +87,10 @@ public:
     Path run(const BasicGraph& G, const State& start,
              const vector<pair<int, int> >& goal_location,
              ReservationTable& RT);
+
+    Path run(const BasicGraph& G, const State& start,
+             const vector<pair<int, int> >& goal_location,
+             ReservationTable& RT, const unordered_map<int, int>& approximate_goals);
 	string getName() const { return "SIPP"; }
     SIPP(): SingleAgentSolver() {}
 
