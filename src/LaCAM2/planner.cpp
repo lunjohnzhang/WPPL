@@ -59,7 +59,7 @@ HNode::~HNode()
 
 Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const Deadline* _deadline,
                  std::mt19937* _MT, const int _verbose,
-                 const Objective _objective, const float _restart_rate)
+                 const Objective _objective, const float _restart_rate, bool use_swap)
     : ins(_ins),
       deadline(_deadline),
       MT(_MT),
@@ -74,7 +74,8 @@ Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & H
       tie_breakers(V_size, 0),
       A(N, nullptr),
       occupied_now(V_size, nullptr),
-      occupied_next(V_size, nullptr)
+      occupied_next(V_size, nullptr),
+      use_swap(use_swap)
 {
 }
 
@@ -383,9 +384,12 @@ bool Planner::funcPIBT(Agent* ai)
     return false;
   });
 
-  Agent* swap_agent = swap_possible_and_required(ai);
-  if (swap_agent != nullptr)
-    std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
+  Agent* swap_agent=nullptr;
+  if (use_swap) {
+    swap_agent = swap_possible_and_required(ai);
+    if (swap_agent != nullptr)
+      std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
+  }
 
   // main operation
   for (auto k = 0; k < K + 1; ++k) {
@@ -409,10 +413,12 @@ bool Planner::funcPIBT(Agent* ai)
 
     // success to plan next one step
     // pull swap_agent when applicable
-    if (k == 0 && swap_agent != nullptr && swap_agent->v_next == nullptr &&
-        occupied_next[ai->v_now->id] == nullptr) {
-      swap_agent->v_next = ai->v_now;
-      occupied_next[swap_agent->v_next->id] = swap_agent;
+    if (use_swap) {
+      if (k == 0 && swap_agent != nullptr && swap_agent->v_next == nullptr &&
+          occupied_next[ai->v_now->id] == nullptr) {
+        swap_agent->v_next = ai->v_now;
+        occupied_next[swap_agent->v_next->id] = swap_agent;
+      }
     }
     return true;
   }

@@ -69,7 +69,8 @@ void LaCAM2Solver::plan(const SharedEnvironment & env){
         const int time_limit_sec = 2;
         auto instance = build_instance(env);
         const auto deadline = Deadline(time_limit_sec * 1000);
-        auto planner = Planner(&instance,HT,&deadline,MT,0);
+        bool use_swap=false;
+        auto planner = Planner(&instance,HT,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap);
         auto additional_info = std::string("");
         const auto solution=planner.solve(additional_info);
         const auto comp_time_ms = deadline.elapsed_ms();

@@ -64,6 +64,7 @@ struct Planner {
   const Deadline* deadline;
   std::mt19937* MT;
   const int verbose;
+  bool use_swap;  // use swap operation or not
 
   // hyper parameters
   const Objective objective;
@@ -86,7 +87,8 @@ struct Planner {
           const int _verbose = 0,
           // other parameters
           const Objective _objective = OBJ_NONE,
-          const float _restart_rate = 0.001);
+          const float _restart_rate = 0.001,
+          bool use_swap=false);
   ~Planner();
   Solution solve(std::string& additional_info);
   void expand_lowlevel_tree(HNode* H, LNode* L);
