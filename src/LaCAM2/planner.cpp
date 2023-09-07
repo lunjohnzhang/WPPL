@@ -369,14 +369,14 @@ bool Planner::funcPIBT(Agent* ai)
   // sort
   std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
             [&](Vertex* const v, Vertex* const u) {
-    
-    double d1=HT->get(v->index,ins->goals[i]->index);
-    double d2=HT->get(u->index,ins->goals[i]->index);
-
-    if (d1!=d2) return d1<d2;
 
     int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index);
     int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index);
+
+    double d1=HT->get(v->index,o1,ins->goals[i]->index);
+    double d2=HT->get(u->index,o2,ins->goals[i]->index);
+
+    if (d1!=d2) return d1<d2;
 
     return o1<o2;
 
