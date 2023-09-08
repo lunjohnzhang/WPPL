@@ -59,7 +59,7 @@ HNode::~HNode()
 
 Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const Deadline* _deadline,
                  std::mt19937* _MT, const int _verbose,
-                 const Objective _objective, const float _restart_rate, bool use_swap)
+                 const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic)
     : ins(_ins),
       deadline(_deadline),
       MT(_MT),
@@ -75,7 +75,8 @@ Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & H
       A(N, nullptr),
       occupied_now(V_size, nullptr),
       occupied_next(V_size, nullptr),
-      use_swap(use_swap)
+      use_swap(use_swap),
+      use_orient_in_heuristic(use_orient_in_heuristic)
 {
 }
 
@@ -373,15 +374,19 @@ bool Planner::funcPIBT(Agent* ai)
     int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index);
     int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index);
 
-    double d1=HT->get(v->index,o1,ins->goals[i]->index);
-    double d2=HT->get(u->index,o2,ins->goals[i]->index);
+    double d1,d2;
+    if (use_orient_in_heuristic){
+      d1=HT->get(v->index,o1,ins->goals[i]->index);
+      d2=HT->get(u->index,o2,ins->goals[i]->index);      
+    } else {
+      d1=HT->get(v->index,ins->goals[i]->index);
+      d2=HT->get(u->index,ins->goals[i]->index);
+    }
 
     if (d1!=d2) return d1<d2;
 
     return o1<o2;
 
-
-    return false;
   });
 
   Agent* swap_agent=nullptr;

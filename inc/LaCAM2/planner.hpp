@@ -65,6 +65,7 @@ struct Planner {
   std::mt19937* MT;
   const int verbose;
   bool use_swap;  // use swap operation or not
+  bool use_orient_in_heuristic;  // use orientation in heuristic or not
 
   // hyper parameters
   const Objective objective;
@@ -88,7 +89,8 @@ struct Planner {
           // other parameters
           const Objective _objective = OBJ_NONE,
           const float _restart_rate = 0.001,
-          bool use_swap=false);
+          bool use_swap=false,
+          bool use_orient_in_heuristic=false);
   ~Planner();
   Solution solve(std::string& additional_info);
   void expand_lowlevel_tree(HNode* H, LNode* L);
