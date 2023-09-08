@@ -70,7 +70,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env){
         auto instance = build_instance(env);
         const auto deadline = Deadline(time_limit_sec * 1000);
         bool use_swap=false;
-        bool use_orient_in_heuristic=false;
+        bool use_orient_in_heuristic=true;
         auto planner = Planner(&instance,HT,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap,use_orient_in_heuristic);
         auto additional_info = std::string("");
         const auto solution=planner.solve(additional_info);

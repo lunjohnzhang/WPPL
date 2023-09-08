@@ -42,6 +42,12 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
         const AgentInfo & a=ins->agent_infos[i];
         const AgentInfo & b=ins->agent_infos[j];
 
+
+        int h1=HT->get(C[i]->index,ins->goals[i]->index);
+        int h2=HT->get(C[j]->index,ins->goals[j]->index);
+
+        if (h1!=h2) return h1<h2;
+
         if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
 
         return a.tie_breaker>b.tie_breaker;
@@ -168,10 +174,19 @@ Solution Planner::solve(std::string& additional_info)
         C_new=_C_new;
       } else {
         h_val=get_h_value(C_new);
-        if (_h_val<h_val) {
-          C_new=_C_new;
-          // cerr<<MC_idx<<" best: "<<_h_val<<endl;
-        }
+        // if (_h_val<h_val) {
+        //   C_new=_C_new;
+        //   // cerr<<MC_idx<<" best: "<<_h_val<<endl;
+        // } else if (_h_val==h_val) {
+          for (auto aid: H->order) {
+            int h=HT->get(C_new[aid]->index,ins->goals[aid]->index);
+            int _h=HT->get(_C_new[aid]->index,ins->goals[aid]->index);
+            if (_h<h) {
+              C_new=_C_new;
+              break;
+            }
+          }
+        // }
       }
 
       if (res) found=true;
@@ -423,11 +438,11 @@ bool Planner::funcPIBT(Agent* ai)
 
     if (d1!=d2) return d1<d2;
 
-    // if (MC_idx==0){
-    //   return o1<o2;
-    // } else {
-    //   return tie_breakers[v->id] < tie_breakers[u->id];
-    // }
+    if (MC_idx==0){
+      return o1<o2;
+    } else {
+      return tie_breakers[v->id] < tie_breakers[u->id];
+    }
     return o1<o2;
 
   });
