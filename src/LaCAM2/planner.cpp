@@ -149,12 +149,41 @@ Solution Planner::solve(std::string& additional_info)
     expand_lowlevel_tree(H, L);
 
     // create successors at the high-level search
-    const auto res = get_new_config(H, L);
+    const int num_trials=1;
+    bool found = false;
+    auto _C_new = Config(N, nullptr);  // for new configuration
+    for (MC_idx=0;MC_idx<num_trials;++MC_idx){
+      const auto res = get_new_config(H, L);
+
+      int _h_val=-1;
+      int h_val=-1;
+
+      if (res){
+        for (auto a : A) _C_new[a->id] = a->v_next;
+        _h_val=get_h_value(_C_new);
+        // cerr<<MC_idx<<" "<<_h_val<<endl;
+      }
+
+      if (!found) {
+        C_new=_C_new;
+      } else {
+        h_val=get_h_value(C_new);
+        if (_h_val<h_val) {
+          C_new=_C_new;
+          // cerr<<MC_idx<<" best: "<<_h_val<<endl;
+        }
+      }
+
+      if (res) found=true;
+    }
+
     delete L;  // free
-    if (!res) continue;
+    if (!found) {
+      continue;
+    }
 
     // create new configuration
-    for (auto a : A) C_new[a->id] = a->v_next;
+    // for (auto a : A) C_new[a->id] = a->v_next;
 
     // check explored list
     const auto iter = EXPLORED.find(C_new);
@@ -366,10 +395,19 @@ bool Planner::funcPIBT(Agent* ai)
       tie_breakers[u->id] = get_random_float(MT);  // set tie-breaker
   }
   C_next[i][K] = ai->v_now;
+  tie_breakers[ai->v_now->id] = get_random_float(MT);  // set tie-breaker
+
+  // for (int j=0;j<K+1;++j){
+  //     std::cerr<<"check C_next "<<j<<" "<<K<<endl;
+  //     std::cerr<<C_next[i][j]<<endl;
+  // }
 
   // sort
   std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
             [&](Vertex* const v, Vertex* const u) {
+
+    // cerr<<"sort "<<v<<" "<<u<<endl;
+
 
     int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index);
     int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index);
@@ -385,6 +423,11 @@ bool Planner::funcPIBT(Agent* ai)
 
     if (d1!=d2) return d1<d2;
 
+    // if (MC_idx==0){
+    //   return o1<o2;
+    // } else {
+    //   return tie_breakers[v->id] < tie_breakers[u->id];
+    // }
     return o1<o2;
 
   });

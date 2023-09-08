@@ -66,6 +66,7 @@ struct Planner {
   const int verbose;
   bool use_swap;  // use swap operation or not
   bool use_orient_in_heuristic;  // use orientation in heuristic or not
+  int MC_idx;
 
   // hyper parameters
   const Objective objective;
