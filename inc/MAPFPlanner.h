@@ -18,6 +18,7 @@
 #include "PIBT/PIBTSolver.h"
 #include "LaCAM/LaCAMSolver.h"
 #include "LaCAM2/LaCAM2Solver.hpp"
+#include "MyLaCAM2/MyLaCAM2Solver.hpp"
 
 class MAPFPlanner
 {
@@ -47,6 +48,7 @@ public:
     std::shared_ptr<PIBT::PIBTSolver> pibt_solver;
     std::shared_ptr<LaCAM::LaCAMSolver> lacam_solver;
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;
+    std::shared_ptr<MyLaCAM2::MyLaCAM2Solver> mylacam2_solver;
     nlohmann::json config;
     void load_configs();
     RHCR::MAPFSolver* rhcr_build_mapf_solver(nlohmann::json & config, RHCR::CompetitionGraph & graph);
