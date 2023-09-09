@@ -17,7 +17,7 @@ uint HNode::HNODE_CNT = 0;
 
 // for high-level
 HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, const uint _g,
-             const uint _h)
+             const uint _h, bool use_dist_in_priority)
     : C(_C),
       parent(_parent),
       neighbor(),
@@ -42,11 +42,12 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
         const AgentInfo & a=ins->agent_infos[i];
         const AgentInfo & b=ins->agent_infos[j];
 
+        if (use_dist_in_priority) {
+          int h1=HT->get(C[i]->index,ins->goals[i]->index);
+          int h2=HT->get(C[j]->index,ins->goals[j]->index);
 
-        int h1=HT->get(C[i]->index,ins->goals[i]->index);
-        int h2=HT->get(C[j]->index,ins->goals[j]->index);
-
-        if (h1!=h2) return h1<h2;
+          if (h1!=h2) return h1<h2;
+        }
 
         if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
 
@@ -65,7 +66,7 @@ HNode::~HNode()
 
 Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const Deadline* _deadline,
                  std::mt19937* _MT, const int _verbose,
-                 const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic)
+                 const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic, bool use_dist_in_priority)
     : ins(_ins),
       deadline(_deadline),
       MT(_MT),
@@ -82,7 +83,8 @@ Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & H
       occupied_now(V_size, nullptr),
       occupied_next(V_size, nullptr),
       use_swap(use_swap),
-      use_orient_in_heuristic(use_orient_in_heuristic)
+      use_orient_in_heuristic(use_orient_in_heuristic),
+      use_dist_in_priority(use_dist_in_priority)
 {
 }
 
@@ -99,7 +101,7 @@ Solution Planner::solve(std::string& additional_info)
   auto OPEN = std::stack<HNode*>();
   auto EXPLORED = std::unordered_map<Config, HNode*, ConfigHasher>();
   // insert initial node, 'H': high-level node
-  auto H_init = new HNode(ins->starts, HT, ins, nullptr, 0, get_h_value(ins->starts));
+  auto H_init = new HNode(ins->starts, HT, ins, nullptr, 0, get_h_value(ins->starts), use_dist_in_priority);
   OPEN.push(H_init);
   EXPLORED[H_init->C] = H_init;
 
@@ -155,50 +157,12 @@ Solution Planner::solve(std::string& additional_info)
     expand_lowlevel_tree(H, L);
 
     // create successors at the high-level search
-    const int num_trials=1;
-    bool found = false;
-    auto _C_new = Config(N, nullptr);  // for new configuration
-    for (MC_idx=0;MC_idx<num_trials;++MC_idx){
-      const auto res = get_new_config(H, L);
-
-      int _h_val=-1;
-      int h_val=-1;
-
-      if (res){
-        for (auto a : A) _C_new[a->id] = a->v_next;
-        _h_val=get_h_value(_C_new);
-        // cerr<<MC_idx<<" "<<_h_val<<endl;
-      }
-
-      if (!found) {
-        C_new=_C_new;
-      } else {
-        h_val=get_h_value(C_new);
-        // if (_h_val<h_val) {
-        //   C_new=_C_new;
-        //   // cerr<<MC_idx<<" best: "<<_h_val<<endl;
-        // } else if (_h_val==h_val) {
-          for (auto aid: H->order) {
-            int h=HT->get(C_new[aid]->index,ins->goals[aid]->index);
-            int _h=HT->get(_C_new[aid]->index,ins->goals[aid]->index);
-            if (_h<h) {
-              C_new=_C_new;
-              break;
-            }
-          }
-        // }
-      }
-
-      if (res) found=true;
-    }
-
+    const auto res = get_new_config(H, L);
     delete L;  // free
-    if (!found) {
-      continue;
-    }
+    if (!res) continue;
 
     // create new configuration
-    // for (auto a : A) C_new[a->id] = a->v_next;
+    for (auto a : A) C_new[a->id] = a->v_next;
 
     // check explored list
     const auto iter = EXPLORED.find(C_new);
@@ -213,7 +177,7 @@ Solution Planner::solve(std::string& additional_info)
     } else {
       // insert new search node
       const auto H_new = new HNode(
-          C_new, HT, ins, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new));
+          C_new, HT, ins, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new), use_dist_in_priority);
       EXPLORED[H_new->C] = H_new;
       if (H_goal == nullptr || H_new->f < H_goal->f) OPEN.push(H_new);
     }
@@ -412,17 +376,9 @@ bool Planner::funcPIBT(Agent* ai)
   C_next[i][K] = ai->v_now;
   tie_breakers[ai->v_now->id] = get_random_float(MT);  // set tie-breaker
 
-  // for (int j=0;j<K+1;++j){
-  //     std::cerr<<"check C_next "<<j<<" "<<K<<endl;
-  //     std::cerr<<C_next[i][j]<<endl;
-  // }
-
   // sort
   std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
             [&](Vertex* const v, Vertex* const u) {
-
-    // cerr<<"sort "<<v<<" "<<u<<endl;
-
 
     int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index);
     int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index);
@@ -438,11 +394,6 @@ bool Planner::funcPIBT(Agent* ai)
 
     if (d1!=d2) return d1<d2;
 
-    if (MC_idx==0){
-      return o1<o2;
-    } else {
-      return tie_breakers[v->id] < tie_breakers[u->id];
-    }
     return o1<o2;
 
   });

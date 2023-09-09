@@ -54,7 +54,7 @@ struct HNode {
   std::queue<LNode*> search_tree;
 
   HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, const uint _g,
-        const uint _h);
+        const uint _h, bool use_dist_in_priority);
   ~HNode();
 };
 using HNodes = std::vector<HNode*>;
@@ -65,8 +65,8 @@ struct Planner {
   std::mt19937* MT;
   const int verbose;
   bool use_swap;  // use swap operation or not
-  bool use_orient_in_heuristic;  // use orientation in heuristic or not
-  int MC_idx;
+  bool use_orient_in_heuristic=true;  // use orientation in heuristic or not
+  bool use_dist_in_priority=true;  // use distance in priority or not
 
   // hyper parameters
   const Objective objective;
@@ -91,7 +91,8 @@ struct Planner {
           const Objective _objective = OBJ_NONE,
           const float _restart_rate = 0.001,
           bool use_swap=false,
-          bool use_orient_in_heuristic=false);
+          bool use_orient_in_heuristic=true,
+          bool use_dist_in_priority=true);
   ~Planner();
   Solution solve(std::string& additional_info);
   void expand_lowlevel_tree(HNode* H, LNode* L);

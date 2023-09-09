@@ -32,31 +32,6 @@ Instance MyLaCAM2Solver::build_instance(const SharedEnvironment & env) {
     return Instance(*G, starts, goals, agent_infos);
 }
 
-int MyLaCAM2Solver::get_neighbor_orientation(int loc1,int loc2) {
-
-    // 0:east, 1:south, 2:west, 3:north
-
-    if (loc1+1==loc2) {
-        return 0;
-    }
-
-    if (loc1+G->width==loc2) {
-        return 1;
-    }
-
-    if (loc1-1==loc2) {
-        return 2;
-    }
-
-    if (loc1-G->width==loc2) {
-        return 3;
-    }
-
-    cerr<<"loc1 and loc2 are not neighbors: "<<loc1<<", "<<loc2<<endl;
-    exit(-1);
-
-}
-
 void MyLaCAM2Solver::plan(const SharedEnvironment & env){
     if (timestep==0) {
         for (int i=0;i<env.num_of_agents;++i) {
@@ -71,7 +46,8 @@ void MyLaCAM2Solver::plan(const SharedEnvironment & env){
         const auto deadline = Deadline(time_limit_sec * 1000);
         bool use_swap=false;
         bool use_orient_in_heuristic=true;
-        auto planner = Planner(&instance,HT,&deadline,MT,0,MyLaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap,use_orient_in_heuristic);
+        bool use_dist_in_priority=true;
+        auto planner = Planner(&instance,HT,&deadline,MT,0,MyLaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap,use_orient_in_heuristic,use_dist_in_priority);
         auto additional_info = std::string("");
         const auto solution=planner.solve(additional_info);
         const auto comp_time_ms = deadline.elapsed_ms();
@@ -119,61 +95,6 @@ void MyLaCAM2Solver::plan(const SharedEnvironment & env){
         // std::cerr<<i<<" "<<env.curr_states[i]<<" "<<next_states[i]<<endl;
     }
 
-
-
-    // bool ready_to_forward = true;
-    // for (int i=0;i<env.num_of_agents;++i) {
-    //     auto & curr_state = paths[i][timestep];
-    //     if (curr_state.location!=next_config[i]->index) {
-    //         int expected_orient = get_neighbor_orientation(curr_state.location,next_config[i]->index);
-    //         int curr_orient = curr_state.orientation;
-    //         if (expected_orient!=curr_orient){
-    //             ready_to_forward = false;
-    //             break;
-    //         }
-    //     }
-        
-    // }
-
-    // cout<<"ready to forward: "<<ready_to_forward<<endl;
-
-    // if (!ready_to_forward) {
-    //     for (int i=0;i<env.num_of_agents;++i) {
-    //         auto & curr_state = paths[i][timestep];
-    //         if (curr_state.location==next_config[i]->index) {
-    //             paths[i].emplace_back(curr_state.location,curr_state.timestep+1,curr_state.orientation);
-    //         } else {
-    //             int expected_orient = get_neighbor_orientation(curr_state.location,next_config[i]->index);
-    //             int curr_orient = curr_state.orientation;
-    //             if (expected_orient==curr_orient){
-    //                 paths[i].emplace_back(curr_state.location,curr_state.timestep+1,expected_orient);
-    //             } else {
-    //                 int d1=(curr_orient+4-expected_orient)%4;
-    //                 int d2=(expected_orient+4-curr_orient)%4;
-
-    //                 int next_orient=-1;
-    //                 if (d1<d2) {
-    //                     next_orient=(curr_orient-1+4)%4;
-    //                 } else {
-    //                     next_orient=(curr_orient+1+4)%4;
-    //                 }
-    //                 paths[i].emplace_back(curr_state.location,curr_state.timestep+1,next_orient);
-    //             }
-    //         }
-    //     }
-    // } else {
-    //     for (int i=0;i<env.num_of_agents;++i) {
-    //         auto & curr_state = paths[i][timestep];
-    //         if (curr_state.location==next_config[i]->index) {
-    //             paths[i].emplace_back(curr_state.location,curr_state.timestep+1,curr_state.orientation);
-    //         } else {
-    //             paths[i].emplace_back(next_config[i]->index,curr_state.timestep+1,curr_state.orientation);
-    //         }
-    //     }
-    // }
-
-    // total_feasible_timestep+=1;
-
 }
 
 
@@ -189,11 +110,6 @@ void MyLaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Acti
         }
         actions.push_back(get_action_from_states(paths[i][timestep],paths[i][timestep+1]));
     }
-
-    // for (int i=0;i<env.num_of_agents;++i) {
-    //     cout<<actions[i]<<" ";
-    // }
-    // cout<<endl;
 
     // TODO(hj) we probably still want to check the validness. so we need construct model or implement is_valid by ourselves.
     // check if not valid, this should not happen in general if the algorithm is correct? but maybe there exist deadlocks.
