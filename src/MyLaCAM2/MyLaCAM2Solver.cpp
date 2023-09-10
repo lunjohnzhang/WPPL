@@ -11,16 +11,13 @@ void MyLaCAM2Solver::initialize(const SharedEnvironment & env) {
     G = std::make_shared<Graph>(env);
 }
 
-Instance MyLaCAM2Solver::build_instance(const SharedEnvironment & env) {
-    auto starts=vector<uint>();
-    auto goals=vector<uint>();
+MyInstance MyLaCAM2Solver::build_instance(const SharedEnvironment & env) {
     for (int i=0;i<env.num_of_agents;++i) {
-        starts.push_back(env.curr_states[i].location);
         assert(env.goal_locations[i].size()>0);
         int goal_location=env.goal_locations[i][0].first;
-        goals.push_back(goal_location);
         auto & agent_info=agent_infos[i];
         // cerr<<"0\trandom-32-32-20.map\t32\t32\t"<<starts[i]%32<<"\t"<<starts[i]/32<<"\t"<<goals[i]%32<<"\t"<<goals[i]/32<<"\t0"<<endl;
+        agent_info.start_state=MyState(G->U[env.curr_states[i].location],-1,-1);
         if (goal_location!=agent_info.goal_location){
             agent_info.goal_location=goal_location;
             agent_info.elapsed=0;
@@ -29,7 +26,7 @@ Instance MyLaCAM2Solver::build_instance(const SharedEnvironment & env) {
             agent_info.elapsed+=1;
         }
     }
-    return Instance(*G, starts, goals, agent_infos);
+    return MyInstance(*G, agent_infos);
 }
 
 void MyLaCAM2Solver::plan(const SharedEnvironment & env){
@@ -44,10 +41,9 @@ void MyLaCAM2Solver::plan(const SharedEnvironment & env){
         const int time_limit_sec = 2;
         auto instance = build_instance(env);
         const auto deadline = Deadline(time_limit_sec * 1000);
-        bool use_swap=false;
         bool use_orient_in_heuristic=true;
         bool use_dist_in_priority=true;
-        auto planner = Planner(&instance,HT,&deadline,MT,0,MyLaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap,use_orient_in_heuristic,use_dist_in_priority);
+        auto planner = MyPlanner(&instance,HT,&deadline,MT,0,MyLaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_orient_in_heuristic,use_dist_in_priority);
         auto additional_info = std::string("");
         const auto solution=planner.solve(additional_info);
         const auto comp_time_ms = deadline.elapsed_ms();
@@ -65,7 +61,7 @@ void MyLaCAM2Solver::plan(const SharedEnvironment & env){
         // }
 
         // post processing
-        print_stats(verbose, instance, HT, solution, comp_time_ms);
+        // print_stats(verbose, instance, HT, solution, comp_time_ms);
 
         cout<<"solution length:"<<solution.size()<<endl;
         
@@ -79,8 +75,9 @@ void MyLaCAM2Solver::plan(const SharedEnvironment & env){
     vector<State> planned_next_states;
     vector<State> next_states;
     for (int i=0;i<env.num_of_agents;++i) {
-        planned_next_states.emplace_back(next_config[i]->index,-1,-1);
+        planned_next_states.emplace_back(next_config[i]->v->index,-1,-1);
         next_states.emplace_back(-1,-1,-1);
+        // std::cerr<<i<<" "<<env.curr_states[i].location<<" "<<next_config[i]->v->index<<endl;
     }
 
     executor.execute(&(env.curr_states),&planned_next_states,&next_states);
@@ -129,17 +126,17 @@ void MyLaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Acti
     // TODO(hj): when we need to replan?
     need_replan=false;
 
-    bool all_arrived=true;
-    for (int i=0;i<env.num_of_agents;++i) {
-        if (paths[i][timestep].location!=next_config[i]->index) {
-            // arrive goal locations
-            all_arrived=false;
-            break;
-        }
-    }    
-    if (all_arrived) {
-        need_replan=true;
-    }
+    // bool all_arrived=true;
+    // for (int i=0;i<env.num_of_agents;++i) {
+    //     if (paths[i][timestep].location!=next_config[i]->v->index) {
+    //         // arrive goal locations
+    //         all_arrived=false;
+    //         break;
+    //     }
+    // }    
+    // if (all_arrived) {
+    //     need_replan=true;
+    // }
 
     // 1. exceed simulation window
     // if (timestep==total_feasible_timestep){
@@ -147,13 +144,13 @@ void MyLaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Acti
     // }
     
     // 2. goal changes: there different ways to check this. let's just keep the old goal and compare.
-    for (int i=0;i<env.num_of_agents;++i) {
-        if (paths[i][timestep].location==env.goal_locations[i][0].first) {
-            // arrive goal locations
-            need_replan=true;
-            break;
-        }
-    }
+    // for (int i=0;i<env.num_of_agents;++i) {
+    //     if (paths[i][timestep].location==env.goal_locations[i][0].first) {
+    //         // arrive goal locations
+    //         need_replan=true;
+    //         break;
+    //     }
+    // }
     
     need_replan=true;
     

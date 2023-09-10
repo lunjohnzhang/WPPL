@@ -3,8 +3,8 @@
 #include "RHCR/interface/CompetitionActionModel.h"
 #include <random>
 #include "MyLaCAM2/graph.hpp"
-#include "MyLaCAM2/instance.hpp"
-#include "MyLaCAM2/planner.hpp"
+#include "MyLaCAM2/my_instance.hpp"
+#include "MyLaCAM2/my_planner.hpp"
 #include <memory>
 #include "PIBT/HeuristicTable.h"
 #include "MyLaCAM2/executor.hpp"
@@ -29,13 +29,13 @@ public:
 
     std::shared_ptr<Graph> G; // graph
     std::shared_ptr<HeuristicTable> HT; // instance
-    Config next_config;
+    MyConfig next_config;
 
-    vector<AgentInfo> agent_infos;
+    vector<MyAgentInfo> agent_infos;
 
     Executor executor;
 
-    Instance build_instance(const SharedEnvironment & env);
+    MyInstance build_instance(const SharedEnvironment & env);
     int get_neighbor_orientation(int loc1,int loc2);
 
     MyLaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT,SharedEnvironment * env,uint random_seed=0):HT(HT),action_model(env),executor(env),MT(new std::mt19937(random_seed)){};
