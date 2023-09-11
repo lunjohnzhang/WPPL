@@ -1,10 +1,9 @@
-// #include <vector>
-
-#ifndef CONS_PROP_H
-#define CONS_PROP_H
+#pragma once
 
 #include <boost/unordered_set.hpp>
 #include "LNS/CBS/MDD.h"
+
+namespace LNS {
 
 typedef std::pair<MDDNode*, MDDNode*> node_pair;
 typedef std::pair<node_pair, node_pair> edge_pair;
@@ -75,9 +74,5 @@ public:
 
   std::pair<std::vector<Constraint>, std::vector<Constraint>> generate_constraints(int, int);
 };
-
-#endif
-
-namespace LNS {
 
 } // end namespace LNS

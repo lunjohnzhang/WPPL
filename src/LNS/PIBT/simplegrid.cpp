@@ -12,6 +12,61 @@
 
 namespace LNS {
 
+SimpleGrid::SimpleGrid(const Instance & instance) {
+  init_from_instance(instance);
+}
+
+
+void SimpleGrid::init_from_instance(const Instance & instance) {
+  // set basic params
+  w=instance.num_of_cols;
+  h=instance.num_of_rows;
+
+  // create nodes
+  for (int i = 0; i < w*h; ++i) {
+    if (instance.isObstacle(i)) continue;
+    Node* v = new Node(i);
+    v->setPos(i/w, i%w);
+    nodes.push_back(v);
+  }
+
+  // create edges
+  for (int i=0 ;i <h; ++i) {
+    for (int j=0; j<w; ++j) {
+      int id = i*w+j;
+      if (instance.isObstacle(id)) continue;
+
+      auto v = getNode(id);
+      Nodes neighbor;
+
+      // east
+      if (j<w-1 && !instance.isObstacle(id+1)) {
+        neighbor.push_back(getNode(id+1));
+      }
+
+      // south
+      if (i<h-1 && !instance.isObstacle(id+w)) {
+        neighbor.push_back(getNode(id+w));
+      } 
+
+      // west
+      if (j>0 && !instance.isObstacle(id-1)) {
+        neighbor.push_back(getNode(id-1));
+      }
+
+      // north
+      if (i>0 && !instance.isObstacle(id-w)) {
+        neighbor.push_back(getNode(id-w));
+      }
+      v->setNeighbor(neighbor);
+    }
+  }
+
+  // set start goal
+  starts = nodes;
+  goals = nodes;
+}
+
 SimpleGrid::SimpleGrid(std::string _filename)
   : filename(_filename)
 {

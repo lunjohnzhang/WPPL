@@ -8,6 +8,28 @@ namespace LNS {
 
 int RANDOM_WALK_STEPS = 100000;
 
+
+Instance::Instance(const SharedEnvironment & env) {
+	// load map
+	num_of_rows=env.rows;
+	num_of_cols=env.cols;
+	map_size=num_of_rows*num_of_cols;
+	my_map.resize(map_size, false);
+
+	for (int i=0;i<map_size;++i){
+		my_map[i]=(bool)env.map[i];
+	}
+
+	// load agents
+	num_of_agents=env.num_of_agents;
+	start_locations.resize(num_of_agents);
+	goal_locations.resize(num_of_agents);
+	for (int i=0;i<num_of_agents;++i){
+		start_locations[i]=env.curr_states[i].location;
+		goal_locations[i]=env.goal_locations[i][0].first;
+	}
+}
+
 Instance::Instance(const string& map_fname, const string& agent_fname, 
 	int num_of_agents, int num_of_rows, int num_of_cols, int num_of_obstacles, int warehouse_width):
 	map_fname(map_fname), agent_fname(agent_fname), num_of_agents(num_of_agents)

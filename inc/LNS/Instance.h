@@ -1,5 +1,6 @@
 #pragma once
 #include"common.h"
+#include "SharedEnv.h"
 
 namespace LNS {
 
@@ -17,6 +18,7 @@ public:
 	Instance()=default;
 	Instance(const string& map_fname, const string& agent_fname, 
 		int num_of_agents = 0, int num_of_rows = 0, int num_of_cols = 0, int num_of_obstacles = 0, int warehouse_width = 0);
+	Instance(const SharedEnvironment & env);
 
 
 	void printAgents() const;
@@ -76,7 +78,7 @@ public:
 	string getInstanceName() const { return agent_fname; }
     void savePaths(const string & file_name, const vector<Path*>& paths) const;
     bool validateSolution(const vector<Path*>& paths, int sum_of_costs, int num_of_colliding_pairs) const;
-private:
+
 	  // int moves_offset[MOVE_COUNT];
 	  vector<bool> my_map;
 	  string map_fname;

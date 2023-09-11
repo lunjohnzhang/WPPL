@@ -2,9 +2,24 @@
     "lifelong_solver_name": [
         {
             "n_agents": 1000000,
-            "value": "LaCAM2"
+            "value": "LNS"
         }
     ],
+    "LNS": {
+        "seed": 0,
+        "cutoffTime": 5,
+        "screen": 1,
+        "initAlgo": "PP",
+        "replanAlgo": "PP",
+        "destoryStrategy": "Adaptive",
+        "neighborSize": 8,
+        "maxIterations": 10000000,
+        "initLNS": true,
+        "initDestoryStrategy": "Adaptive",
+        "sipp": false,
+        "pibtWindow": 5,
+        "winPibtSoftmode": true
+    },
     "PIBT": {
         "prior_type": "early_time"
     },

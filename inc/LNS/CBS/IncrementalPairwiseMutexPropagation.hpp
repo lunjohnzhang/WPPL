@@ -1,8 +1,9 @@
-#ifndef IPMP_H
-#define IPMP_H
+#pragma once
 
 #include "LNS/CBS/MDD.h"
 #include "LNS/SingleAgentSolver.h"
+
+namespace LNS {
 
 typedef std::vector <Constraint> con_vec;
 
@@ -34,9 +35,5 @@ public:
 
 
 };
-
-#endif
-
-namespace LNS {
 
 } // end namespace LNS

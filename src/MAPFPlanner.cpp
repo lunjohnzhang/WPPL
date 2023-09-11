@@ -190,6 +190,12 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         mylacam2_solver = std::make_shared<MyLaCAM2::MyLaCAM2Solver>(heuristics,env,0);
         mylacam2_solver->initialize(*env);
         cout<<"MyLaCAMSolver2 initialized"<<endl;
+    } else if (lifelong_solver_name=="LNS") {
+        auto heuristics =std::make_shared<HeuristicTable>(env);
+        heuristics->preprocess();
+        lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,config["LNS"]);
+        lns_solver->initialize(*env);
+        cout<<"LNSSolver initialized"<<endl;
     }
     else {
         cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
@@ -232,6 +238,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         cout<<"using MyLaCAM2"<<endl;
         mylacam2_solver->plan(*env);
         mylacam2_solver->get_step_actions(*env,actions);
+    } else if (lifelong_solver_name=="LNS") {
+        cout<<"using LNS"<<endl;
+        lns_solver->plan(*env); 
+        lns_solver->get_step_actions(*env,actions);
     } else {
         cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
         exit(-1);

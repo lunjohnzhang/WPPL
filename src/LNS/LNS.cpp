@@ -471,8 +471,8 @@ MAPF LNS::preparePIBTProblem(vector<int>& shuffled_agents){
     // seed for problem and graph
     auto MT_PG = new std::mt19937(0);
 
-//    Graph* G = new SimpleGrid(instance);
-    Graph* G = new SimpleGrid(instance.getMapFile());
+    Graph* G = new SimpleGrid(instance);
+    // Graph* G = new SimpleGrid(instance.getMapFile());
 
     std::vector<Task*> T;
     PIBT_Agents A;

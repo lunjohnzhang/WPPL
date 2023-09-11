@@ -31,6 +31,7 @@
 
 #pragma once
 #include "LNS/PIBT/grid.h"
+#include "LNS/Instance.h"
 
 namespace LNS {
 
@@ -44,7 +45,10 @@ protected:
   void createEdges();
   virtual void setStartGoal();
 
+  void init_from_instance(const Instance & instance);
+
 public:
+  SimpleGrid(const Instance & instance);
   SimpleGrid(std::string _filename);
   SimpleGrid(std::string _filename, std::mt19937* _MT);
   ~SimpleGrid();
