@@ -1,6 +1,8 @@
 #pragma once
 #include "LNS/SingleAgentSolver.h"
 
+namespace LNS {
+
 typedef tuple<int, int, bool> CollidingPair; // <a1, a2, internal conflict or not>
 
 struct PBSNode
@@ -102,3 +104,4 @@ private:
     bool findExternalConflicts(PBSNode& node, int a, const set<int> & lower_agents) const;
     void deleteConflicts(list<CollidingPair>& conflicts, int a) const; // delete conflicts that involve agent a
 };
+} // end namespace LNS

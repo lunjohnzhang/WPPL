@@ -1,5 +1,7 @@
 #include "LNS/SIPP.h"
 
+namespace LNS {
+
 void SIPP::updatePath(const LLNode* goal, vector<PathEntry> &path)
 {
     num_collisions = goal->num_of_conflicts;
@@ -475,3 +477,5 @@ bool SIPP::dominanceCheck(SIPPNode* new_node)
     }
     return true;
 }
+
+} // end namespace LNS

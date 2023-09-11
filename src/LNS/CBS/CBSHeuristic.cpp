@@ -1,6 +1,8 @@
 #include "LNS/CBS/CBSHeuristic.h"
 #include "LNS/CBS/CBS.h"
 #include <queue>
+
+namespace LNS {
 //#include <ilcplex/ilocplex.h>
 
 
@@ -1524,3 +1526,5 @@ bool CBSHeuristic::SyncMDDs(const MDD &mdd, const MDD& other) // assume mdd.leve
 	copy.clear();
 	return true;
 }
+
+} // end namespace LNS

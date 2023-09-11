@@ -1,5 +1,7 @@
 #include "LNS/SpaceTimeAStar.h"
 
+namespace LNS {
+
 
 void SpaceTimeAStar::updatePath(const LLNode* goal, vector<PathEntry> &path)
 {
@@ -428,3 +430,5 @@ void SpaceTimeAStar::releaseNodes()
 	allNodes_table.clear();
 }
 
+
+} // end namespace LNS

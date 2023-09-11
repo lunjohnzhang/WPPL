@@ -10,6 +10,8 @@
 #include "LNS/PIBT/util.h"
 #include "LNS/PIBT/simplegrid.h"
 
+namespace LNS {
+
 SimpleGrid::SimpleGrid(std::string _filename)
   : filename(_filename)
 {
@@ -216,3 +218,5 @@ std::string SimpleGrid::logStr() {
   str += "[graph] filename:" + filename + "\n";
   return str;
 }
+
+} // end namespace LNS

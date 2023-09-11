@@ -11,6 +11,8 @@
 #include "LNS/PIBT/pps.h"
 #include "LNS/PIBT/winpibt.h"
 
+namespace LNS {
+
 enum destroy_heuristic { RANDOMAGENTS, RANDOMWALK, INTERSECTION, DESTORY_COUNT };
 
 // TODO: adaptively change the neighbor size, that is,
@@ -80,3 +82,5 @@ private:
     void randomWalk(int agent_id, int start_location, int start_timestep,
                     set<int>& neighbor, int neighbor_size, int upperbound);
 };
+
+} // end namespace LNS

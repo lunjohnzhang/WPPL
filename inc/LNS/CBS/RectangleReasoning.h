@@ -1,6 +1,8 @@
 #pragma once
 #include "LNS/CBS/MDD.h"
 
+namespace LNS {
+
 //enum rectangle_strategy { NR, R, RM, DISJOINTR };
 
 class RectangleReasoning
@@ -77,3 +79,5 @@ private:
 
 };
 
+
+} // end namespace LNS

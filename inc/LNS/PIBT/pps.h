@@ -8,6 +8,8 @@
 #pragma once
 #include "LNS/PIBT/solver.h"
 
+namespace LNS {
+
 
 enum RES { SUCCESS,
            FAIL,
@@ -109,3 +111,5 @@ public:
 
   std::string logStr();
 };
+
+} // end namespace LNS

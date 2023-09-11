@@ -4,6 +4,8 @@
 
 #include "LNS/PIBT/graph.h"
 
+namespace LNS {
+
 
 class Grid : public Graph {
 protected:
@@ -29,3 +31,5 @@ public:
 
   virtual std::string logStr();
 };
+
+} // end namespace LNS

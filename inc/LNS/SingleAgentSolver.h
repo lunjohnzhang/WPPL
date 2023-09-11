@@ -2,6 +2,8 @@
 #include "LNS/Instance.h"
 #include "LNS/ConstraintTable.h"
 
+namespace LNS {
+
 class LLNode // low-level node
 {
 public:
@@ -148,3 +150,5 @@ protected:
 	int get_DH_heuristic(int from, int to) const { return abs(my_heuristic[from] - my_heuristic[to]); }
 };
 
+
+} // end namespace LNS

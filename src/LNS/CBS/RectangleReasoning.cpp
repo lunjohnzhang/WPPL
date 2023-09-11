@@ -1,5 +1,7 @@
 #include "LNS/CBS/RectangleReasoning.h"
 
+namespace LNS {
+
 
 shared_ptr<Conflict> RectangleReasoning::run(const vector<Path*>& paths, int timestep,
 	int a1, int a2, const MDD* mdd1, const MDD* mdd2)
@@ -904,3 +906,5 @@ bool RectangleReasoning::traverse(const Path& path, int loc, int t)
 		return loc == path.back().location;
 	else return t >= 0 && path[t].location == loc;
 }
+
+} // end namespace LNS

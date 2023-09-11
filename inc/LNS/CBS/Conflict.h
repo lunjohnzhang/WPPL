@@ -1,6 +1,8 @@
 #pragma once
 #include "LNS/common.h"
 
+namespace LNS {
+
 
 enum conflict_type { MUTEX, TARGET, CORRIDOR, RECTANGLE, STANDARD, TYPE_COUNT };
 
@@ -111,3 +113,5 @@ public:
 std::ostream& operator<<(std::ostream& os, const Conflict& conflict);
 
 bool operator < (const Conflict& conflict1, const Conflict& conflict2);
+
+} // end namespace LNS

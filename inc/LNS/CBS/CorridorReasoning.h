@@ -3,6 +3,8 @@
 #include "LNS/Instance.h"
 #include "LNS/SingleAgentSolver.h"
 
+namespace LNS {
+
 // enum corridor_strategy { NC, C, DISJOINTC };
 
 class CorridorReasoning
@@ -42,3 +44,5 @@ private:
 };
 
 
+
+} // end namespace LNS

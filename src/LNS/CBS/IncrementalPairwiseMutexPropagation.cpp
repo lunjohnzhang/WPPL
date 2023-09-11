@@ -3,6 +3,8 @@
 #include <iostream>
 #include "LNS/CBS/ConstraintPropagation.h"
 
+namespace LNS {
+
 using namespace std;
 IPMutexPropagation::IPMutexPropagation(MDD* MDD_0, MDD* MDD_1,
                                        SingleAgentSolver* se_0, SingleAgentSolver* se_1,
@@ -90,3 +92,5 @@ std::pair<con_vec, con_vec> IPMutexPropagation::gen_constraints(){
 
   return {{}, {}};
 }
+
+} // end namespace LNS

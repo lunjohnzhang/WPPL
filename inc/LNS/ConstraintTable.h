@@ -3,6 +3,8 @@
 #include "LNS/CBS/CBSNode.h"
 #include "LNS/PathTable.h"
 
+namespace LNS {
+
 class ConstraintTable
 {
 public:
@@ -66,3 +68,5 @@ protected:
 	inline size_t getEdgeIndex(size_t from, size_t to) const { return (1 + from) * map_size + to; }
 };
 
+
+} // end namespace LNS

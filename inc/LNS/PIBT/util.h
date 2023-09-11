@@ -4,6 +4,8 @@
 #include <random>
 #include <iostream>
 
+namespace LNS {
+
 // vector
 template <typename T>
 static bool inArray(T a, std::vector<T> &arr) {
@@ -39,3 +41,5 @@ static T printVector(std::vector<T> &arr) {
   for (auto ele : arr) std::cout << ele << "    ";
   std::cout << "\n";
 }
+
+} // end namespace LNS

@@ -1,5 +1,7 @@
 #include "LNS/CBS/PBS.h"
 
+namespace LNS {
+
 bool PBS::solve(double _time_limit, int _node_limit, int _collsion_threshold)
 {
     // set timer
@@ -508,3 +510,5 @@ void PBS::deleteConflicts(list<CollidingPair>& conflicts, int a) const
             ++c;
     }
 }
+
+} // end namespace LNS

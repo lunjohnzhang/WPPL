@@ -12,6 +12,8 @@
 #include "LNS/PIBT/pps.h"
 #include "LNS/PIBT/util.h"
 
+namespace LNS {
+
 int PPS::s_uuid = 0;
 
 PPS::PPS(Problem* _P) : Solver(_P) {
@@ -953,3 +955,5 @@ std::string PPS::logStr() {
   str += Solver::logStr();
   return str;
 }
+
+} // end namespace LNS

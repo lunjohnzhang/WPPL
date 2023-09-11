@@ -1,5 +1,7 @@
 #include "LNS/ReservationTable.h"
 
+namespace LNS {
+
 
 /*int ResevationTable::get_holding_time(int location)
 { 
@@ -397,3 +399,4 @@ int ReservationTable::get_earliest_no_collision_arrival_time(int from, int to, c
     }
     return -1;
 }
+} // end namespace LNS

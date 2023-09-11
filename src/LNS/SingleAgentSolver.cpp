@@ -1,6 +1,8 @@
 #include "LNS/SingleAgentSolver.h"
 #include "LNS/SpaceTimeAStar.h"
 
+namespace LNS {
+
 list<int> SingleAgentSolver::getNextLocations(int curr) const // including itself and its neighbors
 {
 	list<int> rst = instance.getNeighbors(curr);
@@ -171,3 +173,5 @@ std::ostream& operator<<(std::ostream& os, const LLNode& node)
     os << node.location << "@" << node.timestep << "(f=" << node.g_val << "+" << node.h_val << ")";
     return os;
 }
+
+} // end namespace LNS

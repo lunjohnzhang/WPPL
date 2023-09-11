@@ -8,6 +8,8 @@
 #include "LNS/PIBT/mapf.h"
 #include "LNS/PIBT/util.h"
 
+namespace LNS {
+
 MAPF::MAPF(Graph* _G,
            PIBT_Agents _A,
            std::vector<Task*> _T) : Problem(_G, _A, _T)
@@ -90,3 +92,5 @@ std::string MAPF::logStr() {
   }
   return str;
 }
+
+} // end namespace LNS

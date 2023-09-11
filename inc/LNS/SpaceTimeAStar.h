@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "LNS/SingleAgentSolver.h"
 
+namespace LNS {
+
 
 class AStarNode: public LLNode
 {
@@ -96,3 +98,5 @@ private:
 	void releaseNodes();
 
 };
+
+} // end namespace LNS

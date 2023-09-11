@@ -4,6 +4,8 @@
 #include "LNS/CBS/CorridorReasoning.h"
 #include "LNS/CBS/MutexReasoning.h"
 
+namespace LNS {
+
 enum high_level_solver_type { ASTAR, ASTAREPS, NEW, EES };
 
 class CBS
@@ -182,3 +184,5 @@ private: // CBS only, cannot be used by ECBS
 
 	void printPaths() const;
 };
+
+} // end namespace LNS

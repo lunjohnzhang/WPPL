@@ -8,6 +8,8 @@
 #include "LNS/PIBT/task.h"
 #include "LNS/PIBT/util.h"
 
+namespace LNS {
+
 
 int Task::cntId = 0;
 
@@ -81,3 +83,5 @@ std::string Task::logStr() {
   str += "\n";
   return str;
 }
+
+} // end namespace LNS

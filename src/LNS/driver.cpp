@@ -5,6 +5,8 @@
 #include "LNS/AnytimeEECBS.h"
 #include "LNS/PIBT/pibt.h"
 
+namespace LNS {
+
 
 /* Main function */
 int main(int argc, char** argv)
@@ -126,3 +128,4 @@ int main(int argc, char** argv)
 	return 0;
 
 }
+} // end namespace LNS

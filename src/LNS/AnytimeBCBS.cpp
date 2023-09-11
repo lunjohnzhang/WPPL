@@ -1,6 +1,8 @@
 #include "LNS/AnytimeBCBS.h"
 #include "LNS/CBS/CBS.h"
 
+namespace LNS {
+
 
 void AnytimeBCBS::run()
 {
@@ -170,3 +172,5 @@ void AnytimeBCBS::writeResultToFile(string file_name) const
           preprocessing_time << "," << getSolverName() << "," << instance.getInstanceName() << endl;
     stats.close();
 }
+
+} // end namespace LNS

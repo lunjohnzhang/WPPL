@@ -1,6 +1,8 @@
 #pragma once
 #include"common.h"
 
+namespace LNS {
+
 
 // Currently only works for undirected unweighted 4-nighbor grids
 class Instance 
@@ -104,3 +106,5 @@ private:
 	  friend class SingleAgentSolver;
 };
 
+
+} // end namespace LNS

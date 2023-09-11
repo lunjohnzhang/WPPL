@@ -5,6 +5,8 @@
 #include "LNS/SIPP.h"
 #include "LNS/SpaceTimeAStar.h"
 
+namespace LNS {
+
 
 // takes the paths_found_initially and UPDATE all (constrained) paths found for agents from curr to start
 void CBS::updatePaths(CBSNode* curr)
@@ -1705,3 +1707,5 @@ void CBS::clear()
 	solution_found = false;
 	solution_cost = -2;
 }
+
+} // end namespace LNS

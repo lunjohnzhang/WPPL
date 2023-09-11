@@ -1,5 +1,7 @@
 #include "LNS/ConstraintTable.h"
 
+namespace LNS {
+
 int ConstraintTable::getMaxTimestep() const // everything is static after the max timestep
 {
     int rst = max(max(ct_max_timestep, cat_max_timestep), length_min);
@@ -363,3 +365,5 @@ int ConstraintTable::getHoldingTime(int location, int earliest_timestep) const
 
 	return rst;
 }
+
+} // end namespace LNS

@@ -10,6 +10,8 @@
 #include <algorithm>
 #include "LNS/PIBT/util.h"
 
+namespace LNS {
+
 
 winPIBT::winPIBT(Problem* _P, int _w, bool _softmode)
   : Solver(_P), w(_w), softmode(_softmode)
@@ -425,3 +427,5 @@ std::string winPIBT::logStr() {
   str += Solver::logStr();
   return str;
 }
+
+} // end namespace LNS

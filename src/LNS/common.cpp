@@ -1,5 +1,7 @@
 #include "LNS/common.h"
 
+namespace LNS {
+
 std::ostream& operator<<(std::ostream& os, const Path& path)
 {
 	for (const auto& state : path)
@@ -21,3 +23,4 @@ bool isSamePath(const Path& p1, const Path& p2)
 	}
 	return true;
 }
+} // end namespace LNS

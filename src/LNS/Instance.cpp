@@ -4,6 +4,8 @@
 #include <chrono>       // std::chrono::system_clock
 #include "LNS/Instance.h"
 
+namespace LNS {
+
 int RANDOM_WALK_STEPS = 100000;
 
 Instance::Instance(const string& map_fname, const string& agent_fname, 
@@ -617,3 +619,4 @@ bool Instance::validateSolution(const vector<Path*>& paths, int sum_of_costs, in
     cout << "Done!" << endl;
     return true;
 }
+} // end namespace LNS

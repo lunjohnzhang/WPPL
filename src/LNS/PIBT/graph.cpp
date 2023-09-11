@@ -12,6 +12,8 @@
 #include "LNS/PIBT/util.h"
 #include <boost/heap/fibonacci_heap.hpp>
 
+namespace LNS {
+
 Graph::Graph() {
   std::random_device seed_gen;
   MT = new std::mt19937(seed_gen());
@@ -258,3 +260,5 @@ Paths Graph::getRandomStartGoal(int num) {
 
   return points;
 }
+
+} // end namespace LNS

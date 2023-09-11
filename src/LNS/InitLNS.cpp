@@ -4,6 +4,8 @@
 #include "LNS/CBS/GCBS.h"
 #include "LNS/CBS/PBS.h"
 
+namespace LNS {
+
 InitLNS::InitLNS(const Instance& instance, vector<Agent>& agents, double time_limit,
          const string & replan_algo_name, const string & init_destory_name, int neighbor_size, int screen) :
          BasicLNS(instance, time_limit, neighbor_size, screen), agents(agents), replan_algo_name(replan_algo_name),
@@ -901,3 +903,4 @@ bool InitLNS::validatePathTable() const
         assert(path_table.getPath(i) == &agents[i].path);
     return true;
 }
+} // end namespace LNS

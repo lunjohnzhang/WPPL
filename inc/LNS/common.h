@@ -46,6 +46,8 @@ typedef std::chrono::duration<float> fsec;
 #define MAX_COST INT_MAX / 2
 #define MAX_NODES INT_MAX / 2
 
+namespace LNS {
+
 struct PathEntry
 {
 	int location = -1;
@@ -92,3 +94,5 @@ struct PIBTPPS_option{
     }
 };*/
 
+
+} // end namespace LNS

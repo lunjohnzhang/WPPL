@@ -1,6 +1,8 @@
 #pragma once
 #include "LNS/PIBT/problem.h"
 
+namespace LNS {
+
 
 class MAPF : public Problem {
 private:
@@ -21,3 +23,5 @@ public:
 
   std::string logStr();
 };
+
+} // end namespace LNS

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 
+namespace LNS {
+
 
 class Node {
 private:
@@ -34,3 +36,5 @@ public:
   bool operator==(Node& v) const { return v.getId() == id; };
   bool operator!=(Node& v) const { return v.getId() != id; };
 };
+
+} // end namespace LNS

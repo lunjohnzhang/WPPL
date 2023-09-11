@@ -3,6 +3,8 @@
 #include "LNS/PIBT/node.h"
 #include "LNS/PIBT/task.h"
 
+namespace LNS {
+
 // history of agent
 struct AgentStatus {
     Node* v;
@@ -59,3 +61,5 @@ public:
     bool operator==(PIBT_Agent& a) const { return a.getId() == id; };
     bool operator!=(PIBT_Agent& a) const { return a.getId() != id; };
 };
+
+} // end namespace LNS

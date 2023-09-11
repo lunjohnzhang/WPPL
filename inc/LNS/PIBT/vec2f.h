@@ -7,6 +7,8 @@
 #include <iostream>
 #include <math.h>
 
+namespace LNS {
+
 class Vec2f {
 public:
   float x;
@@ -125,3 +127,5 @@ inline std::ostream& operator<<(std::ostream& os, const Vec2f& vec) {
   os << "(" << vec.x << ", " << vec.y << ")";
   return os;
 }
+
+} // end namespace LNS

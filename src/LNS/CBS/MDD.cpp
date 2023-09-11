@@ -2,6 +2,8 @@
 #include <iostream>
 #include "LNS/common.h"
 
+namespace LNS {
+
 /*bool MDD::isConstrained(int curr_id, int next_id, int next_timestep, const std::vector< std::list< std::pair<int, int> > >& cons)  const
 {
 	if (cons.empty())
@@ -674,3 +676,5 @@ unordered_map<int, MDDNode*> collectMDDlevel(MDD* mdd, int i){
   return loc2mdd;
 }
 
+
+} // end namespace LNS

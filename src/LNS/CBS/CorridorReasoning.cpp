@@ -4,6 +4,8 @@
 #include "LNS/SpaceTimeAStar.h"
 #include "LNS/SIPP.h"
 
+namespace LNS {
+
 shared_ptr<Conflict> CorridorReasoning::run(const shared_ptr<Conflict>& conflict,
 	const vector<Path*>& paths, const HLNode& node)
 {
@@ -449,3 +451,4 @@ bool CorridorReasoning::blocked(const Path& path, const Constraint& constraint)
 	}
 	return false;
 }
+} // end namespace LNS

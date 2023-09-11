@@ -7,6 +7,8 @@
 
 #include "LNS/PIBT/grid.h"
 
+namespace LNS {
+
 
 Grid::Grid(std::mt19937* _MT) : Graph(_MT) {}
 Grid::Grid() {};
@@ -43,3 +45,5 @@ std::string Grid::logStr() {
   str += "[graph] height:" + std::to_string(getH()) + "\n";
   return str;
 }
+
+} // end namespace LNS

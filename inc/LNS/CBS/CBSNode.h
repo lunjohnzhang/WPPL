@@ -2,6 +2,8 @@
 #include "LNS/common.h"
 #include "LNS/CBS/Conflict.h"
 
+namespace LNS {
+
 enum node_selection { NODE_RANDOM, NODE_H, NODE_DEPTH, NODE_CONFLICTS, NODE_CONFLICTPAIRS, NODE_MVC };
 
 
@@ -247,3 +249,5 @@ struct ConstraintsHasher // Hash a CT node by constraints on one agent
 		}
 	};
 };
+
+} // end namespace LNS

@@ -3,6 +3,8 @@
 #include <vector>
 #include "LNS/PIBT/node.h"
 
+namespace LNS {
+
 
 class Task {
 private:
@@ -39,3 +41,5 @@ public:
 
   std::string logStr();
 };
+
+} // end namespace LNS

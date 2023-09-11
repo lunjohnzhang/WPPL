@@ -2,6 +2,8 @@
 #include "LNS/CBS/CBS.h"
 #include "LNS/CBS/ECBSNode.h"
 
+namespace LNS {
+
 
 class ECBS : public CBS
 {
@@ -46,3 +48,4 @@ private:
 	//update information
 	void printPaths() const;
 };
+} // end namespace LNS

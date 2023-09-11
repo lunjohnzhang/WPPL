@@ -3,6 +3,8 @@
 #include "LNS/CBS/RectangleReasoning.h"
 #include "LNS/CBS/CorridorReasoning.h"
 
+namespace LNS {
+
 
 enum heuristics_type { ZERO, CG, DG, WDG, GLOBAL, PATH, LOCAL, CONFLICT, STRATEGY_COUNT }; //  GREEDY,
 
@@ -254,3 +256,5 @@ private:
 
 
 
+
+} // end namespace LNS

@@ -2,6 +2,8 @@
 #include "LNS/CBS/RectangleReasoning.h"
 #include "LNS/CBS/MDD.h"
 
+namespace LNS {
+
 
 std::ostream& operator<<(std::ostream& os, const Constraint& constraint)
 {
@@ -104,3 +106,5 @@ bool operator < (const Conflict& conflict1, const Conflict& conflict2) // return
 	return conflict1.priority > conflict2.priority;
 }
 
+
+} // end namespace LNS

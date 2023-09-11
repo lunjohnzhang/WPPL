@@ -1,5 +1,7 @@
 #include "LNS/PathTable.h"
 
+namespace LNS {
+
 void PathTable::insertPath(int agent_id, const Path& path)
 {
     if (path.empty())
@@ -278,3 +280,4 @@ void PathTableWC::clear()
     goals.clear();
     paths.clear();
 }
+} // end namespace LNS

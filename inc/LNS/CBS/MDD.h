@@ -2,6 +2,8 @@
 #include "LNS/SingleAgentSolver.h"
 #include "LNS/CBS/ECBSNode.h"
 
+namespace LNS {
+
 
 class MDDNode
 {
@@ -136,3 +138,5 @@ private:
 };
 
 unordered_map<int, MDDNode*> collectMDDlevel(MDD* mdd, int i);
+
+} // end namespace LNS

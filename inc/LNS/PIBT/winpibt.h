@@ -8,6 +8,8 @@
 #pragma once
 #include "LNS/PIBT/solver.h"
 
+namespace LNS {
+
 
 class winPIBT : public Solver {
 protected:
@@ -47,3 +49,5 @@ public:
 
   virtual std::string logStr();
 };
+
+} // end namespace LNS

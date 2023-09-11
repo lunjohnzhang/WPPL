@@ -3,6 +3,8 @@
 #include "LNS/SingleAgentSolver.h"
 #include "LNS/ReservationTable.h"
 
+namespace LNS {
+
 class SIPPNode: public LLNode
 {
 public:
@@ -106,3 +108,5 @@ private:
 	void printSearchTree() const;
 };
 
+
+} // end namespace LNS

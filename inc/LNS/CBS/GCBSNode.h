@@ -1,6 +1,8 @@
 #pragma once
 #include "LNS/CBS/Conflict.h"
 
+namespace LNS {
+
 
 class GCBSNode
 {
@@ -64,3 +66,4 @@ public:
 //        ", d = " << node.colliding_pairs << " ) with " << node.getNumNewPaths() << " new paths ";
 //    return os;
 //}
+} // end namespace LNS

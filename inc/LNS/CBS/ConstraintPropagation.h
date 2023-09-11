@@ -77,3 +77,7 @@ public:
 };
 
 #endif
+
+namespace LNS {
+
+} // end namespace LNS

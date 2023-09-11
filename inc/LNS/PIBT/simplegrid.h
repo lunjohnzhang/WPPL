@@ -32,6 +32,8 @@
 #pragma once
 #include "LNS/PIBT/grid.h"
 
+namespace LNS {
+
 class SimpleGrid : public Grid {
 protected:
   std::string filename;
@@ -54,3 +56,5 @@ public:
 
   std::string logStr();
 };
+
+} // end namespace LNS

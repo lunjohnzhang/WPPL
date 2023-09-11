@@ -10,6 +10,8 @@
 #include "LNS/PIBT/util.h"
 #include <typeinfo>
 
+namespace LNS {
+
 
 Solver::Solver(Problem* _P) : P(_P) {
   std::random_device seed_gen;
@@ -194,3 +196,5 @@ std::string Solver::logStr() {
 
   return str;
 }
+
+} // end namespace LNS

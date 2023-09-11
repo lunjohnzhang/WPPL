@@ -3,6 +3,8 @@
 
 #define NO_AGENT -1
 
+namespace LNS {
+
 class PathTable
 {
 public:
@@ -45,3 +47,4 @@ public:
 private:
     vector<const Path*> paths;
 };
+} // end namespace LNS

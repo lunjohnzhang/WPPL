@@ -2,6 +2,8 @@
 #include "LNS/CBS/ECBS.h"
 #include <queue>
 
+namespace LNS {
+
 LNS::LNS(const Instance& instance, double time_limit, const string & init_algo_name, const string & replan_algo_name,
          const string & destory_name, int neighbor_size, int num_of_iterations, bool use_init_lns,
          const string & init_destory_name, bool use_sipp, int screen, PIBTPPS_option pipp_option) :
@@ -900,3 +902,5 @@ void LNS::writePathsToFile(const string & file_name) const
     }
     output.close();
 }
+
+} // end namespace LNS

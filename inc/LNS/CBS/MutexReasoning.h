@@ -1,6 +1,8 @@
 #include "LNS/CBS/IncrementalPairwiseMutexPropagation.hpp"
 #include "LNS/CBS/MDD.h"
 
+namespace LNS {
+
 class MutexReasoning{
 public:
 	double accumulated_runtime = 0;
@@ -28,3 +30,5 @@ private:
 
 // other TODOs
 // TODO duplicated cardinal test in classify conflicts
+
+} // end namespace LNS

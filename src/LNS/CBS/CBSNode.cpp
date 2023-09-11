@@ -1,5 +1,7 @@
 #include "LNS/CBS/CBSNode.h"
 
+namespace LNS {
+
 
 void HLNode::clear()
 {
@@ -77,3 +79,4 @@ std::ostream& operator<<(std::ostream& os, const HLNode& node)
 		node.getNumNewPaths() << " new paths ";
 	return os;
 }
+} // end namespace LNS

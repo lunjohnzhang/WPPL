@@ -1,6 +1,8 @@
 #pragma once
 #include "LNS/CBS/CBSNode.h"
 
+namespace LNS {
+
 
 class ECBSNode : public HLNode
 {
@@ -86,3 +88,4 @@ public:
 		return rst;
 	}
 };
+} // end namespace LNS

@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include "LNS/PIBT/node.h"
 
+namespace LNS {
+
 using Nodes = std::vector<Node*>;
 using Paths = std::vector<Nodes>;
 
@@ -112,3 +114,5 @@ public:
 
   virtual std::string logStr() { return ""; };
 };
+
+} // end namespace LNS

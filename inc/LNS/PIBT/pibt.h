@@ -2,6 +2,8 @@
 
 #include "LNS/PIBT/solver.h"
 
+namespace LNS {
+
 
 
 class PIBT : public Solver {
@@ -45,3 +47,5 @@ public:
 
   virtual std::string logStr();
 };
+
+} // end namespace LNS
