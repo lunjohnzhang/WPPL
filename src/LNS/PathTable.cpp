@@ -2,10 +2,17 @@
 
 namespace LNS {
 
-void PathTable::insertPath(int agent_id, const Path& path)
+void PathTable::insertPath(int agent_id, const Path& _path)
 {
-    if (path.empty())
+    if (_path.empty())
         return;
+    
+    int T = (int) _path.size();
+    if (window_size>0 && window_size+1<_path.size()) {
+        T = window_size+1;
+    }
+    Path path(_path.begin(), _path.begin() + T);
+
     for (int t = 0; t < (int)path.size(); t++)
     {
         if (table[path[t].location].size() <= t)
@@ -18,11 +25,18 @@ void PathTable::insertPath(int agent_id, const Path& path)
     makespan = max(makespan, (int) path.size() - 1);
 }
 
-void PathTable::deletePath(int agent_id, const Path& path)
+void PathTable::deletePath(int agent_id, const Path& _path)
 {
-    if (path.empty())
+    if (_path.empty())
         return;
-    for (int t = 0; t < (int)path.size(); t++)
+    
+    int T = (int) _path.size();
+    if (window_size>0 && window_size+1<_path.size()) {
+        T = window_size+1;
+    }
+    Path path(_path.begin(), _path.begin() + T);
+    
+    for (int t = 0; t < (int)path.size() ; t++)
     {
         assert(table[path[t].location].size() > t && table[path[t].location][t] == agent_id);
         table[path[t].location][t] = NO_AGENT;

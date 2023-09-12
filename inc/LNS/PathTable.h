@@ -9,6 +9,7 @@ class PathTable
 {
 public:
     int makespan = 0;
+    int window_size = -1;
     vector< vector<int> > table; // this stores the collision-free paths, the value is the id of the agent
     vector<int> goals; // this stores the goal locatons of the paths: key is the location, while value is the timestep when the agent reaches the goal
     void reset() { auto map_size = table.size(); table.clear(); table.resize(map_size); goals.assign(map_size, MAX_COST); makespan = 0; }
@@ -20,7 +21,7 @@ public:
     void get_agents(set<int>& conflicting_agents, int neighbor_size, int loc) const;
     void getConflictingAgents(int agent_id, set<int>& conflicting_agents, int from, int to, int to_time) const;;
     int getHoldingTime(int location, int earliest_timestep) const;
-    explicit PathTable(int map_size = 0) : table(map_size), goals(map_size, MAX_COST) {}
+    explicit PathTable(int map_size = 0, int window_size=-1) : table(map_size), goals(map_size, MAX_COST), window_size(window_size) {}
 };
 
 class PathTableWC // with collisions

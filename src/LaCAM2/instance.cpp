@@ -6,13 +6,15 @@ Instance::Instance(
     const Graph & G,
     const std::vector<uint>& start_indexes,
     const std::vector<uint>& goal_indexes,
-    const std::vector<AgentInfo>& agent_infos
+    const std::vector<AgentInfo>& agent_infos,
+    int planning_window
     ):
       G(G),
       starts(Config()),
       goals(Config()),
       N(start_indexes.size()),
-      agent_infos(agent_infos) {
+      agent_infos(agent_infos),
+      planning_window(planning_window) {
   for (auto k : start_indexes) starts.push_back(G.U[k]);
   for (auto k : goal_indexes) goals.push_back(G.U[k]);
 }

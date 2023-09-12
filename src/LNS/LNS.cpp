@@ -10,7 +10,7 @@ LNS::LNS(const Instance& instance, double time_limit, const string & init_algo_n
          BasicLNS(instance, time_limit, neighbor_size, screen),
          init_algo_name(init_algo_name),  replan_algo_name(replan_algo_name), num_of_iterations(num_of_iterations),
          use_init_lns(use_init_lns),init_destory_name(init_destory_name),
-         path_table(instance.map_size), pipp_option(pipp_option)
+         path_table(instance.map_size,window_size_for_CT), pipp_option(pipp_option)
 {
     start_time = Time::now();
     replan_time_limit = time_limit / 100;
@@ -216,6 +216,8 @@ bool LNS::getInitialSolution()
         succ = runWinPIBT();
     else if (init_algo_name == "CBS")
         succ = runCBS();
+    else if (init_algo_name == "LaCAM2")
+        succ = checkPrecomputed();
     else
     {
         cerr <<  "Initial MAPF solver " << init_algo_name << " does not exist!" << endl;
@@ -232,6 +234,26 @@ bool LNS::getInitialSolution()
         return false;
     }
 
+}
+
+bool LNS::checkPrecomputed()
+{
+    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, nullptr, nullptr);
+    for (int i=0;i<agents.size();++i) {
+        cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
+        if (agents[i].path.back().location!=agents[i].path_planner->goal_location) {
+            auto start_location=agents[i].path_planner->start_location;
+            agents[i].path_planner->start_location=agents[i].path.back().location;
+            auto path = agents[i].path_planner->findPath(constraint_table);
+            agents[i].path_planner->start_location=start_location;
+            agents[i].path.insert(agents[i].path.end(),path.begin(),path.end());
+        }
+        neighbor.sum_of_costs+=agents[i].path.size()-1;
+        path_table.insertPath(agents[i].id, agents[i].path);
+        cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
+    }
+
+    return true;
 }
 
 bool LNS::runEECBS()
@@ -754,7 +776,11 @@ void LNS::validateSolution() const
             const auto & a1 = a1_.path.size() <= a2_.path.size()? a1_ : a2_;
             const auto & a2 = a1_.path.size() <= a2_.path.size()? a2_ : a1_;
             int t = 1;
-            for (; t < (int) a1.path.size(); t++)
+            int T = (int) a1.path.size();
+            if (window_size_for_CT>0) {
+                T = min(T,window_size_for_CT+1);
+            }
+            for (; t < T; t++)
             {
                 if (a1.path[t].location == a2.path[t].location) // vertex conflict
                 {
@@ -771,8 +797,14 @@ void LNS::validateSolution() const
                     exit(-1);
                 }
             }
+
+            // TODO: probably we don't need to check target conflict.
             int target = a1.path.back().location;
-            for (; t < (int) a2.path.size(); t++)
+            T = (int) a2.path.size();
+            if (window_size_for_CT>0) {
+                T = min(T,window_size_for_CT+1);
+            }
+            for (; t < T; t++)
             {
                 if (a2.path[t].location == target)  // target conflict
                 {

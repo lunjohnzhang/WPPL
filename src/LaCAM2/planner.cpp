@@ -17,12 +17,13 @@ uint HNode::HNODE_CNT = 0;
 
 // for high-level
 HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, const uint _g,
-             const uint _h)
+             const uint _h, const uint _d)
     : C(_C),
       parent(_parent),
       neighbor(),
       g(_g),
       h(_h),
+      d(_d),
       f(g + h),
       priorities(C.size()),
       order(C.size(), 0),
@@ -99,13 +100,19 @@ Solution Planner::solve(std::string& additional_info)
   auto OPEN = std::stack<HNode*>();
   auto EXPLORED = std::unordered_map<Config, HNode*, ConfigHasher>();
   // insert initial node, 'H': high-level node
-  auto H_init = new HNode(ins->starts, HT, ins, nullptr, 0, get_h_value(ins->starts));
+  auto H_init = new HNode(ins->starts, HT, ins, nullptr, 0, get_h_value(ins->starts), 0);
   OPEN.push(H_init);
   EXPLORED[H_init->C] = H_init;
 
   std::vector<Config> solution;
   auto C_new = Config(N, nullptr);  // for new configuration
   HNode* H_goal = nullptr;          // to store goal node
+
+
+  int d_max=INT_MAX/2;
+  if (ins->planning_window>0) {
+    d_max=ins->planning_window;
+  }
 
   // DFS
   while (!OPEN.empty() && !is_expired(deadline)) {
@@ -116,15 +123,21 @@ Solution Planner::solve(std::string& additional_info)
 
     // only plan for one step now
     // check goal condition: only require someone to arrive in lifelong case
-    bool someone_arrived = false;
-    for (int i=0;i<N;++i) {
-      if (H->C[i]->id == ins->goals[i]->id || loop_cnt>1){
-        someone_arrived = true;
-        break;
-      }
-    }
+    // bool someone_arrived = false;
+    // for (int i=0;i<N;++i) {
+    //   if (H->C[i]->id == ins->goals[i]->id || loop_cnt>1){
+    //     someone_arrived = true;
+    //     break;
+    //   }
+    // }
 
-    if (someone_arrived || loop_cnt>1) {
+    // if (someone_arrived || loop_cnt>1) {
+    //   H_goal=H;
+    //   break;
+    // }
+
+    // if we find a depth d_max valid solution, then we just return it
+    if (H->d>=d_max) {
       H_goal=H;
       break;
     }
@@ -213,7 +226,7 @@ Solution Planner::solve(std::string& additional_info)
     } else {
       // insert new search node
       const auto H_new = new HNode(
-          C_new, HT, ins, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new));
+          C_new, HT, ins, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new), H->d + 1);
       EXPLORED[H_new->C] = H_new;
       if (H_goal == nullptr || H_new->f < H_goal->f) OPEN.push(H_new);
     }
@@ -273,6 +286,7 @@ void Planner::rewrite(HNode* H_from, HNode* H_to, HNode* H_goal,
         n_to->g = g_val;
         n_to->f = n_to->g + n_to->h;
         n_to->parent = n_from;
+        n_to->d = n_from->d + 1;
         Q.push(n_to);
         if (H_goal != nullptr && n_to->f < H_goal->f) OPEN.push(n_to);
       }

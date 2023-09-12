@@ -53,7 +53,7 @@ public:
         return neighbors;
     }
 
-    vector<State> get_loc_neighbors(const State & curr) {
+    vector<State> get_loc_neighbors(const State & curr,bool move_orient=true) {
         vector<State> neighbors;
 
         int x=curr.location%env->cols;
@@ -61,7 +61,13 @@ public:
 
         for (int i=0;i<4;++i) {
             int new_location=curr.location+moves[i];
-            int new_orientation=i;
+            int new_orientation;
+            
+            if (move_orient) {
+                new_orientation=i;
+            } else {
+                new_orientation=0;
+            }
 
             if ((x==env->cols-1 && i==0) || (y==env->rows-1 && i==1) || (x==0 && i==2) || (y==0 && i==3)) {
                 continue;

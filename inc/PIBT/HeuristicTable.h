@@ -24,14 +24,21 @@ public:
     char * sub_heuristics;
     int * empty_locs;
     int * loc_idxs; 
-    const int n_orientations=4;
+    int n_orientations=4;
     size_t loc_size=0;
     size_t state_size;
+    bool consider_rotation=true;
 
     // divide by 16 in case of overlow
     const uint MAX_HEURISTIC=UINT_MAX/16;
 
-    HeuristicTable(SharedEnvironment * _env):env(*_env),action_model(_env){
+    HeuristicTable(SharedEnvironment * _env, bool consider_rotation=true):env(*_env),action_model(_env),consider_rotation(consider_rotation){
+        if (consider_rotation) {
+            n_orientations=4;
+        } else {
+            n_orientations=1;
+        }
+
         loc_size=0;
         for (int i=0;i<env.map.size();++i) {
             if (!env.map[i]) {
@@ -57,14 +64,16 @@ public:
 
         state_size = loc_size*n_orientations;
         main_heuristics = new unsigned short[loc_size*loc_size];
-        sub_heuristics = new char[state_size*state_size];
+        if (consider_rotation)
+            sub_heuristics = new char[state_size*state_size];
     };
 
     ~HeuristicTable() {
         delete [] empty_locs;
         delete [] loc_idxs;
         delete [] main_heuristics;
-        delete [] sub_heuristics;
+        if (consider_rotation)
+            delete [] sub_heuristics;
     }
 
     void compute_heuristics(){
@@ -160,7 +169,15 @@ public:
                 State state=_pop(queue,s_idx);
                 ++ctr;
                 int c=0;
-                for (auto & next: action_model.get_state_neighbors(state,false)){
+
+                vector<State> neighbors;
+                if (consider_rotation){
+                    neighbors=action_model.get_state_neighbors(state,false);
+                } else {
+                    neighbors=action_model.get_loc_neighbors(state,false);
+                }
+
+                for (auto & next: neighbors){
                     ++c;
                     ONLYDEV(assert(loc_idxs[state.location]>=0);)
                     size_t idx=start_orient*state_size+loc_idxs[next.location]*n_orientations+next.orientation;
@@ -174,26 +191,34 @@ public:
             }
         }
 
-        for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
-            unsigned short min_val=USHRT_MAX;
-            for (int start_orient=0;start_orient<n_orientations;++start_orient) {
-                for (int orient=0;orient<n_orientations;++orient) {
-                    size_t value_idx=start_orient*state_size+loc_idx*n_orientations+orient;
-                    // cerr<<"helo"<<values[value_idx]<<endl;
-                    if (values[value_idx]<min_val) {
-                        min_val = values[value_idx];
+
+        if (consider_rotation) {
+            for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
+                unsigned short min_val=USHRT_MAX;
+                for (int start_orient=0;start_orient<n_orientations;++start_orient) {
+                    for (int orient=0;orient<n_orientations;++orient) {
+                        size_t value_idx=start_orient*state_size+loc_idx*n_orientations+orient;
+                        // cerr<<"helo"<<values[value_idx]<<endl;
+                        if (values[value_idx]<min_val) {
+                            min_val = values[value_idx];
+                        }
+                    }
+                }
+                // cerr<<start_loc_idx<<" "<<loc_idx<<" "<<min_val<<endl;
+                size_t main_idx=start_loc_idx*loc_size+loc_idx;
+                main_heuristics[main_idx]=min_val;
+                for (int start_orient=0;start_orient<n_orientations;++start_orient) {
+                    for (int orient=0;orient<n_orientations;++orient) {
+                        size_t value_idx=start_orient*state_size+loc_idx*n_orientations+orient;
+                        size_t sub_idx=((start_loc_idx*loc_size+loc_idx)*n_orientations+start_orient)*n_orientations+orient;
+                        sub_heuristics[sub_idx]=char(values[value_idx]-min_val);
                     }
                 }
             }
-            // cerr<<start_loc_idx<<" "<<loc_idx<<" "<<min_val<<endl;
-            size_t main_idx=start_loc_idx*loc_size+loc_idx;
-            main_heuristics[main_idx]=min_val;
-            for (int start_orient=0;start_orient<n_orientations;++start_orient) {
-                for (int orient=0;orient<n_orientations;++orient) {
-                    size_t value_idx=start_orient*state_size+loc_idx*n_orientations+orient;
-                    size_t sub_idx=((start_loc_idx*loc_size+loc_idx)*n_orientations+start_orient)*n_orientations+orient;
-                    sub_heuristics[sub_idx]=char(values[value_idx]-min_val);
-                }
+        } else {
+            for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
+                size_t main_idx=start_loc_idx*loc_size+loc_idx;
+                main_heuristics[main_idx]=values[loc_idx];
             }
         }
 
@@ -250,7 +275,12 @@ public:
         if (folder[folder.size()-1]!=boost::filesystem::path::preferred_separator){
             folder+=boost::filesystem::path::preferred_separator;
         }
-        string fpath=folder+fname+"_heuristics_v2.gz";
+        string fpath;
+        if (consider_rotation) {
+            fpath=folder+fname+"_heuristics_v2.gz";
+        } else {
+            fpath=folder+fname+"_heuristics_no_rotation_v2.gz";
+        }
 
         if (boost::filesystem::exists(fpath)) {
             load(fpath);
@@ -284,7 +314,8 @@ public:
         out.write((char *)main_heuristics,sizeof(unsigned short)*loc_size*loc_size);
 
         // save sub heuristics
-        out.write((char *)sub_heuristics,sizeof(char)*state_size*state_size);
+        if (consider_rotation)
+            out.write((char *)sub_heuristics,sizeof(char)*state_size*state_size);
 
         boost::iostreams::close(outbuf);
         fout.close();
@@ -334,7 +365,8 @@ public:
         in.read((char *)main_heuristics,sizeof(unsigned short)*loc_size*loc_size);
         
         // load sub heuristics
-        in.read((char *)sub_heuristics,sizeof(char)*state_size*state_size);
+        if (consider_rotation)
+            in.read((char *)sub_heuristics,sizeof(char)*state_size*state_size);
 
         g_timer.record_d("heu/load_start","heu/load_end","heu/load");
 

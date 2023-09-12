@@ -8,6 +8,7 @@
 #include <memory>
 #include "PIBT/HeuristicTable.h"
 #include "LaCAM2/executor.hpp"
+#include "nlohmann/json.hpp"
 
 namespace LaCAM2 {
 
@@ -35,13 +36,34 @@ public:
 
     Executor executor;
 
+    nlohmann::json config;
+
     Instance build_instance(const SharedEnvironment & env);
     int get_neighbor_orientation(int loc1,int loc2);
 
-    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT,SharedEnvironment * env,uint random_seed=0):HT(HT),action_model(env),executor(env),MT(new std::mt19937(random_seed)){};
+    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, nlohmann::json & config):
+        HT(HT),action_model(env),executor(env),
+        config(config),
+        MT(new std::mt19937(read_param_json<uint>(config,"seed",0))){
+
+    };
+
     ~LaCAM2Solver(){
         delete MT;
     };
+
+
+    void clear() {
+        paths.clear();
+        need_replan = true;
+        total_feasible_timestep = 0;
+        timestep = 0;
+        delete MT;
+        MT = new std::mt19937(read_param_json(config,"seed",0));
+        next_config = Config();
+        agent_infos.clear();
+
+    }
 
     Action get_action_from_states(const State & state, const State & next_state){
         assert(state.timestep+1==next_state.timestep);

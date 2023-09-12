@@ -3,12 +3,13 @@
 #include <random>
 #include <memory>
 #include "PIBT/HeuristicTable.h"
-#include "MyLaCAM2/executor.hpp"
+#include "LaCAM2/executor.hpp"
 #include "SharedEnv.h"
 #include "common.h"
 #include "LNS/LNS.h"
 #include <unordered_set>
 #include <queue>
+#include "LaCAM2/LaCAM2Solver.hpp"
 
 namespace LNS {
 
@@ -29,20 +30,23 @@ public:
     // [end]
 
     std::shared_ptr<HeuristicTable> HT; // instance
-    MyLaCAM2::Executor executor;
+    LaCAM2::Executor executor;
+    std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;
 
     nlohmann::json config;
 
     LNSSolver(
         const std::shared_ptr<HeuristicTable> & HT,
         SharedEnvironment * env,
-        nlohmann::json & config
+        nlohmann::json & config,
+        std::shared_ptr<LaCAM2::LaCAM2Solver> & lacam2_solver
     ):
         HT(HT),
         action_model(env),
         executor(env),
         config(config),
-        MT(new std::mt19937(read_param_json<uint>(config,"seed",0))){
+        MT(new std::mt19937(read_param_json<uint>(config,"seed",0))),
+        lacam2_solver(lacam2_solver){
 
     };
 

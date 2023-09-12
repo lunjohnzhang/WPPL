@@ -29,7 +29,7 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env) {
             agent_info.elapsed+=1;
         }
     }
-    return Instance(*G, starts, goals, agent_infos);
+    return Instance(*G, starts, goals, agent_infos, read_param_json<int>(config,"planning_window",-1));
 }
 
 int LaCAM2Solver::get_neighbor_orientation(int loc1,int loc2) {
@@ -98,28 +98,42 @@ void LaCAM2Solver::plan(const SharedEnvironment & env){
         } else {  
             next_config=solution[1];
         }
+    
+
+        if (!read_param_json<bool>(config,"consider_rotation")) {
+            for (int i=0;i<env.num_of_agents;++i) {
+                cerr<<"xagent "<<i<<": ";
+                for (int j=1;j<solution.size();++j) {
+                    cerr<<solution[j][i]->index<<" ";
+                }
+                cerr<<endl;
+                for (int j=1;j<solution.size();++j) {
+                    paths[i].emplace_back(solution[j][i]->index,env.curr_states[i].timestep+1+j,-1);
+                }
+            }
+        }
     }
 
-    vector<State> planned_next_states;
-    vector<State> next_states;
-    for (int i=0;i<env.num_of_agents;++i) {
-        planned_next_states.emplace_back(next_config[i]->index,-1,-1);
-        next_states.emplace_back(-1,-1,-1);
-    }
-
-    executor.execute(&(env.curr_states),&planned_next_states,&next_states);
-
-    for (int i=0;i<env.num_of_agents;++i) {
-        if (next_states[i].timestep!=env.curr_states[i].timestep+1) {
-            std::cerr<<i<<" "<<next_states[i].timestep<<" "<<env.curr_states[i].timestep<<endl;
-            exit(-1);
+    if (read_param_json<bool>(config,"consider_rotation")) {
+        vector<State> planned_next_states;
+        vector<State> next_states;
+        for (int i=0;i<env.num_of_agents;++i) {
+            planned_next_states.emplace_back(next_config[i]->index,-1,-1);
+            next_states.emplace_back(-1,-1,-1);
         }
 
-        paths[i].emplace_back(next_states[i]);
-        // std::cerr<<i<<" "<<env.curr_states[i]<<" "<<next_states[i]<<endl;
+        executor.execute(&(env.curr_states),&planned_next_states,&next_states);
+
+        for (int i=0;i<env.num_of_agents;++i) {
+            if (next_states[i].timestep!=env.curr_states[i].timestep+1) {
+                std::cerr<<i<<" "<<next_states[i].timestep<<" "<<env.curr_states[i].timestep<<endl;
+                exit(-1);
+            }
+
+            paths[i].emplace_back(next_states[i]);
+            // std::cerr<<i<<" "<<env.curr_states[i]<<" "<<next_states[i]<<endl;
+        }
     }
-
-
 
     // bool ready_to_forward = true;
     // for (int i=0;i<env.num_of_agents;++i) {

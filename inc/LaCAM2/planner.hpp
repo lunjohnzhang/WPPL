@@ -43,6 +43,8 @@ struct HNode {
   HNode* parent;
   std::set<HNode*> neighbor;
 
+  uint d;        // depth (might be updated, it might be different from g)
+
   // costs
   uint g;        // g-value (might be updated)
   const uint h;  // h-value
@@ -54,7 +56,7 @@ struct HNode {
   std::queue<LNode*> search_tree;
 
   HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, const uint _g,
-        const uint _h);
+        const uint _h, const uint _d);
   ~HNode();
 };
 using HNodes = std::vector<HNode*>;

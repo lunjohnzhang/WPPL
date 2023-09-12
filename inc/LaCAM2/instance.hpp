@@ -25,6 +25,7 @@ struct Instance {
   Config goals;   // goal configuration
   const uint N;   // number of agents
   const vector<AgentInfo> & agent_infos;
+  int planning_window=-1;
 
   // // for testing
   // Instance(const std::string& map_filename,
@@ -36,10 +37,13 @@ struct Instance {
   // // random instance generation
   // Instance(const std::string& map_filename, std::mt19937* MT,
   //          const uint _N = 1);
-  Instance(const Graph & G,
-          const std::vector<uint>& start_indexes,
-          const std::vector<uint>& goal_indexes,
-          const std::vector<AgentInfo> & agent_infos);
+  Instance(
+    const Graph & G,
+    const std::vector<uint>& start_indexes,
+    const std::vector<uint>& goal_indexes,
+    const std::vector<AgentInfo> & agent_infos,
+    int planning_window=-1
+  );
   ~Instance() {}
 
   // simple feasibility check of instance
