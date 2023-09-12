@@ -54,6 +54,8 @@ public:
 
 
     void clear() {
+        int num_of_agents=paths.size();
+
         paths.clear();
         need_replan = true;
         total_feasible_timestep = 0;
@@ -63,6 +65,8 @@ public:
         next_config = Config();
         agent_infos.clear();
 
+        paths.resize(num_of_agents);
+        agent_infos.resize(num_of_agents);
     }
 
     Action get_action_from_states(const State & state, const State & next_state){
