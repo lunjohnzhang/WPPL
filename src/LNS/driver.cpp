@@ -86,7 +86,7 @@ int main(int argc, char** argv)
                 vm["initLNS"].as<bool>(),
                 vm["initDestoryStrategy"].as<string>(),
                 vm["sipp"].as<bool>(),
-                screen, pipp_option);
+                screen, pipp_option, nullptr);
         bool succ = lns.run();
         if (succ)
         {

@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "LNS/Instance.h"
 #include "LNS/ConstraintTable.h"
+#include "PIBT/HeuristicTable.h"
+#include <memory>
 
 namespace LNS {
 
@@ -99,6 +101,7 @@ public:
 		return max(get_DH_heuristic(from, to), instance.getManhattanDistance(from, to));
 	}
 	const Instance& instance;
+	std::shared_ptr<HeuristicTable> HT;
 
     //virtual Path findOptimalPath(const PathTable& path_table) = 0;
     //virtual Path findOptimalPath(const ConstraintTable& constraint_table, const PathTableWC& path_table) = 0;
@@ -117,10 +120,11 @@ public:
 	// int getStartLocation() const {return instance.start_locations[agent]; }
 	// int getGoalLocation() const {return instance.goal_locations[agent]; }
 
-	SingleAgentSolver(const Instance& instance, int agent) :
+	SingleAgentSolver(const Instance& instance, int agent, const std::shared_ptr<HeuristicTable> & HT) :
 		instance(instance), //agent(agent), 
 		start_location(instance.start_locations[agent]),
-		goal_location(instance.goal_locations[agent])
+		goal_location(instance.goal_locations[agent]),
+		HT(HT)
 	{
 		compute_heuristics();
 	}

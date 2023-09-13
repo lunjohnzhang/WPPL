@@ -76,8 +76,8 @@ public:
 
 	string getName() const { return "AStar"; }
 
-	SpaceTimeAStar(const Instance& instance, int agent):
-		SingleAgentSolver(instance, agent) {}
+	SpaceTimeAStar(const Instance& instance, int agent, const std::shared_ptr<HeuristicTable> & HT=nullptr):
+		SingleAgentSolver(instance, agent, HT) {}
 
 private:
 	// define typedefs and handles for heap

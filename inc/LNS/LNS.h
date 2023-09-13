@@ -10,6 +10,8 @@
 #include "LNS/PIBT/pibt.h"
 #include "LNS/PIBT/pps.h"
 #include "LNS/PIBT/winpibt.h"
+#include "PIBT/HeuristicTable.h"
+#include <memory>
 
 namespace LNS {
 
@@ -31,11 +33,12 @@ public:
     int restart_times = 0;
 
     int window_size_for_CT = 10;
+    std::shared_ptr<HeuristicTable> HT; // instance
 
     LNS(const Instance& instance, double time_limit,
         const string & init_algo_name, const string & replan_algo_name, const string & destory_name,
         int neighbor_size, int num_of_iterations, bool init_lns, const string & init_destory_name, bool use_sipp,
-        int screen, PIBTPPS_option pipp_option);
+        int screen, PIBTPPS_option pipp_option, const std::shared_ptr<HeuristicTable> & HT);
     ~LNS()
     {
         delete init_lns;

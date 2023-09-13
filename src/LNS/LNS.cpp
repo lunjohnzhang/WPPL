@@ -2,16 +2,17 @@
 #include "LNS/CBS/ECBS.h"
 #include <queue>
 #include "LNS/CBS/CBSNode.h"
+#include "util/Timer.h"
 
 namespace LNS {
 
 LNS::LNS(const Instance& instance, double time_limit, const string & init_algo_name, const string & replan_algo_name,
          const string & destory_name, int neighbor_size, int num_of_iterations, bool use_init_lns,
-         const string & init_destory_name, bool use_sipp, int screen, PIBTPPS_option pipp_option) :
+         const string & init_destory_name, bool use_sipp, int screen, PIBTPPS_option pipp_option, const std::shared_ptr<HeuristicTable> & HT) :
          BasicLNS(instance, time_limit, neighbor_size, screen),
          init_algo_name(init_algo_name),  replan_algo_name(replan_algo_name), num_of_iterations(num_of_iterations),
          use_init_lns(use_init_lns),init_destory_name(init_destory_name),
-         path_table(instance.map_size,window_size_for_CT), path_table_wc(instance.map_size, instance.getDefaultNumberOfAgents()), pipp_option(pipp_option)
+         path_table(instance.map_size,window_size_for_CT), path_table_wc(instance.map_size, instance.getDefaultNumberOfAgents()), pipp_option(pipp_option), HT(HT)
 {
     start_time = Time::now();
     replan_time_limit = time_limit / 100;
@@ -37,7 +38,7 @@ LNS::LNS(const Instance& instance, double time_limit, const string & init_algo_n
     int N = instance.getDefaultNumberOfAgents();
     agents.reserve(N);
     for (int i = 0; i < N; i++)
-        agents.emplace_back(instance, i, use_sipp);
+        agents.emplace_back(instance, i, use_sipp, HT);
     preprocessing_time = ((fsec)(Time::now() - start_time)).count();
     if (screen >= 2)
         cout << "Pre-processing time = " << preprocessing_time << " seconds." << endl;
@@ -248,15 +249,20 @@ bool LNS::checkPrecomputed()
         if (agents[i].path.back().location!=agents[i].path_planner->goal_location) {
             auto start_location=agents[i].path_planner->start_location;
             agents[i].path_planner->start_location=agents[i].path.back().location;
+            g_timer.record_p("find_path_s");
             auto path = agents[i].path_planner->findPath(constraint_table);
+            g_timer.record_d("find_path_s","find_path_e","find_path");
             agents[i].path_planner->start_location=start_location;
             agents[i].path.insert(agents[i].path.end(),path.begin(),path.end());
         }
         neighbor.sum_of_costs+=agents[i].path.size()-1;
+        g_timer.record_p("insert_path_s");
         path_table.insertPath(agents[i].id, agents[i].path);
+        g_timer.record_d("insert_path_s","insert_path_e","insert_path");
         path_table_wc.insertPath(agents[i].id,agents[i].path);
         // cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
     }
+    g_timer.print_all_d();
 
     return true;
 }

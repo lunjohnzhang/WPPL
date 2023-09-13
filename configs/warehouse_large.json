@@ -5,6 +5,26 @@
             "value": "LaCAM2"
         }
     ],
+    "LNS": {
+        "seed": 0,
+        "cutoffTime": 0.01,
+        "screen": 0,
+        "initAlgo": "LaCAM2",
+        "replanAlgo": "PP",
+        "destoryStrategy": "Adaptive",
+        "neighborSize": 4,
+        "maxIterations": 10000000,
+        "initLNS": true,
+        "initDestoryStrategy": "Adaptive",
+        "sipp": true,
+        "pibtWindow": 5,
+        "winPibtSoftmode": true
+    },
+    "LaCAM2": {
+        "seed": 0,
+        "planning_window": 10,
+        "consider_rotation": true
+    },
     "PIBT": {
         "prior_type": "early_time"
     },

@@ -2,13 +2,13 @@
     "lifelong_solver_name": [
         {
             "n_agents": 1000000,
-            "value": "LNS"
+            "value": "LaCAM2"
         }
     ],
     "LNS": {
         "seed": 0,
-        "cutoffTime": 60,
-        "screen": 1,
+        "cutoffTime": 0.01,
+        "screen": 0,
         "initAlgo": "LaCAM2",
         "replanAlgo": "PP",
         "destoryStrategy": "Adaptive",
@@ -23,7 +23,7 @@
     "LaCAM2": {
         "seed": 0,
         "planning_window": 10,
-        "consider_rotation": false
+        "consider_rotation": true
     },
     "PIBT": {
         "prior_type": "early_time"

@@ -42,7 +42,8 @@ void LNSSolver::plan(const SharedEnvironment & env){
             read_param_json<string>(config,"initDestoryStrategy"),
             read_param_json<bool>(config,"sipp"),
             read_param_json<int>(config,"screen"),
-            pipp_option
+            pipp_option,
+            HT
         );
 
 

@@ -2,6 +2,8 @@
 #include "LNS/common.h"
 #include "LNS/SpaceTimeAStar.h"
 #include "LNS/SIPP.h"
+#include "PIBT/HeuristicTable.h"
+#include <memory>
 
 namespace LNS {
 
@@ -10,13 +12,14 @@ struct Agent
     int id;
     SingleAgentSolver* path_planner = nullptr; // start, goal, and heuristics are stored in the path planner
     Path path;
+    std::shared_ptr<HeuristicTable> HT; // instance
 
-    Agent(const Instance& instance, int id, bool sipp) : id(id)
+    Agent(const Instance& instance, int id, bool sipp, const std::shared_ptr<HeuristicTable> & HT): id(id), HT(HT)
     {
         if(sipp)
-            path_planner = new SIPP(instance, id);
+            path_planner = new SIPP(instance, id, HT);
         else
-            path_planner = new SpaceTimeAStar(instance, id);
+            path_planner = new SpaceTimeAStar(instance, id, HT);
     }
     ~Agent(){ delete path_planner; }
 

@@ -50,7 +50,7 @@ public:
         loc_idxs = new int[env.map.size()];
 
         cout<<"number of empyt locations: "<<loc_size<<endl;
-        std::fill(loc_idxs,loc_idxs+loc_size,-1);
+        std::fill(loc_idxs,loc_idxs+env.map.size(),-1);
 
         int loc_idx=0;
         for (int loc=0;loc<env.map.size();++loc) {
