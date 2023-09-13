@@ -102,11 +102,11 @@ void LaCAM2Solver::plan(const SharedEnvironment & env){
 
         if (!read_param_json<bool>(config,"consider_rotation")) {
             for (int i=0;i<env.num_of_agents;++i) {
-                cerr<<"xagent "<<i<<": ";
-                for (int j=1;j<solution.size();++j) {
-                    cerr<<solution[j][i]->index<<" ";
-                }
-                cerr<<endl;
+                // cerr<<"xagent "<<i<<": ";
+                // for (int j=1;j<solution.size();++j) {
+                //     cerr<<solution[j][i]->index<<" ";
+                // }
+                // cerr<<endl;
                 for (int j=1;j<solution.size();++j) {
                     paths[i].emplace_back(solution[j][i]->index,env.curr_states[i].timestep+1+j,-1);
                 }

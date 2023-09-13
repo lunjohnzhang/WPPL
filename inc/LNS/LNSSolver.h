@@ -17,13 +17,15 @@ class LNSSolver {
 
 public:
     // [start] the following lines should be abstracted away.
-    std::vector<Path> paths;
+    std::vector<::Path> paths;
     CompetitionActionModelWithRotate action_model;
     std::mt19937* MT;   // seed for randomness
     bool need_replan = true;
     int total_feasible_timestep = 0;
     int timestep = 0;
+    int executed_plan_step = -1;
     void initialize(const SharedEnvironment & env);
+    void observe(const SharedEnvironment & env);
     void plan(const SharedEnvironment & env);
     void get_step_actions(const SharedEnvironment & env, vector<Action> & actions);
     // Action get_action_from_states(const State & state, const State & next_state);

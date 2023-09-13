@@ -1,6 +1,7 @@
 #include "LNS/LNS.h"
 #include "LNS/CBS/ECBS.h"
 #include <queue>
+#include "LNS/CBS/CBSNode.h"
 
 namespace LNS {
 
@@ -10,7 +11,7 @@ LNS::LNS(const Instance& instance, double time_limit, const string & init_algo_n
          BasicLNS(instance, time_limit, neighbor_size, screen),
          init_algo_name(init_algo_name),  replan_algo_name(replan_algo_name), num_of_iterations(num_of_iterations),
          use_init_lns(use_init_lns),init_destory_name(init_destory_name),
-         path_table(instance.map_size,window_size_for_CT), pipp_option(pipp_option)
+         path_table(instance.map_size,window_size_for_CT), path_table_wc(instance.map_size, instance.getDefaultNumberOfAgents()), pipp_option(pipp_option)
 {
     start_time = Time::now();
     replan_time_limit = time_limit / 100;
@@ -65,9 +66,11 @@ bool LNS::run()
             if (succ) // accept new paths
             {
                 path_table.reset();
+                path_table_wc.reset();
                 for (const auto & agent : agents)
                 {
                     path_table.insertPath(agent.id, agent.path);
+                    path_table_wc.insertPath(agent.id, agent.path);
                 }
                 init_lns->clear();
                 initial_sum_of_costs = init_lns->sum_of_costs;
@@ -144,6 +147,7 @@ bool LNS::run()
             if (replan_algo_name == "PP")
                 neighbor.old_paths[i] = agents[neighbor.agents[i]].path;
             path_table.deletePath(neighbor.agents[i], agents[neighbor.agents[i]].path);
+            path_table_wc.deletePath(neighbor.agents[i]);
             neighbor.old_sum_of_costs += agents[neighbor.agents[i]].path.size() - 1;
         }
 
@@ -240,7 +244,7 @@ bool LNS::checkPrecomputed()
 {
     ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, nullptr, nullptr);
     for (int i=0;i<agents.size();++i) {
-        cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
+        // cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
         if (agents[i].path.back().location!=agents[i].path_planner->goal_location) {
             auto start_location=agents[i].path_planner->start_location;
             agents[i].path_planner->start_location=agents[i].path.back().location;
@@ -250,7 +254,8 @@ bool LNS::checkPrecomputed()
         }
         neighbor.sum_of_costs+=agents[i].path.size()-1;
         path_table.insertPath(agents[i].id, agents[i].path);
-        cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
+        path_table_wc.insertPath(agents[i].id,agents[i].path);
+        // cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
     }
 
     return true;
@@ -392,7 +397,15 @@ bool LNS::runPP()
     if (!iteration_stats.empty()) // replan
         T = min(T, replan_time_limit);
     auto time = Time::now();
-    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table);
+    CBSNode node;
+    int suboptimality=1.2;
+    int search_priority=1;
+    bool use_soft_constraint=true;
+    PathTableWC * ptr_path_table_wc = nullptr;
+    if (use_soft_constraint) {
+        ptr_path_table_wc = &path_table_wc;
+    }
+    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table, nullptr);
     while (p != shuffled_agents.end() && ((fsec)(Time::now() - time)).count() < T)
     {
         int id = *p;
@@ -400,13 +413,20 @@ bool LNS::runPP()
             cout << "Remaining agents = " << remaining_agents <<
                  ", remaining time = " << T - ((fsec)(Time::now() - time)).count() << " seconds. " << endl
                  << "Agent " << agents[id].id << endl;
-        agents[id].path = agents[id].path_planner->findPath(constraint_table);
+        if (search_priority==1) {
+            agents[id].path = agents[id].path_planner->findPath(constraint_table);
+        } else if (search_priority==2) {
+            vector<Path *> paths(agents.size(),nullptr);
+            int min_f_val;
+            tie(agents[id].path,min_f_val) = agents[id].path_planner->findSuboptimalPath(node, constraint_table, paths, agents[id].id, 0,suboptimality);
+        }
         if (agents[id].path.empty()) break;
         neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs)
             break;
         remaining_agents--;
         path_table.insertPath(agents[id].id, agents[id].path);
+        path_table_wc.insertPath(agents[id].id, agents[id].path);
         ++p;
     }
     if (remaining_agents == 0 && neighbor.sum_of_costs <= neighbor.old_sum_of_costs) // accept new paths
@@ -422,6 +442,7 @@ bool LNS::runPP()
         {
             int a = *p2;
             path_table.deletePath(agents[a].id, agents[a].path);
+            path_table_wc.deletePath(agents[a].id);
             ++p2;
         }
         if (!neighbor.old_paths.empty())
@@ -432,6 +453,7 @@ bool LNS::runPP()
                 int a = *p2;
                 agents[a].path = neighbor.old_paths[i];
                 path_table.insertPath(agents[a].id, agents[a].path);
+                path_table_wc.insertPath(agents[a].id, agents[a].path);
                 ++p2;
             }
             neighbor.sum_of_costs = neighbor.old_sum_of_costs;
@@ -551,6 +573,7 @@ void LNS::updatePIBTResult(const PIBT_Agents& A, vector<int>& shuffled_agents){
             cout<<endl;
         }
         path_table.insertPath(agents[a_id].id, agents[a_id].path);
+        path_table_wc.insertPath(agents[a_id].id, agents[a_id].path);
         soc += (int)agents[a_id].path.size()-1;
     }
 
