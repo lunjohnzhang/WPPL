@@ -102,7 +102,7 @@ public:
             q.pop();
 
             int x=curr%env.cols;
-            int y=curr/env.rows;
+            int y=curr/env.cols;
 
             if (x<env.cols-1) {
                 int next = curr+1;
