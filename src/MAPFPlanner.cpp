@@ -193,7 +193,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     } else if (lifelong_solver_name=="LNS") {
         auto heuristics =std::make_shared<HeuristicTable>(env);
         heuristics->preprocess();
-        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,config["LaCAM2"]);
+        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,config["LNS"]["LaCAM2"]);
 
         auto heuristics_no_rot = std::make_shared<HeuristicTable>(env,false);
         heuristics_no_rot->preprocess();

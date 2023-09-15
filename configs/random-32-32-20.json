@@ -18,7 +18,15 @@
         "initDestoryStrategy": "Adaptive",
         "sipp": true,
         "pibtWindow": 5,
-        "winPibtSoftmode": true
+        "winPibtSoftmode": true,
+        "window_size_for_CT": -1,
+        "window_size_for_CAT": -1,
+        "window_size_for_PATH": -1,
+        "LaCAM2": {
+            "seed": 0,
+            "planning_window": 10,
+            "consider_rotation": false
+        }
     },
     "LaCAM2": {
         "seed": 0,

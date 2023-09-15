@@ -174,6 +174,7 @@ void ReservationTable::insertSoftConstraint2SIT(int location, int t_min, int t_m
 
 
 // update SIT at the given location
+// TODO(rivers): deal with window size for all cases.
 void ReservationTable::updateSIT(int location)
 {
     assert(sit[location].empty());
@@ -196,20 +197,32 @@ void ReservationTable::updateSIT(int location)
     {
         sit[location].emplace_back(0, min(constraint_table.length_max, MAX_TIMESTEP - 1) + 1, false);
     }
+
+    // TODO(rivers): currently, we only deal with the window size in this case.
     // path table
     if (constraint_table.path_table_for_CT != nullptr and !constraint_table.path_table_for_CT->table.empty())
     {
         if (location < constraint_table.map_size) // vertex conflict
         {
-            for (int t = 0; t < (int)constraint_table.path_table_for_CT->table[location].size(); t++)
+            int T=(int)constraint_table.path_table_for_CT->table[location].size();
+            if (constraint_table.window_size_for_CT>0) {
+                T = min(T, constraint_table.window_size_for_CT + 1);
+            }
+
+            for (int t = 0; t < T; t++)
             {
                 if (constraint_table.path_table_for_CT->table[location][t] != NO_AGENT)
                 {
                     insert2SIT(location, t, t+1);
                 }
             }
-            if (constraint_table.path_table_for_CT->goals[location] < MAX_TIMESTEP) // target conflict
-                insert2SIT(location, constraint_table.path_table_for_CT->goals[location], MAX_TIMESTEP + 1);
+            
+            T = MAX_TIMESTEP;
+            if (constraint_table.window_size_for_CT>0) {
+                T = min(T, constraint_table.window_size_for_CT+1);
+            }
+            if (constraint_table.path_table_for_CT->goals[location] < T) // target conflict
+                insert2SIT(location, constraint_table.path_table_for_CT->goals[location], T + 1);
         }
         else // edge conflict
         {
@@ -219,6 +232,9 @@ void ReservationTable::updateSIT(int location)
             {
                 int t_max = (int) min(constraint_table.path_table_for_CT->table[from].size(),
                                       constraint_table.path_table_for_CT->table[to].size() + 1);
+                if (constraint_table.window_size_for_CT>0) {
+                    t_max = min(t_max, constraint_table.window_size_for_CT+1);
+                }
                 for (int t = 1; t < t_max; t++)
                 {
                     if (constraint_table.path_table_for_CT->table[to][t - 1] != NO_AGENT and
@@ -231,6 +247,7 @@ void ReservationTable::updateSIT(int location)
             }
         }
     }
+
 
     // negative constraints
     const auto& it = constraint_table.ct.find(location);

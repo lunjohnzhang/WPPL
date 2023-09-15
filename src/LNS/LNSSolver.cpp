@@ -23,6 +23,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
         // build instace
         Instance instance(env);
+        // TODO(rivers): this might not be necessary
         modify_goals(instance.goal_locations, env);
 
         // build planner

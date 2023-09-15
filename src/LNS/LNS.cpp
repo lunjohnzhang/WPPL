@@ -8,12 +8,25 @@ namespace LNS {
 
 LNS::LNS(const Instance& instance, double time_limit, const string & init_algo_name, const string & replan_algo_name,
          const string & destory_name, int neighbor_size, int num_of_iterations, bool use_init_lns,
-         const string & init_destory_name, bool use_sipp, int screen, PIBTPPS_option pipp_option, const std::shared_ptr<HeuristicTable> & HT) :
+         const string & init_destory_name, bool use_sipp, int screen, PIBTPPS_option pipp_option, const std::shared_ptr<HeuristicTable> & HT,
+         int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH):
          BasicLNS(instance, time_limit, neighbor_size, screen),
          init_algo_name(init_algo_name),  replan_algo_name(replan_algo_name), num_of_iterations(num_of_iterations),
          use_init_lns(use_init_lns),init_destory_name(init_destory_name),
-         path_table(instance.map_size,window_size_for_CT), path_table_wc(instance.map_size, instance.getDefaultNumberOfAgents()), pipp_option(pipp_option), HT(HT)
+         path_table(instance.map_size,window_size_for_CT), path_table_wc(instance.map_size, instance.getDefaultNumberOfAgents()), pipp_option(pipp_option), HT(HT),
+         window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH)
 {
+    // check window_size here
+    // if (window_size_for_CAT<window_size_for_CT) {
+    //     cerr<<"window_size_for_CT ("<<window_size_for_CT<<") should be smaller than window_size_for_CAT ("<<window_size_for_CAT<<")"<<endl;
+    //     exit(-1);
+    // }
+
+    // if (window_size_for_PATH<window_size_for_CAT) {
+    //     cerr<<"window_size_for_PATH ("<<window_size_for_PATH<<") should be smaller than window_size_for_CAT ("<<window_size_for_CAT<<")"<<endl;
+    //     exit(-1);
+    // }
+
     start_time = Time::now();
     replan_time_limit = time_limit / 100;
     if (destory_name == "Adaptive")
@@ -411,7 +424,7 @@ bool LNS::runPP()
     if (use_soft_constraint) {
         ptr_path_table_wc = &path_table_wc;
     }
-    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table, nullptr);
+    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table, nullptr, window_size_for_CT, window_size_for_CAT);
     while (p != shuffled_agents.end() && ((fsec)(Time::now() - time)).count() < T)
     {
         int id = *p;

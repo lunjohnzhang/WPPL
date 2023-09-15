@@ -14,6 +14,8 @@ public:
 	size_t map_size;
     const PathTable * path_table_for_CT;
     const PathTableWC * path_table_for_CAT;
+	int window_size_for_CT = -1;
+	int window_size_for_CAT = -1;
 
 	int getHoldingTime(int location, int earliest_timestep) const; // the earliest timestep that the agent can hold the location after earliest_timestep
     int getMaxTimestep() const; // everything is static after the max timestep
@@ -28,9 +30,9 @@ public:
     int getFutureNumOfCollisions(int loc, int t) const;
 
 	ConstraintTable(size_t num_col, size_t map_size, const PathTable* path_table_for_CT = nullptr,
-	        const PathTableWC * path_table_for_CAT = nullptr) :
+	        const PathTableWC * path_table_for_CAT = nullptr, int window_size_for_CT=-1, int window_size_for_CAT=-1):
             num_col(num_col), map_size(map_size), path_table_for_CT(path_table_for_CT),
-            path_table_for_CAT(path_table_for_CAT) {}
+            path_table_for_CAT(path_table_for_CAT), window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT) {}
 	ConstraintTable(const ConstraintTable& other) { copy(other); }
     ~ConstraintTable() = default;
 
