@@ -54,6 +54,14 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
         curr->in_openlist = false;
         num_expanded++;
         assert(curr->location >= 0);
+
+        // NOTE(rivers): we don't take into account soft collisions now.
+        // and we assume g_val is equal to timestep cost.
+        if (curr->g_val==constraint_table.window_size_for_PATH){
+            updatePath(curr,path);
+            break;
+        }
+
         // check if the popped node is a goal
         if (curr->is_goal)
         {
@@ -135,7 +143,7 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
     // if (path.size()==1){
     //     std::cerr<<"wierd: "<<start_location<<"->"<<goal_location<<endl;
     // }
-
+    
     releaseNodes();
     return path;
 }

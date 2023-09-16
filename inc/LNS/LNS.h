@@ -32,16 +32,17 @@ public:
     int sum_of_distances = -1;
     int restart_times = 0;
 
-    int window_size_for_CT = -1;
-    int window_size_for_CAT = -1;
-    int window_size_for_PATH = -1;
+    int window_size_for_CT = MAX_TIMESTEP;
+    int window_size_for_CAT = MAX_TIMESTEP;
+    int window_size_for_PATH = MAX_TIMESTEP;
     
     std::shared_ptr<HeuristicTable> HT; // instance
 
     LNS(const Instance& instance, double time_limit,
         const string & init_algo_name, const string & replan_algo_name, const string & destory_name,
         int neighbor_size, int num_of_iterations, bool init_lns, const string & init_destory_name, bool use_sipp,
-        int screen, PIBTPPS_option pipp_option, const std::shared_ptr<HeuristicTable> & HT, int window_size_for_CT = -1, int window_size_for_CAT = -1, int window_size_for_PATH = -1);
+        int screen, PIBTPPS_option pipp_option, const std::shared_ptr<HeuristicTable> & HT, 
+        int window_size_for_CT = MAX_TIMESTEP, int window_size_for_CAT = MAX_TIMESTEP, int window_size_for_PATH = MAX_TIMESTEP);
     ~LNS()
     {
         delete init_lns;

@@ -38,9 +38,6 @@ int get_neighbor_orientation(const SharedEnvironment * env, int loc1,int loc2) {
 }
 
 void LNSSolver::plan(const SharedEnvironment & env){
-    // should be moved outside.
-    observe(env);
-
     if (need_replan) {
 
         if (read_param_json<string>(config,"initAlgo")=="LaCAM2"){
@@ -152,9 +149,10 @@ void LNSSolver::observe(const SharedEnvironment & env){
 
     // need_replan=false;
 
-    // // TODO: we need to check the state is at leat the previous one in the plan or the current one.
-    // // otherwise, it goes out of control.
-    // // update current executed_plan_step if current state match with the plan
+    // TODO: we need to check the state is at leat the previous one in the plan or the current one.
+    // otherwise, it goes out of control.
+    // update current executed_plan_step if current state match with the plan
+    // agent_ids_need_replan.clear();
     // bool match=true;
     // for (int i=0;i<paths.size();++i){
     //     if (executed_plan_step+1>=paths[i].size()){
@@ -165,10 +163,13 @@ void LNSSolver::observe(const SharedEnvironment & env){
     //     if (paths[i][executed_plan_step+1].location!=env.curr_states[i].location){
     //         match=false;
     //     }
+    //     if (executed_plan_step+1==paths[i].size()){
+    //         agent_ids_need_replan.insert(i);
+    //     }
     // }
     // if (match){
     //     ++executed_plan_step;
-    //     need_replan=true;
+    //     // need_replan=true;
     // }
 }
 

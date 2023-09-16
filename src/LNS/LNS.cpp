@@ -10,23 +10,35 @@ namespace LNS {
 LNS::LNS(const Instance& instance, double time_limit, const string & init_algo_name, const string & replan_algo_name,
          const string & destory_name, int neighbor_size, int num_of_iterations, bool use_init_lns,
          const string & init_destory_name, bool use_sipp, int screen, PIBTPPS_option pipp_option, const std::shared_ptr<HeuristicTable> & HT,
-         int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH):
+         int _window_size_for_CT, int _window_size_for_CAT, int _window_size_for_PATH):
          BasicLNS(instance, time_limit, neighbor_size, screen),
          init_algo_name(init_algo_name),  replan_algo_name(replan_algo_name), num_of_iterations(num_of_iterations),
          use_init_lns(use_init_lns),init_destory_name(init_destory_name),
          path_table(instance.map_size,window_size_for_CT), path_table_wc(instance.map_size, instance.getDefaultNumberOfAgents()), pipp_option(pipp_option), HT(HT),
-         window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH)
+         window_size_for_CT(_window_size_for_CT), window_size_for_CAT(_window_size_for_CAT), window_size_for_PATH(_window_size_for_PATH)
 {
-    // check window_size here
-    // if (window_size_for_CAT<window_size_for_CT) {
-    //     cerr<<"window_size_for_CT ("<<window_size_for_CT<<") should be smaller than window_size_for_CAT ("<<window_size_for_CAT<<")"<<endl;
-    //     exit(-1);
-    // }
+    if (window_size_for_CT<0) {
+        window_size_for_CT=MAX_TIMESTEP;
+    }
 
-    // if (window_size_for_PATH<window_size_for_CAT) {
-    //     cerr<<"window_size_for_PATH ("<<window_size_for_PATH<<") should be smaller than window_size_for_CAT ("<<window_size_for_CAT<<")"<<endl;
-    //     exit(-1);
-    // }
+    if (window_size_for_CAT<0) {
+        window_size_for_CAT=MAX_TIMESTEP;
+    }
+
+    if (window_size_for_PATH<0) {
+        window_size_for_PATH=MAX_TIMESTEP;
+    }
+
+    // check window_size here
+    if (window_size_for_CAT<window_size_for_CT) {
+        cerr<<"window_size_for_CT ("<<window_size_for_CT<<") should be smaller than window_size_for_CAT ("<<window_size_for_CAT<<")"<<endl;
+        exit(-1);
+    }
+
+    if (window_size_for_PATH<window_size_for_CAT) {
+        cerr<<"window_size_for_PATH ("<<window_size_for_PATH<<") should be smaller than window_size_for_CAT ("<<window_size_for_CAT<<")"<<endl;
+        exit(-1);
+    }
 
     start_time = Time::now();
     replan_time_limit = time_limit / 100;
@@ -277,10 +289,14 @@ bool LNS::getInitialSolution()
 
 bool LNS::checkPrecomputed()
 {
-    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, nullptr, nullptr);
+    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size); //, nullptr, nullptr, window_size_for_CT, window_size_for_CAT, window_size_for_PATH);
     for (int i=0;i<agents.size();++i) {
         // cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
-        if (agents[i].path.back().location!=agents[i].path_planner->goal_location) {
+        if (agents[i].path.back().location!=agents[i].path_planner->goal_location && agents[i].path.size()<=window_size_for_CT) {
+            cerr<<"A precomputed agent path "<<agents[i].path.size()<<" should be longer than window size for CT "<<window_size_for_CT<<" unless it arrives at its goal"<<endl;
+        }
+
+        if (agents[i].path.back().location!=agents[i].path_planner->goal_location && agents[i].path.size()<=window_size_for_PATH) {
             auto start_location=agents[i].path_planner->start_location;
             agents[i].path_planner->start_location=agents[i].path.back().location;
             g_timer.record_p("find_path_s");
@@ -289,6 +305,12 @@ bool LNS::checkPrecomputed()
             agents[i].path_planner->start_location=start_location;
             agents[i].path.insert(agents[i].path.end(),path.begin()+1,path.end());
         }
+
+        if (agents[i].path.back().location!=agents[i].path_planner->goal_location && agents[i].path.size()!=window_size_for_PATH+1) {
+            cerr<<"we require agent either arrives at its goal earlier or has a planned path of length window_size_for_PATH. "<<agents[i].path.size()<<" vs "<<window_size_for_PATH<<endl;
+            exit(-1);
+        }
+
         neighbor.sum_of_costs+=agents[i].path.size()-1;
         g_timer.record_p("insert_path_s");
         path_table.insertPath(agents[i].id, agents[i].path);
@@ -449,7 +471,7 @@ bool LNS::runPP(bool init_run)
     if (use_soft_constraint) {
         ptr_path_table_wc = &path_table_wc;
     }
-    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table, nullptr, -1, window_size_for_CAT);
+    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table, nullptr, window_size_for_CT, window_size_for_CAT, window_size_for_PATH);
     while (p != shuffled_agents.end() && ((fsec)(Time::now() - time)).count() < T)
     {
         int id = *p;
@@ -474,6 +496,18 @@ bool LNS::runPP(bool init_run)
         }
         if (agents[id].path.empty()) break;
         neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
+        if (agents[id].path.size()>constraint_table.window_size_for_PATH+1) {
+            // TODO(rivers): this might not be a smart choice, but it keeps everything consistent.
+            agents[id].path.resize(constraint_table.window_size_for_PATH+1);
+        } 
+        if (agents[id].path.back().location!=agents[id].path_planner->goal_location) {
+            if (agents[id].path.size()!=constraint_table.window_size_for_PATH+1) {
+                std::cerr<<"agent "<<agents[id].id<<"'s path length "<<agents[id].path.size()<<" should be equal to window size for path "<<constraint_table.window_size_for_PATH<< "if it doesn't arrive at its goal"<<endl;
+                exit(-1);
+            } else {
+                neighbor.sum_of_costs+=HT->get(agents[id].path.back().location,agents[id].path_planner->goal_location);
+            }
+        }
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs)
             break;
         remaining_agents--;

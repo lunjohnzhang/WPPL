@@ -34,6 +34,7 @@ public:
     std::shared_ptr<HeuristicTable> HT; // instance
     LaCAM2::Executor executor;
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;
+    std::set<int> agent_ids_need_replan;
 
     nlohmann::json config;
 

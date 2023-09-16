@@ -204,10 +204,7 @@ void ReservationTable::updateSIT(int location)
     {
         if (location < constraint_table.map_size) // vertex conflict
         {
-            int T=(int)constraint_table.path_table_for_CT->table[location].size();
-            if (constraint_table.window_size_for_CT>0) {
-                T = min(T, constraint_table.window_size_for_CT + 1);
-            }
+            int T=min((int)constraint_table.path_table_for_CT->table[location].size(), constraint_table.window_size_for_CT+1);
 
             for (int t = 0; t < T; t++)
             {
@@ -217,10 +214,7 @@ void ReservationTable::updateSIT(int location)
                 }
             }
             
-            T = MAX_TIMESTEP;
-            if (constraint_table.window_size_for_CT>0) {
-                T = min(T, constraint_table.window_size_for_CT+1);
-            }
+            T = min(MAX_TIMESTEP, constraint_table.window_size_for_CT+1);
             if (constraint_table.path_table_for_CT->goals[location] < T) // target conflict
                 insert2SIT(location, constraint_table.path_table_for_CT->goals[location], T + 1);
         }
@@ -232,9 +226,7 @@ void ReservationTable::updateSIT(int location)
             {
                 int t_max = (int) min(constraint_table.path_table_for_CT->table[from].size(),
                                       constraint_table.path_table_for_CT->table[to].size() + 1);
-                if (constraint_table.window_size_for_CT>0) {
-                    t_max = min(t_max, constraint_table.window_size_for_CT+1);
-                }
+                t_max = min(t_max, constraint_table.window_size_for_CT+1);
                 for (int t = 1; t < t_max; t++)
                 {
                     if (constraint_table.path_table_for_CT->table[to][t - 1] != NO_AGENT and
@@ -399,13 +391,10 @@ bool ReservationTable::find_safe_interval(Interval& interval, size_t location, i
 
 int ReservationTable::get_earliest_arrival_time(int from, int to, int lower_bound, int upper_bound) const
 {
-    int window_size_for_CT=MAX_TIMESTEP;
-    if (constraint_table.window_size_for_CT>0) {
-        window_size_for_CT=constraint_table.window_size_for_CT;
-    }
+    int T=min(MAX_TIMESTEP,constraint_table.window_size_for_CT);
     for (auto t = lower_bound; t < upper_bound; t++)
     {
-        if (t>window_size_for_CT || !constraint_table.constrained(from, to, t))
+        if (t>T || !constraint_table.constrained(from, to, t))
             return t;
     }
     return -1;
