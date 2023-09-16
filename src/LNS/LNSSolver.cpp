@@ -38,6 +38,10 @@ int get_neighbor_orientation(const SharedEnvironment * env, int loc1,int loc2) {
 }
 
 void LNSSolver::plan(const SharedEnvironment & env){
+
+    // TODO(rivers): we need to replan for all agents that has no plan
+    // later we may think of padding all agents to the same length
+
     if (need_replan) {
 
         if (read_param_json<string>(config,"initAlgo")=="LaCAM2"){
@@ -152,7 +156,6 @@ void LNSSolver::observe(const SharedEnvironment & env){
     // TODO: we need to check the state is at leat the previous one in the plan or the current one.
     // otherwise, it goes out of control.
     // update current executed_plan_step if current state match with the plan
-    // agent_ids_need_replan.clear();
     // bool match=true;
     // for (int i=0;i<paths.size();++i){
     //     if (executed_plan_step+1>=paths[i].size()){
@@ -163,13 +166,30 @@ void LNSSolver::observe(const SharedEnvironment & env){
     //     if (paths[i][executed_plan_step+1].location!=env.curr_states[i].location){
     //         match=false;
     //     }
-    //     if (executed_plan_step+1==paths[i].size()){
-    //         agent_ids_need_replan.insert(i);
-    //     }
     // }
     // if (match){
     //     ++executed_plan_step;
-    //     // need_replan=true;
+    // }
+
+    // // check if we need to replan
+    // agent_ids_need_replan.clear();
+    // for (int i=0;i<paths.size();++i) {
+    //     if (executed_plan_step+1==paths[i].size()) {
+    //         agent_ids_need_replan.insert(i);
+    //     }
+    // }
+
+    // if (agent_ids_need_replan.size()>0){
+    //     cerr<<"need replan"<<endl;
+    //     need_replan=true;
+    //     for (int i=0;i<env.num_of_agents;++i) {
+    //         paths[i].clear();
+    //         paths[i].push_back(env.curr_states[i]);
+    //     }    
+    //     executed_plan_step=0;
+    // } else {
+    //     cerr<<"no need to replan"<<endl;
+    //     need_replan=false;
     // }
 }
 
