@@ -1,4 +1,5 @@
 #include "LNS/LNSSolver.h"
+#include "util/Dev.h"
 
 namespace LNS {
 
@@ -204,6 +205,12 @@ void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> &
             assert(false);
         }
         actions.push_back(get_action_from_states(env.curr_states[i],next_states[i]));
+    }
+
+
+    if (!action_model.is_valid(env.curr_states,actions)){
+        cerr<<"planed actions are not valid in timestep "<<timestep+1<<"!"<<endl;
+        ONLYDEV(exit(-1);)
     }
 
 }
