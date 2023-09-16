@@ -3,6 +3,7 @@
 #include <queue>
 #include "LNS/CBS/CBSNode.h"
 #include "util/Timer.h"
+#include "util/Dev.h"
 
 namespace LNS {
 
@@ -122,11 +123,15 @@ bool LNS::run()
     while (runtime < time_limit && iteration_stats.size() <= num_of_iterations)
     {
         runtime =((fsec)(Time::now() - start_time)).count();
+        ONLYDEV(g_timer.record_p("validate_solution_s");)
         if(screen >= 1)
             validateSolution();
+        ONLYDEV(g_timer.record_d("validate_solution_s","validate_solution_e","validate_solution");)
         if (ALNS)
             chooseDestroyHeuristicbyALNS();
 
+
+        ONLYDEV(g_timer.record_p("generate_neighbor_s");)
         switch (destroy_strategy)
         {
             case RANDOMWALK:
@@ -150,10 +155,15 @@ bool LNS::run()
                 cerr << "Wrong neighbor generation strategy" << endl;
                 exit(-1);
         }
-        if(!succ)
+        ONLYDEV(g_timer.record_d("generate_neighbor_s","generate_neighbor_e","generate_neighbor");)
+        if(!succ) {
+            if (screen>=1)
+                cerr<<"generate neighbors failed"<<endl;
             continue;
+        }
 
         // store the neighbor information
+        ONLYDEV(g_timer.record_p("store_neighbor_info_s");)
         neighbor.old_paths.resize(neighbor.agents.size());
         neighbor.old_sum_of_costs = 0;
         for (int i = 0; i < (int)neighbor.agents.size(); i++)
@@ -164,7 +174,9 @@ bool LNS::run()
             path_table_wc.deletePath(neighbor.agents[i]);
             neighbor.old_sum_of_costs += agents[neighbor.agents[i]].path.size() - 1;
         }
+        ONLYDEV(g_timer.record_d("store_neighbor_info_s","store_neighbor_info_e","store_neighbor_info");)
 
+        ONLYDEV(g_timer.record_p("replan_s");)
         if (replan_algo_name == "EECBS")
             succ = runEECBS();
         else if (replan_algo_name == "CBS")
@@ -176,6 +188,11 @@ bool LNS::run()
             cerr << "Wrong replanning strategy" << endl;
             exit(-1);
         }
+        if (!succ) {
+            if (screen>=1)
+                cerr<<"replan failed"<<endl;
+        }
+        ONLYDEV(g_timer.record_d("replan_s","replan_e","replan");)
 
         if (ALNS) // update destroy heuristics
         {
@@ -197,6 +214,10 @@ bool LNS::run()
         iteration_stats.emplace_back(neighbor.agents.size(), sum_of_costs, runtime, replan_algo_name);
     }
 
+    ONLYDEV(g_timer.record_p("validate_solution_s");)
+    if(screen >= 1)
+        validateSolution();
+    ONLYDEV(g_timer.record_d("validate_solution_s","validate_solution_e","validate_solution");)
 
     average_group_size = - iteration_stats.front().num_of_agents;
     for (const auto& data : iteration_stats)
@@ -225,7 +246,7 @@ bool LNS::getInitialSolution()
     if (init_algo_name == "EECBS")
         succ = runEECBS();
     else if (init_algo_name == "PP")
-        succ = runPP();
+        succ = runPP(true);
     else if (init_algo_name == "PIBT")
         succ = runPIBT();
     else if (init_algo_name == "PPS")
@@ -266,7 +287,7 @@ bool LNS::checkPrecomputed()
             auto path = agents[i].path_planner->findPath(constraint_table);
             g_timer.record_d("find_path_s","find_path_e","find_path");
             agents[i].path_planner->start_location=start_location;
-            agents[i].path.insert(agents[i].path.end(),path.begin(),path.end());
+            agents[i].path.insert(agents[i].path.end(),path.begin()+1,path.end());
         }
         neighbor.sum_of_costs+=agents[i].path.size()-1;
         g_timer.record_p("insert_path_s");
@@ -398,8 +419,12 @@ bool LNS::runCBS()
     }
     return succ;
 }
-bool LNS::runPP()
+bool LNS::runPP(bool init_run)
 {
+    ONLYDEV(
+        if (!init_run)
+            g_timer.record_p("run_pp_s");
+    )
     auto shuffled_agents = neighbor.agents;
     std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
     if (screen >= 2) {
@@ -424,7 +449,7 @@ bool LNS::runPP()
     if (use_soft_constraint) {
         ptr_path_table_wc = &path_table_wc;
     }
-    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table, nullptr, window_size_for_CT, window_size_for_CAT);
+    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table, nullptr, -1, window_size_for_CAT);
     while (p != shuffled_agents.end() && ((fsec)(Time::now() - time)).count() < T)
     {
         int id = *p;
@@ -433,7 +458,15 @@ bool LNS::runPP()
                  ", remaining time = " << T - ((fsec)(Time::now() - time)).count() << " seconds. " << endl
                  << "Agent " << agents[id].id << endl;
         if (search_priority==1) {
+            ONLYDEV(
+                if (!init_run)
+                    g_timer.record_p("findPath_s");
+            )
             agents[id].path = agents[id].path_planner->findPath(constraint_table);
+            ONLYDEV(
+                if (!init_run)
+                    g_timer.record_d("findPath_s","findPath_e","findPath");
+            )
         } else if (search_priority==2) {
             vector<Path *> paths(agents.size(),nullptr);
             int min_f_val;
@@ -450,6 +483,10 @@ bool LNS::runPP()
     }
     if (remaining_agents == 0 && neighbor.sum_of_costs <= neighbor.old_sum_of_costs) // accept new paths
     {
+        ONLYDEV(
+            if (!init_run)
+                g_timer.record_d("run_pp_s","run_pp_e","run_pp");
+        )
         return true;
     }
     else // stick to old paths
@@ -477,6 +514,10 @@ bool LNS::runPP()
             }
             neighbor.sum_of_costs = neighbor.old_sum_of_costs;
         }
+        ONLYDEV(
+            if (!init_run)
+                g_timer.record_d("run_pp_s","run_pp_e","run_pp");
+        )
         return false;
     }
 }
@@ -822,18 +863,19 @@ void LNS::validateSolution() const
             if (window_size_for_CT>0) {
                 T = min(T,window_size_for_CT+1);
             }
+            
             for (; t < T; t++)
             {
                 if (a1.path[t].location == a2.path[t].location) // vertex conflict
                 {
-                    cerr << "Find a vertex conflict between agents " << a1.id << " and " << a2.id <<
+                    cerr << "LNS::validateSolution with T= "<<T<<": Find a vertex conflict between agents " << a1.id << " and " << a2.id <<
                             " at location " << a1.path[t].location << " at timestep " << t << endl;
                     exit(-1);
                 }
                 else if (a1.path[t].location == a2.path[t - 1].location &&
                         a1.path[t - 1].location == a2.path[t].location) // edge conflict
                 {
-                    cerr << "Find an edge conflict between agents " << a1.id << " and " << a2.id <<
+                    cerr << "LNS::validateSolution with window size "<<T<<": Find an edge conflict between agents " << a1.id << " and " << a2.id <<
                          " at edge (" << a1.path[t - 1].location << "," << a1.path[t].location <<
                          ") at timestep " << t << endl;
                     exit(-1);

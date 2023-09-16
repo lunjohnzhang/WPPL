@@ -399,9 +399,13 @@ bool ReservationTable::find_safe_interval(Interval& interval, size_t location, i
 
 int ReservationTable::get_earliest_arrival_time(int from, int to, int lower_bound, int upper_bound) const
 {
+    int window_size_for_CT=MAX_TIMESTEP;
+    if (constraint_table.window_size_for_CT>0) {
+        window_size_for_CT=constraint_table.window_size_for_CT;
+    }
     for (auto t = lower_bound; t < upper_bound; t++)
     {
-        if (!constraint_table.constrained(from, to, t))
+        if (t>window_size_for_CT || !constraint_table.constrained(from, to, t))
             return t;
     }
     return -1;

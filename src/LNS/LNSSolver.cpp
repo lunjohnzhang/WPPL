@@ -8,6 +8,34 @@ void LNSSolver::initialize(const SharedEnvironment & env){
     executed_plan_step = -1;
 }
 
+int get_neighbor_orientation(const SharedEnvironment * env, int loc1,int loc2) {
+
+    // 0:east, 1:south, 2:west, 3:north
+
+    if (loc1+1==loc2) {
+        return 0;
+    }
+
+    if (loc1+env->cols==loc2) {
+        return 1;
+    }
+
+    if (loc1-1==loc2) {
+        return 2;
+    }
+
+    if (loc1-env->cols==loc2) {
+        return 3;
+    }
+
+    if (loc1==loc2) {
+        return 4;
+    }
+
+    return -1;
+
+}
+
 void LNSSolver::plan(const SharedEnvironment & env){
     // should be moved outside.
     observe(env);
@@ -44,12 +72,15 @@ void LNSSolver::plan(const SharedEnvironment & env){
             read_param_json<bool>(config,"sipp"),
             read_param_json<int>(config,"screen"),
             pipp_option,
-            HT
+            HT,
+            read_param_json<int>(config,"window_size_for_CT"),
+            read_param_json<int>(config,"window_size_for_CAT"),
+            read_param_json<int>(config,"window_size_for_PATH")
         );
 
 
         if (read_param_json<string>(config,"initAlgo")=="LaCAM2"){
-            // copy results into LNS.agents
+            // copy results into lns.agents
             for (int i=0;i<lns.agents.size();i++){
                 if (lns.agents[i].id!=i) {
                     cerr<<"agents are not ordered at the begining"<<endl;
@@ -76,11 +107,18 @@ void LNSSolver::plan(const SharedEnvironment & env){
         if (succ)
         {
             cout<<"succeed"<<endl;
+        } else {
+            exit(-1);
         }
 
         // just save to paths: currently we replan at every time step, so we only need to save the first step
         for (int i=0;i<paths.size();++i){
-            paths[i].emplace_back(lns.agents[i].path[1].location,-1,-1);
+            if (lns.agents[i].path.size()>=2){
+                paths[i].emplace_back(lns.agents[i].path[1].location,-1,-1);
+            } else {
+                // if it is just at its goal location
+                paths[i].emplace_back(lns.agents[i].path[0].location,-1,-1);
+            }
         }
 
         // for (int i=0;i<paths.size();++i){

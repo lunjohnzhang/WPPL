@@ -132,6 +132,10 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
     //{
     //    printSearchTree();
     //}
+    // if (path.size()==1){
+    //     std::cerr<<"wierd: "<<start_location<<"->"<<goal_location<<endl;
+    // }
+
     releaseNodes();
     return path;
 }

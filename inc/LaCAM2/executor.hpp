@@ -129,7 +129,7 @@ public:
             return 3;
         }
 
-        std::cerr<<"loc1 and loc2 are not neighbors: "<<loc1<<", "<<loc2<<endl;
+        std::cerr<<"executor: loc1 and loc2 are not neighbors: "<<loc1<<", "<<loc2<<endl;
         exit(-1);
 
     }
