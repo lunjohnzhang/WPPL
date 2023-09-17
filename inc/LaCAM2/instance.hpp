@@ -6,6 +6,7 @@
 
 #include "LaCAM2/graph.hpp"
 #include "LaCAM2/utils.hpp"
+#include "States.h"
 
 namespace LaCAM2 {
 
@@ -14,8 +15,9 @@ public:
     int goal_location;
     float elapsed;
     float tie_breaker;
+    int id;
 
-    AgentInfo():goal_location(-1),elapsed(-1),tie_breaker(-1){};
+    AgentInfo():id(-1),goal_location(-1),elapsed(-1),tie_breaker(-1){};
 };
 
 
@@ -26,6 +28,7 @@ struct Instance {
   const uint N;   // number of agents
   const vector<AgentInfo> & agent_infos;
   int planning_window=-1;
+  std::vector<::Path> * precomputed_paths;
 
   // // for testing
   // Instance(const std::string& map_filename,
@@ -42,7 +45,8 @@ struct Instance {
     const std::vector<uint>& start_indexes,
     const std::vector<uint>& goal_indexes,
     const std::vector<AgentInfo> & agent_infos,
-    int planning_window=-1
+    int planning_window=-1,
+    std::vector<::Path> * precomputed_paths=nullptr
   );
   ~Instance() {}
 

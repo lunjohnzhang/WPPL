@@ -8,10 +8,13 @@ namespace LaCAM2 {
 void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     paths.resize(env.num_of_agents);
     agent_infos.resize(env.num_of_agents);
+    for (int i=0;i<env.num_of_agents;++i) {
+        agent_infos[i].id=i;
+    }
     G = std::make_shared<Graph>(env);
 }
 
-Instance LaCAM2Solver::build_instance(const SharedEnvironment & env) {
+Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths) {
     auto starts=vector<uint>();
     auto goals=vector<uint>();
     for (int i=0;i<env.num_of_agents;++i) {
@@ -29,7 +32,7 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env) {
             agent_info.elapsed+=1;
         }
     }
-    return Instance(*G, starts, goals, agent_infos, read_param_json<int>(config,"planning_window",-1));
+    return Instance(*G, starts, goals, agent_infos, read_param_json<int>(config,"planning_window",-1), precomputed_paths);
 }
 
 int LaCAM2Solver::get_neighbor_orientation(int loc1,int loc2) {
@@ -57,17 +60,27 @@ int LaCAM2Solver::get_neighbor_orientation(int loc1,int loc2) {
 
 }
 
-void LaCAM2Solver::plan(const SharedEnvironment & env){
+void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths){
     if (timestep==0) {
         for (int i=0;i<env.num_of_agents;++i) {
             paths[i].push_back(env.curr_states[i]);
         }
     }
 
+    if (precomputed_paths!=nullptr) {
+        // we need to check the initial states are the same.
+        for (int i=0;i<env.num_of_agents;++i) {
+            if ((*precomputed_paths)[i].size()==0 || (*precomputed_paths)[i][0].location!=env.curr_states[i].location) {
+                cerr<<"agent "<<i<<" has zero-length precomputed paths or initial states are not the same!"<<endl;
+                exit(-1);
+            }
+        }
+    }
+
     if (need_replan) {
         const int verbose = 10;
         const int time_limit_sec = 2;
-        auto instance = build_instance(env);
+        auto instance = build_instance(env, precomputed_paths);
         const auto deadline = Deadline(time_limit_sec * 1000);
         bool use_swap=false;
         bool use_orient_in_heuristic=true;

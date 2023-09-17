@@ -23,7 +23,7 @@ public:
     int total_feasible_timestep = 0;
     int timestep = 0;
     void initialize(const SharedEnvironment & env);
-    void plan(const SharedEnvironment & env);
+    void plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr);
     void get_step_actions(const SharedEnvironment & env, vector<Action> & actions);
     // Action get_action_from_states(const State & state, const State & next_state);
     // [end]
@@ -38,7 +38,7 @@ public:
 
     nlohmann::json config;
 
-    Instance build_instance(const SharedEnvironment & env);
+    Instance build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr);
     int get_neighbor_orientation(int loc1,int loc2);
 
     LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, nlohmann::json & config):

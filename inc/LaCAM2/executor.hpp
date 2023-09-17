@@ -11,7 +11,7 @@ public:
     const SharedEnvironment * env;
     // loc->agent
     unordered_map<int,int> reservation_table;
-    vector<int> executed;
+    vector<bool> executed;
     const vector<State> * curr_states;
     const vector<State> * planned_next_states;
     vector<State> * next_states;

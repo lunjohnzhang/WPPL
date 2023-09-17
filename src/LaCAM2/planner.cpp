@@ -31,7 +31,6 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
 {
   ++HNODE_CNT;
 
-  search_tree.push(new LNode());
   const auto N = C.size();
 
   // update neighbor
@@ -42,7 +41,14 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
   std::sort(order.begin(), order.end(), [&](int i, int j) { 
         const AgentInfo & a=ins->agent_infos[i];
         const AgentInfo & b=ins->agent_infos[j];
+        int aid = a.id;
+        int bid = b.id;
 
+        if (ins->precomputed_paths!=nullptr){
+          bool precomputed_a = (*(ins->precomputed_paths))[aid].size()>(d+1);
+          bool precomputed_b = (*(ins->precomputed_paths))[bid].size()>(d+1);
+          if (precomputed_a != precomputed_b) return (int)precomputed_a>(int)precomputed_b;
+        }
 
         int h1=HT->get(C[i]->index,ins->goals[i]->index);
         int h2=HT->get(C[j]->index,ins->goals[j]->index);
@@ -54,6 +60,27 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
         return a.tie_breaker>b.tie_breaker;
   });
 
+  search_tree.push(new LNode());
+
+  if (ins->precomputed_paths!=nullptr) {
+    // low-level tree
+    int llt_depth = 0;
+    while (llt_depth<N) {
+      int aid = order[llt_depth];
+      auto & path = (*(ins->precomputed_paths))[aid];
+      bool precomputed = path.size()>(d+1);
+      if (precomputed) {
+        auto L = search_tree.front();
+        search_tree.pop();
+        auto v = ins->G.U[path[d+1].location];
+        search_tree.push(new LNode(L, aid, v));
+        delete L; // free it, it won't be used anymore.
+      } else {
+        break;
+      }
+      llt_depth+=1;
+    }
+  }
 }
 
 HNode::~HNode()
@@ -362,12 +389,19 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     const auto l = L->where[k]->id;  // loc
 
     // check vertex collision
-    if (occupied_next[l] != nullptr) return false;
+    if (occupied_next[l] != nullptr){
+      cerr<<"vertex collision"<<endl;
+      exit(-1);
+      return false;
+    }
     // check swap collision
     auto l_pre = H->C[i]->id;
     if (occupied_next[l_pre] != nullptr && occupied_now[l] != nullptr &&
-        occupied_next[l_pre]->id == occupied_now[l]->id)
+        occupied_next[l_pre]->id == occupied_now[l]->id) {
+          cerr<<"swap collision"<<endl;
+          exit(-1);
       return false;
+    }
 
     // set occupied_next
     A[i]->v_next = L->where[k];
@@ -377,7 +411,11 @@ bool Planner::get_new_config(HNode* H, LNode* L)
   // perform PIBT
   for (auto k : H->order) {
     auto a = A[k];
-    if (a->v_next == nullptr && !funcPIBT(a)) return false;  // planning failure
+    if (a->v_next == nullptr && !funcPIBT(a)){
+      cerr<<"planning failture"<<endl;
+      exit(-1);
+      return false;  // planning failure
+    } 
   }
   return true;
 }

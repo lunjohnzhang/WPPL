@@ -4,6 +4,7 @@
 #include <memory>
 #include "PIBT/HeuristicTable.h"
 #include "LaCAM2/executor.hpp"
+#include "LaCAM2/slow_executor.hpp"
 #include "SharedEnv.h"
 #include "common.h"
 #include "LNS/LNS.h"
@@ -33,6 +34,7 @@ public:
 
     std::shared_ptr<HeuristicTable> HT; // instance
     LaCAM2::Executor executor;
+    LaCAM2::SlowExecutor slow_executor;
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;
     std::set<int> agent_ids_need_replan;
 
@@ -47,6 +49,7 @@ public:
         HT(HT),
         action_model(env),
         executor(env),
+        slow_executor(env),
         config(config),
         MT(new std::mt19937(read_param_json<uint>(config,"seed",0))),
         lacam2_solver(lacam2_solver){

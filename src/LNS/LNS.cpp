@@ -180,11 +180,15 @@ bool LNS::run()
         neighbor.old_sum_of_costs = 0;
         for (int i = 0; i < (int)neighbor.agents.size(); i++)
         {
+            auto & agent=agents[neighbor.agents[i]];
             if (replan_algo_name == "PP")
-                neighbor.old_paths[i] = agents[neighbor.agents[i]].path;
-            path_table.deletePath(neighbor.agents[i], agents[neighbor.agents[i]].path);
+                neighbor.old_paths[i] = agent.path;
+            path_table.deletePath(neighbor.agents[i], agent.path);
             path_table_wc.deletePath(neighbor.agents[i]);
-            neighbor.old_sum_of_costs += agents[neighbor.agents[i]].path.size() - 1;
+            neighbor.old_sum_of_costs += agent.path.size() - 1;
+            if (agent.path.back().location!=agent.path_planner->goal_location) {
+            neighbor.old_sum_of_costs+=HT->get(agent.path.back().location,agent.path_planner->goal_location);
+        }
         }
         ONLYDEV(g_timer.record_d("store_neighbor_info_s","store_neighbor_info_e","store_neighbor_info");)
 
@@ -293,18 +297,22 @@ bool LNS::checkPrecomputed()
     for (int i=0;i<agents.size();++i) {
         // cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
         if (agents[i].path.back().location!=agents[i].path_planner->goal_location && agents[i].path.size()<=window_size_for_CT) {
-            cerr<<"A precomputed agent path "<<agents[i].path.size()<<" should be longer than window size for CT "<<window_size_for_CT<<" unless it arrives at its goal"<<endl;
+            cerr<<"A precomputed agent "<<i<<"'s path "<<agents[i].path.size()<<" should be longer than window size for CT "<<window_size_for_CT<<" unless it arrives at its goal:"<<agents[i].path.back().location<<" vs "<<agents[i].path_planner->goal_location<<endl;
+            exit(-1);
         }
 
-        if (agents[i].path.back().location!=agents[i].path_planner->goal_location && agents[i].path.size()<=window_size_for_PATH) {
-            auto start_location=agents[i].path_planner->start_location;
-            agents[i].path_planner->start_location=agents[i].path.back().location;
-            g_timer.record_p("find_path_s");
-            auto path = agents[i].path_planner->findPath(constraint_table);
-            g_timer.record_d("find_path_s","find_path_e","find_path");
-            agents[i].path_planner->start_location=start_location;
-            agents[i].path.insert(agents[i].path.end(),path.begin()+1,path.end());
-        }
+        // TODO(rivers): we cannot pad here, because this implementation doesn't avoid collisions.
+        // We need to modify the search to go along a precomputed path, then plan the following path.
+        // if (agents[i].path.back().location!=agents[i].path_planner->goal_location && agents[i].path.size()<=window_size_for_PATH) {
+        //     cerr<<"pad here"<<endl;
+        //     auto start_location=agents[i].path_planner->start_location;
+        //     agents[i].path_planner->start_location=agents[i].path.back().location;
+        //     g_timer.record_p("find_path_s");
+        //     auto path = agents[i].path_planner->findPath(constraint_table);
+        //     g_timer.record_d("find_path_s","find_path_e","find_path");
+        //     agents[i].path_planner->start_location=start_location;
+        //     agents[i].path.insert(agents[i].path.end(),path.begin()+1,path.end());
+        // }
 
         if (agents[i].path.back().location!=agents[i].path_planner->goal_location && agents[i].path.size()!=window_size_for_PATH+1) {
             cerr<<"we require agent either arrives at its goal earlier or has a planned path of length window_size_for_PATH. "<<agents[i].path.size()<<" vs "<<window_size_for_PATH<<endl;
@@ -312,6 +320,9 @@ bool LNS::checkPrecomputed()
         }
 
         neighbor.sum_of_costs+=agents[i].path.size()-1;
+        if (agents[i].path.back().location!=agents[i].path_planner->goal_location) {
+            neighbor.sum_of_costs+=HT->get(agents[i].path.back().location,agents[i].path_planner->goal_location);
+        }
         g_timer.record_p("insert_path_s");
         path_table.insertPath(agents[i].id, agents[i].path);
         g_timer.record_d("insert_path_s","insert_path_e","insert_path");
@@ -472,6 +483,13 @@ bool LNS::runPP(bool init_run)
         ptr_path_table_wc = &path_table_wc;
     }
     ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table, nullptr, window_size_for_CT, window_size_for_CAT, window_size_for_PATH);
+
+    // TODO(rivers): we require the path to be at least window_size_for_PATH
+    // TODO(rivers): we use hold goal location assumption here, which is not necessary.
+    if (window_size_for_PATH!=MAX_TIMESTEP) {
+        constraint_table.length_min=window_size_for_PATH;
+    }
+
     while (p != shuffled_agents.end() && ((fsec)(Time::now() - time)).count() < T)
     {
         int id = *p;
@@ -495,19 +513,20 @@ bool LNS::runPP(bool init_run)
             tie(agents[id].path,min_f_val) = agents[id].path_planner->findSuboptimalPath(node, constraint_table, paths, agents[id].id, 0,suboptimality);
         }
         if (agents[id].path.empty()) break;
-        neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
+        // always makes a fixed length.
+        // TODO(rivers): this might not be a smart choice, but it keeps everything consistent.
         if (agents[id].path.size()>constraint_table.window_size_for_PATH+1) {
-            // TODO(rivers): this might not be a smart choice, but it keeps everything consistent.
             agents[id].path.resize(constraint_table.window_size_for_PATH+1);
-        } 
-        if (agents[id].path.back().location!=agents[id].path_planner->goal_location) {
+        }
+        neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
+        // if (agents[id].path.back().location!=agents[id].path_planner->goal_location) {
             if (agents[id].path.size()!=constraint_table.window_size_for_PATH+1) {
                 std::cerr<<"agent "<<agents[id].id<<"'s path length "<<agents[id].path.size()<<" should be equal to window size for path "<<constraint_table.window_size_for_PATH<< "if it doesn't arrive at its goal"<<endl;
                 exit(-1);
             } else {
                 neighbor.sum_of_costs+=HT->get(agents[id].path.back().location,agents[id].path_planner->goal_location);
             }
-        }
+        // }
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs)
             break;
         remaining_agents--;
@@ -869,12 +888,17 @@ void LNS::validateSolution() const
                 << ", which is different from its start location " << a1_.path_planner->start_location << endl;
             exit(-1);
         }
-        else if (a1_.path_planner->goal_location != a1_.path.back().location)
-        {
-            cerr << "The path of agent " << a1_.id << " ends at location " << a1_.path.back().location
-                 << ", which is different from its goal location " << a1_.path_planner->goal_location << endl;
-            exit(-1);
+        // else if (a1_.path_planner->goal_location != a1_.path.back().location)
+        // {
+        //     cerr << "The path of agent " << a1_.id << " ends at location " << a1_.path.back().location
+        //          << ", which is different from its goal location " << a1_.path_planner->goal_location << endl;
+        //     exit(-1);
+        // }
+        else if (a1_.path.size()!=window_size_for_PATH+1 && a1_.path.back().location!=a1_.path_planner->goal_location) {
+            cerr<<"agent "<<a1_.id<<"'s path "<<a1_.path.size()<<" should be longer than "<<window_size_for_PATH<<" unless it arrives at its goal:"<<a1_.path.back().location<<" vs "<<a1_.path_planner->goal_location<<endl; 
         }
+
+
         for (int t = 1; t < (int) a1_.path.size(); t++ )
         {
             if (!instance.validMove(a1_.path[t - 1].location, a1_.path[t].location))
@@ -886,6 +910,11 @@ void LNS::validateSolution() const
             }
         }
         sum += (int) a1_.path.size() - 1;
+
+        if (a1_.path.back().location!=a1_.path_planner->goal_location) {
+            sum+=HT->get(a1_.path.back().location,a1_.path_planner->goal_location);
+        }
+
         for (const auto  & a2_: agents)
         {
             if (a1_.id >= a2_.id || a2_.path.empty())

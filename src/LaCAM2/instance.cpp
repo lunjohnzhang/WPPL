@@ -7,14 +7,16 @@ Instance::Instance(
     const std::vector<uint>& start_indexes,
     const std::vector<uint>& goal_indexes,
     const std::vector<AgentInfo>& agent_infos,
-    int planning_window
+    int planning_window,
+    std::vector<::Path> * _precomputed_paths
     ):
       G(G),
       starts(Config()),
       goals(Config()),
       N(start_indexes.size()),
       agent_infos(agent_infos),
-      planning_window(planning_window) {
+      planning_window(planning_window), 
+      precomputed_paths(_precomputed_paths) {
   for (auto k : start_indexes) starts.push_back(G.U[k]);
   for (auto k : goal_indexes) goals.push_back(G.U[k]);
 }
