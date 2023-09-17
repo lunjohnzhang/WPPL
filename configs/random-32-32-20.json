@@ -25,13 +25,17 @@
         "LaCAM2": {
             "seed": 0,
             "planning_window": 10,
-            "consider_rotation": false
+            "consider_rotation": false,
+            "use_orient_in_heuristic": true,
+            "use_slow_executor": false
         }
     },
     "LaCAM2": {
         "seed": 0,
         "planning_window": 10,
-        "consider_rotation": true
+        "consider_rotation": true,
+        "use_orient_in_heuristic": true,
+        "use_slow_executor": true
     },
     "PIBT": {
         "prior_type": "early_time"

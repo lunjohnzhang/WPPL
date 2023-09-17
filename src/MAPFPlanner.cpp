@@ -191,12 +191,15 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         mylacam2_solver->initialize(*env);
         cout<<"MyLaCAMSolver2 initialized"<<endl;
     } else if (lifelong_solver_name=="LNS") {
-        auto heuristics =std::make_shared<HeuristicTable>(env);
+        auto heuristics =std::make_shared<HeuristicTable>(env,read_param_json<bool>(config["LNS"]["LaCAM2"],"use_orient_in_heuristic"));
         heuristics->preprocess();
         auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,config["LNS"]["LaCAM2"]);
 
-        auto heuristics_no_rot = std::make_shared<HeuristicTable>(env,false);
-        heuristics_no_rot->preprocess();
+        std::shared_ptr<HeuristicTable> heuristics_no_rot=heuristics;
+        if (read_param_json<bool>(config["LNS"]["LaCAM2"],"use_orient_in_heuristic")) {
+            heuristics_no_rot = std::make_shared<HeuristicTable>(env,false);
+            heuristics_no_rot->preprocess();
+        }
 
         lns_solver = std::make_shared<LNS::LNSSolver>(heuristics_no_rot,env,config["LNS"],lacam2_solver);
         lns_solver->initialize(*env);

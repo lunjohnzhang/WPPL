@@ -83,7 +83,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         auto instance = build_instance(env, precomputed_paths);
         const auto deadline = Deadline(time_limit_sec * 1000);
         bool use_swap=false;
-        bool use_orient_in_heuristic=true;
+        bool use_orient_in_heuristic=read_param_json<bool>(config,"use_orient_in_heuristic");
         auto planner = Planner(&instance,HT,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap,use_orient_in_heuristic);
         auto additional_info = std::string("");
         const auto solution=planner.solve(additional_info);
@@ -135,7 +135,11 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
             next_states.emplace_back(-1,-1,-1);
         }
 
-        executor.execute(&(env.curr_states),&planned_next_states,&next_states);
+        if (!read_param_json<bool>(config,"use_slow_executor")) {
+            executor.execute(&(env.curr_states),&planned_next_states,&next_states);
+        } else {
+            slow_executor.execute(&(env.curr_states),&planned_next_states,&next_states);
+        }
 
         for (int i=0;i<env.num_of_agents;++i) {
             if (next_states[i].timestep!=env.curr_states[i].timestep+1) {
@@ -266,7 +270,9 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
         }
     }
     
-    need_replan=true;
+    if (!read_param_json<bool>(config,"use_slow_executor")) {
+        need_replan=true;
+    }
     
 }
 

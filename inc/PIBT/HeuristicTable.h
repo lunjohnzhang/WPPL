@@ -238,6 +238,11 @@ public:
     }
 
     inline uint get(int loc1, int orient1, int loc2) {
+        if (!consider_rotation) {
+            cerr<<"no valid to use this func if not consider rotation"<<endl;
+            exit(-1);
+        }
+
         int loc_idx1=loc_idxs[loc1];
         int loc_idx2=loc_idxs[loc2];
 
@@ -256,6 +261,10 @@ public:
     } 
 
     inline uint get(int loc1, int orient1, int loc2, int orient2) {
+        if (!consider_rotation) {
+            cerr<<"no valid to use this func if not consider rotation"<<endl;
+            exit(-1);
+        }
         int loc_idx1=loc_idxs[loc1];
         int loc_idx2=loc_idxs[loc2];
 

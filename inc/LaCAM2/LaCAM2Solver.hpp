@@ -8,6 +8,7 @@
 #include <memory>
 #include "PIBT/HeuristicTable.h"
 #include "LaCAM2/executor.hpp"
+#include "LaCAM2/slow_executor.hpp"
 #include "nlohmann/json.hpp"
 
 namespace LaCAM2 {
@@ -35,6 +36,7 @@ public:
     vector<AgentInfo> agent_infos;
 
     Executor executor;
+    SlowExecutor slow_executor;
 
     nlohmann::json config;
 
@@ -42,7 +44,7 @@ public:
     int get_neighbor_orientation(int loc1,int loc2);
 
     LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, nlohmann::json & config):
-        HT(HT),action_model(env),executor(env),
+        HT(HT),action_model(env),executor(env),slow_executor(env),
         config(config),
         MT(new std::mt19937(read_param_json<uint>(config,"seed",0))){
 
