@@ -35,6 +35,7 @@ find_package( Boost 1.49.0 REQUIRED COMPONENTS program_options system filesystem
 include_directories( ${Boost_INCLUDE_DIRS} )
 
 find_package(OpenMP REQUIRED)
+find_package(spdlog REQUIRED)
 
 IF(PYTHON)
     include_directories("python")
@@ -69,9 +70,12 @@ ELSE()
     add_executable(lifelong ${SOURCES} )
     target_link_libraries(lifelong ${Boost_LIBRARIES})
     target_link_libraries(lifelong OpenMP::OpenMP_CXX)
+    target_link_libraries(lifelong spdlog::spdlog)
     target_compile_definitions(lifelong PRIVATE PYTHON=${PYTHON_FLAG})
 ENDIF()
 
+add_executable(test_log "test/my_logger.cpp" "src/util/MyLogger.cpp")
+target_link_libraries(test_log spdlog::spdlog)
 
 add_custom_target(clean_all
     COMMAND ${CMAKE_BUILD_TOOL} clean

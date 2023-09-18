@@ -49,7 +49,7 @@ public:
         empty_locs = new int[loc_size];
         loc_idxs = new int[env.map.size()];
 
-        cout<<"number of empyt locations: "<<loc_size<<endl;
+        g_logger.debug("number of empty locations: {}", loc_size);
         std::fill(loc_idxs,loc_idxs+env.map.size(),-1);
 
         int loc_idx=0;
@@ -77,7 +77,7 @@ public:
     }
 
     void compute_heuristics(){
-        g_logger.log_info((boost::format("[start] Compute heuristics.")).str());
+        g_logger.debug("[start] Compute heuristics.");
         g_timer.record_p("heu/compute_start");
 
         int n_threads=omp_get_max_threads();
@@ -118,9 +118,7 @@ public:
 
         g_timer.record_d("heu/compute_start","heu/compute_end","heu/compute");
 
-        g_logger.log_info(
-            (boost::format("[end] Compute heuristics. (duration: %.3lf)")%g_timer.get_d("heu/compute")).str()
-        );
+        g_logger.debug("[end] Compute heuristics. (duration: {:.3f})", g_timer.get_d("heu/compute"));
     }
 
     inline void _push(State * queue, State &s, int & e_idx) {
@@ -301,7 +299,7 @@ public:
     }
 
     void save(const string & fpath) {
-        g_logger.log_info((boost::format("[start] Save heuristics to %s.")%fpath).str());
+        g_logger.debug("[start] Save heuristics to {}.", fpath);
         g_timer.record_p("heu/save_start");
 
         std::ofstream fout;
@@ -331,13 +329,11 @@ public:
         
         g_timer.record_d("heu/save_start","heu/save_end","heu/save");
 
-        g_logger.log_info(
-            (boost::format("[end] Save heuristics to %s. (duration: %.3lf)")%fpath%g_timer.get_d("heu/save")).str()
-        );
+        g_logger.debug("[end] Save heuristics to {}. (duration: {:.3f})", fpath, g_timer.get_d("heu/save"));
     }
 
     void load(const string & fpath) {
-        g_logger.log_info((boost::format("[start] load heuristics from %s.")%fpath).str());
+        g_logger.debug("[start] load heuristics from {}.",fpath);
         g_timer.record_p("heu/load_start");
         std::ifstream fin;
         fin.open(fpath,std::ios::binary|std::ios::in);
@@ -379,8 +375,6 @@ public:
 
         g_timer.record_d("heu/load_start","heu/load_end","heu/load");
 
-        g_logger.log_info(
-            (boost::format("[end] load heuristics from %s. (duration: %.3lf)")%fpath%g_timer.get_d("heu/load")).str()
-        );
+        g_logger.debug("[end] load heuristics from {}. (duration: {:.3f})",fpath,g_timer.get_d("heu/load"));
     }
 };

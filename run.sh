@@ -6,19 +6,19 @@ then
     mkdir large_files
 fi
 
-cd build && make -j4 && cd ..
+cd build && make -j4 lifelong && cd ..
 
 # export OMP_NUM_THREADS=128
 ARGS="-o test.json --simulationTime 100 --planTimeLimit 1 --fileStoragePath large_files/"
 
-# # random:random
-./build/lifelong --inputFile example_problems/random.domain/random_20.json $ARGS
-./build/lifelong --inputFile example_problems/random.domain/random_50.json $ARGS
-./build/lifelong --inputFile example_problems/random.domain/random_100.json $ARGS
-./build/lifelong --inputFile example_problems/random.domain/random_200.json $ARGS
-./build/lifelong --inputFile example_problems/random.domain/random_400.json $ARGS
-./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS
-./build/lifelong --inputFile example_problems/random.domain/random_800.json $ARGS
+# random:random
+# ./build/lifelong --inputFile example_problems/random.domain/random_20.json $ARGS
+# ./build/lifelong --inputFile example_problems/random.domain/random_50.json $ARGS
+# ./build/lifelong --inputFile example_problems/random.domain/random_100.json $ARGS
+# ./build/lifelong --inputFile example_problems/random.domain/random_200.json $ARGS
+# ./build/lifelong --inputFile example_problems/random.domain/random_400.json $ARGS
+# ./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS
+# ./build/lifelong --inputFile example_problems/random.domain/random_800.json $ARGS
 
 # warehouse:warehouse_small
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_small_10.json $ARGS

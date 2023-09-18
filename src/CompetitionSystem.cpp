@@ -6,6 +6,7 @@
 #include <Logger.h>
 #include "util/Timer.h"
 #include "util/Analyzer.h"
+#include "util/MyLogger.h"
 
 using json = nlohmann::ordered_json;
 
@@ -202,8 +203,13 @@ void BaseSystem::simulate(int simulation_time)
         ONLYDEV(
             if (actions.size()==num_of_agents) {
                 analyzer.data["moving_steps"]=analyzer.data["moving_steps"].get<int>()+1;
-            } else if (actions.size()!=0) {
-                exit(-1);
+            } else{
+                if (actions.size()!=0) {
+                    DEV_DEBUG("planner return wrong number of actions: {}", actions.size());
+                    exit(-1);
+                } else {
+                    DEV_DEBUG(fmt::format(fmt::fg(fmt::terminal_color::yellow )|fmt::emphasis::bold,"planner return no actions: most likely exceeding the time limit."));
+                }
             }
         )
 

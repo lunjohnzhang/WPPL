@@ -8,3 +8,4 @@ python3-pybind11
 libomp-dev
 python3-numpy
 libeigen3-dev
+libspdlog-dev
