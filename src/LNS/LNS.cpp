@@ -329,8 +329,7 @@ bool LNS::checkPrecomputed()
         path_table_wc.insertPath(agents[i].id,agents[i].path);
         // cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
     }
-    g_timer.print_all_d();
-
+    
     return true;
 }
 

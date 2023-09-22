@@ -1,5 +1,6 @@
 #include "LNS/LNSSolver.h"
 #include "util/Dev.h"
+#include "util/Timer.h"
 
 namespace LNS {
 
@@ -38,17 +39,20 @@ int get_neighbor_orientation(const SharedEnvironment * env, int loc1,int loc2) {
 }
 
 void LNSSolver::plan(const SharedEnvironment & env){
+    ONLYDEV(g_timer.record_p("plan_s");)
 
     // TODO(rivers): we need to replan for all agents that has no plan
     // later we may think of padding all agents to the same length
 
     if (need_replan) {
         if (read_param_json<string>(config,"initAlgo")=="LaCAM2"){
+            ONLYDEV(g_timer.record_p("lacam2_plan_s");)
             // use lacam2 to get a initial solution
             // TODO: it is possible easier we clear everything first of lacam2
             lacam2_solver->clear();
             
             // TODO(rivers): we should avoid copy here. we may use deque for paths.
+            ONLYDEV(g_timer.record_p("copy_paths_1_s");)
             vector<::Path> precomputed_paths;
             precomputed_paths.resize(env.num_of_agents);
             for (int i=0;i<env.num_of_agents;++i){
@@ -60,6 +64,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
                     precomputed_paths[i].emplace_back(paths[i][j]);
                 }
             }
+            ONLYDEV(g_timer.record_d("copy_paths_1_s","copy_paths_1_e","copy_paths_1");)
 
             lacam2_solver->plan(env, &precomputed_paths);
 
@@ -72,14 +77,17 @@ void LNSSolver::plan(const SharedEnvironment & env){
                 }
                 // cerr<<"agent "<<i<<" "<<lacam2_solver->paths[i].size()<<": "<<paths[i]<<endl;
             }
-
+            ONLYDEV(g_timer.record_d("lacam2_plan_s","lacam2_plan_e","lacam2_plan");)
         }
     }
 
+    ONLYDEV(g_timer.record_p("prepare_LNS_s");)
     // build instace
     Instance instance(env);
+    ONLYDEV(g_timer.record_p("modify_goals_s");)
     // TODO(rivers): this might not be necessary
     modify_goals(instance.goal_locations, env);
+    ONLYDEV(g_timer.record_d("modify_goals_s","modify_goals_e","modify_goals");)
 
     // build planner
     PIBTPPS_option pipp_option;
@@ -104,6 +112,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
         read_param_json<int>(config,"window_size_for_CAT"),
         read_param_json<int>(config,"window_size_for_PATH")
     );
+    ONLYDEV(g_timer.record_d("prepare_LNS_s","prepare_LNS_e","prepare_LNS");)
 
 
     //     if (read_param_json<string>(config,"initAlgo")=="LaCAM2"){
@@ -132,6 +141,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
     // }
 
     // copy current paths to lns paths
+    ONLYDEV(g_timer.record_p("copy_paths_2_s");)
     for (int i=0;i<lns.agents.size();i++){
         if (lns.agents[i].id!=i) {
             cerr<<"agents are not ordered at the begining"<<endl;
@@ -152,7 +162,9 @@ void LNSSolver::plan(const SharedEnvironment & env){
         // }   
         // cerr<<endl;
     }
+    ONLYDEV(g_timer.record_d("copy_paths_2_s","copy_paths_2_e","copy_paths_2");)
 
+    ONLYDEV(g_timer.record_p("run_LNS_s");)
     // continue optimizing paths
     bool succ=lns.run();
     if (succ)
@@ -170,8 +182,10 @@ void LNSSolver::plan(const SharedEnvironment & env){
             lns.agents[i].path.push_back(lns.agents[i].path.back());
         }
     }
+    ONLYDEV(g_timer.record_d("run_LNS_s","run_LNS_e","run_LNS");)
 
     // save to paths
+    ONLYDEV(g_timer.record_p("copy_paths_3_s");)
     // cerr<<"lns path lengths:"<<endl;
     for (int i=0;i<paths.size();++i) {
         auto & path=paths[i];
@@ -184,6 +198,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
         // cerr<<"agent "<<i<<" s:"<<env.curr_states[i]<<" e:"<<env.goal_locations[i][0].first<<" c:"<<executed_plan_step<<endl;
         // cerr<<"agent "<<i<<" "<<path.size()<<": "<<path<<endl;
     }
+    ONLYDEV(g_timer.record_d("copy_paths_3_s","copy_paths_3_e","copy_paths_3");)
 
     // for (int i=0;i<paths.size();++i){
     //     cerr<<executed_plan_step<<" "<<env.curr_states[i].location<<" "<<env.curr_states[i].orientation<<endl;
@@ -194,12 +209,16 @@ void LNSSolver::plan(const SharedEnvironment & env){
     //     cerr<<endl;
     // }
 
+    ONLYDEV(g_timer.record_d("plan_s","plan_e","plan");)
+
 }
 
 void LNSSolver::observe(const SharedEnvironment & env){
     // for (int i=0;i<env.num_of_agents;++i) {
     //     paths[i].clear();
     // }    
+
+    ONLYDEV(g_timer.record_p("observe_s");)
 
     if (paths[0].size()==0) {
         for (int i=0;i<env.num_of_agents;++i) {
@@ -256,9 +275,13 @@ void LNSSolver::observe(const SharedEnvironment & env){
         cerr<<"no need to replan"<<endl;
         need_replan=false;
     }
+
+    ONLYDEV(g_timer.record_d("observe_s","observe_e","observe");)
 }
 
 void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> & actions){
+    ONLYDEV(g_timer.record_p("get_step_actions_s");)
+
     assert(actions.empty());
 
     // get current state and current timestep
@@ -299,6 +322,7 @@ void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> &
         ONLYDEV(exit(-1);)
     }
 
+    ONLYDEV(g_timer.record_d("get_step_actions_s","get_step_actions_e","get_step_actions");)
 }
 
 } // end namespace LNS

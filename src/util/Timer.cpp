@@ -53,7 +53,7 @@ double Timer::record_d(const string & old_pkey, const string & new_pkey)
 double Timer::get_d(const string & dkey, int mode) const
 {
     const auto & iter=time_durations.find(dkey);
-    clock_t d=0;
+    double d=0;
     if (iter!=time_durations.end())
     {
         d=iter->second;
@@ -126,7 +126,11 @@ void Timer::print_d(const string & dkey) const
 {
     double sum_d=get_d(dkey,0);
     double mean_d=get_d(dkey,1);
-    cout<<"the time cost of "<<dkey<<" is sum: "<<sum_d<<", mean: "<<mean_d<<"."<<endl;
+    DEV_DEBUG("the time cost of {} is sum: {:.3f}, mean: {:.3f}.",
+        dkey,
+        sum_d,
+        mean_d
+    );
 }
 
 void Timer::print_all_d() const

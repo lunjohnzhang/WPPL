@@ -2,12 +2,12 @@
     "lifelong_solver_name": [
         {
             "n_agents": 1000000,
-            "value": "LNS"
+            "value": "LaCAM2"
         }
     ],
     "LNS": {
         "seed": 0,
-        "cutoffTime": 0.0001,
+        "cutoffTime": 0.5,
         "screen": 0,
         "initAlgo": "LaCAM2",
         "replanAlgo": "PP",
@@ -26,7 +26,7 @@
             "seed": 0,
             "planning_window": 10,
             "consider_rotation": false,
-            "use_orient_in_heuristic": true,
+            "use_orient_in_heuristic": false,
             "use_slow_executor": false
         }
     },

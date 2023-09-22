@@ -6,6 +6,7 @@
 #include <iostream>
 #include <chrono>
 #include "util/Dev.h"
+#include "util/MyLogger.h"
 
 using std::string;
 using std::cerr;
@@ -17,6 +18,7 @@ using std::chrono::duration;
 // Timer uses second as the default unit.
 // p means time point
 // d means time duration
+// TODO(rivers): it may be modified to be thread-safe.
 class Timer
 {
 public:
