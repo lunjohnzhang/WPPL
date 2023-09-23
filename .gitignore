@@ -7,6 +7,8 @@ test.json/
 large_files/
 test.json
 test_rot.json
+my_viz/*.png
+my_viz/*.gif
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

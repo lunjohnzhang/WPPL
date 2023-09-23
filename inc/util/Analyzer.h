@@ -7,6 +7,7 @@
 #include "util/Dev.h"
 #include <ctime>
 #include <algorithm>
+#include "States.h"
 
 class Analyzer {
 public:
@@ -30,6 +31,8 @@ public:
         data["moving_steps"]=0;
         data["finished_tasks"]=0;
         data["details"]="";
+        data["height"]="";
+        data["width"]="";
     };
 
     void set_dump_path(const string & path) {
@@ -118,6 +121,12 @@ public:
         }
         out<<row<<endl;
     }
+
+    void snapshot(
+        const string & fp_prefix,
+        int timestep,
+        const std::vector<::Path> & paths
+    );
 };
 
 extern Analyzer analyzer;

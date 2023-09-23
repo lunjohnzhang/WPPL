@@ -457,6 +457,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         analyzer.timestamp();
         analyzer.init_from_config(config);
         analyzer.set_dump_path(config["analysis_output"].get<string>());
+        analyzer.data["height"]=env->rows;
+        analyzer.data["width"]=env->cols;
         g_logger.init("logs/run");
     )
 

@@ -1,6 +1,7 @@
 #include "LNS/LNSSolver.h"
 #include "util/Dev.h"
 #include "util/Timer.h"
+#include "util/Analyzer.h"
 
 namespace LNS {
 
@@ -95,6 +96,12 @@ void LNSSolver::plan(const SharedEnvironment & env){
             }
             ONLYDEV(g_timer.record_d("lacam2_plan_s","lacam2_plan_e","lacam2_plan");)
         }
+
+        analyzer.snapshot(
+            "analysis/ppaths/lacam2",
+            executed_plan_step,
+            paths
+        );
     }
 
     ONLYDEV(g_timer.record_p("prepare_LNS_s");)
