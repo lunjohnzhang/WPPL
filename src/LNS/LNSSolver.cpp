@@ -4,6 +4,22 @@
 
 namespace LNS {
 
+LNSSolver::LNSSolver(
+    const std::shared_ptr<HeuristicTable> & HT,
+    SharedEnvironment * env,
+    nlohmann::json & config,
+    std::shared_ptr<LaCAM2::LaCAM2Solver> & lacam2_solver
+):
+    HT(HT),
+    action_model(env),
+    executor(env),
+    slow_executor(env),
+    config(config),
+    MT(new std::mt19937(read_param_json<uint>(config,"seed",0))),
+    lacam2_solver(lacam2_solver){
+};
+
+
 void LNSSolver::initialize(const SharedEnvironment & env){
     lacam2_solver->initialize(env);
     paths.resize(env.num_of_agents);
@@ -83,19 +99,15 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
     ONLYDEV(g_timer.record_p("prepare_LNS_s");)
     // build instace
-    Instance instance(env);
-    ONLYDEV(g_timer.record_p("modify_goals_s");)
-    // TODO(rivers): this might not be necessary
-    // modify_goals(instance.goal_locations, env);
-    ONLYDEV(g_timer.record_d("modify_goals_s","modify_goals_e","modify_goals");)
+    instance = new Instance(env);
 
     // build planner
     PIBTPPS_option pipp_option;
     pipp_option.windowSize = read_param_json<int>(config,"pibtWindow");
     pipp_option.winPIBTSoft = read_param_json<int>(config,"winPibtSoftmode");
 
-    LNS lns(
-        instance,
+    lns = new LNS(
+        *instance,
         read_param_json<double>(config,"cutoffTime"),
         read_param_json<string>(config,"initAlgo"),
         read_param_json<string>(config,"replanAlgo"),
@@ -114,50 +126,29 @@ void LNSSolver::plan(const SharedEnvironment & env){
     );
     ONLYDEV(g_timer.record_d("prepare_LNS_s","prepare_LNS_e","prepare_LNS");)
 
-
-    //     if (read_param_json<string>(config,"initAlgo")=="LaCAM2"){
-    //         // copy results into lns.agents
-    //         for (int i=0;i<lns.agents.size();i++){
-    //             if (lns.agents[i].id!=i) {
-    //                 cerr<<"agents are not ordered at the begining"<<endl;
-    //                 exit(-1);
-    //             }
-    //             lns.agents[i].path.clear();
-    //             bool goal_arrived=false;
-    //             for (int j=0;j<lacam2_solver->paths[i].size();++j){
-    //                 lns.agents[i].path.emplace_back(lacam2_solver->paths[i][j].location);
-    //                 if (lacam2_solver->paths[i][j].location==env.goal_locations[i][0].first){
-    //                     goal_arrived=true;
-    //                     // break;
-    //                 }
-    //             }
-    //             // cerr<<"agent "<<i<<": ";
-    //             // for (int j=0;j<lns.agents[i].path.size();++j){
-    //             //     cerr<<lacam2_solver->paths[i][j].location<<" ";
-    //             // }   
-    //             // cerr<<endl;
-    //         }
-    //     }
-    // }
+    // ONLYDEV(g_timer.record_p("modify_goals_s");)
+    // TODO(rivers): this might not be necessary
+    // modify_goals(instance.goal_locations, env);
+    // ONLYDEV(g_timer.record_d("modify_goals_s","modify_goals_e","modify_goals");)
 
     // copy current paths to lns paths
     ONLYDEV(g_timer.record_p("copy_paths_2_s");)
-    for (int i=0;i<lns.agents.size();i++){
-        if (lns.agents[i].id!=i) {
+    for (int i=0;i<lns->agents.size();i++){
+        if (lns->agents[i].id!=i) {
             cerr<<"agents are not ordered at the begining"<<endl;
             exit(-1);
         }
-        lns.agents[i].path.clear();
+        lns->agents[i].path.clear();
         bool goal_arrived=false;
         for (int j=executed_plan_step;j<paths[i].size();++j){
-            lns.agents[i].path.emplace_back(paths[i][j].location);
+            lns->agents[i].path.emplace_back(paths[i][j].location);
             if (paths[i][j].location==env.goal_locations[i][0].first){
                 goal_arrived=true;
                 // break;
             }
         }
         // cerr<<"agent "<<i<<": ";
-        // for (int j=0;j<lns.agents[i].path.size();++j){
+        // for (int j=0;j<lns->agents[i].path.size();++j){
         //     cerr<<lacam2_solver->paths[i][j].location<<" ";
         // }   
         // cerr<<endl;
@@ -166,7 +157,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
     ONLYDEV(g_timer.record_p("run_LNS_s");)
     // continue optimizing paths
-    bool succ=lns.run();
+    bool succ=lns->run();
     if (succ)
     {
         cout<<"lns succeed"<<endl;
@@ -176,10 +167,10 @@ void LNSSolver::plan(const SharedEnvironment & env){
     }
 
     // deal with a special case when the goal and the start are the same.
-    for (int i=0;i<lns.agents.size();++i) {
-        if (lns.agents[i].path.size()==1) {
+    for (int i=0;i<lns->agents.size();++i) {
+        if (lns->agents[i].path.size()==1) {
             // in this case, actually the goal is the same as the start
-            lns.agents[i].path.push_back(lns.agents[i].path.back());
+            lns->agents[i].path.push_back(lns->agents[i].path.back());
         }
     }
     ONLYDEV(g_timer.record_d("run_LNS_s","run_LNS_e","run_LNS");)
@@ -190,7 +181,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
     for (int i=0;i<paths.size();++i) {
         auto & path=paths[i];
         path.resize(executed_plan_step+1);
-        auto & new_path=lns.agents[i].path;
+        auto & new_path=lns->agents[i].path;
         // cerr<<"agent "<<i<<" "<<new_path.size()<<": "<<new_path<<endl;
         for (int j=1;j<new_path.size();++j) {
             path.emplace_back(new_path[j].location, env.curr_timestep+j, -1);
@@ -210,6 +201,9 @@ void LNSSolver::plan(const SharedEnvironment & env){
     // }
 
     ONLYDEV(g_timer.record_d("plan_s","plan_e","plan");)
+
+    delete lns;
+    delete instance;
 
 }
 
@@ -256,7 +250,7 @@ void LNSSolver::observe(const SharedEnvironment & env){
     int window_size_for_PATH=read_param_json<int>(config,"window_size_for_PATH");
     int LaCAM2_planning_window=read_param_json<int>(config["LaCAM2"],"planning_window");
     if (window_size_for_CT==-1 || LaCAM2_planning_window!=window_size_for_CT || window_size_for_PATH!=window_size_for_CT) {
-        cerr<<"not fully supported now! need to modify the padding path code in LNS."<<endl;
+        cerr<<"not fully supported now! need to modify the padding path code in lns->"<<endl;
         exit(-1);
     }
     agent_ids_need_replan.clear();

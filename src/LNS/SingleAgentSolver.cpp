@@ -11,60 +11,60 @@ list<int> SingleAgentSolver::getNextLocations(int curr) const // including itsel
 }
 
 
-void SingleAgentSolver::compute_heuristics()
-{
-    // we just copy heuristics from HT
+// void SingleAgentSolver::compute_heuristics()
+// {
+//     // we just copy heuristics from HT
 
-    my_heuristic.resize(instance.map_size, MAX_TIMESTEP);
-    for (int i = 0; i < instance.map_size; i++)
-    {
-        uint v = HT->get(i, goal_location);
-        if (v!=HT->MAX_HEURISTIC) {
-            my_heuristic[i] = v;
-        } 
-    }
+//     my_heuristic.resize(instance.map_size, MAX_TIMESTEP);
+//     for (int i = 0; i < instance.map_size; i++)
+//     {
+//         uint v = HT->get(i, goal_location);
+//         if (v!=HT->MAX_HEURISTIC) {
+//             my_heuristic[i] = v;
+//         } 
+//     }
     
-	// struct Node
-	// {
-	// 	int location;
-	// 	int value;
+// 	// struct Node
+// 	// {
+// 	// 	int location;
+// 	// 	int value;
 
-	// 	Node() = default;
-	// 	Node(int location, int value) : location(location), value(value) {}
-	// 	// the following is used to compare nodes in the OPEN list
-	// 	struct compare_node
-	// 	{
-	// 		// returns true if n1 > n2 (note -- this gives us *min*-heap).
-	// 		bool operator()(const Node& n1, const Node& n2) const
-	// 		{
-	// 			return n1.value >= n2.value;
-	// 		}
-	// 	};  // used by OPEN (heap) to compare nodes (top of the heap has min f-val, and then highest g-val)
-	// };
+// 	// 	Node() = default;
+// 	// 	Node(int location, int value) : location(location), value(value) {}
+// 	// 	// the following is used to compare nodes in the OPEN list
+// 	// 	struct compare_node
+// 	// 	{
+// 	// 		// returns true if n1 > n2 (note -- this gives us *min*-heap).
+// 	// 		bool operator()(const Node& n1, const Node& n2) const
+// 	// 		{
+// 	// 			return n1.value >= n2.value;
+// 	// 		}
+// 	// 	};  // used by OPEN (heap) to compare nodes (top of the heap has min f-val, and then highest g-val)
+// 	// };
 
-	// my_heuristic.resize(instance.map_size, MAX_TIMESTEP);
+// 	// my_heuristic.resize(instance.map_size, MAX_TIMESTEP);
 
-	// // generate a heap that can save nodes (and a open_handle)
-	// boost::heap::pairing_heap< Node, boost::heap::compare<Node::compare_node> > heap;
+// 	// // generate a heap that can save nodes (and a open_handle)
+// 	// boost::heap::pairing_heap< Node, boost::heap::compare<Node::compare_node> > heap;
 
-	// Node root(goal_location, 0);
-	// my_heuristic[goal_location] = 0;
-	// heap.push(root);  // add root to heap
-	// while (!heap.empty())
-	// {
-	// 	Node curr = heap.top();
-	// 	heap.pop();
-	// 	for (int next_location : instance.getNeighbors(curr.location))
-	// 	{
-	// 		if (my_heuristic[next_location] > curr.value + 1)
-	// 		{
-	// 			my_heuristic[next_location] = curr.value + 1;
-	// 			Node next(next_location, curr.value + 1);
-	// 			heap.push(next);
-	// 		}
-	// 	}
-	// }
-}
+// 	// Node root(goal_location, 0);
+// 	// my_heuristic[goal_location] = 0;
+// 	// heap.push(root);  // add root to heap
+// 	// while (!heap.empty())
+// 	// {
+// 	// 	Node curr = heap.top();
+// 	// 	heap.pop();
+// 	// 	for (int next_location : instance.getNeighbors(curr.location))
+// 	// 	{
+// 	// 		if (my_heuristic[next_location] > curr.value + 1)
+// 	// 		{
+// 	// 			my_heuristic[next_location] = curr.value + 1;
+// 	// 			Node next(next_location, curr.value + 1);
+// 	// 			heap.push(next);
+// 	// 		}
+// 	// 	}
+// 	// }
+// }
 
 // find the optimal no wait path by A* search
 // Returns a path that minimizes the number of target locations visited, breaking ties by cost.
@@ -110,7 +110,7 @@ void SingleAgentSolver::findMinimumSetofColldingTargets(vector<int>& goal_table,
     Path path;
 
     // generate start and add it to the OPEN
-    auto start = new Node(start_location, 0, my_heuristic[start_location], 0, nullptr);
+    auto start = new Node(start_location, 0, HT->get(start_location, goal_location), 0, nullptr);
     start->open_handle = open_list.push(start);
     start->expanded = true;
     visited[start->location] = start;
@@ -148,7 +148,7 @@ void SingleAgentSolver::findMinimumSetofColldingTargets(vector<int>& goal_table,
             if (visited[next_location] == nullptr)
             {
                 // generate (maybe temporary) node
-                auto next = new Node(next_location, next_g_val, my_heuristic[next_location],
+                auto next = new Node(next_location, next_g_val, HT->get(next_location, goal_location),
                         num_of_visited_targets, curr);
                 next->open_handle = open_list.push(next);
                 visited[next_location] = next;

@@ -6,7 +6,7 @@
 
 namespace LNS {
 
-InitLNS::InitLNS(const Instance& instance, vector<Agent>& agents, double time_limit,
+InitLNS::InitLNS(Instance& instance, vector<Agent>& agents, double time_limit,
          const string & replan_algo_name, const string & init_destory_name, int neighbor_size, int screen) :
          BasicLNS(instance, time_limit, neighbor_size, screen), agents(agents), replan_algo_name(replan_algo_name),
          path_table(instance.map_size, agents.size()), collision_graph(agents.size()), goal_table(instance.map_size, -1)

@@ -11,7 +11,7 @@ public:
     vector<Agent>& agents;
     int num_of_colliding_pairs = 0;
 
-    InitLNS(const Instance& instance, vector<Agent>& agents, double time_limit,
+    InitLNS(Instance& instance, vector<Agent>& agents, double time_limit,
             const string & replan_algo_name, const string & init_destory_name, int neighbor_size, int screen);
 
     bool getInitialSolution();

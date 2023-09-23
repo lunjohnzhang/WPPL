@@ -24,7 +24,7 @@ void AnytimeEECBS::run()
     sum_of_distances = 0;
     for (int i = 0; i < num_of_agents; i++)
     {
-        sum_of_distances += ecbs.getSearchEngine(i)->my_heuristic[ecbs.getSearchEngine(i)->start_location];
+        sum_of_distances += ecbs.getSearchEngine(i)->HT->get(ecbs.getSearchEngine(i)->start_location,ecbs.getSearchEngine(i)->goal_location);
     }
 
     // run

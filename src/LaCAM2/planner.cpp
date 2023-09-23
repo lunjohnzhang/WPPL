@@ -16,8 +16,8 @@ LNode::LNode(LNode* parent, uint i, Vertex* v)
 uint HNode::HNODE_CNT = 0;
 
 // for high-level
-HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, const uint _g,
-             const uint _h, const uint _d)
+HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, const int _g,
+             const int _h, const uint _d)
     : C(_C),
       parent(_parent),
       neighbor(),
@@ -321,10 +321,10 @@ void Planner::rewrite(HNode* H_from, HNode* H_to, HNode* H_goal,
   }
 }
 
-uint Planner::get_edge_cost(const Config& C1, const Config& C2)
+int Planner::get_edge_cost(const Config& C1, const Config& C2)
 {
   if (objective == OBJ_SUM_OF_LOSS) {
-    uint cost = 0;
+    int cost = 0;
     for (uint i = 0; i < N; ++i) {
       if (C1[i] != ins->goals[i] || C2[i] != ins->goals[i]) {
         cost += 1;
@@ -337,14 +337,14 @@ uint Planner::get_edge_cost(const Config& C1, const Config& C2)
   return 1;
 }
 
-uint Planner::get_edge_cost(HNode* H_from, HNode* H_to)
+int Planner::get_edge_cost(HNode* H_from, HNode* H_to)
 {
   return get_edge_cost(H_from->C, H_to->C);
 }
 
-uint Planner::get_h_value(const Config& C)
+int Planner::get_h_value(const Config& C)
 {
-  uint cost = 0;
+  int cost = 0;
   if (objective == OBJ_MAKESPAN) {
     for (auto i = 0; i < N; ++i) cost = std::max(cost, HT->get(C[i]->index, ins->goals[i]->index));
   } else if (objective == OBJ_SUM_OF_LOSS) {

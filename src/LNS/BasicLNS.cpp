@@ -2,7 +2,7 @@
 
 namespace LNS {
 
-BasicLNS::BasicLNS(const Instance& instance, double time_limit, int neighbor_size, int screen) :
+BasicLNS::BasicLNS(Instance& instance, double time_limit, int neighbor_size, int screen) :
         instance(instance), time_limit(time_limit), neighbor_size(neighbor_size), screen(screen) {}
 
 void BasicLNS::rouletteWheel()

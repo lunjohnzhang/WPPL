@@ -28,7 +28,7 @@ void AnytimeBCBS::run()
     sum_of_distances = 0;
     for (int i = 0; i < num_of_agents; i++)
     {
-        sum_of_distances += bcbs.getSearchEngine(i)->my_heuristic[bcbs.getSearchEngine(i)->start_location];
+        sum_of_distances += bcbs.getSearchEngine(i)->HT->get(bcbs.getSearchEngine(i)->start_location,bcbs.getSearchEngine(i)->goal_location);
     }
 
     // run

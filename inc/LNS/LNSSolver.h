@@ -32,6 +32,8 @@ public:
     // Action get_action_from_states(const State & state, const State & next_state);
     // [end]
 
+    LNS * lns = nullptr;
+    Instance * instance = nullptr;
     std::shared_ptr<HeuristicTable> HT; // instance
     LaCAM2::Executor executor;
     LaCAM2::SlowExecutor slow_executor;
@@ -45,16 +47,7 @@ public:
         SharedEnvironment * env,
         nlohmann::json & config,
         std::shared_ptr<LaCAM2::LaCAM2Solver> & lacam2_solver
-    ):
-        HT(HT),
-        action_model(env),
-        executor(env),
-        slow_executor(env),
-        config(config),
-        MT(new std::mt19937(read_param_json<uint>(config,"seed",0))),
-        lacam2_solver(lacam2_solver){
-
-    };
+    );
 
     ~LNSSolver(){
         delete MT;

@@ -7,7 +7,7 @@
 
 namespace LNS {
 
-LNS::LNS(const Instance& instance, double time_limit, const string & init_algo_name, const string & replan_algo_name,
+LNS::LNS(Instance& instance, double time_limit, const string & init_algo_name, const string & replan_algo_name,
          const string & destory_name, int neighbor_size, int num_of_iterations, bool use_init_lns,
          const string & init_destory_name, bool use_sipp, int screen, PIBTPPS_option pipp_option, const std::shared_ptr<HeuristicTable> & HT,
          int _window_size_for_CT, int _window_size_for_CAT, int _window_size_for_PATH):
@@ -70,13 +70,42 @@ LNS::LNS(const Instance& instance, double time_limit, const string & init_algo_n
         cout << "Pre-processing time = " << preprocessing_time << " seconds." << endl;
 }
 
+// void LNS::reset(const SharedEnvironment & env) {
+    // for (int aid=0;aid<instance.num_of_agents;++aid) {
+
+    //     int start=env.curr_states[aid].location;
+    //     int goal=env.goal_locations[aid][0].first;
+
+    //     instance.start_locations[aid]=start;
+    //     instance.goal_locations[aid]=goal;
+    //     agents[aid].path_planner->start_location=start;
+    //     agents[aid].path_planner->goal_location=goal;
+    // }
+
+    // TODO(rivers): we may do it faster, by only reset the goal map with the old goal location.
+    // path_table.reset();
+    // path_table_wc.reset();
+
+    // initial_solution_runtime = 0;
+    // initial_sum_of_costs = -1;
+    // sum_of_costs_lowerbound = -1;
+    // sum_of_distances = -1;
+    // restart_times = 0;
+
+    // num_of_failures = 0; // #replanning that fails to find any solutions
+    // iteration_stats.clear(); //stats about each iteration
+    // runtime = 0;
+    // average_group_size = -1;
+    // sum_of_costs = 0;
+// }
+
 bool LNS::run()
 {
     // only for statistic analysis, and thus is not included in runtime
     sum_of_distances = 0;
     for (const auto & agent : agents)
     {
-        sum_of_distances += agent.path_planner->my_heuristic[agent.path_planner->start_location];
+        sum_of_distances += agent.path_planner->HT->get(agent.path_planner->start_location,agent.path_planner->goal_location);
     }
 
     initial_solution_runtime = 0;
@@ -471,7 +500,7 @@ bool LNS::runPP(bool init_run)
     std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
     if (screen >= 2) {
         for (auto id : shuffled_agents)
-            cout << id << "(" << agents[id].path_planner->my_heuristic[agents[id].path_planner->start_location] <<
+            cout << id << "(" << agents[id].path_planner->HT->get(agents[id].path.back().location,agents[id].path_planner->goal_location) <<
                 "->" << agents[id].path.size() - 1 << "), ";
         cout << endl;
     }
@@ -806,7 +835,7 @@ bool LNS::generateNeighborByRandomWalk()
     neighbor.agents.assign(neighbors_set.begin(), neighbors_set.end());
     if (screen >= 2)
         cout << "Generate " << neighbor.agents.size() << " neighbors by random walks of agent " << a
-             << "(" << agents[a].path_planner->my_heuristic[agents[a].path_planner->start_location]
+             << "(" << agents[a].path_planner->HT->get(agents[a].path_planner->start_location,agents[a].path_planner->goal_location)
              << "->" << agents[a].path.size() - 1 << ")" << endl;
 
     return true;
@@ -867,7 +896,7 @@ void LNS::randomWalk(int agent_id, int start_location, int start_timestep,
             int step = rand() % next_locs.size();
             auto it = next_locs.begin();
             advance(it, step);
-            int next_h_val = agents[agent_id].path_planner->my_heuristic[*it];
+            int next_h_val = agents[agent_id].path_planner->HT->get(*it,agents[agent_id].path_planner->goal_location);
             if (t + 1 + next_h_val < upperbound) // move to this location
             {
                 path_table.getConflictingAgents(agent_id, conflicting_agents, loc, *it, t + 1);

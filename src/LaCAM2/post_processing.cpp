@@ -93,7 +93,7 @@ int get_sum_of_loss(const Solution& solution)
 
 int get_makespan_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT)
 {
-  uint c = 0;
+  int c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
     c = std::max(c, HT->get(ins.starts[i]->index,ins.goals[i]->index));
   }

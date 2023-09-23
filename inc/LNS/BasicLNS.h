@@ -25,7 +25,7 @@ struct Agent
 
     int getNumOfDelays() const
     {
-        return (int) path.size() - 1 - path_planner->my_heuristic[path_planner->start_location];
+        return (int) path.size() - 1 - path_planner->HT->get(path_planner->start_location,path_planner->goal_location);
     }
 };
 
@@ -49,11 +49,11 @@ public:
     double average_group_size = -1;
     int sum_of_costs = 0;
 
-    BasicLNS(const Instance& instance, double time_limit, int neighbor_size, int screen);
+    BasicLNS(Instance& instance, double time_limit, int neighbor_size, int screen);
     virtual string getSolverName() const = 0;
 protected:
     // input params
-    const Instance& instance; // avoid making copies of this variable as much as possible
+    Instance& instance; // avoid making copies of this variable as much as possible
     double time_limit;
     double replan_time_limit; // time limit for replanning
     int neighbor_size;

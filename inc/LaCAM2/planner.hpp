@@ -46,17 +46,17 @@ struct HNode {
   uint d;        // depth (might be updated, it might be different from g)
 
   // costs
-  uint g;        // g-value (might be updated)
-  const uint h;  // h-value
-  uint f;        // g + h (might be updated)
+  int g;        // g-value (might be updated)
+  const int h;  // h-value
+  int f;        // g + h (might be updated)
 
   // for low-level search
   std::vector<float> priorities;
   std::vector<uint> order;
   std::queue<LNode*> search_tree;
 
-  HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, const uint _g,
-        const uint _h, const uint _d);
+  HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, const int _g,
+        const int _h, const uint _d);
   ~HNode();
 };
 using HNodes = std::vector<HNode*>;
@@ -99,9 +99,9 @@ struct Planner {
   void expand_lowlevel_tree(HNode* H, LNode* L);
   void rewrite(HNode* H_from, HNode* T, HNode* H_goal,
                std::stack<HNode*>& OPEN);
-  uint get_edge_cost(const Config& C1, const Config& C2);
-  uint get_edge_cost(HNode* H_from, HNode* H_to);
-  uint get_h_value(const Config& C);
+  int get_edge_cost(const Config& C1, const Config& C2);
+  int get_edge_cost(HNode* H_from, HNode* H_to);
+  int get_h_value(const Config& C);
   bool get_new_config(HNode* H, LNode* L);
   bool funcPIBT(Agent* ai);
 

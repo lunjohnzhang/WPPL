@@ -60,7 +60,7 @@ bool MDD::buildMDD(ConstraintTable& constraint_table, const SingleAgentSolver* _
 	};
 	this->solver = _solver;
 	int holding_time = constraint_table.getHoldingTime(solver->goal_location, constraint_table.length_min); // the earliest timestep that the agent can hold its goal location. The length_min is considered here.
-	auto root = new Node(solver->start_location, 0, solver->my_heuristic[solver->start_location]); // Root
+	auto root = new Node(solver->start_location, 0, solver->HT->get(solver->start_location,solver->goal_location)); // Root
 	// generate a heap that can save nodes (and a open_handle)
 	pairing_heap< Node*, compare<Node::compare_node> > open;
 	unordered_set<Node*, Node::NodeHasher, Node::eqnode> allNodes_table;
@@ -92,7 +92,7 @@ bool MDD::buildMDD(ConstraintTable& constraint_table, const SingleAgentSolver* _
 			if (constraint_table.constrained(next_location, next_timestep) ||
 				constraint_table.constrained(curr->location, next_location, next_timestep))
 				continue;
-			int next_h_val = solver->my_heuristic[next_location];
+			int next_h_val = solver->HT->get(next_location,solver->goal_location);
 			if (next_timestep + next_h_val > upperbound)
 				continue;
 			auto next = new Node(next_location, next_timestep, next_h_val);
@@ -179,7 +179,7 @@ bool MDD::buildMDD(const ConstraintTable& ct,
 		list<int> next_locations = solver->getNextLocations(curr->location);
 		for (int next_location : next_locations) // Try every possible move. We only add backward edges in this step.
 		{
-			if (solver->my_heuristic[next_location] <= heuristicBound &&
+			if (solver->HT->get(next_location,solver->goal_location) <= heuristicBound &&
 				!ct.constrained(next_location, curr->level + 1) &&
 				!ct.constrained(curr->location, next_location, curr->level + 1)) // valid move
 			{
@@ -408,7 +408,7 @@ void MDD::increaseBy(const ConstraintTable&ct, int dLevel, SingleAgentSolver* so
         // for (int i = 0; i < 5; i++) // Try every possible move. We only add backward edges in this step.
         {
           // int newLoc = node_ptr->location + solver.moves_offset[i];
-          if (solver->my_heuristic[newLoc] <= heuristicBound &&
+          if (solver->HT->get(newLoc,solver->goal_location) <= heuristicBound &&
               !ct.constrained(newLoc, it->level + 1) &&
               !ct.constrained(it->location, newLoc, it->level + 1)) // valid move
             {

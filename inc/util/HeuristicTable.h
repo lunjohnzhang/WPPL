@@ -13,6 +13,8 @@
 #include "util/MyLogger.h"
 #include "boost/format.hpp"
 
+#define MAX_HEURISTIC INT_MAX/16
+
 class HeuristicTable {
 public:
 
@@ -28,9 +30,6 @@ public:
     size_t loc_size=0;
     size_t state_size;
     bool consider_rotation=true;
-
-    // divide by 16 in case of overlow
-    const uint MAX_HEURISTIC=UINT_MAX/16;
 
     HeuristicTable(SharedEnvironment * _env, bool consider_rotation=true):env(*_env),action_model(_env),consider_rotation(consider_rotation){
         if (consider_rotation) {
@@ -232,7 +231,7 @@ public:
     }
     
     // TODO(hj) add check
-    inline uint get(int loc1, int loc2) {
+    inline int get(int loc1, int loc2) {
         int loc_idx1=loc_idxs[loc1];
         int loc_idx2=loc_idxs[loc2];
 
@@ -244,7 +243,7 @@ public:
         return main_heuristics[idx];
     }
 
-    inline uint get(int loc1, int orient1, int loc2) {
+    inline int get(int loc1, int orient1, int loc2) {
         if (!consider_rotation) {
             cerr<<"no valid to use this func if not consider rotation"<<endl;
             exit(-1);
@@ -267,7 +266,7 @@ public:
         return min_v+main_heuristics[loc_idx1*loc_size+loc_idx2];
     } 
 
-    inline uint get(int loc1, int orient1, int loc2, int orient2) {
+    inline int get(int loc1, int orient1, int loc2, int orient2) {
         if (!consider_rotation) {
             cerr<<"no valid to use this func if not consider rotation"<<endl;
             exit(-1);

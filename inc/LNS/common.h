@@ -13,6 +13,7 @@
 #include <boost/heap/pairing_heap.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
+#include "util/HeuristicTable.h"
 
 using boost::heap::pairing_heap;
 using boost::heap::compare;
@@ -42,7 +43,7 @@ using namespace std::chrono;
 typedef std::chrono::high_resolution_clock Time;
 typedef std::chrono::duration<float> fsec;
 
-#define MAX_TIMESTEP INT_MAX / 2
+#define MAX_TIMESTEP MAX_HEURISTIC
 #define MAX_COST INT_MAX / 2
 #define MAX_NODES INT_MAX / 2
 

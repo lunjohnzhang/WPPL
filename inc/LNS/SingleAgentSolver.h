@@ -95,11 +95,11 @@ public:
 
 	int start_location;
 	int goal_location;
-	vector<int> my_heuristic;  // this is the precomputed heuristic for this agent
-	int compute_heuristic(int from, int to) const  // compute admissible heuristic between two locations
-	{
-		return max(get_DH_heuristic(from, to), instance.getManhattanDistance(from, to));
-	}
+	// vector<int> my_heuristic;  // this is the precomputed heuristic for this agent
+	// int compute_heuristic(int from, int to) const  // compute admissible heuristic between two locations
+	// {
+	// 	return max(get_DH_heuristic(from, to), instance.getManhattanDistance(from, to));
+	// }
 	const Instance& instance;
 	std::shared_ptr<HeuristicTable> HT;
 
@@ -126,7 +126,7 @@ public:
 		goal_location(instance.goal_locations[agent]),
 		HT(HT)
 	{
-		compute_heuristics();
+		// compute_heuristics();
 	}
 	virtual ~SingleAgentSolver()= default;
     void reset()
@@ -150,8 +150,8 @@ protected:
 	// int lower_bound; // Threshold for FOCAL
 	double w = 1; // suboptimal bound
 
-	void compute_heuristics();
-	int get_DH_heuristic(int from, int to) const { return abs(my_heuristic[from] - my_heuristic[to]); }
+	// void compute_heuristics();
+	// int get_DH_heuristic(int from, int to) const { return abs(my_heuristic[from] - my_heuristic[to]); }
 };
 
 

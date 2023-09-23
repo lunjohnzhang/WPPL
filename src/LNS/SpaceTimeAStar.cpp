@@ -39,7 +39,7 @@ Path SpaceTimeAStar::findPath(const ConstraintTable& constraint_table)
     auto static_timestep = constraint_table.getMaxTimestep() + 1; // everything is static after this timestep
     auto last_target_collision_time = constraint_table.getLastCollisionTimestep(goal_location);
     // generate start and add it to the OPEN & FOCAL list
-    auto h = max(max(my_heuristic[start_location], holding_time), last_target_collision_time + 1);
+    auto h = max(max(HT->get(start_location, goal_location), holding_time), last_target_collision_time + 1);
     auto start = new AStarNode(start_location, 0, h, nullptr, 0, 0);
     num_generated++;
     start->in_openlist = true;
@@ -121,7 +121,7 @@ Path SpaceTimeAStar::findPath(const ConstraintTable& constraint_table)
 
             // compute cost to next_id via curr node
             int next_g_val = curr->g_val + 1;
-            int next_h_val = my_heuristic[next_location];
+            int next_h_val = HT->get(next_location, goal_location);
             if (next_g_val + next_h_val > constraint_table.length_max)
                 continue;
             auto num_conflicts = curr->num_of_conflicts +
@@ -207,7 +207,7 @@ pair<Path, int> SpaceTimeAStar::findSuboptimalPath(const HLNode& node, const Con
     lowerbound =  max(holding_time, lowerbound);
 
 	// generate start and add it to the OPEN & FOCAL list
-	auto start = new AStarNode(start_location, 0, max(lowerbound, my_heuristic[start_location]), nullptr, 0, 0);
+	auto start = new AStarNode(start_location, 0, max(lowerbound, HT->get(start_location, goal_location)), nullptr, 0, 0);
 
 	num_generated++;
 	start->open_handle = open_list.push(start);
@@ -254,7 +254,7 @@ pair<Path, int> SpaceTimeAStar::findSuboptimalPath(const HLNode& node, const Con
 
 			// compute cost to next_id via curr node
 			int next_g_val = curr->g_val + 1;
-			int next_h_val = max(lowerbound - next_g_val, my_heuristic[next_location]);
+			int next_h_val = max(lowerbound - next_g_val, HT->get(next_location, goal_location));
 			if (next_g_val + next_h_val > constraint_table.length_max)
 				continue;
 			int next_internal_conflicts = curr->num_of_conflicts +
@@ -326,7 +326,7 @@ int SpaceTimeAStar::getTravelTime(int start, int end, const ConstraintTable& con
     reset();
 	int length = MAX_TIMESTEP;
     auto static_timestep = constraint_table.getMaxTimestep() + 1; // everything is static after this timestep
-	auto root = new AStarNode(start, 0, compute_heuristic(start, end), nullptr, 0, 0);
+	auto root = new AStarNode(start, 0, HT->get(start, end), nullptr, 0, 0);
 	root->open_handle = open_list.push(root);  // add root to heap
 	allNodes_table.insert(root);       // add root to hash_table (nodes)
 	AStarNode* curr = nullptr;
@@ -355,7 +355,7 @@ int SpaceTimeAStar::getTravelTime(int start, int end, const ConstraintTable& con
 			if (!constraint_table.constrained(next_location, next_timestep) &&
 				!constraint_table.constrained(curr->location, next_location, next_timestep))
 			{  // if that grid is not blocked
-				int next_h_val = compute_heuristic(next_location, end);
+				int next_h_val = HT->get(next_location, end);
 				if (next_g_val + next_h_val >= upper_bound) // the cost of the path is larger than the upper bound
 					continue;
 				auto next = new AStarNode(next_location, next_g_val, next_h_val, nullptr, next_timestep, 0);
