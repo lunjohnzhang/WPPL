@@ -8,7 +8,7 @@
 #include "MyLaCAM2/instance.hpp"
 #include "MyLaCAM2/utils.hpp"
 #include "MyLaCAM2/my_state.hpp"
-#include "PIBT/HeuristicTable.h"
+#include "util/HeuristicTable.h"
 #include "MyLaCAM2/planner.hpp"
 #include "MyLaCAM2/my_instance.hpp"
 #include <memory>

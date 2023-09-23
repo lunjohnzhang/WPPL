@@ -7,7 +7,7 @@
 #include "MyLaCAM2/graph.hpp"
 #include "MyLaCAM2/instance.hpp"
 #include "MyLaCAM2/utils.hpp"
-#include "PIBT/HeuristicTable.h"
+#include "util/HeuristicTable.h"
 #include <memory>
 
 namespace MyLaCAM2 {

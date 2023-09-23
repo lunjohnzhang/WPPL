@@ -8,7 +8,7 @@
 #include <thread>
 #include <future>
 #include <mutex>
-#include "RHCR/interface/CompetitionActionModel.h"
+#include "util/CompetitionActionModel.h"
 
 namespace RHCR {
 class RHCRSolver: public BasicSystem{

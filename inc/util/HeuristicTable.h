@@ -3,7 +3,7 @@
 #include "SharedEnv.h"
 #include <omp.h>
 #include <chrono>
-#include "RHCR/interface/CompetitionActionModel.h"
+#include "util/CompetitionActionModel.h"
 #include "boost/filesystem.hpp"
 #include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
@@ -169,11 +169,20 @@ public:
                 int c=0;
 
                 vector<State> neighbors;
+#ifndef NO_ROT
                 if (consider_rotation){
                     neighbors=action_model.get_state_neighbors(state,false);
                 } else {
                     neighbors=action_model.get_loc_neighbors(state,false);
                 }
+#else
+                if (consider_rotation){
+                    cerr<<"no valid to set on consider_rotation when compiled with NO_ROT"<<endl;
+                    exit(-1);
+                } else {
+                    neighbors=action_model.get_loc_neighbors(state,false);
+                }
+#endif
 
                 for (auto & next: neighbors){
                     ++c;

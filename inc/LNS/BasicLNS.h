@@ -2,7 +2,7 @@
 #include "LNS/common.h"
 #include "LNS/SpaceTimeAStar.h"
 #include "LNS/SIPP.h"
-#include "PIBT/HeuristicTable.h"
+#include "util/HeuristicTable.h"
 #include <memory>
 
 namespace LNS {

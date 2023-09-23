@@ -4,7 +4,7 @@
 #pragma once
 #include "LaCAM/instance.h"
 #include "LaCAM/utils.h"
-#include "PIBT/HeuristicTable.h"
+#include "util/HeuristicTable.h"
 #include <memory>
 
 namespace LaCAM {

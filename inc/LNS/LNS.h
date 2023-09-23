@@ -10,7 +10,7 @@
 #include "LNS/PIBT/pibt.h"
 #include "LNS/PIBT/pps.h"
 #include "LNS/PIBT/winpibt.h"
-#include "PIBT/HeuristicTable.h"
+#include "util/HeuristicTable.h"
 #include <memory>
 
 namespace LNS {

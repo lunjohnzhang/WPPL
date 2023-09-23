@@ -1,4 +1,4 @@
-#include "RHCR/interface/CompetitionActionModel.h"
+#include "util/CompetitionActionModel.h"
 
 bool CompetitionActionModelWithRotate::is_valid(const vector<State>& prev, const vector<Action> & actions)
 {

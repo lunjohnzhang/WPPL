@@ -1,12 +1,12 @@
 #pragma once
 
-#include "RHCR/interface/CompetitionActionModel.h"
+#include "util/CompetitionActionModel.h"
 #include <random>
 #include "LaCAM2/graph.hpp"
 #include "LaCAM2/instance.hpp"
 #include "LaCAM2/planner.hpp"
 #include <memory>
-#include "PIBT/HeuristicTable.h"
+#include "util/HeuristicTable.h"
 #include "LaCAM2/executor.hpp"
 #include "LaCAM2/slow_executor.hpp"
 #include "nlohmann/json.hpp"
@@ -72,6 +72,7 @@ public:
     }
 
     Action get_action_from_states(const State & state, const State & next_state){
+#ifndef NO_ROT
         assert(state.timestep+1==next_state.timestep);
         
         if (state.location==next_state.location){
@@ -90,6 +91,18 @@ public:
         else {
             return Action::FW;
         }
+#else 
+        assert(state.timestep+1==next_state.timestep);
+        
+        for (int i=0;i<5;++i) {
+            if (state.location+action_model.moves[i]==next_state.location) {
+                return static_cast<Action>(i);
+            }
+        }
+
+        cerr<<"Cannot get action from invalid movement between state "<<state<<" and "<<next_state<<endl;
+        exit(-1);
+#endif
     }
 
 };

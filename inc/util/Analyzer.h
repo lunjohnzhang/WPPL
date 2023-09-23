@@ -14,6 +14,11 @@ public:
     string dump_path="analysis/test.csv";
 
     Analyzer(){
+#ifndef NO_ROT
+        data["rot"]=true;
+#else  
+        data["rot"]=false;
+#endif
         data["timestamp"]="";
         data["instance"]="";
         data["lifelong_solver"]="";
@@ -68,6 +73,7 @@ public:
         std::ofstream out;
 
         vector<std::pair<string,string>> keys={
+            {"rot","%b"},
             {"timestamp","%s"},
             {"instance","%s"},
             {"lifelong_solver","%s"},

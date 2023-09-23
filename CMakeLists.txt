@@ -3,7 +3,10 @@ project(lifelong)
 cmake_minimum_required(VERSION 3.16)
 set(CMAKE_CXX_STANDARD 17)
 
-add_definitions(-DDEV)
+# if set, use dev mode, which has a lot of logging and timing.
+set(DEV ON)
+# if set, use action model with no rotation.
+set(NO_ROT ON)
 
 # Set the default value of PYTHON to false
 option(PYTHON "Enable Python" OFF)
@@ -65,7 +68,23 @@ IF(PYTHON)
 ELSE()
     message(STATUS "Python support is disabled")
     
-    file(GLOB_RECURSE SOURCES "src/**.cpp")
+    IF(NO_ROT)
+        message(STATUS "Use action model with no rotation")
+        add_definitions(-DNO_ROT)
+        file(GLOB OFFICIAL_SOURCES "src/*.cpp")
+        file(GLOB_RECURSE MY_SOURCES "src/LNS/*.cpp" "src/LaCAM2/*.cpp" "src/util/*.cpp")
+        set(SOURCES ${OFFICIAL_SOURCES} ${MY_SOURCES})
+    ELSE()
+        message(STATUS "Use action model with rotation")
+        file(GLOB_RECURSE SOURCES "src/**.cpp")
+    ENDIF()
+
+    IF(DEV)
+        message(STATUS "Dev mode is enabled")
+        add_definitions(-DDEV)
+    ENDIF()
+
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wfatal-errors")
 
     add_executable(lifelong ${SOURCES} )
     target_link_libraries(lifelong ${Boost_LIBRARIES})

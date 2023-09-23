@@ -273,6 +273,12 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
     if (!read_param_json<bool>(config,"use_slow_executor")) {
         need_replan=true;
     }
+
+    if (need_replan) {
+        for (int i=0;i<env.num_of_agents;++i) {
+            paths[i].resize(timestep+1);
+        }
+    }
     
 }
 

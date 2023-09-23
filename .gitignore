@@ -6,6 +6,7 @@ Dockerfile
 test.json/
 large_files/
 test.json
+test_rot.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

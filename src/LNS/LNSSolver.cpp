@@ -86,7 +86,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
     Instance instance(env);
     ONLYDEV(g_timer.record_p("modify_goals_s");)
     // TODO(rivers): this might not be necessary
-    modify_goals(instance.goal_locations, env);
+    // modify_goals(instance.goal_locations, env);
     ONLYDEV(g_timer.record_d("modify_goals_s","modify_goals_e","modify_goals");)
 
     // build planner
@@ -284,6 +284,7 @@ void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> &
 
     assert(actions.empty());
 
+#ifndef NO_ROT
     // get current state and current timestep
     vector<State> planned_next_states;
     vector<State> next_states;
@@ -308,17 +309,31 @@ void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> &
 
     // get actions from current state and next state
     for (int i=0;i<env.num_of_agents;++i) {
-        // we will get action indexed at timestep+1
-        if (paths[i].size()<=timestep+1){
-            cerr<<"wierd error for agent "<<i<<". path length: "<<paths[i].size()<<", "<<"timestep+1: "<<timestep+1<<endl;
-            assert(false);
+        // we will get action indexed at executed_plan_step+1
+        if (paths[i].size()<=executed_plan_step+1){
+            cerr<<"wierd error for agent "<<i<<". path length: "<<paths[i].size()<<", "<<"executed_plan_step+1: "<<executed_plan_step+1<<endl;
+            exit(-1);
         }
         actions.push_back(get_action_from_states(env.curr_states[i],next_states[i]));
     }
+#else
 
+    for (int i=0;i<env.num_of_agents;++i) {
+        // we will get action indexed at executed_plan_step+1
+        if (paths[i].size()<=executed_plan_step+1){
+            cerr<<"wierd error for agent "<<i<<". path length: "<<paths[i].size()<<", "<<"executed_plan_step+1: "<<executed_plan_step+1<<endl;
+            assert(false);
+        }
+        actions.push_back(get_action_from_states(paths[i][executed_plan_step],paths[i][executed_plan_step+1]));
+    }
+
+#endif
 
     if (!action_model.is_valid(env.curr_states,actions)){
-        cerr<<"planed actions are not valid in timestep "<<timestep+1<<"!"<<endl;
+        cerr<<"planed actions are not valid in executed_plan_step "<<executed_plan_step+1<<"!"<<endl;
+        for (int i=0;i<env.num_of_agents;++i) {
+            cerr<<"agent "<<i<<" "<<env.curr_states[i]<<" "<<actions[i]<<endl;
+        }
         ONLYDEV(exit(-1);)
     }
 

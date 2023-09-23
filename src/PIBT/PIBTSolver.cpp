@@ -76,6 +76,7 @@ void PIBTSolver::plan(const SharedEnvironment & env) {
                 // if (agent_idx==18){
                 //     cerr<<agent.curr_state<<" "<<agent.next_state<<endl;
                 // }
+                
                 auto candidates=action_model.get_state_neighbors(agent.curr_state,true);
                 int best_d=3;
                 State next_state;

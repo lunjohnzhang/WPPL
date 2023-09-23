@@ -132,6 +132,16 @@ bool LNS::run()
         return false; // terminate because no initial solution is found
     }
 
+    if (time_limit<=0) {
+        cout << getSolverName() << " (only init): "
+            << "runtime = " << runtime << ", "
+            << "iterations = " << iteration_stats.size() << ", "
+            << "solution cost = " << sum_of_costs << ", "
+            << "initial solution cost = " << initial_sum_of_costs << ", "
+            << "failed iterations = " << num_of_failures << endl;
+        return true;
+    }
+
     while (runtime < time_limit && iteration_stats.size() <= num_of_iterations)
     {
         runtime =((fsec)(Time::now() - start_time)).count();
