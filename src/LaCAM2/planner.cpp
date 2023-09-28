@@ -41,12 +41,10 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
   std::sort(order.begin(), order.end(), [&](int i, int j) { 
         const AgentInfo & a=ins->agent_infos[i];
         const AgentInfo & b=ins->agent_infos[j];
-        int aid = a.id;
-        int bid = b.id;
 
         if (ins->precomputed_paths!=nullptr){
-          bool precomputed_a = (*(ins->precomputed_paths))[aid].size()>(d+1);
-          bool precomputed_b = (*(ins->precomputed_paths))[bid].size()>(d+1);
+          bool precomputed_a = (*(ins->precomputed_paths))[i].size()>(d+1);
+          bool precomputed_b = (*(ins->precomputed_paths))[j].size()>(d+1);
           if (precomputed_a != precomputed_b) return (int)precomputed_a>(int)precomputed_b;
         }
 

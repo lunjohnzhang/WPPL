@@ -55,7 +55,7 @@ public:
     };
 
 
-    void clear() {
+    void clear(const SharedEnvironment & env) {
         int num_of_agents=paths.size();
 
         paths.clear();
@@ -67,8 +67,7 @@ public:
         next_config = Config();
         agent_infos.clear();
 
-        paths.resize(num_of_agents);
-        agent_infos.resize(num_of_agents);
+        initialize(env);
     }
 
     Action get_action_from_states(const State & state, const State & next_state){

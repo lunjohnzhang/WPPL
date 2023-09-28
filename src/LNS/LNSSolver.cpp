@@ -66,7 +66,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
             ONLYDEV(g_timer.record_p("lacam2_plan_s");)
             // use lacam2 to get a initial solution
             // TODO: it is possible easier we clear everything first of lacam2
-            lacam2_solver->clear();
+            lacam2_solver->clear(env);
             
             // TODO(rivers): we should avoid copy here. we may use deque for paths.
             ONLYDEV(g_timer.record_p("copy_paths_1_s");)
