@@ -7,7 +7,7 @@
     ],
     "LNS": {
         "seed": 0,
-        "cutoffTime": 0.5,
+        "cutoffTime": 4.5,
         "screen": 0,
         "initAlgo": "LaCAM2",
         "replanAlgo": "PP",

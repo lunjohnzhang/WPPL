@@ -12,6 +12,9 @@
 #include "util/Timer.h"
 #include "util/MyLogger.h"
 #include "boost/format.hpp"
+#include "util/SearchForHeuristics/SpatialSearch.h"
+// #include "bshoshany/BS_thread_pool.hpp"
+
 
 #define MAX_HEURISTIC INT_MAX/16
 
@@ -73,6 +76,196 @@ public:
         delete [] main_heuristics;
         if (consider_rotation)
             delete [] sub_heuristics;
+    }
+
+    // weights is an array of [loc_size*n_orientations]
+    void compute_heuristics(const std::vector<int> & weights){
+        g_logger.debug("[start] Compute heuristics.");
+        g_timer.record_p("heu/compute_start");
+
+
+
+        int n_threads=omp_get_max_threads();
+        // BS::thread_pool pool(n_threads);
+
+        // int n_threads=pool.get_thread_count();
+        cout<<"number of threads used for heuristic computation: "<<n_threads<<endl;
+        unsigned short * values = new unsigned short[n_threads*n_orientations*state_size];
+        RIVERS::SPATIAL::State ** heaps = new RIVERS::SPATIAL::State* [n_threads*n_orientations*env.map.size()];
+        RIVERS::SPATIAL::State * all_states = new RIVERS::SPATIAL::State[n_threads*n_orientations*env.map.size()];
+        int max_successors=8;
+        RIVERS::SPATIAL::State * successors = new RIVERS::SPATIAL::State[n_threads*max_successors];
+        RIVERS::SPATIAL::SpatialAStar ** planners= new RIVERS::SPATIAL::SpatialAStar* [n_threads];
+        for (int i=0;i<n_threads;++i) {
+            planners[i]=new RIVERS::SPATIAL::SpatialAStar(env,n_orientations,weights,heaps+i*n_orientations*env.map.size(),all_states+i*n_orientations*env.map.size(),successors+i*max_successors);
+        }
+
+        cerr<<"created"<<endl;
+
+        int ctr=0;
+        int step=100;
+        auto start = std::chrono::steady_clock::now();
+
+        // std::queue<int> tasks;
+        // for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
+        //     tasks.push(loc_idx);
+        // }
+
+        // std::vector<std::future<void>> futures(n_threads);
+        // std::queue<int> empty_slots;
+        // for (int i=0;i<n_threads;++i) {
+        //     empty_slots.push(i);
+        // }
+
+        // while (!tasks.empty()) {
+        //     int loc_idx=tasks.front();
+        //     tasks.pop();
+
+        //     while (empty_slots.size()==0) {
+        //         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        //         for (int i=0;i<futures.size();++i) {
+        //             if (futures[i].wait_for(std::chrono::milliseconds(0))==std::future_status::ready) {
+        //                 // futures[i].get();
+        //                 empty_slots.push(i);
+        //                 ++ctr;
+        //             }
+        //         }
+        //     }
+
+        //     int thread_id=empty_slots.front();
+        //     empty_slots.pop();
+        //     futures[thread_id]=pool.submit(
+        //         &HeuristicTable::_compute_heuristics,
+        //         this,
+        //         loc_idx,
+        //         values+thread_id*n_orientations*state_size,
+        //         planners[thread_id]
+        //     );
+
+        //     if (ctr%step==0){
+        //         auto end = std::chrono::steady_clock::now();
+        //         double elapse=std::chrono::duration<double>(end-start).count();
+        //         double estimated_remain=elapse/ctr*(loc_size-ctr);
+        //         cout<<ctr<<"/"<<loc_size<<" completed in "<<elapse<<"s. estimated time to finish all: "<<estimated_remain<<"s.  estimated total time: "<<(estimated_remain+elapse)<<"s."<<endl;
+        //     }
+        // }
+
+        // while (empty_slots.size()!=n_threads) {
+        //     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        //     for (int i=0;i<futures.size();++i) {
+        //         if (futures[i].wait_for(std::chrono::milliseconds(0))==std::future_status::ready) {
+        //             // futures[i].get();
+        //             empty_slots.push(i);
+        //             ++ctr;
+        //         }
+        //     }
+
+        //     if (ctr%step==0){
+        //         auto end = std::chrono::steady_clock::now();
+        //         double elapse=std::chrono::duration<double>(end-start).count();
+        //         double estimated_remain=elapse/ctr*(loc_size-ctr);
+        //         cout<<ctr<<"/"<<loc_size<<" completed in "<<elapse<<"s. estimated time to finish all: "<<estimated_remain<<"s.  estimated total time: "<<(estimated_remain+elapse)<<"s."<<endl;
+        //     }
+        // }
+
+        #pragma omp parallel for
+        for (int loc_idx=0;loc_idx<loc_size;++loc_idx)
+		{
+            int thread_id=omp_get_thread_num();
+
+            int s_idx=thread_id*n_orientations*state_size;
+ 
+            _compute_heuristics(loc_idx,values+s_idx,planners[thread_id]);
+
+
+            #pragma omp critical
+            {
+                ++ctr;
+                if (ctr%step==0){
+                    auto end = std::chrono::steady_clock::now();
+                    double elapse=std::chrono::duration<double>(end-start).count();
+                    double estimated_remain=elapse/ctr*(loc_size-ctr);
+                    cout<<ctr<<"/"<<loc_size<<" completed in "<<elapse<<"s. estimated time to finish all: "<<estimated_remain<<"s.  estimated total time: "<<(estimated_remain+elapse)<<"s."<<endl;
+                }
+            }
+
+            if (empty_locs[loc_idx]==2) {
+                dump_main_heuristics(
+                    2,
+                    "analysis/heuristics/debug"
+                );
+            }
+
+		}
+
+
+
+        delete [] values;
+        for (int i=0;i<n_threads;++i) {
+            delete planners[i];
+        }
+        delete planners;
+
+        g_timer.record_d("heu/compute_start","heu/compute_end","heu/compute");
+
+        g_logger.debug("[end] Compute heuristics. (duration: {:.3f})", g_timer.get_d("heu/compute"));
+    }
+
+    void _compute_heuristics(
+        int start_loc_idx,
+        unsigned short * values,
+        RIVERS::SPATIAL::SpatialAStar * planner
+    ) {
+        planner->reset();
+        int start_loc=empty_locs[start_loc_idx];
+        if (!consider_rotation){
+            planner->search_for_all(start_loc,-1);
+            for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
+                int loc=empty_locs[loc_idx];
+                RIVERS::SPATIAL::State * state=planner->all_states+loc;
+                if (loc!=state->pos) {
+                    std::cerr<<"loc: "<<loc<<" state->pos: "<<state->pos<<endl;
+                    exit(-1);
+                }
+                // if (start_loc==100)
+                //     std::cerr<<start_loc<<" "<<state->pos<<" "<<state->g<<endl;
+                int cost=state->g;
+                if (cost==-1) {
+                    cost=USHRT_MAX;
+                }
+                size_t main_idx=start_loc_idx*loc_size+loc_idx;
+                main_heuristics[main_idx]=cost;
+            }
+            // if (start_loc==0) exit(-1);
+        } else {
+            g_logger.error("compute_heuristics with both orient and weight is not supported now!");
+            exit(-1);
+        }
+    }
+
+    void dump_main_heuristics(int start_loc, string file_path_prefix) {
+        int start_loc_idx=loc_idxs[start_loc];
+        if (start_loc_idx==-1) {
+            std::cerr<<"error: start_loc_idx==-1"<<endl;
+            exit(-1);
+        }
+        string file_path=file_path_prefix+"_"+std::to_string(start_loc)+".main_heuristics";
+        std::ofstream fout(file_path);
+        for (int i=0;i<env.rows;++i) {
+            for (int j=0;j<env.cols;++j) {
+                int target_loc=i*env.cols+j;
+                int target_loc_idx=loc_idxs[target_loc];
+                int h=USHRT_MAX;
+                if (target_loc_idx!=-1){
+                    h=main_heuristics[start_loc_idx*loc_size+target_loc_idx];
+                }
+                fout<<h;
+                if (j!=env.cols-1) {
+                    fout<<",";
+                }
+            }
+            fout<<endl;
+        }
     }
 
     void compute_heuristics(){
@@ -304,6 +497,28 @@ public:
             save(fpath);
         }
 
+    }
+
+    void preprocess(const std::vector<int> & weights, string suffix="") {
+
+        string fname=env.map_name.substr(0,env.map_name.size()-4);
+        string folder=env.file_storage_path;
+        if (folder[folder.size()-1]!=boost::filesystem::path::preferred_separator){
+            folder+=boost::filesystem::path::preferred_separator;
+        }
+        string fpath;
+        if (consider_rotation) {
+            fpath=folder+fname+suffix+"_weighted_heuristics_v2.gz";
+        } else {
+            fpath=folder+fname+suffix+"_weighted_heuristics_no_rotation_v2.gz";
+        }
+
+        if (boost::filesystem::exists(fpath)) {
+            load(fpath);
+        } else {
+            compute_heuristics(weights);
+            save(fpath);
+        }
     }
 
     void save(const string & fpath) {
