@@ -103,7 +103,7 @@ struct Planner {
   int get_edge_cost(HNode* H_from, HNode* H_to);
   int get_h_value(const Config& C);
   bool get_new_config(HNode* H, LNode* L);
-  bool funcPIBT(Agent* ai);
+  bool funcPIBT(Agent* ai, HNode * H);
 
   // swap operation
   Agent* swap_possible_and_required(Agent* ai);

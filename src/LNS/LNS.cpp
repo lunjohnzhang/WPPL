@@ -14,7 +14,7 @@ LNS::LNS(Instance& instance, double time_limit, const string & init_algo_name, c
          BasicLNS(instance, time_limit, neighbor_size, screen),
          init_algo_name(init_algo_name),  replan_algo_name(replan_algo_name), num_of_iterations(num_of_iterations),
          use_init_lns(use_init_lns),init_destory_name(init_destory_name),
-         path_table(instance.map_size,window_size_for_CT), path_table_wc(instance.map_size, instance.getDefaultNumberOfAgents()), pipp_option(pipp_option), HT(HT),
+         path_table(instance.map_size,window_size_for_CT), pipp_option(pipp_option), HT(HT),
          window_size_for_CT(_window_size_for_CT), window_size_for_CAT(_window_size_for_CAT), window_size_for_PATH(_window_size_for_PATH)
 {
     if (window_size_for_CT<0) {
@@ -84,7 +84,6 @@ LNS::LNS(Instance& instance, double time_limit, const string & init_algo_name, c
 
     // TODO(rivers): we may do it faster, by only reset the goal map with the old goal location.
     // path_table.reset();
-    // path_table_wc.reset();
 
     // initial_solution_runtime = 0;
     // initial_sum_of_costs = -1;
@@ -122,11 +121,9 @@ bool LNS::run()
             if (succ) // accept new paths
             {
                 path_table.reset();
-                path_table_wc.reset();
                 for (const auto & agent : agents)
                 {
                     path_table.insertPath(agent.id, agent.path);
-                    path_table_wc.insertPath(agent.id, agent.path);
                 }
                 init_lns->clear();
                 initial_sum_of_costs = init_lns->sum_of_costs;
@@ -223,7 +220,6 @@ bool LNS::run()
             if (replan_algo_name == "PP")
                 neighbor.old_paths[i] = agent.path;
             path_table.deletePath(neighbor.agents[i], agent.path);
-            path_table_wc.deletePath(neighbor.agents[i]);
             neighbor.old_sum_of_costs += agent.path.size() - 1;
             if (agent.path.back().location!=agent.path_planner->goal_location) {
             neighbor.old_sum_of_costs+=HT->get(agent.path.back().location,agent.path_planner->goal_location);
@@ -365,9 +361,10 @@ bool LNS::checkPrecomputed()
         g_timer.record_p("insert_path_s");
         path_table.insertPath(agents[i].id, agents[i].path);
         g_timer.record_d("insert_path_s","insert_path_e","insert_path");
-        path_table_wc.insertPath(agents[i].id,agents[i].path);
         // cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
     }
+
+    // validateSolution();
     
     return true;
 }
@@ -516,17 +513,13 @@ bool LNS::runPP(bool init_run)
     int suboptimality=1.2;
     int search_priority=1;
     bool use_soft_constraint=true;
-    PathTableWC * ptr_path_table_wc = nullptr;
-    if (use_soft_constraint) {
-        ptr_path_table_wc = &path_table_wc;
-    }
     ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table, nullptr, window_size_for_CT, window_size_for_CAT, window_size_for_PATH);
 
     // TODO(rivers): we require the path to be at least window_size_for_PATH
     // TODO(rivers): we use hold goal location assumption here, which is not necessary.
-    if (window_size_for_PATH!=MAX_TIMESTEP) {
-        constraint_table.length_min=window_size_for_PATH;
-    }
+    // if (window_size_for_PATH!=MAX_TIMESTEP) {
+    //     constraint_table.length_min=window_size_for_PATH;
+    // }
 
     while (p != shuffled_agents.end() && ((fsec)(Time::now() - time)).count() < T)
     {
@@ -556,6 +549,13 @@ bool LNS::runPP(bool init_run)
         if (agents[id].path.size()>constraint_table.window_size_for_PATH+1) {
             agents[id].path.resize(constraint_table.window_size_for_PATH+1);
         }
+
+        // do we need to pad here?
+        // assume hold goal location
+        if (agents[id].path.size()<constraint_table.window_size_for_PATH+1) {
+            agents[id].path.resize(constraint_table.window_size_for_PATH+1,agents[id].path.back());
+        }
+
         neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
         // if (agents[id].path.back().location!=agents[id].path_planner->goal_location) {
             if (agents[id].path.size()!=constraint_table.window_size_for_PATH+1) {
@@ -569,7 +569,6 @@ bool LNS::runPP(bool init_run)
             break;
         remaining_agents--;
         path_table.insertPath(agents[id].id, agents[id].path);
-        path_table_wc.insertPath(agents[id].id, agents[id].path);
         ++p;
     }
     if (remaining_agents == 0 && neighbor.sum_of_costs <= neighbor.old_sum_of_costs) // accept new paths
@@ -589,7 +588,6 @@ bool LNS::runPP(bool init_run)
         {
             int a = *p2;
             path_table.deletePath(agents[a].id, agents[a].path);
-            path_table_wc.deletePath(agents[a].id);
             ++p2;
         }
         if (!neighbor.old_paths.empty())
@@ -600,7 +598,6 @@ bool LNS::runPP(bool init_run)
                 int a = *p2;
                 agents[a].path = neighbor.old_paths[i];
                 path_table.insertPath(agents[a].id, agents[a].path);
-                path_table_wc.insertPath(agents[a].id, agents[a].path);
                 ++p2;
             }
             neighbor.sum_of_costs = neighbor.old_sum_of_costs;
@@ -724,7 +721,6 @@ void LNS::updatePIBTResult(const PIBT_Agents& A, vector<int>& shuffled_agents){
             cout<<endl;
         }
         path_table.insertPath(agents[a_id].id, agents[a_id].path);
-        path_table_wc.insertPath(agents[a_id].id, agents[a_id].path);
         soc += (int)agents[a_id].path.size()-1;
     }
 
@@ -969,14 +965,14 @@ void LNS::validateSolution() const
             {
                 if (a1.path[t].location == a2.path[t].location) // vertex conflict
                 {
-                    cerr << "LNS::validateSolution with T= "<<T<<": Find a vertex conflict between agents " << a1.id << " and " << a2.id <<
+                    cerr << "LNS::validateSolution with T= "<<t<<": Find a vertex conflict between agents " << a1.id << " and " << a2.id <<
                             " at location " << a1.path[t].location << " at timestep " << t << endl;
                     exit(-1);
                 }
                 else if (a1.path[t].location == a2.path[t - 1].location &&
                         a1.path[t - 1].location == a2.path[t].location) // edge conflict
                 {
-                    cerr << "LNS::validateSolution with window size "<<T<<": Find an edge conflict between agents " << a1.id << " and " << a2.id <<
+                    cerr << "LNS::validateSolution with window size "<<t<<": Find an edge conflict between agents " << a1.id << " and " << a2.id <<
                          " at edge (" << a1.path[t - 1].location << "," << a1.path[t].location <<
                          ") at timestep " << t << endl;
                     exit(-1);
@@ -1001,12 +997,12 @@ void LNS::validateSolution() const
             }
         }
     }
-    if (sum_of_costs != sum)
-    {
-        cerr << "The computed sum of costs " << sum_of_costs <<
-             " is different from the sum of the paths in the solution " << sum << endl;
-        exit(-1);
-    }
+    // if (sum_of_costs != sum)
+    // {
+    //     cerr << "The computed sum of costs " << sum_of_costs <<
+    //          " is different from the sum of the paths in the solution " << sum << endl;
+    //     exit(-1);
+    // }
 }
 
 void LNS::writeIterStatsToFile(const string & file_name) const

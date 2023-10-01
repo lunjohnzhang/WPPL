@@ -60,25 +60,25 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
 
   search_tree.push(new LNode());
 
-  if (ins->precomputed_paths!=nullptr) {
-    // low-level tree
-    int llt_depth = 0;
-    while (llt_depth<N) {
-      int aid = order[llt_depth];
-      auto & path = (*(ins->precomputed_paths))[aid];
-      bool precomputed = path.size()>(d+1);
-      if (precomputed) {
-        auto L = search_tree.front();
-        search_tree.pop();
-        auto v = ins->G.U[path[d+1].location];
-        search_tree.push(new LNode(L, aid, v));
-        delete L; // free it, it won't be used anymore.
-      } else {
-        break;
-      }
-      llt_depth+=1;
-    }
-  }
+  // if (ins->precomputed_paths!=nullptr) {
+  //   // low-level tree
+  //   int llt_depth = 0;
+  //   while (llt_depth<N) {
+  //     int aid = order[llt_depth];
+  //     auto & path = (*(ins->precomputed_paths))[aid];
+  //     bool precomputed = path.size()>(d+1);
+  //     if (precomputed) {
+  //       auto L = search_tree.front();
+  //       search_tree.pop();
+  //       auto v = ins->G.U[path[d+1].location];
+  //       search_tree.push(new LNode(L, aid, v));
+  //       delete L; // free it, it won't be used anymore.
+  //     } else {
+  //       break;
+  //     }
+  //     llt_depth+=1;
+  //   }
+  // }
 }
 
 HNode::~HNode()
@@ -409,7 +409,7 @@ bool Planner::get_new_config(HNode* H, LNode* L)
   // perform PIBT
   for (auto k : H->order) {
     auto a = A[k];
-    if (a->v_next == nullptr && !funcPIBT(a)){
+    if (a->v_next == nullptr && !funcPIBT(a,H)){
       cerr<<"planning failture"<<endl;
       exit(-1);
       return false;  // planning failure
@@ -447,7 +447,7 @@ int get_neighbor_orientation(const Graph & G, int loc1, int loc2) {
 
 }
 
-bool Planner::funcPIBT(Agent* ai)
+bool Planner::funcPIBT(Agent* ai, HNode * H)
 {
   const auto i = ai->id;
   const auto K = ai->v_now->neighbor.size();
@@ -486,6 +486,23 @@ bool Planner::funcPIBT(Agent* ai)
       d2=HT->get(u->index,ins->goals[i]->index);
     }
 
+    if (ins->precomputed_paths!=nullptr){
+      auto path=(*ins->precomputed_paths)[i];
+      // for (int j=path.size()-1;j>0;--j){
+        int j=H->d;
+        if (path[j].location==ai->v_now->index) {
+          if (path[j+1].location==v->index) {
+            d1=0.1;
+            // break;
+          }
+          if (path[j+1].location==u->index) {
+            d2=0.1;
+            // break;
+          }
+        }
+      // }
+    }
+
     if (d1!=d2) return d1<d2;
 
     if (MC_idx==0){
@@ -521,7 +538,7 @@ bool Planner::funcPIBT(Agent* ai)
     ai->v_next = u;
 
     // priority inheritance
-    if (ak != nullptr && ak != ai && ak->v_next == nullptr && !funcPIBT(ak))
+    if (ak != nullptr && ak != ai && ak->v_next == nullptr && !funcPIBT(ak,H))
       continue;
 
     // success to plan next one step

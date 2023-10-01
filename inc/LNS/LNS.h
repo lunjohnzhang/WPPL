@@ -67,8 +67,6 @@ private:
     string init_destory_name;
     PIBTPPS_option pipp_option;
 
-
-    PathTableWC path_table_wc;
     PathTable path_table; // 1. stores the paths of all agents in a time-space table;
     // 2. avoid making copies of this variable as much as possible.
     unordered_set<int> tabu_list; // used by randomwalk strategy

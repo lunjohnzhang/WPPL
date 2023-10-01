@@ -192,6 +192,9 @@ void LNSSolver::plan(const SharedEnvironment & env){
         // cerr<<"agent "<<i<<" "<<new_path.size()<<": "<<new_path<<endl;
         for (int j=1;j<new_path.size();++j) {
             path.emplace_back(new_path[j].location, env.curr_timestep+j, -1);
+            if (new_path[j].location==env.goal_locations[i][0].first){
+                break;
+            }
         }
         // cerr<<"agent "<<i<<" s:"<<env.curr_states[i]<<" e:"<<env.goal_locations[i][0].first<<" c:"<<executed_plan_step<<endl;
         // cerr<<"agent "<<i<<" "<<path.size()<<": "<<path<<endl;
@@ -264,7 +267,7 @@ void LNSSolver::observe(const SharedEnvironment & env){
     for (int i=0;i<paths.size();++i) {
         // cerr<<"agent "<<i<<" need replan lengths:"<<executed_plan_step+window_size_for_CT<<" vs "<<paths[i].size()<<" locations:"<<paths[i].back().location<<" vs "<<env.goal_locations[i][0].first<<endl;
         // we ensure that we always has a planed path of window_size_for_CT for each agent.
-        if (paths[i].back().location!=env.goal_locations[i][0].first && executed_plan_step+window_size_for_CT>=paths[i].size()) {
+        if (executed_plan_step+window_size_for_CT>=paths[i].size()) {
             agent_ids_need_replan.insert(i);
         }
     }
