@@ -468,12 +468,12 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     if (lifelong_solver_name=="LaCAM2") {
         if (read_param_json<bool>(config["LaCAM2"],"use_orient_in_heuristic")
         || read_param_json<bool>(config["LaCAM2"],"consider_rotation")
-        || read_param_json<bool>(config["LNS"]["LaCAM2"],"use_slow_executor")
+        || read_param_json<bool>(config["LaCAM2"],"use_slow_executor")
         ) {
             std::cerr<<"no allowed to use orient when compiled with NO_ROT"<<std::endl;
             exit(-1);
         }
-        auto heuristics =std::make_shared<HeuristicTable>(env);
+        auto heuristics =std::make_shared<HeuristicTable>(env,read_param_json<bool>(config["LNS"]["LaCAM2"],"use_orient_in_heuristic"));
         heuristics->preprocess();
         lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,config["LaCAM2"]);
         lacam2_solver->initialize(*env);
@@ -487,14 +487,41 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
             exit(-1);
         }
         
+        std::vector<int> weights(env->rows*env->cols*4,1);
+        std::string suffix="all_one";
+
+        std::string weights_path=read_param_json<std::string>(config,"map_weights_path");
+        if (weights_path!=""){
+            std::ifstream f(weights_path);
+            try
+            {
+                nlohmann::json _weights = nlohmann::json::parse(f);
+                for (int i=0;i<weights.size();++i){
+                    weights[i]=_weights[i].get<int>();
+                }
+                
+            }
+            catch (nlohmann::json::parse_error error)
+            {
+                std::cerr << "Failed to load " << weights_path << std::endl;
+                std::cerr << "Message: " << error.what() << std::endl;
+                exit(1);
+            }
+        }
+
+        boost::filesystem::path _weights_path(weights_path);
+        suffix=_weights_path.stem().string();
+
         auto heuristics =std::make_shared<HeuristicTable>(env,read_param_json<bool>(config["LNS"]["LaCAM2"],"use_orient_in_heuristic"));
-        heuristics->preprocess();
+        heuristics->preprocess(weights, suffix);
+        //heuristics->preprocess();
         auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,config["LNS"]["LaCAM2"]);
 
         std::shared_ptr<HeuristicTable> heuristics_no_rot=heuristics;
         if (read_param_json<bool>(config["LNS"]["LaCAM2"],"use_orient_in_heuristic")) {
             heuristics_no_rot = std::make_shared<HeuristicTable>(env,false);
-            heuristics_no_rot->preprocess();
+            heuristics_no_rot->preprocess(weights, suffix);
+            //heuristics_no_rot->preprocess();
         }
 
         lns_solver = std::make_shared<LNS::LNSSolver>(heuristics_no_rot,env,config["LNS"],lacam2_solver);

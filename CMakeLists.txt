@@ -23,7 +23,7 @@ message(STATUS "PYTHON: ${PYTHON}")
 
 IF(NOT CMAKE_BUILD_TYPE)
     #SET(CMAKE_BUILD_TYPE "DEBUG")
-    SET(CMAKE_BUILD_TYPE "RELEASE")
+     SET(CMAKE_BUILD_TYPE "RELEASE")
     #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
     #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
 ENDIF()
@@ -39,6 +39,7 @@ include_directories( ${Boost_INCLUDE_DIRS} )
 
 find_package(OpenMP REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(Threads REQUIRED)
 
 IF(PYTHON)
     include_directories("python")
@@ -95,6 +96,10 @@ ENDIF()
 
 add_executable(test_log "test/my_logger.cpp" "src/util/MyLogger.cpp")
 target_link_libraries(test_log spdlog::spdlog)
+
+add_executable(test_openlist "test/my_openlist.cpp")
+add_executable(test_thread_pool "test/thread_pool.cpp")
+target_link_libraries(test_thread_pool PRIVATE Threads::Threads)
 
 add_custom_target(clean_all
     COMMAND ${CMAKE_BUILD_TOOL} clean

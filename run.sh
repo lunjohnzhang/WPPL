@@ -8,8 +8,8 @@ fi
 
 cd build && make -j4 lifelong && cd ..
 
-# export OMP_NUM_THREADS=128
-ARGS="-o test.json --simulationTime 100 --planTimeLimit 1 --fileStoragePath large_files/"
+# export OMP_NUM_THREADS=2
+ARGS="-o test.json --simulationTime 1000 --planTimeLimit 1 --fileStoragePath large_files/"
 
 # random:random
 # ./build/lifelong --inputFile example_problems/random.domain/random_20.json $ARGS
@@ -35,7 +35,7 @@ ARGS="-o test.json --simulationTime 100 --planTimeLimit 1 --fileStoragePath larg
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_600.json $ARGS
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_800.json $ARGS
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_1000.json $ARGS
-# ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_2000.json $ARGS
+./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_2000.json $ARGS
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_3000.json $ARGS
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_4000.json $ARGS
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_5000.json $ARGS
