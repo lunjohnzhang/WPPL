@@ -94,7 +94,7 @@ ELSE()
     target_compile_definitions(lifelong PRIVATE PYTHON=${PYTHON_FLAG})
 ENDIF()
 
-add_executable(test_log "test/my_logger.cpp" "src/util/MyLogger.cpp" "src/util/SearchForHeuristics/SpatialState.cpp")
+add_executable(test_log "test/my_logger.cpp" "src/util/MyLogger.cpp")
 target_link_libraries(test_log spdlog::spdlog)
 
 add_executable(test_openlist "test/my_openlist.cpp")

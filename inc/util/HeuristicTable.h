@@ -163,7 +163,7 @@ public:
         //     }
         // }
 
-        #pragma omp parallel for
+        #pragma omp parallel for schedule(dynamic,1)
         for (int loc_idx=0;loc_idx<loc_size;++loc_idx)
 		{
             int thread_id=omp_get_thread_num();
@@ -184,13 +184,12 @@ public:
                 }
             }
 
-            if (empty_locs[loc_idx]==2) {
-                dump_main_heuristics(
-                    2,
-                    "analysis/heuristics/debug"
-                );
-            }
-
+            // ONLYDEV(if (empty_locs[loc_idx]==2) {
+            //     dump_main_heuristics(
+            //         2,
+            //         "analysis/heuristics/debug"
+            //     );
+            // })
 		}
 
         delete [] values;
