@@ -30,9 +30,9 @@ struct State {
     struct StateCompare {
         bool operator()(const State * s1, const State * s2) const {
             if (s1->f == s2->f){
-                if (s1->h == s2->h) {
-                    return rand()%2==0;
-                }
+                // if (s1->h == s2->h) {
+                //     return rand()%2==0;
+                // }
                 return s1->h > s2->h;
             }
             return s1->f > s2->f;
@@ -57,8 +57,6 @@ struct State {
     int heap_index;
 
 };
-
-bool is_better(const State * s1, const State * s2);
 
 }
 

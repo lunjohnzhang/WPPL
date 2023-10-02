@@ -1,6 +1,7 @@
 #pragma once
 #include "util/SearchForHeuristics/SpatialState.h"
 #include <iostream>
+#include <random>
 
 namespace RIVERS {
 namespace SPATIAL {
@@ -9,16 +10,27 @@ class OpenList {
 public:
     State ** heap;
 
-    bool (* is_better)(const State * s1, const State * s2);
+    inline bool is_better(const State * s1, const State * s2) {
+        if (s1->f == s2->f){
+            // if (s1->h == s2->h) {
+                // the random here cause slower?
+                // return rng()%2==0;
+            // }
+            return s1->h < s2->h;
+        }
+        return s1->f < s2->f; 
+    }
+
     int max_size;
     int size;
+    std::mt19937 rng;
 
-    OpenList(int _max_size, bool (*_is_better) (const State * s1, const State * s2), State ** _heap): max_size(_max_size), is_better(_is_better), size(0), heap(_heap) {
-        // heap = new State * [max_size];
+    OpenList(int _max_size): max_size(_max_size), size(0),rng(0) {
+        heap = new State * [max_size];
     };
 
     ~OpenList(){
-        // delete [] heap;
+        delete [] heap;
     };
 
     inline void swap(State *s, State * p) {

@@ -5,9 +5,10 @@
             "value": "LNS"
         }
     ],
+    "map_weights_path": "",
     "LNS": {
         "seed": 0,
-        "cutoffTime": 4.5,
+        "cutoffTime": 0.0,
         "screen": 0,
         "initAlgo": "LaCAM2",
         "replanAlgo": "PP",
@@ -19,12 +20,12 @@
         "sipp": true,
         "pibtWindow": 5,
         "winPibtSoftmode": true,
-        "window_size_for_CT": 10,
-        "window_size_for_CAT": 10,
-        "window_size_for_PATH": 10,
+        "window_size_for_CT": 1,
+        "window_size_for_CAT": 1,
+        "window_size_for_PATH": 1,
         "LaCAM2": {
             "seed": 0,
-            "planning_window": 10,
+            "planning_window": 1,
             "consider_rotation": false,
             "use_orient_in_heuristic": false,
             "use_slow_executor": false

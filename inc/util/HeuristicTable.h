@@ -13,6 +13,7 @@
 #include "util/MyLogger.h"
 #include "boost/format.hpp"
 #include "util/SearchForHeuristics/SpatialSearch.h"
+#include "util/SearchForHeuristics/SpatialSearchBoost.h"
 // #include "bshoshany/BS_thread_pool.hpp"
 
 
@@ -83,21 +84,15 @@ public:
         g_logger.debug("[start] Compute heuristics.");
         g_timer.record_p("heu/compute_start");
 
-
-
         int n_threads=omp_get_max_threads();
         // BS::thread_pool pool(n_threads);
 
         // int n_threads=pool.get_thread_count();
         cout<<"number of threads used for heuristic computation: "<<n_threads<<endl;
         unsigned short * values = new unsigned short[n_threads*n_orientations*state_size];
-        RIVERS::SPATIAL::State ** heaps = new RIVERS::SPATIAL::State* [n_threads*n_orientations*env.map.size()];
-        RIVERS::SPATIAL::State * all_states = new RIVERS::SPATIAL::State[n_threads*n_orientations*env.map.size()];
-        int max_successors=8;
-        RIVERS::SPATIAL::State * successors = new RIVERS::SPATIAL::State[n_threads*max_successors];
         RIVERS::SPATIAL::SpatialAStar ** planners= new RIVERS::SPATIAL::SpatialAStar* [n_threads];
         for (int i=0;i<n_threads;++i) {
-            planners[i]=new RIVERS::SPATIAL::SpatialAStar(env,n_orientations,weights,heaps+i*n_orientations*env.map.size(),all_states+i*n_orientations*env.map.size(),successors+i*max_successors);
+            planners[i]=new RIVERS::SPATIAL::SpatialAStar(env,n_orientations,weights);
         }
 
         cerr<<"created"<<endl;
@@ -198,8 +193,6 @@ public:
 
 		}
 
-
-
         delete [] values;
         for (int i=0;i<n_threads;++i) {
             delete planners[i];
@@ -220,6 +213,13 @@ public:
         int start_loc=empty_locs[start_loc_idx];
         if (!consider_rotation){
             planner->search_for_all(start_loc,-1);
+          
+            // for (auto & state: planner->all_states) {
+            //     int loc_idx=loc_idxs[state->pos];
+            //     size_t main_idx=start_loc_idx*loc_size+loc_idx;
+            //     main_heuristics[main_idx]=state->g;
+            // }
+          
             for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
                 int loc=empty_locs[loc_idx];
                 RIVERS::SPATIAL::State * state=planner->all_states+loc;
@@ -508,9 +508,9 @@ public:
         }
         string fpath;
         if (consider_rotation) {
-            fpath=folder+fname+suffix+"_weighted_heuristics_v2.gz";
+            fpath=folder+fname+"_weighted_heuristics_v2_"+suffix+".gz";
         } else {
-            fpath=folder+fname+suffix+"_weighted_heuristics_no_rotation_v2.gz";
+            fpath=folder+fname+"_weighted_heuristics_no_rotation_v2_"+suffix+".gz";
         }
 
         if (boost::filesystem::exists(fpath)) {

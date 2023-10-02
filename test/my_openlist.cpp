@@ -5,11 +5,10 @@
 
 using RIVERS::SPATIAL::OpenList;
 using RIVERS::SPATIAL::State;
-using RIVERS::SPATIAL::is_better;
 
 int main() {
 
-    OpenList openlist(10, is_better);
+    OpenList openlist(10);
 
     std::vector<State *> states;
     for (int i=0;i<10;++i) {

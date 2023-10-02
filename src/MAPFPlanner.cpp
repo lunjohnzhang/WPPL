@@ -488,24 +488,29 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         }
         
         std::vector<int> weights(env->rows*env->cols*4,1);
-        std::string suffix="_all_one";
+        std::string suffix="all_one";
 
-        std::string config_path="scripts/warehouse_large_weight_test.txt";
-        std::ifstream f(config_path);
-        try
-        {
-            nlohmann::json _weights = nlohmann::json::parse(f);
-            for (int i=0;i<weights.size();++i){
-                weights[i]=_weights[i].get<int>();
+        std::string weights_path=read_param_json<std::string>(config,"map_weights_path");
+        if (weights_path!=""){
+            std::ifstream f(weights_path);
+            try
+            {
+                nlohmann::json _weights = nlohmann::json::parse(f);
+                for (int i=0;i<weights.size();++i){
+                    weights[i]=_weights[i].get<int>();
+                }
+                
             }
-            
+            catch (nlohmann::json::parse_error error)
+            {
+                std::cerr << "Failed to load " << weights_path << std::endl;
+                std::cerr << "Message: " << error.what() << std::endl;
+                exit(1);
+            }
         }
-        catch (nlohmann::json::parse_error error)
-        {
-            std::cerr << "Failed to load " << config_path << std::endl;
-            std::cerr << "Message: " << error.what() << std::endl;
-            exit(1);
-        }
+
+        boost::filesystem::path _weights_path(weights_path);
+        suffix=_weights_path.stem().string();
 
         auto heuristics =std::make_shared<HeuristicTable>(env,read_param_json<bool>(config["LNS"]["LaCAM2"],"use_orient_in_heuristic"));
         heuristics->preprocess(weights, suffix);

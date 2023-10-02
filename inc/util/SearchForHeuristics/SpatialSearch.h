@@ -12,25 +12,15 @@ class SpatialAStar {
 
 public:
     SpatialAStar(
-        const SharedEnvironment & env, int n_orients, const std::vector<int> & weights,
-        State ** heap, State * all_states, State * successors
-    ): env(env), n_orients(n_orients), weights(weights), all_states(all_states), successors(successors) 
-    
-    {
+        const SharedEnvironment & env, int n_orients, const std::vector<int> & weights
+    ): env(env), n_orients(n_orients), weights(weights) {
         max_states=env.rows*env.cols*n_orients;
         n_states=0;
-        open_list = new OpenList(max_states, RIVERS::SPATIAL::is_better, heap);
-        // all_states = new State * [max_states];
-        // for (int i=0;i<max_states;++i) {
-        //     all_states[i]=new State(-1, -1, -1, 0, nullptr);
-        // }
-
+        open_list = new OpenList(max_states);
+        all_states = new State[max_states];
         max_successors=8;
-        // successors = new State * [max_successors];
-        // for (int i=0;i<max_successors;++i) {
-        //     successors[i]=new State(-1, -1, -1, 0, nullptr);
-        // }
-        n_successors = 0;
+        successors = new State[max_successors];
+        reset();
     };
 
     void reset() {
@@ -51,14 +41,8 @@ public:
 
     ~SpatialAStar() {
         delete open_list;
-        // for (int i=0;i<max_states;++i) {
-        //     delete all_states[i];
-        // }
-        // delete [] all_states;
-        // for (int i=0;i<max_successors;++i) {
-        //     delete successors[i];
-        // }
-        // delete [] successors;
+        delete [] all_states;
+        delete [] successors;
     }
     
     int n_orients;
@@ -166,47 +150,21 @@ public:
 
 
     void search_for_all(int start_pos, int start_orient=-1) {
-
-        // int thread_id=omp_get_thread_num();
-        // if (thread_id==0) {
-        //     g_timer.record_p("heu/search_start");
-        // }
         State * start=add_state(start_pos, start_orient, 0, 0, nullptr);
         open_list->push(start);
 
         while (!open_list->empty()) {
-            //             if (thread_id==0) {
-            //     g_timer.record_p("heu/pop");
-            // }
             State * curr=open_list->pop();
-        //                       if (thread_id==0) {
-        //     g_timer.record_d("heu/pop","pop");
-        // }
             curr->closed=true;
-            // std::cerr<<curr->pos<<" "<<curr->g<<" "<<curr->h<<" "<<curr->f<<std::endl;
 
-            // if (thread_id==0) {
-            //     g_timer.record_p("heu/get_successors");
-            // }
             get_successors(curr);
-        //             if (thread_id==0) {
-        //     g_timer.record_d("heu/get_successors","get_successors");
-        // }
             for (int i=0;i<n_successors;++i) {
                 State * next=successors+i;
-                // std::cerr<<"generated:"<<next->pos<<" "<<next->g<<" "<<next->h<<" "<<next->f<<std::endl;
                 if ((all_states+next->pos)->pos==-1) {
                     // new state
                     State * new_state=add_state(next->pos, next->orient, next->g, next->h, next->prev);
                     new_state->closed=false;
-            //                                 if (thread_id==0) {
-            //     g_timer.record_p("heu/push");
-            // }
                     open_list->push(new_state);
-
-        //                                           if (thread_id==0) {
-        //     g_timer.record_d("heu/push","push");
-        // }
                 } else {
                     // old state
                     auto old_state=all_states+next->pos;
@@ -215,13 +173,7 @@ public:
                         old_state->copy(next);
                         if (old_state->closed) {
                             old_state->closed=false;
-            //                                                          if (thread_id==0) {
-            //     g_timer.record_p("heu/push");
-            // }
                             open_list->push(old_state);
-        //                                                   if (thread_id==0) {
-        //     g_timer.record_d("heu/push","push");
-        // }
                         } else {
                             open_list->increase(old_state);
                         }
@@ -229,10 +181,6 @@ public:
                 }
             }
         }
-
-        //         if (thread_id==0) {
-        //     g_timer.record_d("heu/search_start","search");
-        // }
     }
 
 };
