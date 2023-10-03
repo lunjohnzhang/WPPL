@@ -2,6 +2,7 @@
 #include "util/MyLogger.h"
 #include "LaCAM2/post_processing.hpp"
 #include "PIBT/util.h"
+#include "LaCAM2/SUO/suo.hpp"
 
 namespace LaCAM2 {
 
@@ -84,6 +85,49 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         const auto deadline = Deadline(time_limit_sec * 1000);
         bool use_swap=false;
         bool use_orient_in_heuristic=read_param_json<bool>(config,"use_orient_in_heuristic");
+
+
+        vector<::Path> precomputed_paths;
+        if (read_param_json<int>(config["SUO"],"iterations")>0) {
+
+#ifndef NO_ROT
+            std::cerr<<"only support NO_ROT now"<<std::endl;
+            exit(-1);
+#endif
+
+            ONLYDEV(g_timer.record_p("suo_plan_s");)
+            SUO::SUO suo(
+                env,
+                1, // only work for no rotation now
+                *map_weights,
+                HT,
+                read_param_json<float>(config["SUO"],"vertex_collision_cost"),
+                read_param_json<int>(config["SUO"],"iterations"),
+                read_param_json<int>(config["SUO"],"max_expanded"),
+                read_param_json<float>(config["SUO"],"h_weight")
+            );
+            suo.plan();
+            ONLYDEV(g_timer.record_d("suo_plan_s","suo_plan");)
+            g_timer.print_all_d();
+
+            ONLYDEV(g_timer.record_p("copy_suo_paths_s");)
+            
+            precomputed_paths.resize(env.num_of_agents);
+            for (int i=0;i<env.num_of_agents;++i){
+                if (suo.paths[i][0].pos!=env.curr_states[i].location){
+                    cerr<<"agent "<<i<<"'s current state doesn't match with the plan"<<endl;
+                    exit(-1);
+                }
+                for (int j=0;j<suo.paths[i].size();++j){
+                    precomputed_paths[i].emplace_back(suo.paths[i][j].pos,-1,-1);
+                }
+            }
+            // we need to change precomputed_paths to suo_paths. because the former one means hard constraints to follow
+            // but the latter one is just a suggesion.
+            instance.precomputed_paths=&precomputed_paths;
+            ONLYDEV(g_timer.record_d("copy_suo_paths_s","copy_suo_paths");)
+        }
+
         auto planner = Planner(&instance,HT,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap,use_orient_in_heuristic);
         auto additional_info = std::string("");
         const auto solution=planner.solve(additional_info);
@@ -121,7 +165,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
                 // }
                 // cerr<<endl;
                 for (int j=1;j<solution.size();++j) {
-                    paths[i].emplace_back(solution[j][i]->index,env.curr_states[i].timestep+1+j,-1);
+                    paths[i].emplace_back(solution[j][i]->index,env.curr_states[i].timestep+j,-1);
                 }
             }
         }

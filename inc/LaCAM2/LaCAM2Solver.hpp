@@ -31,6 +31,7 @@ public:
 
     std::shared_ptr<Graph> G; // graph
     std::shared_ptr<HeuristicTable> HT; // instance
+    std::shared_ptr<std::vector<int> > map_weights; // map weights
     Config next_config;
 
     vector<AgentInfo> agent_infos;
@@ -43,8 +44,10 @@ public:
     Instance build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr);
     int get_neighbor_orientation(int loc1,int loc2);
 
-    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, nlohmann::json & config):
-        HT(HT),action_model(env),executor(env),slow_executor(env),
+    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<int> > & map_weights, nlohmann::json & config):
+        HT(HT),
+        map_weights(map_weights),
+        action_model(env),executor(env),slow_executor(env),
         config(config),
         MT(new std::mt19937(read_param_json<uint>(config,"seed",0))){
 

@@ -381,6 +381,13 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     occupied_now[a->v_now->id] = a;
   }
 
+  // for (int i=0;i<occupied_next.size();++i){
+  //   if (occupied_next[i]!=nullptr) {
+  //     cerr<<"occupied_next is not empty"<<endl;
+  //     exit(-1);
+  //   }
+  // }
+
   // add constraints
   for (uint k = 0; k < L->depth; ++k) {
     const auto i = L->who[k];        // agent
@@ -410,8 +417,8 @@ bool Planner::get_new_config(HNode* H, LNode* L)
   for (auto k : H->order) {
     auto a = A[k];
     if (a->v_next == nullptr && !funcPIBT(a,H)){
-      cerr<<"planning failture"<<endl;
-      exit(-1);
+      // cerr<<"planning failture"<<endl;
+      // exit(-1);
       return false;  // planning failure
     } 
   }
@@ -486,11 +493,28 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
       d2=HT->get(u->index,ins->goals[i]->index);
     }
 
+    // if (ins->precomputed_paths!=nullptr){
+    //   auto path=(*ins->precomputed_paths)[i];
+    //   // for (int j=path.size()-1;j>=0;--j){
+    //     int j=H->d;
+    //     if (j<path.size()-1 && path[j].location==ai->v_now->index) {
+    //       if (path[j+1].location==v->index) {
+    //         d1=0.1;
+    //         // break;
+    //       }
+    //       if (path[j+1].location==u->index) {
+    //         d2=0.1;
+    //         // break;
+    //       }
+    //     }
+    //   // }
+    // }
+
     if (ins->precomputed_paths!=nullptr){
       auto path=(*ins->precomputed_paths)[i];
-      // for (int j=path.size()-1;j>0;--j){
-        int j=H->d;
-        if (path[j].location==ai->v_now->index) {
+      for (int j=path.size()-1;j>=0;--j){
+        // int j=H->d;
+        if (j<path.size()-1 && path[j].location==ai->v_now->index) {
           if (path[j+1].location==v->index) {
             d1=0.1;
             // break;
@@ -500,8 +524,10 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
             // break;
           }
         }
-      // }
+      }
     }
+
+
 
     if (d1!=d2) return d1<d2;
 
