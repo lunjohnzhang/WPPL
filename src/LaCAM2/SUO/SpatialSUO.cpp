@@ -1,7 +1,9 @@
-#include "LaCAM2/SUO/suo.hpp"
+#include "LaCAM2/SUO/SpatialSUO.hpp"
 #include <algorithm>
 
 namespace SUO {
+
+namespace Spatial {
 
 void SUO::init() {
     paths.clear();
@@ -14,8 +16,9 @@ void SUO::init() {
 }
 
 void SUO::reset_cost_map() {
-    cost_map.clear();
-    cost_map.resize(env.map.size(), 0);
+    for (int tid=0;tid<n_threads;++tid) {
+        planners[tid]->clear_cost_map();
+    }
 }
 
 void SUO::plan() {
@@ -30,9 +33,6 @@ void SUO::plan() {
     std::sort(orders.begin(), orders.end(), [&](int i, int j) {
         return distance[i]<distance[j];
     });
-
-    // TODO(rivers): we should add their shortest path as initialization?
-
 
     // TODO(rivers): how to update cost map asynchronously? maybe everyone needs to hold its own copy of cost map
     // and before planning, it checks whether should update the cost map first. we could keep delta cost in a vector,
@@ -60,18 +60,17 @@ void SUO::plan() {
                 int start_pos = env.curr_states[agent_idx].location;
                 int goal_pos = env.goal_locations[agent_idx][0].first;
                 
-                auto old_path=paths[agent_idx];
-                
-                // update cost map first
-                // if (j!=0)
-                planner->update_cost_map(cost_map, old_path, vertex_collision_cost);
-                planner->reset_plan();
+                auto & old_path=paths[agent_idx];
 
+                planner->reset_plan();
+                planner->remove_path_cost(old_path, vertex_collision_cost);
                 State * goal_state = planner->search(start_pos, -1, goal_pos);
                 if (goal_state==nullptr) {
                     cerr<<"SUO: agent "<<agent_idx<<" failed to find a path"<<endl;
                     exit(-1);
                 }
+                // we recover the path cost and wait for a global update
+                planner->add_path_cost(old_path, vertex_collision_cost);
 
                 
                 #pragma omp critical 
@@ -79,21 +78,28 @@ void SUO::plan() {
                     goal_states.emplace_back(agent_idx, goal_state);
                 }
         
-
                 // g_timer.record_p("Astar_s");
                 // double d=g_timer.record_d("Astar_s","Astar");
                 // cerr<<"a star time cost"<<d<<endl;
             }
 
+            deltas.clear();
             for (int i=0;i<goal_states.size();++i) {
                 auto & p = goal_states[i];
                 update_path(p.first, p.second);
+            }
+
+            #pragma omp parallel for schedule(static,1)
+            for (int i=start_idx;i<end_idx;++i) {
+                int tid=omp_get_thread_num();
+                auto planner = planners[tid];
+                planner->update_cost_map(deltas);
             }
         }
     }
 }
 
-void SUO::update_path(int agent_idx, State * goal_state, bool update_cost_map) {
+void SUO::update_path(int agent_idx, State * goal_state) {
     // NOTE(rivers) we cannot compare f to decided whether to replace the old path.
     // float old_f = path_costs[agent_idx];
     // // TODO(rives): we should prefer less conflicts as well
@@ -102,12 +108,14 @@ void SUO::update_path(int agent_idx, State * goal_state, bool update_cost_map) {
     // }
 
     auto & path=paths[agent_idx]; 
-
-    if (update_cost_map) {
         
-        // remove old path from the cost map
-        for (auto &state: path) {
-            cost_map[state.pos]-=vertex_collision_cost;
+    // remove old path from the cost map
+    int ctr=0;
+    for (auto &state: path) {
+        deltas.emplace_back(state.pos, -vertex_collision_cost);
+        ++ctr;
+        if (ctr==20){
+            break;
         }
     }
 
@@ -123,12 +131,18 @@ void SUO::update_path(int agent_idx, State * goal_state, bool update_cost_map) {
 
     std::reverse(path.begin(), path.end());
 
-    if (update_cost_map) {
-        // add new path to the cost map
-        for (auto &state: path) {
-            cost_map[state.pos]+=vertex_collision_cost;
+    // add new path to the cost map
+    ctr=0;
+    for (auto &state: path) {
+        deltas.emplace_back(state.pos,vertex_collision_cost);
+        ++ctr;
+        if (ctr==20){
+            break;
         }
     }
+
+}
+
 }
 
 }

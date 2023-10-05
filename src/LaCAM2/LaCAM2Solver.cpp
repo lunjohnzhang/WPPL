@@ -2,7 +2,8 @@
 #include "util/MyLogger.h"
 #include "LaCAM2/post_processing.hpp"
 #include "PIBT/util.h"
-#include "LaCAM2/SUO/suo.hpp"
+#include "LaCAM2/SUO/SpatialSUO.hpp"
+#include "LaCAM2/SUO/TemporalSpatialSUO.hpp"
 
 namespace LaCAM2 {
 
@@ -86,7 +87,6 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         bool use_swap=false;
         bool use_orient_in_heuristic=read_param_json<bool>(config,"use_orient_in_heuristic");
 
-
         vector<::Path> precomputed_paths;
         if (read_param_json<int>(config["SUO"],"iterations")>0) {
 
@@ -95,8 +95,8 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
             exit(-1);
 #endif
 
-            ONLYDEV(g_timer.record_p("suo_plan_s");)
-            SUO::SUO suo(
+            ONLYDEV(g_timer.record_p("suo_init_s");)
+            SUO::TemporalSpatial::SUO suo(
                 env,
                 1, // only work for no rotation now
                 *map_weights,
@@ -104,8 +104,11 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
                 read_param_json<float>(config["SUO"],"vertex_collision_cost"),
                 read_param_json<int>(config["SUO"],"iterations"),
                 read_param_json<int>(config["SUO"],"max_expanded"),
+                read_param_json<int>(config["SUO"],"window"),
                 read_param_json<float>(config["SUO"],"h_weight")
             );
+            ONLYDEV(g_timer.record_d("suo_init_s","suo_init");)
+            ONLYDEV(g_timer.record_p("suo_plan_s");)
             suo.plan();
             ONLYDEV(g_timer.record_d("suo_plan_s","suo_plan");)
             g_timer.print_all_d();

@@ -2,15 +2,18 @@
 #include <cstdlib>
 #include <utility>
 #include "boost/heap/pairing_heap.hpp"
+#include "LaCAM2/SUO/Search/Constants.h"
 
 namespace SUO {
+
+namespace Spatial {
 
 struct State {
     int pos;
     int orient;
-    int g;
-    int h;
-    int f;
+    float g;
+    float h;
+    float f;
     State * prev;
 
     State(): pos(-1), orient(-1), g(-1), h(0), f(-1), prev(nullptr), closed(false) {};
@@ -20,6 +23,7 @@ struct State {
 
     void copy(const State * s) {
         pos = s->pos;
+        orient = s->orient;
         g = s->g;
         h = s->h;
         f = s->f;
@@ -39,14 +43,14 @@ struct State {
 
     struct StateHash {
         std::size_t operator()(const State * s) const {
-            size_t loc_hash = std::hash<int>()(s->pos);
-            return loc_hash;
+            size_t h= std::hash<int>()(s->pos*MAX_ORIENT+s->orient);
+            return h;
         }
     };
 
     struct StateEqual {
         bool operator()(const State * s1, const State * s2) const {
-            return s1->pos == s2->pos;
+            return s1->pos == s2->pos && s1->orient==s2->orient;
         }
     };
 
@@ -55,5 +59,7 @@ struct State {
     int heap_index;
 
 };
+
+}
 
 }

@@ -31,8 +31,9 @@
             "use_slow_executor": false,
             "SUO": {
                 "vertex_collision_cost": 1,
-                "iterations": 1,
+                "iterations": 0,
                 "max_expanded": -1,
+                "window": 30,
                 "h_weight": 1.0
             }
         }
@@ -45,8 +46,9 @@
         "use_slow_executor": false,
         "SUO": {
             "vertex_collision_cost": 1,
-            "iterations": 1,
-            "max_expanded": 1000,
+            "iterations": 0,
+            "max_expanded": -1,
+            "window": 30,
             "h_weight": 1.0
         }
     },

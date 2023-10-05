@@ -1,12 +1,13 @@
 #pragma once
 #include "SharedEnv.h"
 #include <omp.h>
+#include "LaCAM2/SUO/Search/SpatialDataStructure.h"
 #include "LaCAM2/SUO/Search/SpatialSearch.h"
 #include "util/HeuristicTable.h"
 
-
 namespace SUO {
 
+namespace Spatial {
 
 class SUO {
 public:
@@ -18,6 +19,7 @@ public:
         float _vertex_collision_cost,
         int _iterations,
         int _max_expanded,
+        int _window,
         float _h_weight
         ):
         env(_env),
@@ -27,13 +29,14 @@ public:
         vertex_collision_cost(_vertex_collision_cost), 
         iterations(_iterations),
         max_expanded(_max_expanded),
+        window(_window),
         h_weight(_h_weight) {
         
         n_threads=omp_get_max_threads();
 
-        planners = new SpatialAStar * [n_threads];
+        planners = new Spatial::AStar * [n_threads];
         for (int tid=0;tid<n_threads;++tid) {
-            planners[tid] = new SpatialAStar(env, n_orients, weights);
+            planners[tid] = new Spatial::AStar(env, n_orients, weights, HT, window);
         }
     }
 
@@ -46,7 +49,7 @@ public:
     }
 
     int n_threads;
-    SpatialAStar ** planners;
+    Spatial::AStar ** planners;
 
     int n_orients;
     const SharedEnvironment & env;
@@ -56,18 +59,22 @@ public:
     float vertex_collision_cost;
     int iterations;
     int max_expanded;
+    int window;
     float h_weight;
 
     std::vector<std::vector<State> > paths;
     std::vector<float> path_costs;
     std::vector<int> orders;
-    std::vector<float> cost_map;
+    // std::vector<float> cost_map;
+    std::vector<std::pair<int,float> > deltas;
     
     void init();
     void plan();
-    void update_path(int agent_idx, State * goal_state, bool update_cost_map=true);
+    void update_path(int agent_idx, State * goal_state);
     void reset_cost_map();
 
 };
+
+}
 
 } // namespace SUO
