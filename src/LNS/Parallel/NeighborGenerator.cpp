@@ -86,7 +86,7 @@ void NeighborGenerator::generate(double time_limit) {
         }
     }
 
-    neighbors.push(neighbor_ptr);
+    neighbors.push_back(neighbor_ptr);
 }
 
 void NeighborGenerator::chooseDestroyHeuristicbyALNS() {

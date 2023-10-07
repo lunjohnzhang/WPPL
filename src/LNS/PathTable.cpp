@@ -90,6 +90,47 @@ bool PathTable::constrained(int from, int to, int to_time) const
     return false;
 }
 
+bool PathTable::constrained(int from, int to, int to_time, std::vector<int> & ignored_agents) const
+{
+    if (!table.empty())
+    {
+        if (table[to].size() > to_time && table[to][to_time] != NO_AGENT) {
+            bool found=false;
+            for (int i=0;i<ignored_agents.size();++i) {
+                if (table[to][to_time]==ignored_agents[i]) {
+                    found=true;
+                    break;
+                }
+            }
+            if (!found) {
+                return true;  // vertex conflict with agent table[to][to_time]
+            }
+        }
+        
+        if (table[to].size() >= to_time && table[from].size() > to_time && !table[to].empty() &&
+                 table[to][to_time - 1] != NO_AGENT && table[from][to_time] == table[to][to_time - 1]) {
+            bool found=false;
+            for (int i=0;i<ignored_agents.size();++i) {
+                if (table[to][to_time-1]==ignored_agents[i]) {
+                    found=true;
+                    break;
+                }
+            }
+            if (!found) {
+                return true;  // edge conflict with agent table[to][to_time - 1]
+            }
+        }
+    }
+
+    // TODO(rivers): we just ignore this for now in our lifelong setting with a planning window.
+    // if (!goals.empty())
+    // {
+    //     if (goals[to] <= to_time)
+    //         return true; // target conflict
+    // }
+    return false;
+}
+
 void PathTable::getConflictingAgents(int agent_id, set<int>& conflicting_agents, int from, int to, int to_time) const
 {
     if (table.empty())

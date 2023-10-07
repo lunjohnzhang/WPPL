@@ -16,6 +16,7 @@ public:
     void insertPath(int agent_id, const Path& path, bool verbose=false);
     void deletePath(int agent_id, const Path& path, bool verbose=false);
     bool constrained(int from, int to, int to_time) const;
+    bool constrained(int from, int to, int to_time, std::vector<int> & ignored_agents) const;
 
     void get_agents(set<int>& conflicting_agents, int loc) const;
     void get_agents(set<int>& conflicting_agents, int neighbor_size, int loc) const;

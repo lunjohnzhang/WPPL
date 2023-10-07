@@ -9,7 +9,7 @@ class GlobalManager
 {
 public:
     NeighborGenerator neighbor_generator;
-    LocalOptimizer local_optimizer;
+    std::vector<std::shared_ptr<LocalOptimizer>> local_optimizers;
 
     int initial_sum_of_costs=MAX_COST;
     int sum_of_costs=MAX_COST;
@@ -28,6 +28,7 @@ public:
     std::shared_ptr<HeuristicTable> HT;
     double time_limit;
     int screen;
+    int num_threads;
 
     GlobalManager(
         Instance & instance, PathTable & path_table, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT,
@@ -40,6 +41,7 @@ public:
 
     void getInitialSolution(Neighbor & neighbor);
     bool run();
+    void update(Neighbor & neighbor, bool recheck);
     void update(Neighbor & neighbor);
 
     string getSolverName() const { return "LNS(" + init_algo_name + ";" + replan_algo_name + ")"; }

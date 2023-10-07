@@ -24,13 +24,14 @@ public:
     vector<double> destroy_weights; // the weights of each destroy heuristic
     int selected_neighbor; // TODO: rename? is it just the some kind of selected strategy's id?
 
-    // TODO(rivers): check if shared data structures (across multiple runs) need to be reset
+    // for all strategies: currently we only use it for parallelism
+    // unordered_set<int> global_tabu_list;
     // for randomwalk strategy
     unordered_set<int> tabu_list;
     // for intersection strategy
     list<int> intersections;
 
-    std::queue<std::shared_ptr<Neighbor>> neighbors; // the generated neighbors for usage
+    std::vector<std::shared_ptr<Neighbor>> neighbors; // the generated neighbors for usage
 
     NeighborGenerator(
         Instance & instance, PathTable & path_table, std::vector<Agent> & agents, 

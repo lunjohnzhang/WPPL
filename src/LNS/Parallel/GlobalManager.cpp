@@ -1,5 +1,6 @@
 #include "LNS/Parallel/GlobalManager.h"
 #include "util/Timer.h"
+#include "omp.h"
 
 namespace LNS {
 
@@ -12,51 +13,145 @@ GlobalManager::GlobalManager(
     double time_limit, int screen
 ): 
     neighbor_generator(instance, path_table, agents, neighbor_size, destroy_strategy, ALNS, decay_factor, reaction_factor, screen),
-    local_optimizer(instance, agents, HT, replan_algo_name, sipp, window_size_for_CT, window_size_for_CAT, window_size_for_PATH, screen),
     instance(instance), path_table(path_table), agents(agents), HT(HT),
     init_algo_name(init_algo_name), replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
     time_limit(time_limit), screen(screen) {
 
+    num_threads=omp_get_max_threads()/2-1;
+
+    // cout<<num_threads<<endl;
+    // exit(-1);
+
+    for (auto i=0;i<num_threads;++i) {
+        auto local_optimizer=std::make_shared<LocalOptimizer>(
+            instance, agents, HT,
+            replan_algo_name, sipp,
+            window_size_for_CT, window_size_for_CAT, window_size_for_PATH,
+            screen
+        );
+        local_optimizers.push_back(local_optimizer);
+    }
 }
 
-void GlobalManager::update(Neighbor & neighbor) {
+void GlobalManager::update(Neighbor & neighbor, bool recheck) {
+
     if (neighbor.succ){
         // before we update, we check if the solution is valid. because in the parallel setting, we may have later update that makes the solution invalid.
 
-        
-
-
-        for (auto & aid: neighbor.agents) {
-            bool verbose=false;
-            // if (neighbor.agents.size()<10){
-            //     verbose=true;
-            // } 
-
-            path_table.deletePath(aid, neighbor.m_old_paths[aid],verbose);
+        if (recheck) {
+            g_timer.record_p("manager_update_s");
+        } else {
+            g_timer.record_p("init_manager_update_s");
         }
 
-        // std::cerr<<std::endl;
+        if (recheck) {
+            g_timer.record_p("recheck_s");
+            // re-check validness
+            bool valid=true;
+            for (auto & aid: neighbor.agents) {
+                auto & path=neighbor.m_paths[aid];
+                for (int i=0;i<path.size()-1;++i) {
+                    int from=path[i].location;
+                    int to=path[i+1].location;
+                    int to_time=i+1;
+                    // TODO(rivers): we need to ignore the conflicts with agents in the neighbor.
+                    if (path_table.constrained(from,to,to_time,neighbor.agents)) {
+                        std::cerr<<aid<<" "<<i<<" invalid"<<std::endl;
+                        valid=false;
+                        break;
+                    }
+                }
+                if (!valid) break;
+            }
 
-        for (auto & aid: neighbor.agents) {
-            // update agents' paths here
-            agents[aid].path = neighbor.m_paths[aid];
-            bool verbose=false;
-            // if (neighbor.agents.size()<10){
-            //     verbose=true;
-            // } 
-            // update path table here
-            path_table.insertPath(aid, neighbor.m_paths[aid],verbose);
+            if (!valid) {
+                neighbor.succ=false;
+                std::cerr<<"invalid"<<std::endl;
+                return;
+            }
+
+            // re-check if the cost is still smaller
+            int old_sum_of_costs=0;
+            for (auto & aid: neighbor.agents) {
+                old_sum_of_costs+=agents[aid].path.size()-1;
+                if (agents[aid].path.back().location!=instance.goal_locations[aid]) {
+                    old_sum_of_costs+=HT->get(agents[aid].path.back().location,instance.goal_locations[aid]);
+                }
+            }
+
+            if (old_sum_of_costs<neighbor.sum_of_costs) {
+                neighbor.succ=false;
+                std::cerr<<"incost"<<std::endl;
+                return;
+            } 
+
+            // re-update old_sum_of_costs here.
+            neighbor.old_sum_of_costs=old_sum_of_costs;
+            for (auto & id: neighbor.agents) {
+                neighbor.m_old_paths[id]=agents[id].path;
+            }
+
+            g_timer.record_d("recheck_s","recheck");
+
         }
 
-        // std::cerr<<std::endl;
-        // update costs here
-        sum_of_costs += neighbor.sum_of_costs - neighbor.old_sum_of_costs;
+        if (recheck) {
+            g_timer.record_d("manager_update_s","manager_update");
+        } else {
+            g_timer.record_d("init_manager_update_s","init_manager_update");
+        }
 
 
-        local_optimizer.update(neighbor);
+        // synchonize to local optimizer
+        if (recheck) {
+            g_timer.record_p("loc_opt_update_s");
+        } else {
+            g_timer.record_p("init_loc_opt_update_s");
+        }
+        #pragma omp parallel for
+        for (int i=0;i<num_threads+1;++i) {
+            if (i==num_threads) this->update(neighbor);
+            else local_optimizers[i]->update(neighbor);
+        }
+        if (recheck) {
+            g_timer.record_d("loc_opt_update_s","loc_opt_update");
+        } else {
+            g_timer.record_d("init_loc_opt_update_s","init_loc_opt_update");
+        }
+
     }
 }
+
+void GlobalManager::update(Neighbor & neighbor) {
+    // apply update
+    for (auto & aid: neighbor.agents) {
+        bool verbose=false;
+        // if (neighbor.agents.size()<10){
+        //     verbose=true;
+        // } 
+        path_table.deletePath(aid, neighbor.m_old_paths[aid],verbose);
+    }
+
+    // std::cerr<<std::endl;
+
+    for (auto & aid: neighbor.agents) {
+        // update agents' paths here
+        agents[aid].path = neighbor.m_paths[aid];
+        bool verbose=false;
+        // if (neighbor.agents.size()<10){
+        //     verbose=true;
+        // } 
+        // update path table here
+        path_table.insertPath(aid, neighbor.m_paths[aid],verbose);
+    }
+
+        // std::cerr<<std::endl;
+    // update costs here
+    sum_of_costs += neighbor.sum_of_costs - neighbor.old_sum_of_costs;
+}
+
+
 
 // TODO(rivers): we will do single-thread code refactor first, then we will do the parallelization
 bool GlobalManager::run() {
@@ -87,7 +182,7 @@ bool GlobalManager::run() {
     }
     getInitialSolution(init_neighbor);
 
-    update(init_neighbor);
+    update(init_neighbor,false);
 
     bool runtime=g_timer.record_d("lns_init_sol_s","lns_init_sol");
 
@@ -108,45 +203,64 @@ bool GlobalManager::run() {
         return false;
     }
 
+    g_timer.record_p("lns_opt_s");
     while (true) {
         elapse=g_timer.record_d("_lns_s","_lns");
         if (elapse>=time_limit)
             break;
 
         // 1. generate neighbors
-        if (neighbor_generator.neighbors.empty()){
-            neighbor_generator.generate(1, time_limit);
-        } 
+        g_timer.record_p("neighbor_generate_s");
+        neighbor_generator.neighbors.clear();
+        neighbor_generator.generate(num_threads, time_limit);
+        g_timer.record_d("neighbor_generate_s","neighbor_generate");
 
         // 2. optimize the neighbor
-        auto neighbor_ptr = neighbor_generator.neighbors.front();
-        auto & neighbor = *neighbor_ptr;
-        neighbor_generator.neighbors.pop();
+        // auto neighbor_ptr = neighbor_generator.neighbors.front();
+        // auto & neighbor = *neighbor_ptr;
+        // neighbor_generator.neighbors.pop();
 
         // in the single-thread setting, local_optimizer directly modify paths
         // but we should first recover the path table, then redo it after all local optimizers finishes.
-        local_optimizer.optimize(neighbor, time_limit);
+        g_timer.record_p("loc_opt_s");
+        #pragma omp parallel for
+        for (auto i=0;i<neighbor_generator.neighbors.size();++i) {
+            // cerr<<i<<" "<<neighbor_generator.neighbors[i]->agents.size()<<endl;
+            auto & neighbor_ptr = neighbor_generator.neighbors[i];
+            auto & neighbor = *neighbor_ptr;
+            local_optimizers[i]->optimize(neighbor, time_limit);
+        }
+        g_timer.record_d("loc_opt_s","loc_opt");
 
         // TODO(rivers): validate solution
 
         // 3. update path_table, statistics & maybe adjust strategies
-        update(neighbor);
-        neighbor_generator.update(neighbor);
+        g_timer.record_p("neighbor_update_s");
+        // TODO(rivers): it seems we should not modify neighbor in the previous update
+        for (auto & neighbor_ptr: neighbor_generator.neighbors){
+            auto & neighbor=*neighbor_ptr;
+            neighbor_generator.update(neighbor);
+        }
+        g_timer.record_d("neighbor_update_s","neighbor_update");
 
-        if (!neighbor.succ) {
-            ++num_of_failures;
-        } 
+        for (auto & neighbor_ptr: neighbor_generator.neighbors){
+            auto & neighbor=*neighbor_ptr;
+            update(neighbor,true);
 
-        sum_of_costs += neighbor.sum_of_costs - neighbor.old_sum_of_costs;
+            if (!neighbor.succ) {
+                ++num_of_failures;
+            } 
 
-        elapse=g_timer.record_d("_lns_s","_lns");
-        if (screen >= 1)
-            cout << "Iteration " << iteration_stats.size() << ", "
-                << "group size = " << neighbor.agents.size() << ", "
-                << "solution cost = " << sum_of_costs << ", "
-                << "remaining time = " << time_limit - elapse << endl;
-        iteration_stats.emplace_back(neighbor.agents.size(), sum_of_costs, elapse, replan_algo_name);
+            elapse=g_timer.record_d("_lns_s","_lns");
+            if (screen >= 1)
+                cout << "Iteration " << iteration_stats.size() << ", "
+                    << "group size = " << neighbor.agents.size() << ", "
+                    << "solution cost = " << sum_of_costs << ", "
+                    << "remaining time = " << time_limit - elapse << endl;
+            iteration_stats.emplace_back(neighbor.agents.size(), sum_of_costs, elapse, replan_algo_name);
+        }
     }
+    g_timer.record_d("lns_opt_s","lns_opt");
 
     // TODO(rivers): validate solution
 
@@ -192,6 +306,7 @@ void GlobalManager::getInitialSolution(Neighbor & neighbor) {
         }
 
         neighbor.m_paths[i]=agents[i].path;
+        neighbor.m_old_paths[i]=Path();
         // cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
     }
 
