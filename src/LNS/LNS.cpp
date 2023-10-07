@@ -4,6 +4,7 @@
 #include "LNS/CBS/CBSNode.h"
 #include "util/Timer.h"
 #include "util/Dev.h"
+#include "LNS/Parallel/GlobalManager.h"
 
 namespace LNS {
 
@@ -97,6 +98,21 @@ LNS::LNS(Instance& instance, double time_limit, const string & init_algo_name, c
     // average_group_size = -1;
     // sum_of_costs = 0;
 // }
+
+bool LNS::run_parallel() {
+    bool sipp=true;
+    auto global_manager=std::make_shared<GlobalManager>(
+        instance, path_table, agents, HT,
+        neighbor_size, destroy_strategy,
+        ALNS, decay_factor, reaction_factor,
+        init_algo_name, replan_algo_name, sipp,
+        window_size_for_CT, window_size_for_CAT, window_size_for_PATH,
+        time_limit, screen
+    );
+
+    bool succ=global_manager->run();
+    return succ;
+}
 
 bool LNS::run()
 {

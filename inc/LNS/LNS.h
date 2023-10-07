@@ -50,6 +50,7 @@ public:
     }
     bool getInitialSolution();
     bool run();
+    bool run_parallel();
     void validateSolution() const;
     void writeIterStatsToFile(const string & file_name) const;
     void writeResultToFile(const string & file_name) const;

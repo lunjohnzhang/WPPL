@@ -167,7 +167,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
     ONLYDEV(g_timer.record_p("run_LNS_s");)
     // continue optimizing paths
-    bool succ=lns->run();
+    bool succ=lns->run_parallel();
     if (succ)
     {
         cout<<"lns succeed"<<endl;

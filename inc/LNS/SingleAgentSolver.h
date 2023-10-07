@@ -129,6 +129,12 @@ public:
 		// compute_heuristics();
 	}
 	virtual ~SingleAgentSolver()= default;
+
+	void prepare_for_planning(int agent) {
+		start_location=instance.start_locations[agent];
+		goal_location=instance.goal_locations[agent];
+	}
+
     void reset()
     {
         if (num_generated > 0)

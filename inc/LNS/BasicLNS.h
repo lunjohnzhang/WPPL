@@ -4,6 +4,7 @@
 #include "LNS/SIPP.h"
 #include "util/HeuristicTable.h"
 #include <memory>
+#include <map>
 
 namespace LNS {
 
@@ -34,9 +35,12 @@ struct Neighbor
     vector<int> agents;
     int sum_of_costs;
     int old_sum_of_costs;
+    std::map<int, Path> m_paths; // for temporally storing the new paths. may change to vector later, agent id -> path
     set<pair<int, int>> colliding_pairs;  // id1 < id2
     set<pair<int, int>> old_colliding_pairs;  // id1 < id2
-    vector<Path> old_paths;
+    std::vector<Path> old_paths;
+    std::map<int, Path> m_old_paths; // for temporally storing the old paths. may change to vector later, agent id -> path
+    bool succ = false;
 };
 
 class BasicLNS

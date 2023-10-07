@@ -1,9 +1,19 @@
 #include "LNS/PathTable.h"
+#include "util/MyLogger.h"
 
 namespace LNS {
 
-void PathTable::insertPath(int agent_id, const Path& _path)
+void PathTable::insertPath(int agent_id, const Path& _path, bool verbose)
 {
+
+    if (verbose) {
+        std::cerr<<"insertPath for agent "<<agent_id<<" paths: ";
+        for (auto p : _path) {
+            std::cerr<<p.location<<" ";
+        }
+        std::cerr<<std::endl;
+    }
+
     if (_path.empty())
         return;
     
@@ -25,8 +35,16 @@ void PathTable::insertPath(int agent_id, const Path& _path)
     makespan = max(makespan, (int) path.size() - 1);
 }
 
-void PathTable::deletePath(int agent_id, const Path& _path)
+void PathTable::deletePath(int agent_id, const Path& _path,bool verbose)
 {
+    if (verbose) {
+        std::cerr<<"deletePath for agent "<<agent_id<<" paths: ";
+        for (auto p : _path) {
+            std::cerr<<p.location<<" ";
+        }
+        std::cerr<<std::endl;
+    }
+
     if (_path.empty())
         return;
     

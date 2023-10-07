@@ -493,27 +493,15 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
       d2=HT->get(u->index,ins->goals[i]->index);
     }
 
-    // if (ins->precomputed_paths!=nullptr){
-    //   auto path=(*ins->precomputed_paths)[i];
-    //   // for (int j=path.size()-1;j>=0;--j){
-    //     int j=H->d;
-    //     if (j<path.size()-1 && path[j].location==ai->v_now->index) {
-    //       if (path[j+1].location==v->index) {
-    //         d1=0.1;
-    //         // break;
-    //       }
-    //       if (path[j+1].location==u->index) {
-    //         d2=0.1;
-    //         // break;
-    //       }
-    //     }
-    //   // }
-    // }
+    // TODO(rivers): we should still think about the following codes. 
+    // the former one seems to fit LNS but doesn't work with SUO
+    // the latter one ssems to fit SUO but doesn't work with LNS
+    // the latter one is problematic with wait action?
 
     if (ins->precomputed_paths!=nullptr){
       auto path=(*ins->precomputed_paths)[i];
-      for (int j=path.size()-1;j>=0;--j){
-        // int j=H->d;
+      // for (int j=path.size()-1;j>=0;--j){
+        int j=H->d;
         if (j<path.size()-1 && path[j].location==ai->v_now->index) {
           if (path[j+1].location==v->index) {
             d1=0.1;
@@ -524,8 +512,25 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
             // break;
           }
         }
-      }
+      // }
     }
+
+    // if (ins->precomputed_paths!=nullptr){
+    //   auto path=(*ins->precomputed_paths)[i];
+    //   for (int j=path.size()-1;j>=0;--j){
+    //     // int j=H->d;
+    //     if (j<path.size()-1 && path[j].location==ai->v_now->index) {
+    //       if (path[j+1].location==v->index) {
+    //         d1=0.1;
+    //         // break;
+    //       }
+    //       if (path[j+1].location==u->index) {
+    //         d2=0.1;
+    //         // break;
+    //       }
+    //     }
+    //   }
+    // }
 
 
 
