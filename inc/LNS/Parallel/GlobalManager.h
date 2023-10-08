@@ -8,7 +8,7 @@ namespace LNS {
 class GlobalManager
 {
 public:
-    NeighborGenerator neighbor_generator;
+    std::shared_ptr<NeighborGenerator> neighbor_generator;
     std::vector<std::shared_ptr<LocalOptimizer>> local_optimizers;
 
     int initial_sum_of_costs=MAX_COST;

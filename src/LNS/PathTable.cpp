@@ -60,16 +60,18 @@ void PathTable::deletePath(int agent_id, const Path& _path,bool verbose)
         table[path[t].location][t] = NO_AGENT;
     }
     goals[path.back().location] = MAX_TIMESTEP;
-    if (makespan == (int) path.size() - 1) // re-compute makespan
-    {
-        makespan = 0;
-        for (int time : goals)
-        {
-            if (time < MAX_TIMESTEP && time > makespan)
-                makespan = time;
-        }
 
-    }
+    // TODO(rivers): when we use window size, we ignore this for now, maybe we can use a better data structure such as ordered_set/heap to maintain the makespan. 
+    // if (makespan == (int) path.size() - 1) // re-compute makespan
+    // {
+    //     makespan = 0;
+    //     for (int time : goals)
+    //     {
+    //         if (time < MAX_TIMESTEP && time > makespan)
+    //             makespan = time;
+    //     }
+
+    // }
 }
 
 bool PathTable::constrained(int from, int to, int to_time) const

@@ -12,13 +12,12 @@ GlobalManager::GlobalManager(
     int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
     double time_limit, int screen
 ): 
-    neighbor_generator(instance, path_table, agents, neighbor_size, destroy_strategy, ALNS, decay_factor, reaction_factor, screen),
     instance(instance), path_table(path_table), agents(agents), HT(HT),
     init_algo_name(init_algo_name), replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
     time_limit(time_limit), screen(screen) {
 
-    num_threads=omp_get_max_threads()/2-1;
+    num_threads=omp_get_max_threads();
 
     // cout<<num_threads<<endl;
     // exit(-1);
@@ -32,6 +31,8 @@ GlobalManager::GlobalManager(
         );
         local_optimizers.push_back(local_optimizer);
     }
+
+    neighbor_generator=std::make_shared<NeighborGenerator>(instance, path_table, agents, neighbor_size, destroy_strategy, ALNS, decay_factor, reaction_factor, num_threads, screen);
 }
 
 void GlobalManager::update(Neighbor & neighbor, bool recheck) {
@@ -96,6 +97,8 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
 
         }
 
+        update(neighbor);
+
         if (recheck) {
             g_timer.record_d("manager_update_s","manager_update");
         } else {
@@ -110,9 +113,8 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
             g_timer.record_p("init_loc_opt_update_s");
         }
         #pragma omp parallel for
-        for (int i=0;i<num_threads+1;++i) {
-            if (i==num_threads) this->update(neighbor);
-            else local_optimizers[i]->update(neighbor);
+        for (int i=0;i<num_threads;++i) {
+            local_optimizers[i]->update(neighbor);
         }
         if (recheck) {
             g_timer.record_d("loc_opt_update_s","loc_opt_update");
@@ -125,6 +127,7 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
 
 void GlobalManager::update(Neighbor & neighbor) {
     // apply update
+    g_timer.record_p("path_table_delete_s");
     for (auto & aid: neighbor.agents) {
         bool verbose=false;
         // if (neighbor.agents.size()<10){
@@ -132,9 +135,10 @@ void GlobalManager::update(Neighbor & neighbor) {
         // } 
         path_table.deletePath(aid, neighbor.m_old_paths[aid],verbose);
     }
+    g_timer.record_d("path_table_delete_s","path_table_delete");
 
     // std::cerr<<std::endl;
-
+    g_timer.record_p("path_table_insert_s");
     for (auto & aid: neighbor.agents) {
         // update agents' paths here
         agents[aid].path = neighbor.m_paths[aid];
@@ -145,6 +149,7 @@ void GlobalManager::update(Neighbor & neighbor) {
         // update path table here
         path_table.insertPath(aid, neighbor.m_paths[aid],verbose);
     }
+    g_timer.record_d("path_table_insert_s","path_table_insert");
 
         // std::cerr<<std::endl;
     // update costs here
@@ -211,8 +216,7 @@ bool GlobalManager::run() {
 
         // 1. generate neighbors
         g_timer.record_p("neighbor_generate_s");
-        neighbor_generator.neighbors.clear();
-        neighbor_generator.generate(num_threads, time_limit);
+        neighbor_generator->generate_parallel(time_limit);
         g_timer.record_d("neighbor_generate_s","neighbor_generate");
 
         // 2. optimize the neighbor
@@ -224,9 +228,9 @@ bool GlobalManager::run() {
         // but we should first recover the path table, then redo it after all local optimizers finishes.
         g_timer.record_p("loc_opt_s");
         #pragma omp parallel for
-        for (auto i=0;i<neighbor_generator.neighbors.size();++i) {
+        for (auto i=0;i<neighbor_generator->neighbors.size();++i) {
             // cerr<<i<<" "<<neighbor_generator.neighbors[i]->agents.size()<<endl;
-            auto & neighbor_ptr = neighbor_generator.neighbors[i];
+            auto & neighbor_ptr = neighbor_generator->neighbors[i];
             auto & neighbor = *neighbor_ptr;
             local_optimizers[i]->optimize(neighbor, time_limit);
         }
@@ -237,13 +241,13 @@ bool GlobalManager::run() {
         // 3. update path_table, statistics & maybe adjust strategies
         g_timer.record_p("neighbor_update_s");
         // TODO(rivers): it seems we should not modify neighbor in the previous update
-        for (auto & neighbor_ptr: neighbor_generator.neighbors){
+        for (auto & neighbor_ptr: neighbor_generator->neighbors){
             auto & neighbor=*neighbor_ptr;
-            neighbor_generator.update(neighbor);
+            neighbor_generator->update(neighbor);
         }
         g_timer.record_d("neighbor_update_s","neighbor_update");
 
-        for (auto & neighbor_ptr: neighbor_generator.neighbors){
+        for (auto & neighbor_ptr: neighbor_generator->neighbors){
             auto & neighbor=*neighbor_ptr;
             update(neighbor,true);
 

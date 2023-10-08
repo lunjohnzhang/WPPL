@@ -3,6 +3,7 @@
 #include "util/Dev.h"
 #include "util/MyLogger.h"
 #include <algorithm>
+#include "omp.h"
 
 namespace LNS {
 
@@ -10,37 +11,50 @@ NeighborGenerator::NeighborGenerator(
     Instance & instance, PathTable & path_table, std::vector<Agent> & agents, 
     int neighbor_size, destroy_heuristic destroy_strategy, 
     bool ALNS, double decay_factor, double reaction_factor, 
-    int screen
+    int num_threads, int screen
 ):
     instance(instance), path_table(path_table), agents(agents),
     neighbor_size(neighbor_size), destroy_strategy(destroy_strategy),
     ALNS(ALNS), decay_factor(decay_factor), reaction_factor(reaction_factor),
-    screen(screen) {
+    num_threads(num_threads), screen(screen) {
 
     destroy_weights.assign(DESTORY_COUNT,1);
+
+    // if (intersections.empty())
+    // {
+    for (int i = 0; i < instance.map_size; i++)
+    {
+        if (!instance.isObstacle(i) && instance.getDegree(i) > 2)
+            intersections.push_back(i);
+    }
+    // }
+
+    tabu_list_list.resize(num_threads);
+    neighbors.resize(num_threads);
+
 }
 
 void NeighborGenerator::update(Neighbor & neighbor){
     if (ALNS) // update destroy heuristics
     {
         if (neighbor.old_sum_of_costs > neighbor.sum_of_costs )
-            destroy_weights[selected_neighbor] =
+            destroy_weights[neighbor.selected_neighbor] =
                     reaction_factor * (neighbor.old_sum_of_costs - neighbor.sum_of_costs) / neighbor.agents.size()
-                    + (1 - reaction_factor) * destroy_weights[selected_neighbor];
+                    + (1 - reaction_factor) * destroy_weights[neighbor.selected_neighbor];
         else
-            destroy_weights[selected_neighbor] =
-                    (1 - decay_factor) * destroy_weights[selected_neighbor];
+            destroy_weights[neighbor.selected_neighbor] =
+                    (1 - decay_factor) * destroy_weights[neighbor.selected_neighbor];
     }
 }
 
-
-void NeighborGenerator::generate(int n, double time_limit) {
-    for (int i = 0; i < n; i++)
-        generate(time_limit);
+void NeighborGenerator::generate_parallel(double time_limit) {
+    #pragma omp parallel for
+    for (int i = 0; i < num_threads; i++) {
+        generate(time_limit,i);
+    }
 }
 
-
-void NeighborGenerator::generate(double time_limit) {
+void NeighborGenerator::generate(double time_limit,int idx) {
     std::shared_ptr<Neighbor> neighbor_ptr = std::make_shared<Neighbor>();
     Neighbor & neighbor = *neighbor_ptr;
 
@@ -57,22 +71,41 @@ void NeighborGenerator::generate(double time_limit) {
         switch (destroy_strategy)
         {
             case RANDOMWALK:
-                succ = generateNeighborByRandomWalk(neighbor);
-                break;
-            case INTERSECTION:
-                succ = generateNeighborByIntersection(neighbor);
-                break;
-            case RANDOMAGENTS:
-                neighbor.agents.resize(agents.size());
-                for (int i = 0; i < (int)agents.size(); i++)
-                    neighbor.agents[i] = i;
-                if (neighbor.agents.size() > neighbor_size)
                 {
-                    std::random_shuffle(neighbor.agents.begin(), neighbor.agents.end());
-                    neighbor.agents.resize(neighbor_size);
+                    succ = generateNeighborByRandomWalk(neighbor,idx);
+                    neighbor.selected_neighbor = 0;
+                    break;
                 }
-                succ = true;
-                break;
+            case INTERSECTION:
+                {
+                    succ = generateNeighborByIntersection(neighbor);
+                    neighbor.selected_neighbor = 1;
+                    break;
+                }
+            case RANDOMAGENTS:
+                // TODO(rivers): this implementation is too bad
+                // neighbor.agents.resize(agents.size());
+                // for (int i = 0; i < (int)agents.size(); i++)
+                //     neighbor.agents[i] = i;
+                // if (neighbor.agents.size() > neighbor_size)
+                // {
+                //     std::random_shuffle(neighbor.agents.begin(), neighbor.agents.end());
+                //     neighbor.agents.resize(neighbor_size);
+                // }
+                // succ = true;
+                // neighbor.selected_neighbor = 2;
+                {
+                    auto s=std::set<int>();
+                    while (s.size()<neighbor_size) {
+                        s.insert(rand()%agents.size());
+                    }
+                    for (auto i:s) {
+                        neighbor.agents.push_back(i);
+                    } 
+                    succ = true;
+                    neighbor.selected_neighbor = 2;
+                    break;
+                }
             default:
                 cerr << "Wrong neighbor generation strategy" << endl;
                 exit(-1);
@@ -86,11 +119,11 @@ void NeighborGenerator::generate(double time_limit) {
         }
     }
 
-    neighbors.push_back(neighbor_ptr);
+    neighbors[idx]=neighbor_ptr;
 }
 
 void NeighborGenerator::chooseDestroyHeuristicbyALNS() {
-    rouletteWheel();
+    int selected_neighbor=rouletteWheel();
     switch (selected_neighbor)
     {
         case 0 : destroy_strategy = RANDOMWALK; break;
@@ -100,7 +133,7 @@ void NeighborGenerator::chooseDestroyHeuristicbyALNS() {
     }
 }
 
-void NeighborGenerator::rouletteWheel()
+int NeighborGenerator::rouletteWheel()
 {
     double sum = 0;
     for (const auto& h : destroy_weights)
@@ -114,15 +147,16 @@ void NeighborGenerator::rouletteWheel()
     }
     double r = (double) rand() / RAND_MAX;
     double threshold = destroy_weights[0];
-    selected_neighbor = 0;
+    int selected_neighbor = 0;
     while (threshold < r * sum)
     {
         selected_neighbor++;
         threshold += destroy_weights[selected_neighbor];
     }
+    return selected_neighbor;
 }
 
-bool NeighborGenerator::generateNeighborByRandomWalk(Neighbor & neighbor) {
+bool NeighborGenerator::generateNeighborByRandomWalk(Neighbor & neighbor, int idx) {
     if (neighbor_size >= (int)agents.size())
     {
         neighbor.agents.resize(agents.size());
@@ -131,7 +165,7 @@ bool NeighborGenerator::generateNeighborByRandomWalk(Neighbor & neighbor) {
         return true;
     }
 
-    int a = findMostDelayedAgent();
+    int a = findMostDelayedAgent(idx);
     if (a < 0)
         return false;
     
@@ -172,15 +206,6 @@ bool NeighborGenerator::generateNeighborByRandomWalk(Neighbor & neighbor) {
 }
 
 bool NeighborGenerator::generateNeighborByIntersection(Neighbor & neighbor) {
-    if (intersections.empty())
-    {
-        for (int i = 0; i < instance.map_size; i++)
-        {
-            if (!instance.isObstacle(i) && instance.getDegree(i) > 2)
-                intersections.push_back(i);
-        }
-    }
-
     set<int> neighbors_set;
     auto pt = intersections.begin();
     std::advance(pt, rand() % intersections.size());
@@ -222,11 +247,14 @@ bool NeighborGenerator::generateNeighborByIntersection(Neighbor & neighbor) {
     return true;
 }
 
-int NeighborGenerator::findMostDelayedAgent(){
+int NeighborGenerator::findMostDelayedAgent(int idx){
     int a = -1;
     int max_delays = -1;
+    auto & tabu_list=tabu_list_list[idx];
     for (int i = 0; i < agents.size(); i++)
     {
+        // TODO(rivers): currently we just use index to split threads
+        if (i%num_threads!=idx) continue;
         if (tabu_list.find(i) != tabu_list.end())
             continue;
         int delays = agents[i].getNumOfDelays();

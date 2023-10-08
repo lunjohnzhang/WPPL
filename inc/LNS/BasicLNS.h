@@ -41,6 +41,7 @@ struct Neighbor
     std::vector<Path> old_paths;
     std::map<int, Path> m_old_paths; // for temporally storing the old paths. may change to vector later, agent id -> path
     bool succ = false;
+    int selected_neighbor;
 };
 
 class BasicLNS
