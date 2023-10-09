@@ -1,6 +1,7 @@
 #include "LNS/Parallel/GlobalManager.h"
 #include "util/Timer.h"
 #include "omp.h"
+#include "LNS/Parallel/TimeLimiter.h"
 
 namespace LNS {
 
@@ -10,12 +11,12 @@ GlobalManager::GlobalManager(
     bool ALNS, double decay_factor, double reaction_factor,
     string init_algo_name, string replan_algo_name, bool sipp,
     int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
-    double time_limit, int screen
+    int screen
 ): 
     instance(instance), path_table(path_table), agents(agents), HT(HT),
     init_algo_name(init_algo_name), replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
-    time_limit(time_limit), screen(screen) {
+    screen(screen) {
 
     num_threads=omp_get_max_threads();
 
@@ -159,7 +160,9 @@ void GlobalManager::update(Neighbor & neighbor) {
 
 
 // TODO(rivers): we will do single-thread code refactor first, then we will do the parallelization
-bool GlobalManager::run() {
+bool GlobalManager::run(double time_limit) {
+
+    TimeLimiter time_limiter(time_limit);
 
     initial_sum_of_costs=0;
     sum_of_costs=0;
@@ -167,10 +170,9 @@ bool GlobalManager::run() {
     average_group_size=0;
     iteration_stats.clear();
 
-    // we need an extra timer for this problem.
-    g_timer.record_p("_lns_s");
     double elapse=0;
 
+    g_timer.record_p("lns_init_sol_s");
     sum_of_distances = 0;
     for (const auto & agent : agents)
     {
@@ -178,8 +180,6 @@ bool GlobalManager::run() {
     }
 
     // 0. get initial solution
-
-    g_timer.record_p("lns_init_sol_s");
     Neighbor init_neighbor;
     init_neighbor.agents.resize(agents.size());
     for (int i=0;i<agents.size();++i) {
@@ -191,7 +191,7 @@ bool GlobalManager::run() {
 
     bool runtime=g_timer.record_d("lns_init_sol_s","lns_init_sol");
 
-    elapse=g_timer.record_d("_lns_s","_lns");
+    elapse=time_limiter.get_elapse();
     iteration_stats.emplace_back(agents.size(), initial_sum_of_costs, runtime, init_algo_name);
 
     if (screen >= 1)
@@ -210,13 +210,12 @@ bool GlobalManager::run() {
 
     g_timer.record_p("lns_opt_s");
     while (true) {
-        elapse=g_timer.record_d("_lns_s","_lns");
-        if (elapse>=time_limit)
+        if (time_limiter.timeout())
             break;
 
         // 1. generate neighbors
         g_timer.record_p("neighbor_generate_s");
-        neighbor_generator->generate_parallel(time_limit);
+        neighbor_generator->generate_parallel(time_limiter);
         g_timer.record_d("neighbor_generate_s","neighbor_generate");
 
         // 2. optimize the neighbor
@@ -232,7 +231,7 @@ bool GlobalManager::run() {
             // cerr<<i<<" "<<neighbor_generator.neighbors[i]->agents.size()<<endl;
             auto & neighbor_ptr = neighbor_generator->neighbors[i];
             auto & neighbor = *neighbor_ptr;
-            local_optimizers[i]->optimize(neighbor, time_limit);
+            local_optimizers[i]->optimize(neighbor, time_limiter);
         }
         g_timer.record_d("loc_opt_s","loc_opt");
 
@@ -255,12 +254,12 @@ bool GlobalManager::run() {
                 ++num_of_failures;
             } 
 
-            elapse=g_timer.record_d("_lns_s","_lns");
+            elapse=time_limiter.get_elapse();
             if (screen >= 1)
                 cout << "Iteration " << iteration_stats.size() << ", "
                     << "group size = " << neighbor.agents.size() << ", "
                     << "solution cost = " << sum_of_costs << ", "
-                    << "remaining time = " << time_limit - elapse << endl;
+                    << "remaining time = " << time_limiter.time_limit-elapse << endl;
             iteration_stats.emplace_back(neighbor.agents.size(), sum_of_costs, elapse, replan_algo_name);
         }
     }
@@ -274,7 +273,7 @@ bool GlobalManager::run() {
     if (average_group_size > 0)
         average_group_size /= (double)(iteration_stats.size() - 1);
 
-    elapse=g_timer.record_d("_lns_s","_lns");
+    elapse=time_limiter.get_elapse();
     cout << getSolverName() << ": "
         << "runtime = " << elapse << ", "
         << "iterations = " << iteration_stats.size() << ", "

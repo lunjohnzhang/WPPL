@@ -1,6 +1,7 @@
 #pragma once
 #include "LNS/LNS.h"
 #include <queue>
+#include "LNS/Parallel/TimeLimiter.h"
 
 namespace LNS {
 
@@ -44,8 +45,8 @@ public:
 
     // we will just make this part sequentially now, namely each time we only select one neighborhood
     // if we want to parallelize the optimization of multiple ones. just call this fuction more.
-    void generate_parallel(double time_limit);
-    void generate(double time_limit,int idx);
+    void generate_parallel(const TimeLimiter & time_limiter);
+    void generate(const TimeLimiter & time_limiter,int idx);
     void update(Neighbor & neighbor);
 
     void chooseDestroyHeuristicbyALNS();

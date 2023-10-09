@@ -37,7 +37,7 @@ void LocalOptimizer::update(Neighbor & neighbor) {
 
 void LocalOptimizer::prepare(Neighbor & neighbor) {
     // store the neighbor information
-    ONLYDEV(g_timer.record_p("store_neighbor_info_s");)
+    //ONLYDEV(g_timer.record_p("store_neighbor_info_s");)
     neighbor.old_sum_of_costs = 0;
     for (auto & aid: neighbor.agents)
     {
@@ -53,18 +53,18 @@ void LocalOptimizer::prepare(Neighbor & neighbor) {
         path_table.deletePath(aid, neighbor.m_old_paths[aid]);
     }   
 
-    ONLYDEV(g_timer.record_d("store_neighbor_info_s","store_neighbor_info_e","store_neighbor_info");)    
+    //ONLYDEV(g_timer.record_d("store_neighbor_info_s","store_neighbor_info_e","store_neighbor_info");)    
 }
 
-void LocalOptimizer::optimize(Neighbor & neighbor, double time_limit) {
+void LocalOptimizer::optimize(Neighbor & neighbor, const TimeLimiter & time_limiter) {
 
     prepare(neighbor);
 
     // replan
-    ONLYDEV(g_timer.record_p("replan_s");)
+    //ONLYDEV(g_timer.record_p("replan_s");)
     bool succ=false;
     if (replan_algo_name == "PP")
-        succ = runPP(neighbor, time_limit);
+        succ = runPP(neighbor, time_limiter);
     else
     {
         cerr << "Wrong replanning strategy" << endl;
@@ -74,16 +74,16 @@ void LocalOptimizer::optimize(Neighbor & neighbor, double time_limit) {
         if (screen>=1)
             g_logger.debug("replan failed");
     }
-    ONLYDEV(g_timer.record_d("replan_s","replan_e","replan");)
+    //ONLYDEV(g_timer.record_d("replan_s","replan_e","replan");)
 
     // the cleanup is done in runPP: e.g., if runPP fails, the old paths are restored.
 
     neighbor.succ=succ;
 }
 
-bool LocalOptimizer::runPP(Neighbor & neighbor, double time_limit)
+bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter)
 {
-    ONLYDEV(g_timer.record_p("run_pp_s");)
+    //ONLYDEV(g_timer.record_p("run_pp_s");)
     auto shuffled_agents = neighbor.agents;
     std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
     if (screen >= 2) {
@@ -107,20 +107,19 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, double time_limit)
     // }
 
     while (p != shuffled_agents.end()) {
-        double elapse=g_timer.record_d("_lns_s","_lns");
-        if (elapse>=time_limit)
+        if (time_limiter.timeout())
             break;
 
         int id = *p;
         if (screen >= 3)
             cout << "Remaining agents = " << remaining_agents <<
-                 ", remaining time = " << time_limit-elapse << " seconds. " << endl
+                 ", remaining time = " << time_limiter.get_remaining_time() << " seconds. " << endl
                  << "Agent " << agents[id].id << endl;
         if (search_priority==1) {
-            ONLYDEV(g_timer.record_p("findPath_s");)
+            //ONLYDEV(g_timer.record_p("findPath_s");)
             path_planner->prepare_for_planning(id);
             neighbor.m_paths[id] = path_planner->findPath(constraint_table);
-            ONLYDEV(g_timer.record_d("findPath_s","findPath_e","findPath");)
+            //ONLYDEV(g_timer.record_d("findPath_s","findPath_e","findPath");)
         } else if (search_priority==2) {
             std::cerr<<"not supported now, need double checks"<<std::endl;
             exit(-1);
@@ -173,7 +172,7 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, double time_limit)
             path_table.insertPath(aid, neighbor.m_old_paths[aid]);
         }
     }
-    ONLYDEV(g_timer.record_d("run_pp_s","run_pp_e","run_pp");)
+    //ONLYDEV(g_timer.record_d("run_pp_s","run_pp_e","run_pp");)
 
 
     if (remaining_agents == 0 && neighbor.sum_of_costs <= neighbor.old_sum_of_costs) // accept new paths

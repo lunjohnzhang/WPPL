@@ -101,16 +101,18 @@ LNS::LNS(Instance& instance, double time_limit, const string & init_algo_name, c
 
 bool LNS::run_parallel() {
     bool sipp=true;
+    ONLYDEV(g_timer.record_p("build_parallel_s");)
     auto global_manager=std::make_shared<GlobalManager>(
         instance, path_table, agents, HT,
         neighbor_size, destroy_strategy,
         ALNS, decay_factor, reaction_factor,
         init_algo_name, replan_algo_name, sipp,
         window_size_for_CT, window_size_for_CAT, window_size_for_PATH,
-        time_limit, screen
+        screen
     );
+    ONLYDEV(g_timer.record_d("build_parallel_s","build_parallel");)
 
-    bool succ=global_manager->run();
+    bool succ=global_manager->run(time_limit);
     return succ;
 }
 

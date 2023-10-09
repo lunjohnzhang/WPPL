@@ -47,27 +47,26 @@ void NeighborGenerator::update(Neighbor & neighbor){
     }
 }
 
-void NeighborGenerator::generate_parallel(double time_limit) {
+void NeighborGenerator::generate_parallel(const TimeLimiter & time_limiter) {
     #pragma omp parallel for
     for (int i = 0; i < num_threads; i++) {
-        generate(time_limit,i);
+        generate(time_limiter,i);
     }
 }
 
-void NeighborGenerator::generate(double time_limit,int idx) {
+void NeighborGenerator::generate(const TimeLimiter & time_limiter,int idx) {
     std::shared_ptr<Neighbor> neighbor_ptr = std::make_shared<Neighbor>();
     Neighbor & neighbor = *neighbor_ptr;
 
     bool succ=false;
     while (!succ){
-        double elapse=g_timer.record_d("_lns_s","_lns");
-        if (elapse>=time_limit)
+        if (time_limiter.timeout())
             break;
 
         if (ALNS)
             chooseDestroyHeuristicbyALNS();
 
-        ONLYDEV(g_timer.record_p("generate_neighbor_s");)
+        // ONLYDEV(g_timer.record_p("generate_neighbor_s");)
         switch (destroy_strategy)
         {
             case RANDOMWALK:
@@ -110,7 +109,7 @@ void NeighborGenerator::generate(double time_limit,int idx) {
                 cerr << "Wrong neighbor generation strategy" << endl;
                 exit(-1);
         }
-        ONLYDEV(g_timer.record_d("generate_neighbor_s","generate_neighbor_e","generate_neighbor");)
+        // ONLYDEV(g_timer.record_d("generate_neighbor_s","generate_neighbor_e","generate_neighbor");)
 
         if (!succ) {        
             // TODO: we need to count how many times we failed to generate a neighbor

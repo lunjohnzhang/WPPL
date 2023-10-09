@@ -26,7 +26,6 @@ public:
     PathTable & path_table;
     std::vector<Agent> & agents;
     std::shared_ptr<HeuristicTable> HT;
-    double time_limit;
     int screen;
     int num_threads;
 
@@ -36,11 +35,11 @@ public:
         bool ALNS, double decay_factor, double reaction_factor,
         string init_algo_name, string replan_algo_name, bool sipp,
         int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
-        double time_limit, int screen
+        int screen
     );
 
     void getInitialSolution(Neighbor & neighbor);
-    bool run();
+    bool run(double time_limit);
     void update(Neighbor & neighbor, bool recheck);
     void update(Neighbor & neighbor);
 

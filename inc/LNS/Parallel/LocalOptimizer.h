@@ -2,6 +2,7 @@
 #include "LNS/PathTable.h"
 #include "LNS/BasicLNS.h"
 #include "util/HeuristicTable.h"
+#include "LNS/Parallel/TimeLimiter.h"
 
 namespace LNS {
 
@@ -31,10 +32,10 @@ public:
 
     // the global manager will push global changes to local optimizer though this function. 
     void update(Neighbor & neighbor);
-    void optimize(Neighbor & neighbor, double time_limit);
+    void optimize(Neighbor & neighbor, const TimeLimiter & time_limiter);
     void prepare(Neighbor & neighbor);
 
-    bool runPP(Neighbor & neighbor, double time_limit);
+    bool runPP(Neighbor & neighbor, const TimeLimiter & time_limiter);
 
 };
 
