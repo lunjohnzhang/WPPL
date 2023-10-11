@@ -4,7 +4,7 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include <string>
 #include <ctime>
-#include "spdlog/fmt/bundled/color.h"
+// #include "spdlog/fmt/bundled/color.h"
 #include "util/Dev.h"
 
 class MyLogger {
@@ -29,15 +29,15 @@ public:
         logger=std::make_shared<spdlog::logger>(name, spdlog::sinks_init_list({console_sink, file_sink}));
         logger->set_level(level);
 
-        logger->debug(
-            fmt::format(
-                // fmt::bg( fmt::terminal_color::yellow ) |
-                fmt::fg( fmt::terminal_color::cyan ), //|
-                // fmt::emphasis::bold,
-                "{}_logger initialized",
-                name
-            )
-        );
+        // logger->debug(
+        //     fmt::format(
+        //         // fmt::bg( fmt::terminal_color::yellow ) |
+        //         fmt::fg( fmt::terminal_color::cyan ), //|
+        //         // fmt::emphasis::bold,
+        //         "{}_logger initialized",
+        //         name
+        //     )
+        // );
     }
 
     // get timestep

@@ -6,9 +6,9 @@ then
     mkdir large_files
 fi
 
-cd build && make -j4 lifelong && cd ..
+cd build && make -j16 lifelong && cd ..
 
-# export OMP_NUM_THREADS=2
+#export OMP_NUM_THREADS=1
 ARGS="-o test.json --simulationTime 1000 --planTimeLimit 1 --fileStoragePath large_files/"
 
 # random:random
@@ -35,11 +35,11 @@ ARGS="-o test.json --simulationTime 1000 --planTimeLimit 1 --fileStoragePath lar
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_600.json $ARGS
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_800.json $ARGS
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_1000.json $ARGS
-./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_2000.json $ARGS
+# ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_2000.json $ARGS
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_3000.json $ARGS
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_4000.json $ARGS
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_5000.json $ARGS
-# ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_8000.json $ARGS
+./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_8000.json $ARGS
 
 # warehouse:sortation
 # ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_400.json $ARGS

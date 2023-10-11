@@ -4,16 +4,16 @@ import numpy as np
 
 weights=np.ones((140,500,5),dtype=np.int32)*2
 
-c=1
+c=0
 for row in range(7,131,3):
     if (row-7)%6==0:
         # go east
         weights[row,7:492,0]=2-c
         # go west
-        weights[row,7:492,2]=2+c
+        weights[row,7:492,2]=100000
     elif (row-7)%6==3:
         # go east
-        weights[row,7:492,0]=2+c
+        weights[row,7:492,0]=100000
         # go west
         weights[row,7:492,2]=2-c
     else:
@@ -24,16 +24,16 @@ for col in range(7,492,4):
         # go south
         weights[7:131,col,1]=2-c
         # go north
-        weights[7:131,col,3]=2+c
+        weights[7:131,col,3]=100000
     elif (col-7)%8==4:
         # go south
-        weights[7:131,col,1]=2+c
+        weights[7:131,col,1]=100000
         # go north
         weights[7:131,col,3]=2-c
     else:
         assert False
         
-with open("warehouse_large_weight_test.weight","w") as f:
+with open("warehouse_large_weight_test3.weight","w") as f:
     f.write("[")
     for row in range(140):
         for col in range(500):

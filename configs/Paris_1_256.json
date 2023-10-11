@@ -5,6 +5,53 @@
             "value": "LaCAM2"
         }
     ],
+    "map_weights_path": "",
+    "LNS": {
+        "seed": 0,
+        "cutoffTime": 0,
+        "screen": 0,
+        "initAlgo": "LaCAM2",
+        "replanAlgo": "PP",
+        "destoryStrategy": "Adaptive",
+        "neighborSize": 4,
+        "maxIterations": 10000000,
+        "initLNS": false,
+        "initDestoryStrategy": "Adaptive",
+        "sipp": true,
+        "pibtWindow": 5,
+        "winPibtSoftmode": true,
+        "window_size_for_CT": 1,
+        "window_size_for_CAT": 1,
+        "window_size_for_PATH": 1,
+        "LaCAM2": {
+            "seed": 0,
+            "planning_window": 1,
+            "consider_rotation": false,
+            "use_orient_in_heuristic": true,
+            "use_slow_executor": false,
+            "SUO": {
+                "vertex_collision_cost": 1,
+                "iterations": 0,
+                "max_expanded": -1,
+                "window": 30,
+                "h_weight": 1.0
+            }
+        }
+    },
+    "LaCAM2": {
+        "seed": 0,
+        "planning_window": 1,
+        "consider_rotation": true,
+        "use_orient_in_heuristic": true,
+        "use_slow_executor": false,
+        "SUO": {
+            "vertex_collision_cost": 1,
+            "iterations": 0,
+            "max_expanded": -1,
+            "window": 30,
+            "h_weight": 1.0
+        }
+    },
     "PIBT": {
         "prior_type": "early_time"
     },

@@ -37,6 +37,7 @@ void MAPFPlanner::load_configs() {
     try
     {
         config = nlohmann::json::parse(f);
+        std::cerr<<config<<std::endl;
         string s=config.dump();
         std::replace(s.begin(),s.end(),',','|');
         config["details"]=s;
@@ -145,6 +146,40 @@ void MAPFPlanner::rhcr_config_solver(std::shared_ptr<RHCR::RHCRSolver> & solver,
     srand(solver->seed);
 }
 
+std::string MAPFPlanner::load_map_weights(string weights_path) {
+    // TODO(rivers): make weights float
+    // we have at least 5 weights for a location: right,down,left,up,stay
+    map_weights=std::make_shared<std::vector<int> >(env->rows*env->cols*5,1);
+    std::string suffix = "all_one";
+
+    if (weights_path!=""){
+        std::ifstream f(weights_path);
+        try
+        {
+            nlohmann::json _weights = nlohmann::json::parse(f);
+            if (_weights.size()!=map_weights->size()) {
+                std::cerr<<"map weights size mismatch"<<std::endl;
+                exit(-1);
+            }
+
+            for (int i=0;i<map_weights->size();++i){
+                (*map_weights)[i]=_weights[i].get<int>();
+            }
+            
+        }
+        catch (nlohmann::json::parse_error error)
+        {
+            std::cerr << "Failed to load " << weights_path << std::endl;
+            std::cerr << "Message: " << error.what() << std::endl;
+            exit(1);
+        }
+
+        boost::filesystem::path _weights_path(weights_path);
+        suffix=_weights_path.stem().string();
+    }
+    return suffix;
+}
+
 void MAPFPlanner::initialize(int preprocess_time_limit) {
     cout << "planner initialization begins" << endl;
     load_configs();
@@ -155,6 +190,9 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         analyzer.set_dump_path(config["analysis_output"].get<string>());
         g_logger.init("logs/run");
     )
+
+    std::string weights_path=read_param_json<std::string>(config,"map_weights_path");
+    std::string suffix=load_map_weights(weights_path);
 
     lifelong_solver_name=config["lifelong_solver_name"];
 
@@ -167,49 +205,33 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         rhcr_config_solver(rhcr_solver,config["RHCR"]);
         rhcr_solver->initialize(*env);
         cout<<"RHCRSolver initialized"<<endl;
-    } else if (lifelong_solver_name=="PIBT") {
-        auto heuristics = new HeuristicTable(env);
-        heuristics->preprocess();
-        // TODO(hj): configure random seed
-        pibt_solver = std::make_shared<PIBT::PIBTSolver>(*heuristics,env,0);
-        pibt_solver->set_prior_type(config["PIBT"]["prior_type"].get<string>());
-        pibt_solver->initialize(*env);
-        cout<<"PIBTSolver initialized"<<endl;
-    } else if (lifelong_solver_name=="LaCAM") {
-        auto heuristics = std::make_shared<HeuristicTable>(env);
-        heuristics->preprocess();
-        lacam_solver = std::make_shared<LaCAM::LaCAMSolver>(heuristics,env,0);
-        lacam_solver->initialize(*env);
-        cout<<"LaCAMSolver initialized"<<endl;
     } else if (lifelong_solver_name=="LaCAM2") {
         if (!read_param_json<bool>(config["LaCAM2"],"consider_rotation")) {
             std::cerr<<"In LaCAM2, must consider rotation when compiled with NO_ROT unset"<<std::endl;
             exit(-1);
         }
-        auto heuristics =std::make_shared<HeuristicTable>(env);
-        heuristics->preprocess();
-        lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,config["LaCAM2"]);
+
+        auto heuristics =std::make_shared<HeuristicTable>(env,read_param_json<bool>(config["LaCAM2"],"use_orient_in_heuristic"));
+        heuristics->preprocess(*map_weights, suffix);
+        lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,config["LaCAM2"]);
         lacam2_solver->initialize(*env);
         cout<<"LaCAMSolver2 initialized"<<endl;
-    } else if (lifelong_solver_name=="MyLaCAM2") {
-        auto heuristics =std::make_shared<HeuristicTable>(env);
-        heuristics->preprocess();
-        mylacam2_solver = std::make_shared<MyLaCAM2::MyLaCAM2Solver>(heuristics,env,0);
-        mylacam2_solver->initialize(*env);
-        cout<<"MyLaCAMSolver2 initialized"<<endl;
     } else if (lifelong_solver_name=="LNS") {
         if (read_param_json<bool>(config["LNS"]["LaCAM2"],"consider_rotation")) {
             std::cerr<<"In LNS, must not consider rotation when compiled with NO_ROT unset"<<std::endl;
             exit(-1);
         }
         auto heuristics =std::make_shared<HeuristicTable>(env,read_param_json<bool>(config["LNS"]["LaCAM2"],"use_orient_in_heuristic"));
-        heuristics->preprocess();
-        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,config["LNS"]["LaCAM2"]);
+        heuristics->preprocess(*map_weights, suffix);
+        //heuristics->preprocess();
+        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,config["LNS"]["LaCAM2"]);
+
 
         std::shared_ptr<HeuristicTable> heuristics_no_rot=heuristics;
         if (read_param_json<bool>(config["LNS"]["LaCAM2"],"use_orient_in_heuristic")) {
             heuristics_no_rot = std::make_shared<HeuristicTable>(env,false);
-            heuristics_no_rot->preprocess();
+            heuristics_no_rot->preprocess(*map_weights, suffix);
+            //heuristics_no_rot->preprocess();
         }
 
         lns_solver = std::make_shared<LNS::LNSSolver>(heuristics_no_rot,env,config["LNS"],lacam2_solver);
@@ -241,22 +263,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         cout<<"using RHCR"<<endl;
         rhcr_solver->plan(*env);
         rhcr_solver->get_step_actions(*env, actions);
-    } else if (lifelong_solver_name=="PIBT") {
-        cout<<"using PIBT"<<endl;
-        pibt_solver->plan(*env);
-        pibt_solver->get_step_actions(*env,actions);
-    } else if (lifelong_solver_name=="LaCAM") {
-        cout<<"using LaCAM"<<endl;
-        lacam_solver->plan(*env);
-        lacam_solver->get_step_actions(*env,actions);
     } else if (lifelong_solver_name=="LaCAM2") {
         cout<<"using LaCAM2"<<endl;
         lacam2_solver->plan(*env);
         lacam2_solver->get_step_actions(*env,actions);
-    } else if (lifelong_solver_name=="MyLaCAM2") {
-        cout<<"using MyLaCAM2"<<endl;
-        mylacam2_solver->plan(*env);
-        mylacam2_solver->get_step_actions(*env,actions);
     } else if (lifelong_solver_name=="LNS") {
         cout<<"using LNS"<<endl;
         lns_solver->observe(*env);

@@ -64,6 +64,7 @@ public:
     }
 
     void add_successor(int pos, int orient, int g, int h, State * prev) {
+
         // std::cerr<<"add successor: "<<pos<<" "<<orient<<" "<<g<<" "<<h<<std::endl;
         successors[n_successors].pos=pos;
         successors[n_successors].orient=orient;
@@ -124,16 +125,80 @@ public:
                 }
             }
         } else {
-            g_logger.error("Spatial Search with orientation is not supported now!");
-            exit(-1);
+            int pos=curr->pos;
+            int x=pos%(env.cols);
+            int y=pos/(env.cols);
+            int orient=curr->orient;
+
+            // FW
+            int next_pos;
+            int weight_idx;
+            if (orient==0) {
+                // east
+                if (x+1<env.cols){
+                    next_pos=pos+1;
+                    weight_idx=pos*n_dirs;
+                    if (env.map[next_pos]==0) {
+                        add_successor(next_pos, orient, curr->g+weights[weight_idx], 0, curr);
+                    }
+                }
+            } else if (orient==1) {
+                // south
+                if (y+1<env.rows) {
+                    next_pos=pos+env.cols;
+                    weight_idx=pos*n_dirs+1;
+                    if (env.map[next_pos]==0) {
+                        add_successor(next_pos, orient, curr->g+weights[weight_idx], 0, curr);
+                    }
+                }
+            } else if (orient==2) {
+                // west
+                if (x-1>=0) {
+                    next_pos=pos-1;
+                    weight_idx=pos*n_dirs+2;
+                    if (env.map[next_pos]==0) {
+                        add_successor(next_pos, orient, curr->g+weights[weight_idx], 0, curr);
+                    }
+                }
+            } else if (orient==3) {
+                // north
+                if (y-1>=0) {
+                    next_pos=pos-env.cols;
+                    weight_idx=pos*n_dirs+3;
+                    if (env.map[next_pos]==0) {
+                        add_successor(next_pos, orient, curr->g+weights[weight_idx], 0, curr);
+                    }
+                }
+            } else {
+                std::cerr<<"spatial search in heuristics: invalid orient: "<<orient<<endl;
+                exit(-1);
+            }
+        
+            int next_orient;
+            weight_idx=pos*n_dirs+4;
+            // CR
+            next_orient=(orient+1+n_orients)%n_orients;
+            add_successor(pos, next_orient, curr->g+weights[weight_idx], 0, curr);
+
+            // CCR
+            next_orient=(orient-1+n_orients)%n_orients;
+            add_successor(pos, next_orient, curr->g+weights[weight_idx], 0, curr);
+
+            // W
+            add_successor(pos, orient, curr->g+weights[weight_idx], 0, curr);
         }
     }
 
     State * add_state(int pos, int orient, int g, int h, State * prev) {
-        int index=pos;
+        int index;
+        if (orient==-1) {
+            index=pos;
+        } else {
+            index=pos*n_orients+orient;
+        }
         State * s=all_states+index;
         if (s->pos!=-1) {
-            g_logger.error("State already exists!");
+            g_logger.error("State {} {} already exists!",pos,orient);
             exit(-1);
         }
 
@@ -149,25 +214,32 @@ public:
     }
 
 
-    void search_for_all(int start_pos, int start_orient=-1) {
+    void search_for_all(int start_pos, int start_orient) {
         State * start=add_state(start_pos, start_orient, 0, 0, nullptr);
         open_list->push(start);
 
         while (!open_list->empty()) {
             State * curr=open_list->pop();
             curr->closed=true;
+            // cerr<<curr->pos<<" "<<curr->orient<<" "<<curr->g<<" "<<curr->h<<endl;
 
             get_successors(curr);
             for (int i=0;i<n_successors;++i) {
                 State * next=successors+i;
-                if ((all_states+next->pos)->pos==-1) {
+                int index;
+                if (next->orient==-1) {
+                    index=next->pos;
+                } else {
+                    index=next->pos*n_orients+next->orient;
+                }
+                if ((all_states+index)->pos==-1) {
                     // new state
                     State * new_state=add_state(next->pos, next->orient, next->g, next->h, next->prev);
                     new_state->closed=false;
                     open_list->push(new_state);
                 } else {
                     // old state
-                    auto old_state=all_states+next->pos;
+                    auto old_state=all_states+index;
                     if (next->g<old_state->g) {
                         // we need to update the state
                         old_state->copy(next);

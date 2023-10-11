@@ -18,10 +18,7 @@
 #include "RHCR/interface/CompetitionGraph.h"
 #include "common.h"
 #include <memory>
-#include "PIBT/PIBTSolver.h"
-#include "LaCAM/LaCAMSolver.h"
 #include "LaCAM2/LaCAM2Solver.hpp"
-#include "MyLaCAM2/MyLaCAM2Solver.hpp"
 #include "LNS/LNSSolver.h"
 
 class MAPFPlanner
@@ -48,14 +45,15 @@ public:
 
     bool consider_rotation=true;
     string lifelong_solver_name;
-    std::shared_ptr<RHCR::RHCRSolver> rhcr_solver; 
-    std::shared_ptr<PIBT::PIBTSolver> pibt_solver;
-    std::shared_ptr<LaCAM::LaCAMSolver> lacam_solver;
+    std::shared_ptr<RHCR::RHCRSolver> rhcr_solver;
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;
-    std::shared_ptr<MyLaCAM2::MyLaCAM2Solver> mylacam2_solver;
     std::shared_ptr<LNS::LNSSolver> lns_solver;
+
+    std::shared_ptr<std::vector<int> > map_weights;
     nlohmann::json config;
     void load_configs();
+    std::string load_map_weights(string weights_path);
+
     RHCR::MAPFSolver* rhcr_build_mapf_solver(nlohmann::json & config, RHCR::CompetitionGraph & graph);
     void rhcr_config_solver(std::shared_ptr<RHCR::RHCRSolver> & solver,nlohmann::json & config);
 };
