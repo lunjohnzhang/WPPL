@@ -2,7 +2,7 @@
 
 import numpy as np
 
-weights=np.ones((140,500,4),dtype=np.int32)*2
+weights=np.ones((140,500,5),dtype=np.int32)*2
 
 c=1
 for row in range(7,131,3):
@@ -37,8 +37,8 @@ with open("warehouse_large_weight_test.weight","w") as f:
     f.write("[")
     for row in range(140):
         for col in range(500):
-            for dir in range(4):
+            for dir in range(5):
                 f.write(str(weights[row,col,dir]))
-                if (row,col,dir)!=(139,499,3):
+                if (row,col,dir)!=(139,499,4):
                     f.write(",")
     f.write("]")

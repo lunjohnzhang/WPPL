@@ -63,7 +63,7 @@ public:
     int window;
     
     int n_orients;    
-    const int n_dirs=4;
+    const int n_dirs=5; // right, down, left, up, stay
     boost::heap::pairing_heap<State*, boost::heap::compare<State::StateCompare> > open_list;
     boost::unordered_set<State*, State::StateHash, State::StateEqual> all_states;
     std::vector<State *> successors;
@@ -134,10 +134,10 @@ public:
             // wait
             int next_pos=pos;
             // BUG(rivers): it is a bug we need to fix, the weight need to be read from file
-            // int weight_idx=1; //pos*n_dirs+4;
+            int weight_idx=pos*n_dirs+4;
             float collision_cost=cost_map(next_pos,next_t);
             float h=HT->get(next_pos, goal_pos);
-            successors.push_back(new State(next_pos, -1, next_t, curr->g+1+collision_cost, h, curr));
+            successors.push_back(new State(next_pos, -1, next_t, curr->g+weights[weight_idx]+collision_cost, h, curr));
 
         } else {
             g_logger.error("Temporal-Spatial Search with orientation is not supported now!");

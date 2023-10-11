@@ -81,7 +81,7 @@ public:
     int max_states;
     OpenList* open_list;
     State * all_states;
-    const int n_dirs=4;
+    const int n_dirs=5; // right, down, left, up, stay
 
     int n_successors;
     int max_successors;

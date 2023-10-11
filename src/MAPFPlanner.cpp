@@ -451,7 +451,8 @@ void MAPFPlanner::load_configs() {
 
 std::string MAPFPlanner::load_map_weights(string weights_path) {
     // TODO(rivers): make weights float
-    map_weights=std::make_shared<std::vector<int> >(env->rows*env->cols*4,1);
+    // we have at least 5 weights for a location: right,down,left,up,stay
+    map_weights=std::make_shared<std::vector<int> >(env->rows*env->cols*5,1);
     std::string suffix = "all_one";
 
     if (weights_path!=""){
