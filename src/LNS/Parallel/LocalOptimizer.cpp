@@ -72,7 +72,7 @@ void LocalOptimizer::optimize(Neighbor & neighbor, const TimeLimiter & time_limi
     }
     if (!succ) {
         if (screen>=1)
-            g_logger.debug("replan failed");
+            DEV_DEBUG("replan failed");
     }
     //ONLYDEV(g_timer.record_d("replan_s","replan_e","replan");)
 

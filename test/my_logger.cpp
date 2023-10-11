@@ -7,7 +7,7 @@ int main() {
     g_logger.error("this is error");
     g_logger.warn("this is warn");
     g_logger.info("this is info");
-    g_logger.debug("this is debug");
+    DEV_DEBUG("this is debug");
 
     g_logger.info("this is simple formatted info: hello, {}", "world");
     g_logger.info("this is colored formatted info: hello, {}", "world");

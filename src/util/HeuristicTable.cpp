@@ -18,7 +18,7 @@ HeuristicTable::HeuristicTable(SharedEnvironment * _env, bool consider_rotation)
     empty_locs = new int[loc_size];
     loc_idxs = new int[env.map.size()];
 
-    g_logger.debug("number of empty locations: {}", loc_size);
+    DEV_DEBUG("number of empty locations: {}", loc_size);
     std::fill(loc_idxs,loc_idxs+env.map.size(),-1);
 
     int loc_idx=0;
@@ -48,7 +48,7 @@ HeuristicTable::~HeuristicTable() {
 
 // weights is an array of [loc_size*n_orientations]
 void HeuristicTable::compute_heuristics(const std::vector<int> & weights){
-    g_logger.debug("[start] Compute heuristics.");
+    DEV_DEBUG("[start] Compute heuristics.");
     g_timer.record_p("heu/compute_start");
 
     int n_threads=omp_get_max_threads();
@@ -105,7 +105,7 @@ void HeuristicTable::compute_heuristics(const std::vector<int> & weights){
 
     g_timer.record_d("heu/compute_start","heu/compute_end","heu/compute");
 
-    g_logger.debug("[end] Compute heuristics. (duration: {:.3f})", g_timer.get_d("heu/compute"));
+    DEV_DEBUG("[end] Compute heuristics. (duration: {:.3f})", g_timer.get_d("heu/compute"));
 }
 
 void HeuristicTable::_compute_heuristics(
@@ -141,10 +141,10 @@ void HeuristicTable::_compute_heuristics(
                 for (int orient=0;orient<n_orientations;++orient) {
                     int loc=empty_locs[loc_idx];
                     RIVERS::SPATIAL::State * state=planner->all_states+loc*n_orientations+orient;
-                    if (loc!=state->pos || orient!=state->orient) {
-                        std::cerr<<"loc: "<<loc<<" state->pos: "<<state->pos<<" orient: "<<orient<<" state->orient: "<<state->orient<<endl;
-                        exit(-1);
-                    }
+                    // if (loc!=state->pos || orient!=state->orient) {
+                    //     std::cerr<<"start_loc: "<<start_loc<<" loc: "<<loc<<" state->pos: "<<state->pos<<" orient: "<<orient<<" state->orient: "<<state->orient<<endl;
+                    //     exit(-1);
+                    // }
                     int cost=state->g;
                     if (cost==-1) {
                         cost=USHRT_MAX;
@@ -200,7 +200,7 @@ void HeuristicTable::dump_main_heuristics(int start_loc, string file_path_prefix
 }
 
 void HeuristicTable::compute_heuristics(){
-    g_logger.debug("[start] Compute heuristics.");
+    DEV_DEBUG("[start] Compute heuristics.");
     g_timer.record_p("heu/compute_start");
 
     int n_threads=omp_get_max_threads();
@@ -241,7 +241,7 @@ void HeuristicTable::compute_heuristics(){
 
     g_timer.record_d("heu/compute_start","heu/compute_end","heu/compute");
 
-    g_logger.debug("[end] Compute heuristics. (duration: {:.3f})", g_timer.get_d("heu/compute"));
+    DEV_DEBUG("[end] Compute heuristics. (duration: {:.3f})", g_timer.get_d("heu/compute"));
 }
 
 void HeuristicTable::_push(State * queue, State &s, int & e_idx) {
@@ -425,7 +425,7 @@ void HeuristicTable::preprocess() {
         load(fpath);
     } else {
         compute_heuristics();
-        // save(fpath);
+        ONLYDEV(save(fpath));
     }
 
 }
@@ -448,12 +448,12 @@ void HeuristicTable::preprocess(const std::vector<int> & weights, string suffix)
         load(fpath);
     } else {
         compute_heuristics(weights);
-        // save(fpath);
+        ONLYDEV(save(fpath));
     }
 }
 
 void HeuristicTable::save(const string & fpath) {
-    g_logger.debug("[start] Save heuristics to {}.", fpath);
+    DEV_DEBUG("[start] Save heuristics to {}.", fpath);
     g_timer.record_p("heu/save_start");
 
     std::ofstream fout;
@@ -483,11 +483,11 @@ void HeuristicTable::save(const string & fpath) {
     
     g_timer.record_d("heu/save_start","heu/save_end","heu/save");
 
-    g_logger.debug("[end] Save heuristics to {}. (duration: {:.3f})", fpath, g_timer.get_d("heu/save"));
+    DEV_DEBUG("[end] Save heuristics to {}. (duration: {:.3f})", fpath, g_timer.get_d("heu/save"));
 }
 
 void HeuristicTable::load(const string & fpath) {
-    g_logger.debug("[start] load heuristics from {}.",fpath);
+    DEV_DEBUG("[start] load heuristics from {}.",fpath);
     g_timer.record_p("heu/load_start");
     std::ifstream fin;
     fin.open(fpath,std::ios::binary|std::ios::in);
@@ -529,5 +529,5 @@ void HeuristicTable::load(const string & fpath) {
 
     g_timer.record_d("heu/load_start","heu/load_end","heu/load");
 
-    g_logger.debug("[end] load heuristics from {}. (duration: {:.3f})",fpath,g_timer.get_d("heu/load"));
+    DEV_DEBUG("[end] load heuristics from {}. (duration: {:.3f})",fpath,g_timer.get_d("heu/load"));
 }

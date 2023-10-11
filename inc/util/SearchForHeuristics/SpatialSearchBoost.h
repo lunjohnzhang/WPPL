@@ -83,7 +83,7 @@ public:
                 }
             }
         } else {
-            g_logger.error("Spatial Search with orientation is not supported now!");
+            DEV_ERROR("Spatial Search with orientation is not supported now!");
             exit(-1);
         }
     }

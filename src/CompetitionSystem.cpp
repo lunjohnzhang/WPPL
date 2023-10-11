@@ -209,7 +209,8 @@ void BaseSystem::simulate(int simulation_time)
                     DEV_DEBUG("planner return wrong number of actions: {}", actions.size());
                     exit(-1);
                 } else {
-                    DEV_DEBUG(fmt::format(fmt::fg(fmt::terminal_color::yellow )|fmt::emphasis::bold,"planner return no actions: most likely exceeding the time limit."));
+                    // DEV_DEBUG(fmt::format(fmt::fg(fmt::terminal_color::yellow )|fmt::emphasis::bold,"planner return no actions: most likely exceeding the time limit."));
+                    DEV_WARN("planner return no actions: most likely exceeding the time limit.");
                 }
             }
         )

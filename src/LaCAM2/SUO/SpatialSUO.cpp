@@ -41,7 +41,7 @@ void SUO::plan() {
     // we need to keep cost map for each thread anyway, because before planning for each agent, we need to remove its own old path costs from the cost map.
 
     // then for each agent, we plan with Spatial A* search
-    g_logger.debug("SUO: plan with {} iterations, {} threads for {} agents", iterations, n_threads, env.num_of_agents);
+    DEV_DEBUG("SUO: plan with {} iterations, {} threads for {} agents", iterations, n_threads, env.num_of_agents);
     for (int j=0;j<iterations;++j){
         // TODO(rivers): currently we use a batch mode
         int num_batches=(env.num_of_agents+n_threads-1)/n_threads;

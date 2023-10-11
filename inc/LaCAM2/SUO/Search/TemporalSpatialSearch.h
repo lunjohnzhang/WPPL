@@ -140,13 +140,13 @@ public:
             successors.push_back(new State(next_pos, -1, next_t, curr->g+weights[weight_idx]+collision_cost, h, curr));
 
         } else {
-            g_logger.error("Temporal-Spatial Search with orientation is not supported now!");
+            DEV_ERROR("Temporal-Spatial Search with orientation is not supported now!");
             exit(-1);
         }
     }
 
     State* search(int start_pos, int start_orient, int goal_pos) {
-        // g_logger.debug("start search from {} to {} with window {}", start_pos, goal_pos, window);
+        // DEV_DEBUG("start search from {} to {} with window {}", start_pos, goal_pos, window);
 
         State * start=new State(start_pos, -1, 0, 0, 0, nullptr);
         all_states.insert(start);

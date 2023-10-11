@@ -198,7 +198,7 @@ public:
         }
         State * s=all_states+index;
         if (s->pos!=-1) {
-            g_logger.error("State {} {} already exists!",pos,orient);
+            DEV_ERROR("State {} {} already exists!",pos,orient);
             exit(-1);
         }
 

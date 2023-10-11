@@ -184,7 +184,7 @@ public:
                 }
             }
         } else {
-            g_logger.error("Spatial Search with orientation is not supported now!");
+            DEV_ERROR("Spatial Search with orientation is not supported now!");
             exit(-1);
         }
     }
@@ -193,7 +193,7 @@ public:
         int index=pos;
         State * s=all_states+index;
         if (s->pos!=-1) {
-            g_logger.error("State already exists!");
+            DEV_ERROR("State already exists!");
             exit(-1);
         }
 

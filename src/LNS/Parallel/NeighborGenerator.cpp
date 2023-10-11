@@ -114,7 +114,7 @@ void NeighborGenerator::generate(const TimeLimiter & time_limiter,int idx) {
         if (!succ) {        
             // TODO: we need to count how many times we failed to generate a neighbor
             if (screen>=1)
-                g_logger.debug("generate neighbors failed");
+                DEV_DEBUG("generate neighbors failed");
         }
     }
 
