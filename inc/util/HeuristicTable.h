@@ -514,6 +514,7 @@ public:
 
         if (boost::filesystem::exists(fpath)) {
             load(fpath);
+             g_logger.debug("Loaded heuristics from {}.", fpath);
         } else {
             compute_heuristics(weights);
             save(fpath);

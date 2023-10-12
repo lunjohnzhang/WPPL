@@ -6,7 +6,7 @@ mkdir build
 
 cd build
 cmake ../
-make -j
+make -j8
 
 
 # build exec for python

@@ -95,6 +95,7 @@ public:
 
     bool consider_rotation=true;
     string lifelong_solver_name;
+    int weights_from_json;
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;
     std::shared_ptr<LNS::LNSSolver> lns_solver;
 

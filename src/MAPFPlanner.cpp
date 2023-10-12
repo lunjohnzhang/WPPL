@@ -157,10 +157,10 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     )
 
     lifelong_solver_name=config["lifelong_solver_name"];
-
+    weights_from_json = config["weights_config"]
     // TODO(hj): memory management is a disaster here...
     if (lifelong_solver_name=="RHCR") {
-        auto graph = new RHCR::CompetitionGraph(*env);
+        auto graph = new RHCR::CompetitionGraph(*env, weights_from_json);
         graph->preprocessing(consider_rotation,env->file_storage_path);
         auto mapf_solver=rhcr_build_mapf_solver(config["RHCR"],*graph);
         rhcr_solver = std::make_shared<RHCR::RHCRSolver>(*graph,*mapf_solver,env);
