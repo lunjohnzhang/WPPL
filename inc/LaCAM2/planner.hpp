@@ -9,6 +9,7 @@
 #include "LaCAM2/utils.hpp"
 #include "util/HeuristicTable.h"
 #include <memory>
+#include "LaCAM2/executor.hpp"
 
 namespace LaCAM2 {
 
@@ -28,10 +29,10 @@ using Agents = std::vector<Agent*>;
 // low-level node
 struct LNode {
   std::vector<uint> who;
-  Vertices where;
+  std::vector<std::tuple<Vertex*,int > > where; // vertex and orientation
   const uint depth;
-  LNode(LNode* parent = nullptr, uint i = 0,
-        Vertex* v = nullptr);  // who and where
+  LNode(LNode* parent, uint i, const std::tuple<Vertex*,int > & t);  // who and where
+  LNode(): who(), where(), depth(0) {}
 };
 
 // high-level node
@@ -95,7 +96,13 @@ struct Planner {
           bool use_swap=false,
           bool use_orient_in_heuristic=false);
   ~Planner();
+
+  Executor executor;
+
   Solution solve(std::string& additional_info);
+
+  std::vector<std::tuple<Vertex *,int> > get_successors(Vertex *v, int orient);
+
   void expand_lowlevel_tree(HNode* H, LNode* L);
   void rewrite(HNode* H_from, HNode* T, HNode* H_goal,
                std::stack<HNode*>& OPEN);

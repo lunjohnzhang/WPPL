@@ -32,7 +32,7 @@ public:
     std::shared_ptr<Graph> G; // graph
     std::shared_ptr<HeuristicTable> HT; // instance
     std::shared_ptr<std::vector<int> > map_weights; // map weights
-    Config next_config;
+    // Config next_config;
 
     vector<AgentInfo> agent_infos;
 
@@ -67,7 +67,7 @@ public:
         timestep = 0;
         delete MT;
         MT = new std::mt19937(read_param_json(config,"seed",0));
-        next_config = Config();
+        // next_config = Config();
         agent_infos.clear();
 
         initialize(env);

@@ -23,8 +23,8 @@ void SUO::plan(Instance & instance){
         const AgentInfo & a=instance.agent_infos[i];
         const AgentInfo & b=instance.agent_infos[j];
 
-        int h1=HT->get(instance.starts[i]->index,instance.goals[i]->index);
-        int h2=HT->get(instance.starts[j]->index,instance.goals[j]->index);
+        int h1=HT->get(instance.starts.locs[i]->index,instance.goals.locs[i]->index);
+        int h2=HT->get(instance.starts.locs[j]->index,instance.goals.locs[j]->index);
 
         if (h1!=h2) return h1<h2;
 
@@ -38,7 +38,7 @@ void SUO::plan(Instance & instance){
         for (int i=0;i<instance.N;i++) {
             int agent_idx=orders[i];
             // g_timer.record_p("Astar_s");
-            AStar(agent_idx, instance.starts[agent_idx], instance.goals[agent_idx]);
+            AStar(agent_idx, instance.starts.locs[agent_idx], instance.goals.locs[agent_idx]);
             // double d=g_timer.record_d("Astar_s","Astar");
             // cerr<<"a star time cost"<<d<<endl;
         }

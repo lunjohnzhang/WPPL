@@ -2,14 +2,14 @@
 
 namespace LaCAM2 {
 
-LNode::LNode(LNode* parent, uint i, Vertex* v)
+LNode::LNode(LNode* parent, uint i, const std::tuple<Vertex*,int > & t)
     : who(), where(), depth(parent == nullptr ? 0 : parent->depth + 1)
 {
   if (parent != nullptr) {
     who = parent->who;
     who.push_back(i);
     where = parent->where;
-    where.push_back(v);
+    where.push_back(t);
   }
 }
 
@@ -37,10 +37,13 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
   if (parent != nullptr) parent->neighbor.insert(this);
 
   // set order
+  // TODO(rivers_: probably we should set a basic ordering at the begining, because it is time consuming to sort everytime with large-scale agents
   std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) { 
         const AgentInfo & a=ins->agent_infos[i];
         const AgentInfo & b=ins->agent_infos[j];
+
+        if (C.arrivals[i]!=C.arrivals[j]) return C.arrivals[i]<C.arrivals[j];
 
         if (ins->precomputed_paths!=nullptr){
           bool precomputed_a = (*(ins->precomputed_paths))[i].size()>(d+1);
@@ -48,8 +51,11 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
           if (precomputed_a != precomputed_b) return (int)precomputed_a>(int)precomputed_b;
         }
 
-        int h1=HT->get(C[i]->index,ins->goals[i]->index);
-        int h2=HT->get(C[j]->index,ins->goals[j]->index);
+        int h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
+        int h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
+
+        // int h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
+        // int h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
 
         if (h1!=h2) return h1<h2;
 
@@ -108,7 +114,8 @@ Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & H
       occupied_now(V_size, nullptr),
       occupied_next(V_size, nullptr),
       use_swap(use_swap),
-      use_orient_in_heuristic(use_orient_in_heuristic)
+      use_orient_in_heuristic(use_orient_in_heuristic),
+      executor(_ins->G.height,_ins->G.width)
 {
 }
 
@@ -123,14 +130,14 @@ Solution Planner::solve(std::string& additional_info)
 
   // setup search
   auto OPEN = std::stack<HNode*>();
-  auto EXPLORED = std::unordered_map<Config, HNode*, ConfigHasher>();
+  auto EXPLORED = std::unordered_map<Config, HNode*, ConfigHasher, Config::ConfigEqual>();
   // insert initial node, 'H': high-level node
   auto H_init = new HNode(ins->starts, HT, ins, nullptr, 0, get_h_value(ins->starts), 0);
   OPEN.push(H_init);
   EXPLORED[H_init->C] = H_init;
 
   std::vector<Config> solution;
-  auto C_new = Config(N, nullptr);  // for new configuration
+  auto C_new = Config(N);  // for new configuration
   HNode* H_goal = nullptr;          // to store goal node
 
 
@@ -145,6 +152,8 @@ Solution Planner::solve(std::string& additional_info)
 
     // do not pop here!
     auto H = OPEN.top();  // high-level node
+  
+    // cerr<<"configs "<<H->d<<" "<<H->C<<endl;
 
     // only plan for one step now
     // check goal condition: only require someone to arrive in lifelong case
@@ -180,7 +189,7 @@ Solution Planner::solve(std::string& additional_info)
     }
 
     // check goal condition
-    if (H_goal == nullptr && is_same_config(H->C, ins->goals)) {
+    if (H_goal == nullptr && H->C.all_arrived()) {
       H_goal = H;
       solver_info(1, "found solution, cost: ", H->g);
       if (objective == OBJ_NONE) break;
@@ -193,50 +202,80 @@ Solution Planner::solve(std::string& additional_info)
     expand_lowlevel_tree(H, L);
 
     // create successors at the high-level search
-    const int num_trials=1;
-    bool found = false;
-    auto _C_new = Config(N, nullptr);  // for new configuration
-    for (MC_idx=0;MC_idx<num_trials;++MC_idx){
-      const auto res = get_new_config(H, L);
-
-      int _h_val=-1;
-      int h_val=-1;
-
-      if (res){
-        for (auto a : A) _C_new[a->id] = a->v_next;
-        _h_val=get_h_value(_C_new);
-        // cerr<<MC_idx<<" "<<_h_val<<endl;
-      }
-
-      if (!found) {
-        C_new=_C_new;
-      } else {
-        h_val=get_h_value(C_new);
-        // if (_h_val<h_val) {
-        //   C_new=_C_new;
-        //   // cerr<<MC_idx<<" best: "<<_h_val<<endl;
-        // } else if (_h_val==h_val) {
-          for (auto aid: H->order) {
-            int h=HT->get(C_new[aid]->index,ins->goals[aid]->index);
-            int _h=HT->get(_C_new[aid]->index,ins->goals[aid]->index);
-            if (_h<h) {
-              C_new=_C_new;
-              break;
-            }
-          }
-        // }
-      }
-
-      if (res) found=true;
-    }
-
+    const auto res = get_new_config(H, L);
     delete L;  // free
-    if (!found) {
-      continue;
+    if (!res) continue;
+
+    // create successors at the high-level search
+    // const int num_trials=1;
+    // bool found = false;    
+    // auto _C_new = Config(N);  // for new configuration
+    // for (MC_idx=0;MC_idx<num_trials;++MC_idx){
+    //   const auto res = get_new_config(H, L);
+
+    //   int _h_val=-1;
+    //   int h_val=-1;
+
+    //   if (res){
+    //     for (auto a : A) _C_new[a->id] = a->v_next;
+    //     _h_val=get_h_value(_C_new);
+    //     // cerr<<MC_idx<<" "<<_h_val<<endl;
+    //   }
+
+    //   if (!found) {
+    //     C_new=_C_new;
+    //   } else {
+    //     h_val=get_h_value(C_new);
+    //     // if (_h_val<h_val) {
+    //     //   C_new=_C_new;
+    //     //   // cerr<<MC_idx<<" best: "<<_h_val<<endl;
+    //     // } else if (_h_val==h_val) {
+    //       for (auto aid: H->order) {
+    //         int h=HT->get(C_new[aid]->index,ins->goals[aid]->index);
+    //         int _h=HT->get(_C_new[aid]->index,ins->goals[aid]->index);
+    //         if (_h<h) {
+    //           C_new=_C_new;
+    //           break;
+    //         }
+    //       }
+    //     // }
+    //   }
+
+    //   if (res) found=true;
+    // }
+
+    // delete L;  // free
+    // if (!found) {
+    //   continue;
+    // }
+
+
+
+    // we need map no rotation action to rotation action here and create the new configuration for the next step.
+    std::vector<::State> curr_states;
+    std::vector<::State> planned_next_states;
+    std::vector<::State> next_states;
+    
+    curr_states.reserve(N);
+    planned_next_states.reserve(N);
+    next_states.reserve(N);
+
+    for (int i=0;i<N;++i){
+      // cerr<<"ddd "<<i<<" "<<H->C.locs[i]->index<<" "<<H->C.orients[i]<<" "<<A[i]->v_next->index<<endl;
+      curr_states.emplace_back(H->C.locs[i]->index,0,H->C.orients[i]);
+      planned_next_states.emplace_back(A[i]->v_next->index,-1,-1);
+      next_states.emplace_back(-1,-1,-1);
     }
+
+    executor.execute(&curr_states,&planned_next_states,&next_states);
+
 
     // create new configuration
-    // for (auto a : A) C_new[a->id] = a->v_next;
+    for (int i=0;i<N;++i) {
+      C_new.locs[i] = ins->G.U[next_states[i].location];
+      C_new.orients[i] = next_states[i].orientation;
+      C_new.arrivals[i] = H->C.arrivals[i] | (next_states[i].location==ins->goals.locs[i]->index);
+    }
 
     // check explored list
     const auto iter = EXPLORED.find(C_new);
@@ -324,7 +363,7 @@ int Planner::get_edge_cost(const Config& C1, const Config& C2)
   if (objective == OBJ_SUM_OF_LOSS) {
     int cost = 0;
     for (uint i = 0; i < N; ++i) {
-      if (C1[i] != ins->goals[i] || C2[i] != ins->goals[i]) {
+      if ((!C1.arrivals[i] || !C2.arrivals[i])) {
         cost += 1;
       }
     }
@@ -344,23 +383,102 @@ int Planner::get_h_value(const Config& C)
 {
   int cost = 0;
   if (objective == OBJ_MAKESPAN) {
-    for (auto i = 0; i < N; ++i) cost = std::max(cost, HT->get(C[i]->index, ins->goals[i]->index));
+    for (auto i = 0; i < N; ++i) cost = std::max(cost, HT->get(C.locs[i]->index, C.orients[i], ins->goals.locs[i]->index)*(1-C.arrivals[i]));
   } else if (objective == OBJ_SUM_OF_LOSS) {
-    for (auto i = 0; i < N; ++i) cost += HT->get(C[i]->index, ins->goals[i]->index);
+    for (auto i = 0; i < N; ++i) cost += HT->get(C.locs[i]->index, C.orients[i], ins->goals.locs[i]->index)*(1-C.arrivals[i]);
   }
   return cost;
 }
+
+
+std::vector<std::tuple<Vertex *,int> > Planner::get_successors(Vertex *v, int orient) {
+#ifdef NO_ROT
+  cerr<<"NO_ROT is not supported now"<<endl;
+  exit(-1);
+#else
+  std::vector<std::tuple<Vertex *,int> > successors;
+  int pos=v->index;
+  int rows=ins->G.height;
+  int cols=ins->G.width;
+  int x=pos%cols;
+  int y=pos/cols;
+
+  // forward
+  int next_pos;
+  if (orient==0) {
+      // east
+      if (x+1<cols){
+          next_pos=pos+1;
+          auto nv=ins->G.U[next_pos];
+          if (nv!=nullptr) {
+              successors.emplace_back(nv,orient);
+          }
+      }
+  } else if (orient==1) {
+      // south
+      if (y+1<rows) {
+          next_pos=pos+cols;
+          auto nv=ins->G.U[next_pos];
+          if (nv!=nullptr) {
+              successors.emplace_back(nv,orient);
+          }
+      }
+  } else if (orient==2) {
+      // west
+      if (x-1>=0) {
+          next_pos=pos-1;
+          auto nv=ins->G.U[next_pos];
+          if (nv!=nullptr) {
+              successors.emplace_back(nv,orient);
+          }
+      }
+  } else if (orient==3) {
+      // north
+      if (y-1>=0) {
+          next_pos=pos-cols;
+          auto nv=ins->G.U[next_pos];
+          if (nv!=nullptr) {
+              successors.emplace_back(nv,orient);
+          }
+      }
+  } else {
+      std::cerr<<"spatial search in heuristics: invalid orient: "<<orient<<endl;
+      exit(-1);
+  } 
+
+  int next_orient;
+  const int n_orients=4;
+
+  // CR
+  next_orient=(orient+1+n_orients)%n_orients;
+  successors.emplace_back(v,next_orient);
+
+  // CCR
+  next_orient=(orient-1+n_orients)%n_orients;
+  successors.emplace_back(v,next_orient);
+
+  // W
+  successors.emplace_back(v,orient);
+
+  return successors;
+#endif
+}
+
+
 
 void Planner::expand_lowlevel_tree(HNode* H, LNode* L)
 {
   if (L->depth >= N) return;
   const auto i = H->order[L->depth];
-  auto C = H->C[i]->neighbor;
-  C.push_back(H->C[i]);
+  // auto C = H->C.locs[i]->neighbor;
+  // C.push_back(H->C.locs[i]);
+
+  auto successors=get_successors(H->C.locs[i],H->C.orients[i]);
+
   // randomize
-  if (MT != nullptr) std::shuffle(C.begin(), C.end(), *MT);
+  if (MT != nullptr) std::shuffle(successors.begin(), successors.end(), *MT);
   // insert
-  for (auto v : C) H->search_tree.push(new LNode(L, i, v));
+  for (auto s : successors) H->search_tree.push(new LNode(L, i, s));
 }
 
 bool Planner::get_new_config(HNode* H, LNode* L)
@@ -377,7 +495,7 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     }
 
     // set occupied now
-    a->v_now = H->C[a->id];
+    a->v_now = H->C.locs[a->id];
     occupied_now[a->v_now->id] = a;
   }
 
@@ -391,7 +509,7 @@ bool Planner::get_new_config(HNode* H, LNode* L)
   // add constraints
   for (uint k = 0; k < L->depth; ++k) {
     const auto i = L->who[k];        // agent
-    const auto l = L->where[k]->id;  // loc
+    const auto l = std::get<0>(L->where[k])->id;  // loc
 
     // check vertex collision
     if (occupied_next[l] != nullptr){
@@ -400,7 +518,7 @@ bool Planner::get_new_config(HNode* H, LNode* L)
       return false;
     }
     // check swap collision
-    auto l_pre = H->C[i]->id;
+    auto l_pre = H->C.locs[i]->id;
     if (occupied_next[l_pre] != nullptr && occupied_now[l] != nullptr &&
         occupied_next[l_pre]->id == occupied_now[l]->id) {
           cerr<<"swap collision"<<endl;
@@ -409,7 +527,7 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     }
 
     // set occupied_next
-    A[i]->v_next = L->where[k];
+    A[i]->v_next = std::get<0>(L->where[k]);
     occupied_next[l] = A[i];
   }
 
@@ -425,7 +543,7 @@ bool Planner::get_new_config(HNode* H, LNode* L)
   return true;
 }
 
-int get_neighbor_orientation(const Graph & G, int loc1, int loc2) {
+int get_neighbor_orientation(const Graph & G, int loc1, int loc2, int default_value=5) {
 
     // 0:east, 1:south, 2:west, 3:north
 
@@ -446,7 +564,7 @@ int get_neighbor_orientation(const Graph & G, int loc1, int loc2) {
     }
 
     if (loc1==loc2) {
-      return 5;
+      return default_value;
     }
 
     std::cerr<<"loc1 and loc2 are not neighbors: "<<loc1<<", "<<loc2<<endl;
@@ -478,19 +596,25 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
             [&](Vertex* const v, Vertex* const u) {
 
-    // cerr<<"sort "<<v<<" "<<u<<endl;
+    // TODO(rivers): deal with arrivals: maybe just select randomly
+    int o0=H->C.orients[i];
 
+    int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index,o0);
+    int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index,o0);
 
-    int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index);
-    int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index);
+    const int n_orients=4;
+    double o_dist1=std::min((o1-o0+n_orients)%n_orients,(o0-o1+n_orients)%n_orients)*1.1+(v->index==ai->v_now->index)*0.5;
+    double o_dist2=std::min((o2-o0+n_orients)%n_orients,(o0-o2+n_orients)%n_orients)*1.1+(u->index==ai->v_now->index)*0.5;
+
+    // cerr<<o1<<" "<<o2<<" "<<o0<<" "<<o_dist1<<" "<<o_dist2<<endl;
 
     double d1,d2;
     if (use_orient_in_heuristic){
-      d1=HT->get(v->index,o1,ins->goals[i]->index);
-      d2=HT->get(u->index,o2,ins->goals[i]->index);      
+      d1=HT->get(v->index,o1,ins->goals.locs[i]->index)+o_dist1;
+      d2=HT->get(u->index,o2,ins->goals.locs[i]->index)+o_dist2;      
     } else {
-      d1=HT->get(v->index,ins->goals[i]->index);
-      d2=HT->get(u->index,ins->goals[i]->index);
+      d1=HT->get(v->index,ins->goals.locs[i]->index);
+      d2=HT->get(u->index,ins->goals.locs[i]->index);
     }
 
     // TODO(rivers): we should still think about the following codes. 
@@ -504,11 +628,11 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
         int j=H->d;
         if (j<path.size()-1 && path[j].location==ai->v_now->index) {
           if (path[j+1].location==v->index) {
-            d1=0.1;
+            d1=std::min(0.1,d1);
             // break;
           }
           if (path[j+1].location==u->index) {
-            d2=0.1;
+            d2=std::min(0.1,d2);
             // break;
           }
         }
@@ -532,17 +656,28 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
     //   }
     // }
 
+    // cerr<<d1<<" "<<d2<<endl;
 
+    // TODO(rivers): The PIBT thing is just too sensitive to the hyper-parameters and the implementation...
 
     if (d1!=d2) return d1<d2;
 
-    if (MC_idx==0){
-      return o1<o2;
-    } else {
-      return tie_breakers[v->id] < tie_breakers[u->id];
-    }
-    return o1<o2;
+    // if (MC_idx==0){
+    //   return o_dist1<o_dist2;
+    // } else {
+    //   return tie_breakers[v->id] < tie_breakers[u->id];
+    // }
+    // TODO(rivers): check this. may be bad.
+    // return tie_breakers[v->id] < tie_breakers[u->id];
 
+    // if (o_dist1!=o_dist2) 
+    return o_dist1<o_dist2;
+    // return tie_breakers[v->id] < tie_breakers[u->id];
+    // if (i%2==0){
+    //   return o1<o2;
+    // } else {
+    //   return o2<o1;
+    // }
   });
 
   Agent* swap_agent=nullptr;
@@ -625,14 +760,14 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
   auto v_puller = v_puller_origin;
   Vertex* tmp = nullptr;
   while (
-      HT->get(v_puller->index, ins->goals[pusher]->index) < HT->get(v_pusher->index, ins->goals[pusher]->index)
+      HT->get(v_puller->index, ins->goals.locs[pusher]->index) < HT->get(v_pusher->index, ins->goals.locs[pusher]->index)
     ) {
     auto n = v_puller->neighbor.size();
     // remove agents who need not to move
     for (auto u : v_puller->neighbor) {
       auto a = occupied_now[u->id];
       if (u == v_pusher ||
-          (u->neighbor.size() == 1 && a != nullptr && ins->goals[a->id] == u)) {
+          (u->neighbor.size() == 1 && a != nullptr && ins->goals.locs[a->id] == u)) {
         --n;
       } else {
         tmp = u;
@@ -645,8 +780,8 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
   }
 
   // judge based on distance
-  return (HT->get(v_pusher->index, ins->goals[puller]->index) < HT->get(v_puller->index, ins->goals[puller]->index)) &&
-          (HT->get(v_pusher->index, ins->goals[pusher]->index) == 0 || HT->get(v_puller->index, ins->goals[pusher]->index) < HT->get(v_pusher->index, ins->goals[pusher]->index));
+  return (HT->get(v_pusher->index, ins->goals.locs[puller]->index) < HT->get(v_puller->index, ins->goals.locs[puller]->index)) &&
+          (HT->get(v_pusher->index, ins->goals.locs[pusher]->index) == 0 || HT->get(v_puller->index, ins->goals.locs[pusher]->index) < HT->get(v_pusher->index, ins->goals.locs[pusher]->index));
 }
 
 // simulate whether the swap is possible
@@ -660,7 +795,7 @@ bool Planner::is_swap_possible(Vertex* v_pusher_origin, Vertex* v_puller_origin)
     for (auto u : v_puller->neighbor) {
       auto a = occupied_now[u->id];
       if (u == v_pusher ||
-          (u->neighbor.size() == 1 && a != nullptr && ins->goals[a->id] == u)) {
+          (u->neighbor.size() == 1 && a != nullptr && ins->goals.locs[a->id] == u)) {
         --n;      // pull-impossible with u
       } else {
         tmp = u;  // pull-possible with u

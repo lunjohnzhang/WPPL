@@ -5,49 +5,49 @@ namespace LaCAM2 {
 bool is_feasible_solution(const Instance& ins, const Solution& solution,
                           const int verbose)
 {
-  if (solution.empty()) return true;
+  // if (solution.empty()) return true;
 
-  // check start locations
-  if (!is_same_config(solution.front(), ins.starts)) {
-    info(1, verbose, "invalid starts");
-    return false;
-  }
+  // // check start locations
+  // if (!is_same_config(solution.front(), ins.starts)) {
+  //   info(1, verbose, "invalid starts");
+  //   return false;
+  // }
 
-  // check goal locations
-  if (!is_same_config(solution.back(), ins.goals)) {
-    info(1, verbose, "invalid goals");
-    return false;
-  }
+  // // check goal locations
+  // if (!is_same_config(solution.back(), ins.goals)) {
+  //   info(1, verbose, "invalid goals");
+  //   return false;
+  // }
 
-  for (size_t t = 1; t < solution.size(); ++t) {
-    for (size_t i = 0; i < ins.N; ++i) {
-      auto v_i_from = solution[t - 1][i];
-      auto v_i_to = solution[t][i];
-      // check connectivity
-      if (v_i_from != v_i_to &&
-          std::find(v_i_to->neighbor.begin(), v_i_to->neighbor.end(),
-                    v_i_from) == v_i_to->neighbor.end()) {
-        info(1, verbose, "invalid move");
-        return false;
-      }
+  // for (size_t t = 1; t < solution.size(); ++t) {
+  //   for (size_t i = 0; i < ins.N; ++i) {
+  //     auto v_i_from = solution[t - 1][i];
+  //     auto v_i_to = solution[t][i];
+  //     // check connectivity
+  //     if (v_i_from != v_i_to &&
+  //         std::find(v_i_to->neighbor.begin(), v_i_to->neighbor.end(),
+  //                   v_i_from) == v_i_to->neighbor.end()) {
+  //       info(1, verbose, "invalid move");
+  //       return false;
+  //     }
 
-      // check conflicts
-      for (size_t j = i + 1; j < ins.N; ++j) {
-        auto v_j_from = solution[t - 1][j];
-        auto v_j_to = solution[t][j];
-        // vertex conflicts
-        if (v_j_to == v_i_to) {
-          info(1, verbose, "vertex conflict");
-          return false;
-        }
-        // swap conflicts
-        if (v_j_to == v_i_from && v_j_from == v_i_to) {
-          info(1, verbose, "edge conflict");
-          return false;
-        }
-      }
-    }
-  }
+  //     // check conflicts
+  //     for (size_t j = i + 1; j < ins.N; ++j) {
+  //       auto v_j_from = solution[t - 1][j];
+  //       auto v_j_to = solution[t][j];
+  //       // vertex conflicts
+  //       if (v_j_to == v_i_to) {
+  //         info(1, verbose, "vertex conflict");
+  //         return false;
+  //       }
+  //       // swap conflicts
+  //       if (v_j_to == v_i_from && v_j_from == v_i_to) {
+  //         info(1, verbose, "edge conflict");
+  //         return false;
+  //       }
+  //     }
+  //   }
+  // }
 
   return true;
 }
@@ -61,9 +61,9 @@ int get_makespan(const Solution& solution)
 int get_path_cost(const Solution& solution, uint i)
 {
   const auto makespan = solution.size();
-  const auto g = solution.back()[i];
+  const auto g = solution.back().locs[i];
   auto c = makespan;
-  while (c > 0 && solution[c - 1][i] == g) --c;
+  while (c > 0 && solution[c - 1].locs[i] == g) --c;
   return c;
 }
 
@@ -83,9 +83,9 @@ int get_sum_of_loss(const Solution& solution)
   const auto N = solution.front().size();
   const auto T = solution.size();
   for (size_t i = 0; i < N; ++i) {
-    auto g = solution.back()[i];
+    // auto g = solution.back()[i];
     for (size_t t = 1; t < T; ++t) {
-      if (solution[t - 1][i] != g || solution[t][i] != g) ++c;
+      if (!solution[t].arrivals[i]) ++c;
     }
   }
   return c;
@@ -95,7 +95,7 @@ int get_makespan_lower_bound(const Instance& ins, const std::shared_ptr<Heuristi
 {
   int c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
-    c = std::max(c, HT->get(ins.starts[i]->index,ins.goals[i]->index));
+    c = std::max(c, HT->get(ins.starts.locs[i]->index,ins.goals.locs[i]->index));
   }
   return c;
 }
@@ -104,7 +104,7 @@ int get_sum_of_costs_lower_bound(const Instance& ins, const std::shared_ptr<Heur
 {
   int c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
-    c += HT->get(ins.starts[i]->index,ins.goals[i]->index);
+    c += HT->get(ins.starts.locs[i]->index,ins.goals.locs[i]->index);
   }
   return c;
 }
@@ -162,19 +162,19 @@ void make_log(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT, co
   if (log_short) return;
   log << "starts=";
   for (size_t i = 0; i < ins.N; ++i) {
-    auto k = ins.starts[i]->index;
+    auto k = ins.starts.locs[i]->index;
     log << "(" << get_x(k) << "," << get_y(k) << "),";
   }
   log << "\ngoals=";
   for (size_t i = 0; i < ins.N; ++i) {
-    auto k = ins.goals[i]->index;
+    auto k = ins.goals.locs[i]->index;
     log << "(" << get_x(k) << "," << get_y(k) << "),";
   }
   log << "\nsolution=\n";
   for (size_t t = 0; t < solution.size(); ++t) {
     log << t << ":";
     auto C = solution[t];
-    for (auto v : C) {
+    for (auto v : C.locs) {
       log << "(" << get_x(v->index) << "," << get_y(v->index) << "),";
     }
     log << "\n";

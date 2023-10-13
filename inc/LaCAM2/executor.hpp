@@ -8,7 +8,8 @@ namespace LaCAM2 {
 class Executor {
 public:
 
-    const SharedEnvironment * env;
+    int rows;
+    int cols;
     // loc->agent
     unordered_map<int,int> reservation_table;
     vector<bool> executed;
@@ -16,7 +17,8 @@ public:
     const vector<State> * planned_next_states;
     vector<State> * next_states;
 
-    Executor(const SharedEnvironment * _env):env(_env){};
+    Executor(const SharedEnvironment * _env):rows(_env->rows), cols(_env->cols){};
+    Executor(int _rows, int _cols): rows(_rows), cols(_cols) {};   
 
     /*
      * NOTE(hj): currently we only consider one step
@@ -117,7 +119,7 @@ public:
             return 0;
         }
 
-        if (loc1+env->cols==loc2) {
+        if (loc1+cols==loc2) {
             return 1;
         }
 
@@ -125,7 +127,7 @@ public:
             return 2;
         }
 
-        if (loc1-env->cols==loc2) {
+        if (loc1-cols==loc2) {
             return 3;
         }
 

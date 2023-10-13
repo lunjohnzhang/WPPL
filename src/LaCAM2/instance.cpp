@@ -4,21 +4,29 @@ namespace LaCAM2 {
 
 Instance::Instance(
     const Graph & G,
-    const std::vector<uint>& start_indexes,
-    const std::vector<uint>& goal_indexes,
+    const std::vector<std::pair<uint,int> >& start_indexes,
+    const std::vector<std::pair<uint,int> >& goal_indexes,
     const std::vector<AgentInfo>& agent_infos,
     int planning_window,
     std::vector<::Path> * _precomputed_paths
     ):
       G(G),
-      starts(Config()),
-      goals(Config()),
-      N(start_indexes.size()),
+      starts(agent_infos.size()),
+      goals(agent_infos.size()),
+      N(agent_infos.size()),
       agent_infos(agent_infos),
       planning_window(planning_window), 
       precomputed_paths(_precomputed_paths) {
-  for (auto k : start_indexes) starts.push_back(G.U[k]);
-  for (auto k : goal_indexes) goals.push_back(G.U[k]);
+  // for (auto k : start_indexes) starts.push_back(G.U[k]);
+  // for (auto k : goal_indexes) goals.push_back(G.U[k]);
+
+  for (int i=0;i<N;++i) {
+    starts.locs[i]=G.U[start_indexes[i].first];
+    starts.orients[i]=start_indexes[i].second;
+    goals.locs[i]=G.U[goal_indexes[i].first];
+    goals.orients[i]=goal_indexes[i].second;
+  }
+
 }
 
 // // for load instance
@@ -108,7 +116,7 @@ std::ostream& operator<<(std::ostream& os, const Solution& solution)
     os << std::setw(5) << i << ":";
     for (size_t k = 0; k < solution[i].size(); ++k) {
       if (k > 0) os << "->";
-      os << std::setw(5) << solution[i][k]->index;
+      os << "(" << std::setw(5) << solution[i].locs[k]->index <<"," << solution[i].orients[k] << ")"; 
     }
     os << std::endl;
   }

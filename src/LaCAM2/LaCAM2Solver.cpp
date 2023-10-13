@@ -17,13 +17,13 @@ void LaCAM2Solver::initialize(const SharedEnvironment & env) {
 }
 
 Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths) {
-    auto starts=vector<uint>();
-    auto goals=vector<uint>();
+    auto starts=vector<std::pair<uint,int> >();
+    auto goals=vector<std::pair<uint,int> >();
     for (int i=0;i<env.num_of_agents;++i) {
-        starts.push_back(env.curr_states[i].location);
+        starts.emplace_back(env.curr_states[i].location, env.curr_states[i].orientation);
         assert(env.goal_locations[i].size()>0);
         int goal_location=env.goal_locations[i][0].first;
-        goals.push_back(goal_location);
+        goals.emplace_back(goal_location, -1);
         auto & agent_info=agent_infos[i];
         // cerr<<"0\trandom-32-32-20.map\t32\t32\t"<<starts[i]%32<<"\t"<<starts[i]/32<<"\t"<<goals[i]%32<<"\t"<<goals[i]/32<<"\t0"<<endl;
         if (goal_location!=agent_info.goal_location){
@@ -153,51 +153,64 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
 
         cout<<"solution length:"<<solution.size()<<endl;
         
-        if (solution.size()==1) {
-            next_config=solution[0];
-        } else {  
-            next_config=solution[1];
+        // if (solution.size()==1) {
+        //     next_config=solution[0];
+        // } else {  
+        //     next_config=solution[1];
+        // }
+
+        for (int i=0;i<env.num_of_agents;++i) {
+            // cerr<<"xagent "<<i<<": ";
+            // for (int j=1;j<solution.size();++j) {
+            //     cerr<<solution[j][i]->index<<" ";
+            // }
+            // cerr<<endl;
+            int j=solution.size()==1?0:1;
+            for (;j<solution.size();++j) {
+                paths[i].emplace_back(solution[j].locs[i]->index,env.curr_states[i].timestep+j,solution[j].orients[i]);
+            }
         }
+
     
 
-        if (!read_param_json<bool>(config,"consider_rotation")) {
-            for (int i=0;i<env.num_of_agents;++i) {
-                // cerr<<"xagent "<<i<<": ";
-                // for (int j=1;j<solution.size();++j) {
-                //     cerr<<solution[j][i]->index<<" ";
-                // }
-                // cerr<<endl;
-                for (int j=1;j<solution.size();++j) {
-                    paths[i].emplace_back(solution[j][i]->index,env.curr_states[i].timestep+j,-1);
-                }
-            }
-        }
+        // if (!read_param_json<bool>(config,"consider_rotation")) {
+        //     for (int i=0;i<env.num_of_agents;++i) {
+        //         // cerr<<"xagent "<<i<<": ";
+        //         // for (int j=1;j<solution.size();++j) {
+        //         //     cerr<<solution[j][i]->index<<" ";
+        //         // }
+        //         // cerr<<endl;
+        //         for (int j=1;j<solution.size();++j) {
+        //             paths[i].emplace_back(solution[j][i]->index,env.curr_states[i].timestep+j,-1);
+        //         }
+        //     }
+        // }
     }
 
-    if (read_param_json<bool>(config,"consider_rotation")) {
-        vector<State> planned_next_states;
-        vector<State> next_states;
-        for (int i=0;i<env.num_of_agents;++i) {
-            planned_next_states.emplace_back(next_config[i]->index,-1,-1);
-            next_states.emplace_back(-1,-1,-1);
-        }
+    // if (read_param_json<bool>(config,"consider_rotation")) {
+    //     vector<State> planned_next_states;
+    //     vector<State> next_states;
+    //     for (int i=0;i<env.num_of_agents;++i) {
+    //         planned_next_states.emplace_back(next_config[i]->index,-1,-1);
+    //         next_states.emplace_back(-1,-1,-1);
+    //     }
 
-        if (!read_param_json<bool>(config,"use_slow_executor")) {
-            executor.execute(&(env.curr_states),&planned_next_states,&next_states);
-        } else {
-            slow_executor.execute(&(env.curr_states),&planned_next_states,&next_states);
-        }
+    //     if (!read_param_json<bool>(config,"use_slow_executor")) {
+    //         executor.execute(&(env.curr_states),&planned_next_states,&next_states);
+    //     } else {
+    //         slow_executor.execute(&(env.curr_states),&planned_next_states,&next_states);
+    //     }
 
-        for (int i=0;i<env.num_of_agents;++i) {
-            if (next_states[i].timestep!=env.curr_states[i].timestep+1) {
-                std::cerr<<i<<" "<<next_states[i].timestep<<" "<<env.curr_states[i].timestep<<endl;
-                exit(-1);
-            }
+    //     for (int i=0;i<env.num_of_agents;++i) {
+    //         if (next_states[i].timestep!=env.curr_states[i].timestep+1) {
+    //             std::cerr<<i<<" "<<next_states[i].timestep<<" "<<env.curr_states[i].timestep<<endl;
+    //             exit(-1);
+    //         }
 
-            paths[i].emplace_back(next_states[i]);
-            // std::cerr<<i<<" "<<env.curr_states[i]<<" "<<next_states[i]<<endl;
-        }
-    }
+    //         paths[i].emplace_back(next_states[i]);
+    //         // std::cerr<<i<<" "<<env.curr_states[i]<<" "<<next_states[i]<<endl;
+    //     }
+    // }
 
     // bool ready_to_forward = true;
     // for (int i=0;i<env.num_of_agents;++i) {
@@ -289,37 +302,39 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
     }
 
     // TODO(hj): when we need to replan?
-    need_replan=false;
+    need_replan=true;
+   
+    // need_replan=false;
 
-    bool all_arrived=true;
-    for (int i=0;i<env.num_of_agents;++i) {
-        if (paths[i][timestep].location!=next_config[i]->index) {
-            // arrive goal locations
-            all_arrived=false;
-            break;
-        }
-    }    
-    if (all_arrived) {
-        need_replan=true;
-    }
-
-    // 1. exceed simulation window
-    // if (timestep==total_feasible_timestep){
+    // bool all_arrived=true;
+    // for (int i=0;i<env.num_of_agents;++i) {
+    //     if (paths[i][timestep].location!=next_config.locs[i]->index) {
+    //         // arrive goal locations
+    //         all_arrived=false;
+    //         break;
+    //     }
+    // }    
+    // if (all_arrived) {
     //     need_replan=true;
     // }
+
+    // // 1. exceed simulation window
+    // // if (timestep==total_feasible_timestep){
+    // //     need_replan=true;
+    // // }
     
-    // 2. goal changes: there different ways to check this. let's just keep the old goal and compare.
-    for (int i=0;i<env.num_of_agents;++i) {
-        if (paths[i][timestep].location==env.goal_locations[i][0].first) {
-            // arrive goal locations
-            need_replan=true;
-            break;
-        }
-    }
+    // // 2. goal changes: there different ways to check this. let's just keep the old goal and compare.
+    // for (int i=0;i<env.num_of_agents;++i) {
+    //     if (paths[i][timestep].location==env.goal_locations[i][0].first) {
+    //         // arrive goal locations
+    //         need_replan=true;
+    //         break;
+    //     }
+    // }
     
-    if (!read_param_json<bool>(config,"use_slow_executor")) {
-        need_replan=true;
-    }
+    // if (!read_param_json<bool>(config,"use_slow_executor")) {
+    //     need_replan=true;
+    // }
 
     if (need_replan) {
         for (int i=0;i<env.num_of_agents;++i) {

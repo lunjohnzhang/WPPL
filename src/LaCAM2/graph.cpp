@@ -148,15 +148,21 @@ bool is_same_config(const Config& C1, const Config& C2)
 {
   const auto N = C1.size();
   for (size_t i = 0; i < N; ++i) {
-    if (C1[i]->id != C2[i]->id) return false;
+    if (C1.locs[i]->id != C2.locs[i]->id) return false;
+    if (C1.orients[i] != C2.orients[i]) return false;
+    if (C1.arrivals[i] != C2.arrivals[i]) return false;
   }
   return true;
 }
 
 uint ConfigHasher::operator()(const Config& C) const
 {
+  // TODO: rivers: has is not very necessary in our case, because we don't use LaCAM to expand a large search tree.
+  // we will just do it simple here and revisit it later.
   uint hash = C.size();
-  for (auto& v : C) hash ^= v->id + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+  for (auto i=0;i<C.size();++i) {
+    hash ^= C.locs[i]->id<<3 + C.orients[i]<<1 + C.arrivals[i] + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+  }
   return hash;
 }
 
@@ -172,7 +178,7 @@ std::ostream& operator<<(std::ostream& os, const Config& config)
   const auto N = config.size();
   for (size_t i = 0; i < N; ++i) {
     if (i > 0) os << ",";
-    os << std::setw(5) << config[i];
+    os << "(" <<std::setw(5) << config.locs[i]<<","<< config.orients[i]<<","<<config.arrivals[i]<<")";
   }
   os << ">";
   return os;

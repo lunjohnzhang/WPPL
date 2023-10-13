@@ -42,8 +42,8 @@ struct Instance {
   //          const uint _N = 1);
   Instance(
     const Graph & G,
-    const std::vector<uint>& start_indexes,
-    const std::vector<uint>& goal_indexes,
+    const std::vector<std::pair<uint,int> >& start_indexes,
+    const std::vector<std::pair<uint,int> >& goal_indexes,
     const std::vector<AgentInfo> & agent_infos,
     int planning_window=-1,
     std::vector<::Path> * precomputed_paths=nullptr

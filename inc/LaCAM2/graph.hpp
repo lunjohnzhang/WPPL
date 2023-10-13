@@ -15,7 +15,45 @@ struct Vertex {
   Vertex(uint _id, uint _index);
 };
 using Vertices = std::vector<Vertex*>;
-using Config = std::vector<Vertex*>;  // a set of locations for all agents
+// using Config = std::vector<Vertex*>;  // a set of locations for all agents
+
+struct Config {
+  std::vector<Vertex*> locs;
+  std::vector<int> orients;
+  std::vector<bool> arrivals;
+
+  Config(int N) {
+    locs.resize(N, nullptr);
+    orients.resize(N, -1);
+    arrivals.resize(N, false);
+  }
+
+  inline size_t size() const {
+    return locs.size();
+  };
+
+  
+  inline bool all_arrived() const {
+    for (int i=0;i<arrivals.size();++i) {
+      if (!arrivals[i]) return false;
+    }
+    return true;
+  }
+
+  struct ConfigEqual {
+    bool operator()(const Config& C1, const Config& C2) const {
+        const auto N = C1.size();
+        for (size_t i = 0; i < N; ++i) {
+          if (C1.locs[i]->id != C2.locs[i]->id) return false;
+          if (C1.orients[i] != C2.orients[i]) return false;
+          if (C1.arrivals[i] != C2.arrivals[i]) return false;
+        }
+        return true;
+    }
+  };
+
+
+};
 
 struct Graph {
   Vertices V;                          // without nullptr
