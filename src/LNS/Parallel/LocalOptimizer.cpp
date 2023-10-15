@@ -4,23 +4,21 @@
 
 namespace LNS {
 
+namespace Parallel {
+
 LocalOptimizer::LocalOptimizer(
-    Instance & instance, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT,
+    Instance & instance, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<int> > map_weights,
     string replan_algo_name, bool sipp,
     int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
     int screen
 ):
-    instance(instance), path_table(instance.map_size,window_size_for_CT), agents(agents), HT(HT),
+    instance(instance), path_table(instance.map_size,window_size_for_CT), agents(agents), HT(HT), map_weights(map_weights),
     replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
     screen(screen) {
 
     // TODO(rivers): for agent_id, we just use 0 to initialize the path planner. but we need to change it (also starts and goals) everytime before planning
-    if(sipp)
-        path_planner = std::make_shared<SIPP>(instance, 0, HT);
-    else
-        path_planner = std::make_shared<SpaceTimeAStar>(instance, 0, HT);
-
+    path_planner = std::make_shared<TimeSpaceAStarPlanner>(instance, HT, map_weights);
 }
 
 void LocalOptimizer::update(Neighbor & neighbor) {
@@ -45,11 +43,7 @@ void LocalOptimizer::prepare(Neighbor & neighbor) {
         if (replan_algo_name == "PP")
             neighbor.m_old_paths[aid] = agent.path;
         // path_table.deletePath(neighbor.agents[i], agent.path);
-        neighbor.old_sum_of_costs += agent.path.size() - 1;
-        if (agent.path.back().location!=instance.goal_locations[aid]) {
-            neighbor.old_sum_of_costs+=HT->get(agent.path.back().location,instance.goal_locations[aid]);
-        }
-
+        neighbor.old_sum_of_costs += agent.path.path_cost;
         path_table.deletePath(aid, neighbor.m_old_paths[aid]);
     }   
 
@@ -88,7 +82,7 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter
     std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
     if (screen >= 2) {
         for (auto aid : shuffled_agents)
-            cout << aid << "(" << HT->get(neighbor.m_paths[aid].back().location,instance.goal_locations[aid]) << "->" << agents[aid].path.size() - 1 << "), ";
+            cout << aid << "(" << agents[aid].getNumOfDelays()<<"), ";
         cout << endl;
     }
     int remaining_agents = (int)shuffled_agents.size();
@@ -111,45 +105,48 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter
             break;
 
         int id = *p;
+        int start_pos=instance.start_locations[id];
+        int start_orient=instance.start_orientations[id];
+        int goal_pos=instance.goal_locations[id];
+
         if (screen >= 3)
             cout << "Remaining agents = " << remaining_agents <<
                  ", remaining time = " << time_limiter.get_remaining_time() << " seconds. " << endl
                  << "Agent " << agents[id].id << endl;
         if (search_priority==1) {
             //ONLYDEV(g_timer.record_p("findPath_s");)
-            path_planner->prepare_for_planning(id);
-            neighbor.m_paths[id] = path_planner->findPath(constraint_table);
+            path_planner->findPath(start_pos,start_orient,goal_pos,constraint_table);
+            neighbor.m_paths[id] = path_planner->path;
             //ONLYDEV(g_timer.record_d("findPath_s","findPath_e","findPath");)
         } else if (search_priority==2) {
             std::cerr<<"not supported now, need double checks"<<std::endl;
             exit(-1);
-            vector<Path *> paths(agents.size(),nullptr);
-            int min_f_val;
-            tie(neighbor.m_paths[id],min_f_val) = path_planner->findSuboptimalPath(node, constraint_table, paths, agents[id].id, 0,suboptimality);
+            // vector<Path *> paths(agents.size(),nullptr);
+            // int min_f_val;
+            // tie(neighbor.m_paths[id],min_f_val) = path_planner->findSuboptimalPath(node, constraint_table, paths, agents[id].id, 0,suboptimality);
         }
         if (neighbor.m_paths[id].empty()) break;
         
         // always makes a fixed length.
         // TODO(rivers): this might not be a smart choice, but it keeps everything consistent.
         if (neighbor.m_paths[id].size()>constraint_table.window_size_for_PATH+1) {
-            neighbor.m_paths[id].resize(constraint_table.window_size_for_PATH+1);
+            neighbor.m_paths[id].nodes.resize(constraint_table.window_size_for_PATH+1);
         }
 
         // do we need to pad here?
         // assume hold goal location
         if (neighbor.m_paths[id].size()<constraint_table.window_size_for_PATH+1) {
-            neighbor.m_paths[id].resize(constraint_table.window_size_for_PATH+1,neighbor.m_paths[id].back());
+            neighbor.m_paths[id].nodes.resize(constraint_table.window_size_for_PATH+1,neighbor.m_paths[id].nodes.back());
         }
 
-        neighbor.sum_of_costs += (int)neighbor.m_paths[id].size() - 1;
         // if (neighbor.m_paths[id].back().location!=agents[id].path_planner->goal_location) {
             if (neighbor.m_paths[id].size()!=constraint_table.window_size_for_PATH+1) {
                 std::cerr<<"agent "<<agents[id].id<<"'s path length "<<neighbor.m_paths[id].size()<<" should be equal to window size for path "<<constraint_table.window_size_for_PATH<< "if it doesn't arrive at its goal"<<endl;
                 exit(-1);
-            } else {
-                neighbor.sum_of_costs+=HT->get(neighbor.m_paths[id].back().location, path_planner->goal_location);
-            }
+            } 
         // }
+        neighbor.sum_of_costs += neighbor.m_paths[id].path_cost;
+
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs){
             // because it is not inserted into path table yet.
             neighbor.m_paths[id].clear();
@@ -185,8 +182,6 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter
     }
 }
 
-
-
-
+}
 
 }

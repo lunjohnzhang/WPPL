@@ -50,7 +50,7 @@ public:
     }
     bool getInitialSolution();
     bool run();
-    bool run_parallel();
+    bool run_parallel(std::shared_ptr<vector<int> > & map_weights);
     void validateSolution() const;
     void writeIterStatsToFile(const string & file_name) const;
     void writeResultToFile(const string & file_name) const;

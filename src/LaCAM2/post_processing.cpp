@@ -52,10 +52,14 @@ bool is_feasible_solution(const Instance& ins, const Solution& solution,
   return true;
 }
 
-int get_makespan(const Solution& solution)
+int get_makespan(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT, const Solution& solution)
 {
   if (solution.empty()) return 0;
-  return solution.size() - 1;
+  int c = 0;
+  for (auto i=0;i<ins.N;++i) {
+    c = std::max(c,(int) (solution.size()-1) + HT->get(solution.back().locs[i]->index,solution.back().orients[i],ins.goals.locs[i]->index));
+  }
+  return c;
 }
 
 int get_path_cost(const Solution& solution, uint i)
@@ -76,17 +80,14 @@ int get_sum_of_costs(const Solution& solution)
   return c;
 }
 
-int get_sum_of_loss(const Solution& solution)
+int get_sum_of_loss(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT, const Solution& solution)
 {
   if (solution.empty()) return 0;
   int c = 0;
   const auto N = solution.front().size();
   const auto T = solution.size();
   for (size_t i = 0; i < N; ++i) {
-    // auto g = solution.back()[i];
-    for (size_t t = 1; t < T; ++t) {
-      if (!solution[t].arrivals[i]) ++c;
-    }
+    c+= (int)(solution.size()-1) + HT->get(solution.back().locs[i]->index,solution.back().orients[i],ins.goals.locs[i]->index);
   }
   return c;
 }
@@ -113,17 +114,17 @@ void print_stats(const int verbose, const Instance& ins, const std::shared_ptr<H
                  const Solution& solution, const double comp_time_ms)
 {
   auto ceil = [](float x) { return std::ceil(x * 100) / 100; };
-  const auto makespan = get_makespan(solution);
+  const auto makespan = get_makespan(ins,HT,solution);
   const auto makespan_lb = get_makespan_lower_bound(ins, HT);
-  const auto sum_of_costs = get_sum_of_costs(solution);
+  // const auto sum_of_costs = get_sum_of_costs(solution);
   const auto sum_of_costs_lb = get_sum_of_costs_lower_bound(ins, HT);
-  const auto sum_of_loss = get_sum_of_loss(solution);
+  const auto sum_of_loss = get_sum_of_loss(ins,HT,solution);
   info(1, verbose, "solved: ", comp_time_ms, "ms", "\tmakespan: ", makespan,
-       " (lb=", makespan_lb, ", ub=", ceil((float)makespan / makespan_lb), ")",
-       "\tsum_of_costs: ", sum_of_costs, " (lb=", sum_of_costs_lb,
-       ", ub=", ceil((float)sum_of_costs / sum_of_costs_lb), ")",
+       " (lb=", makespan_lb, ", ratio=", ceil((float)makespan / makespan_lb), ")",
+      //  "\tsum_of_costs: ", sum_of_costs, " (lb=", sum_of_costs_lb,
+      //  ", ub=", ceil((float)sum_of_costs / sum_of_costs_lb), ")",
        "\tsum_of_loss: ", sum_of_loss, " (lb=", sum_of_costs_lb,
-       ", ub=", ceil((float)sum_of_loss / sum_of_costs_lb), ")");
+       ", ratio=", ceil((float)sum_of_loss / sum_of_costs_lb), ")");
 }
 
 // for log of map_name
@@ -149,11 +150,11 @@ void make_log(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT, co
   log << "map_file=" << map_recorded_name << "\n";
   log << "solver=planner\n";
   log << "solved=" << !solution.empty() << "\n";
-  log << "soc=" << get_sum_of_costs(solution) << "\n";
-  log << "soc_lb=" << get_sum_of_costs_lower_bound(ins, HT) << "\n";
-  log << "makespan=" << get_makespan(solution) << "\n";
+  // log << "soc=" << get_sum_of_costs(solution) << "\n";
+  // log << "soc_lb=" << get_sum_of_costs_lower_bound(ins, HT) << "\n";
+  log << "makespan=" << get_makespan(ins,HT,solution) << "\n";
   log << "makespan_lb=" << get_makespan_lower_bound(ins, HT) << "\n";
-  log << "sum_of_loss=" << get_sum_of_loss(solution) << "\n";
+  log << "sum_of_loss=" << get_sum_of_loss(ins,HT,solution) << "\n";
   log << "sum_of_loss_lb=" << get_sum_of_costs_lower_bound(ins, HT)
       << "\n";
   log << "comp_time=" << comp_time_ms << "\n";

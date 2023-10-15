@@ -86,6 +86,7 @@ public:
 
 	  int num_of_agents;
 	  vector<int> start_locations;
+	  vector<int> start_orientations;
 	  vector<int> goal_locations;
 
 	  bool nathan_benchmark = true;

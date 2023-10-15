@@ -623,20 +623,23 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
     // the latter one is problematic with wait action?
 
     if (ins->precomputed_paths!=nullptr){
+      int pre_d1=1;
+      int pre_d2=1;
       auto path=(*ins->precomputed_paths)[i];
       // for (int j=path.size()-1;j>=0;--j){
         int j=H->d;
-        if (j<path.size()-1 && path[j].location==ai->v_now->index) {
-          if (path[j+1].location==v->index) {
-            d1=std::min(0.1,d1);
+        if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
+          if (path[j+1].orientation==o1) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
+            pre_d1=0;
             // break;
           }
-          if (path[j+1].location==u->index) {
-            d2=std::min(0.1,d2);
+          if (path[j+1].orientation==o2) { // && ((o2==o0 && path[j+1].location==u->index) || (o2!=o0))) {
+            pre_d2=0;
             // break;
           }
         }
       // }
+      if (pre_d1!=pre_d2) return pre_d1<pre_d2;
     }
 
     // if (ins->precomputed_paths!=nullptr){

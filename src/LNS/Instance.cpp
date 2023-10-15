@@ -23,9 +23,11 @@ Instance::Instance(const SharedEnvironment & env) {
 	// load agents
 	num_of_agents=env.num_of_agents;
 	start_locations.resize(num_of_agents);
+	start_orientations.resize(num_of_agents);
 	goal_locations.resize(num_of_agents);
 	for (int i=0;i<num_of_agents;++i){
 		start_locations[i]=env.curr_states[i].location;
+		start_orientations[i]=env.curr_states[i].orientation;
 		goal_locations[i]=env.goal_locations[i][0].first;
 	}
 }

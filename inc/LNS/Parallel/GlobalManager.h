@@ -5,6 +5,8 @@
 
 namespace LNS {
 
+namespace Parallel {
+
 class GlobalManager
 {
 public:
@@ -23,14 +25,15 @@ public:
     string init_algo_name;
     string replan_algo_name;
     Instance & instance;
-    PathTable & path_table;
-    std::vector<Agent> & agents;
+    PathTable path_table;
+    std::vector<Agent> agents;
     std::shared_ptr<HeuristicTable> HT;
+    std::shared_ptr<vector<int> > map_weights;
     int screen;
     int num_threads;
 
     GlobalManager(
-        Instance & instance, PathTable & path_table, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT,
+        Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<int> > map_weights,
         int neighbor_size, destroy_heuristic destroy_strategy,
         bool ALNS, double decay_factor, double reaction_factor,
         string init_algo_name, string replan_algo_name, bool sipp,
@@ -46,5 +49,7 @@ public:
     string getSolverName() const { return "LNS(" + init_algo_name + ";" + replan_algo_name + ")"; }
 
 };
+
+}
 
 }

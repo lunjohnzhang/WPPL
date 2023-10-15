@@ -7,13 +7,15 @@
 
 namespace LNS {
 
+namespace Parallel {
+
 NeighborGenerator::NeighborGenerator(
-    Instance & instance, PathTable & path_table, std::vector<Agent> & agents, 
+    Instance & instance, std::shared_ptr<HeuristicTable> HT, PathTable & path_table, std::vector<Agent> & agents, 
     int neighbor_size, destroy_heuristic destroy_strategy, 
     bool ALNS, double decay_factor, double reaction_factor, 
     int num_threads, int screen
 ):
-    instance(instance), path_table(path_table), agents(agents),
+    instance(instance), HT(HT), path_table(path_table), agents(agents),
     neighbor_size(neighbor_size), destroy_strategy(destroy_strategy),
     ALNS(ALNS), decay_factor(decay_factor), reaction_factor(reaction_factor),
     num_threads(num_threads), screen(screen) {
@@ -170,14 +172,14 @@ bool NeighborGenerator::generateNeighborByRandomWalk(Neighbor & neighbor, int id
     
     set<int> neighbors_set;
     neighbors_set.insert(a);
-    randomWalk(a, agents[a].path[0].location, 0, neighbors_set, neighbor_size, (int) agents[a].path.size() - 1);
+    randomWalk(a, 0, neighbors_set, neighbor_size);
 
     // TODO(rivers): we iterate for at most 10 iterations (not shown in the pseudo-code) to 
     // address the situation where the agent density is too low for us to collect N agents
     int count = 0;
     while (neighbors_set.size() < neighbor_size && count < 10) {
         int t = rand() % agents[a].path.size();
-        randomWalk(a, agents[a].path[t].location, t, neighbors_set, neighbor_size, (int) agents[a].path.size() - 1);
+        randomWalk(a, t, neighbors_set, neighbor_size);
         count++;
         // select the next agent randomly
         int idx = rand() % neighbors_set.size();
@@ -198,7 +200,7 @@ bool NeighborGenerator::generateNeighborByRandomWalk(Neighbor & neighbor, int id
     neighbor.agents.assign(neighbors_set.begin(), neighbors_set.end());
     if (screen >= 2)
         cout << "Generate " << neighbor.agents.size() << " neighbors by random walks of agent " << a
-             << "(" << agents[a].path_planner->HT->get(agents[a].path_planner->start_location,agents[a].path_planner->goal_location)
+             << "(" << HT->get(agents[a].getStartLocation(),agents[a].getStartOrientation(),agents[a].getGoalLocation())
              << "->" << agents[a].path.size() - 1 << ")" << endl;
 
     return true;
@@ -274,35 +276,110 @@ int NeighborGenerator::findMostDelayedAgent(int idx){
     return a;
 }
 
+std::list<std::pair<int,int> > NeighborGenerator::getSuccessors(int pos, int orient) {
+    std::list<std::pair<int,int> > successors;
+
+    int & cols=instance.num_of_cols;
+    int & rows=instance.num_of_rows;
+    auto & map=instance.my_map;
+
+    int x=pos%(cols);
+    int y=pos/(cols);
+
+    // FW
+    int next_pos;
+    int next_orient=orient;
+    if (orient==0) {
+        // east
+        if (x+1<cols){
+            next_pos=pos+1;
+            if (map[next_pos]==0) {
+                successors.emplace_back(next_pos,next_orient);
+            }
+        }
+    } else if (orient==1) {
+        // south
+        if (y+1<rows) {
+            next_pos=pos+cols;
+            if (map[next_pos]==0) {
+                successors.emplace_back(next_pos,next_orient);
+            }
+        }
+    } else if (orient==2) {
+        // west
+        if (x-1>=0) {
+            next_pos=pos-1;
+            if (map[next_pos]==0) {
+                successors.emplace_back(next_pos,next_orient);
+            }
+        }
+    } else if (orient==3) {
+        // north
+        if (y-1>=0) {
+            next_pos=pos-cols;
+            if (map[next_pos]==0) {
+                successors.emplace_back(next_pos,next_orient);
+            }
+        }
+    } else {
+        std::cerr<<"NeighborGenerator: invalid orient: "<<orient<<endl;
+        exit(-1);
+    }
+
+
+    // for actions that don't change the position
+    next_pos=pos;
+
+    // CR
+    next_orient=(orient+1+n_orients)%n_orients;
+    successors.emplace_back(next_pos, next_orient);
+
+    // CCR
+    next_orient=(orient-1+n_orients)%n_orients;
+    successors.emplace_back(next_pos, next_orient);
+
+    // W
+    next_orient=orient;
+    successors.emplace_back(next_pos, next_orient);
+    
+    return successors;
+}
 
 // a random walk with path that is shorter than upperbound and has conflicting with neighbor_size agents
-void NeighborGenerator::randomWalk(int agent_id, int start_location, int start_timestep,
-                     set<int>& conflicting_agents, int neighbor_size, int upperbound)
+void NeighborGenerator::randomWalk(int agent_id, int start_timestep, set<int>& conflicting_agents, int neighbor_size)
 {
-    int loc = start_location;
-    for (int t = start_timestep; t < upperbound; t++)
+    auto & path = agents[agent_id].path;
+    int loc = path[start_timestep].location;
+    int orient = path[start_timestep].orientation;
+    for (int t = start_timestep; t < path.size(); ++t)
     {
-        auto next_locs = instance.getNeighbors(loc);
-        next_locs.push_back(loc);
-        while (!next_locs.empty())
+        auto successors=getSuccessors(loc,orient);
+        while (!successors.empty())
         {
-            int step = rand() % next_locs.size();
-            auto it = next_locs.begin();
-            advance(it, step);
-            int next_h_val = agents[agent_id].path_planner->HT->get(*it,agents[agent_id].path_planner->goal_location);
-            if (t + 1 + next_h_val < upperbound) // move to this location
+            int step = rand() % successors.size();
+            auto iter = successors.begin();
+            advance(iter, step);
+
+            int next_loc = iter->first;
+            int next_orient = iter->second;
+            
+            int next_h_val = HT->get(next_loc, next_orient,instance.goal_locations[agent_id]);
+            // if we can find a path with a smaller distance, we try to see who becomes the obstacle.
+            // TODO(rivers): this is not correct if we have weighted distance map
+            if (t + next_h_val < path.path_cost) // move to this location
             {
-                path_table.getConflictingAgents(agent_id, conflicting_agents, loc, *it, t + 1);
-                loc = *it;
+                path_table.getConflictingAgents(agent_id, conflicting_agents, loc, next_loc, t + 1);
+                loc = next_loc;
+                orient = next_orient;
                 break;
             }
-            next_locs.erase(it);
+            successors.erase(iter);
         }
-        if (next_locs.empty() || conflicting_agents.size() >= neighbor_size)
+        if (successors.empty() || conflicting_agents.size() >= neighbor_size)
             break;
     }
 }
 
-
+}
 
 }

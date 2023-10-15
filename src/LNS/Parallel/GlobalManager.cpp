@@ -5,27 +5,44 @@
 
 namespace LNS {
 
+namespace Parallel {
+
 GlobalManager::GlobalManager(
-    Instance & instance, PathTable & path_table, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT,
+    Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<int> > map_weights,
     int neighbor_size, destroy_heuristic destroy_strategy,
     bool ALNS, double decay_factor, double reaction_factor,
     string init_algo_name, string replan_algo_name, bool sipp,
     int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
     int screen
 ): 
-    instance(instance), path_table(path_table), agents(agents), HT(HT),
+    instance(instance), path_table(instance.map_size,window_size_for_PATH), HT(HT), map_weights(map_weights),
     init_algo_name(init_algo_name), replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
     screen(screen) {
 
     num_threads=omp_get_max_threads();
 
+    g_logger.debug("debug");
+    g_logger.flush();
+
+    for (auto w: *map_weights){
+        if (w!=1){
+            g_logger.error("we cannot support weighted map now for LNS! because in that way, we may need two different heuristic table. one for path cost estimation, one for path length estimation.");
+            g_logger.flush();
+            exit(-1);
+        }
+    }
+    
+    for (int i=0;i<instance.num_of_agents;++i) {
+        agents.emplace_back(i,instance,HT);
+    }
+
     // cout<<num_threads<<endl;
     // exit(-1);
 
     for (auto i=0;i<num_threads;++i) {
         auto local_optimizer=std::make_shared<LocalOptimizer>(
-            instance, agents, HT,
+            instance, agents, HT, map_weights,
             replan_algo_name, sipp,
             window_size_for_CT, window_size_for_CAT, window_size_for_PATH,
             screen
@@ -33,7 +50,12 @@ GlobalManager::GlobalManager(
         local_optimizers.push_back(local_optimizer);
     }
 
-    neighbor_generator=std::make_shared<NeighborGenerator>(instance, path_table, agents, neighbor_size, destroy_strategy, ALNS, decay_factor, reaction_factor, num_threads, screen);
+    neighbor_generator=std::make_shared<NeighborGenerator>(
+        instance, HT, path_table, agents, 
+        neighbor_size, destroy_strategy, 
+        ALNS, decay_factor, reaction_factor, 
+        num_threads, screen
+    );
 }
 
 void GlobalManager::update(Neighbor & neighbor, bool recheck) {
@@ -76,13 +98,11 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
             // re-check if the cost is still smaller
             int old_sum_of_costs=0;
             for (auto & aid: neighbor.agents) {
-                old_sum_of_costs+=agents[aid].path.size()-1;
-                if (agents[aid].path.back().location!=instance.goal_locations[aid]) {
-                    old_sum_of_costs+=HT->get(agents[aid].path.back().location,instance.goal_locations[aid]);
-                }
+                old_sum_of_costs+=agents[aid].path.path_cost;
             }
 
-            if (old_sum_of_costs<neighbor.sum_of_costs) {
+            // TODO(rivers): use < or <= here?
+            if (old_sum_of_costs<=neighbor.sum_of_costs) {
                 neighbor.succ=false;
                 std::cerr<<"incost"<<std::endl;
                 return;
@@ -276,7 +296,7 @@ bool GlobalManager::run(double time_limit) {
     elapse=time_limiter.get_elapse();
     cout << getSolverName() << ": "
         << "runtime = " << elapse << ", "
-        << "iterations = " << iteration_stats.size() << ", "
+        << "iterations = " << iteration_stats.size()-1 << ", "
         << "solution cost = " << sum_of_costs << ", "
         << "initial solution cost = " << initial_sum_of_costs << ", "
         << "failed iterations = " << num_of_failures << endl;
@@ -303,10 +323,7 @@ void GlobalManager::getInitialSolution(Neighbor & neighbor) {
             exit(-1);
         }
 
-        neighbor.sum_of_costs+=agents[i].path.size()-1;
-        if (agents[i].path.back().location!=instance.goal_locations[i]) {
-            neighbor.sum_of_costs+=HT->get(agents[i].path.back().location,instance.goal_locations[i]);
-        }
+        neighbor.sum_of_costs+=agents[i].path.path_cost;
 
         neighbor.m_paths[i]=agents[i].path;
         neighbor.m_old_paths[i]=Path();
@@ -318,5 +335,6 @@ void GlobalManager::getInitialSolution(Neighbor & neighbor) {
     initial_sum_of_costs = neighbor.sum_of_costs;
 }
 
+}
 
 }

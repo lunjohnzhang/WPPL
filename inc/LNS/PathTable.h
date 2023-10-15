@@ -1,5 +1,6 @@
 #pragma once
 #include "LNS/common.h"
+#include "LNS/Parallel/DataStructure.h"
 
 #define NO_AGENT -1
 
@@ -15,6 +16,8 @@ public:
     void reset() { auto map_size = table.size(); table.clear(); table.resize(map_size); goals.assign(map_size, MAX_TIMESTEP); makespan = 0; }
     void insertPath(int agent_id, const Path& path, bool verbose=false);
     void deletePath(int agent_id, const Path& path, bool verbose=false);
+    void insertPath(int agent_id, const Parallel::Path& path,bool verbose=false);
+    void deletePath(int agent_id, const Parallel::Path& path,bool verbose=false);
     bool constrained(int from, int to, int to_time) const;
     bool constrained(int from, int to, int to_time, std::vector<int> & ignored_agents) const;
 

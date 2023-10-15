@@ -2,13 +2,17 @@
 #include "LNS/LNS.h"
 #include <queue>
 #include "LNS/Parallel/TimeLimiter.h"
+#include "util/HeuristicTable.h"
 
 namespace LNS {
+
+namespace Parallel {
 
 class NeighborGenerator
 {
 public:
     Instance & instance;
+    std::shared_ptr<HeuristicTable> HT;
     PathTable & path_table;
     std::vector<Agent> & agents;
 
@@ -21,6 +25,8 @@ public:
 
     int screen=0;
     int num_threads;
+
+    static const int n_orients=4; // east, south, west, north
 
     // for ALNS
     vector<double> destroy_weights; // the weights of each destroy heuristic
@@ -37,7 +43,7 @@ public:
     std::vector<std::shared_ptr<Neighbor>> neighbors; // the generated neighbors for usage
 
     NeighborGenerator(
-        Instance & instance, PathTable & path_table, std::vector<Agent> & agents, 
+        Instance & instance, std::shared_ptr<HeuristicTable> HT, PathTable & path_table, std::vector<Agent> & agents, 
         int neighbor_size, destroy_heuristic destroy_strategy, 
         bool ALNS, double decay_factor, double reaction_factor, 
         int num_threads, int screen
@@ -58,10 +64,13 @@ private:
 
     int findMostDelayedAgent(int idx);
     void randomWalk(
-        int agent_id, int start_location, int start_timestep, 
-        set<int>& conflicting_agents, int neighbor_size, int upperbound
+        int agent_id, int start_timestep, 
+        set<int>& conflicting_agents, int neighbor_size
     );
+    std::list<std::pair<int,int> > getSuccessors(int loc, int orient);
 
 };
+
+}
 
 }

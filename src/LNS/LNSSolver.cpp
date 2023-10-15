@@ -2,16 +2,19 @@
 #include "util/Dev.h"
 #include "util/Timer.h"
 #include "util/Analyzer.h"
+#include "LNS/Parallel/GlobalManager.h"
 
 namespace LNS {
 
 LNSSolver::LNSSolver(
     const std::shared_ptr<HeuristicTable> & HT,
     SharedEnvironment * env,
+    std::shared_ptr<std::vector<int> > & map_weights,
     nlohmann::json & config,
     std::shared_ptr<LaCAM2::LaCAM2Solver> & lacam2_solver
 ):
     HT(HT),
+    map_weights(map_weights),
     action_model(env),
     executor(env),
     slow_executor(env),
@@ -73,7 +76,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
             vector<::Path> precomputed_paths;
             precomputed_paths.resize(env.num_of_agents);
             for (int i=0;i<env.num_of_agents;++i){
-                if (paths[i][executed_plan_step].location!=env.curr_states[i].location){
+                if (paths[i][executed_plan_step].location!=env.curr_states[i].location || paths[i][executed_plan_step].orientation!=env.curr_states[i].orientation){
                     cerr<<"agent "<<i<<"'s current state doesn't match with the plan"<<endl;
                     exit(-1);
                 }
@@ -86,13 +89,13 @@ void LNSSolver::plan(const SharedEnvironment & env){
             lacam2_solver->plan(env, &precomputed_paths);
 
             // we need to copy the new planned paths into paths
-            // cerr<<"lacam2 path lengths:"<<endl;
+            // std::cerr<<"lacam2 paths:"<<endl;
             for (int i=0;i<env.num_of_agents;++i){
                 paths[i].resize(executed_plan_step+1);
                 for (int j=1;j<lacam2_solver->paths[i].size();++j){
-                    paths[i].emplace_back(lacam2_solver->paths[i][j].location,executed_plan_step+j,-1);
+                    paths[i].emplace_back(lacam2_solver->paths[i][j].location,executed_plan_step+j,lacam2_solver->paths[i][j].orientation);
                 }
-                // cerr<<"agent "<<i<<" "<<lacam2_solver->paths[i].size()<<": "<<paths[i]<<endl;
+                // std::cerr<<"agent "<<i<<" "<<env.curr_states[i]<<"->"<<env.goal_locations[i][0].first<<" "<<paths[i].size()<<": "<<paths[i]<<std::endl;
             }
             ONLYDEV(g_timer.record_d("lacam2_plan_s","lacam2_plan_e","lacam2_plan");)
         }
@@ -116,24 +119,44 @@ void LNSSolver::plan(const SharedEnvironment & env){
     pipp_option.windowSize = read_param_json<int>(config,"pibtWindow");
     pipp_option.winPIBTSoft = read_param_json<int>(config,"winPibtSoftmode");
 
-    lns = new LNS(
+    // lns = new LNS(
+    //     *instance,
+    //     read_param_json<double>(config,"cutoffTime"),
+    //     read_param_json<string>(config,"initAlgo"),
+    //     read_param_json<string>(config,"replanAlgo"),
+    //     read_param_json<string>(config,"destoryStrategy"),
+    //     read_param_json<int>(config,"neighborSize"),
+    //     read_param_json<int>(config,"maxIterations"),
+    //     read_param_json<bool>(config,"initLNS"),
+    //     read_param_json<string>(config,"initDestoryStrategy"),
+    //     read_param_json<bool>(config,"sipp"),
+    //     read_param_json<int>(config,"screen"),
+    //     pipp_option,
+    //     HT,
+    //     read_param_json<int>(config,"window_size_for_CT"),
+    //     read_param_json<int>(config,"window_size_for_CAT"),
+    //     read_param_json<int>(config,"window_size_for_PATH")
+    // );
+
+
+    auto lns=new Parallel::GlobalManager(
         *instance,
-        read_param_json<double>(config,"cutoffTime"),
+        HT,
+        map_weights,
+        read_param_json<int>(config,"neighborSize"),
+        destroy_heuristic::RANDOMWALK, // TODO: always randomwalk
+        true, // TODO: always Adaptive
+        0.01, // TODO: decay factor
+        0.01, // TODO: reaction factor
         read_param_json<string>(config,"initAlgo"),
         read_param_json<string>(config,"replanAlgo"),
-        read_param_json<string>(config,"destoryStrategy"),
-        read_param_json<int>(config,"neighborSize"),
-        read_param_json<int>(config,"maxIterations"),
-        read_param_json<bool>(config,"initLNS"),
-        read_param_json<string>(config,"initDestoryStrategy"),
-        read_param_json<bool>(config,"sipp"),
-        read_param_json<int>(config,"screen"),
-        pipp_option,
-        HT,
+        false, // TODO: not sipp
         read_param_json<int>(config,"window_size_for_CT"),
         read_param_json<int>(config,"window_size_for_CAT"),
-        read_param_json<int>(config,"window_size_for_PATH")
+        read_param_json<int>(config,"window_size_for_PATH"),
+        0 // TODO: screen
     );
+
     ONLYDEV(g_timer.record_d("prepare_LNS_s","prepare_LNS_e","prepare_LNS");)
 
     // ONLYDEV(g_timer.record_p("modify_goals_s");)
@@ -151,12 +174,14 @@ void LNSSolver::plan(const SharedEnvironment & env){
         lns->agents[i].path.clear();
         bool goal_arrived=false;
         for (int j=executed_plan_step;j<paths[i].size();++j){
-            lns->agents[i].path.emplace_back(paths[i][j].location);
+            lns->agents[i].path.nodes.emplace_back(paths[i][j].location,paths[i][j].orientation);
             if (paths[i][j].location==env.goal_locations[i][0].first){
                 goal_arrived=true;
                 // break;
             }
         }
+        // TODO(rivers): it is not correct on weighted maps
+        lns->agents[i].path.path_cost=(lns->agents[i].path.size()-1)+HT->get(lns->agents[i].path.back().location,lns->agents[i].path.back().orientation,env.goal_locations[i][0].first);
         // cerr<<"agent "<<i<<": ";
         // for (int j=0;j<lns->agents[i].path.size();++j){
         //     cerr<<lacam2_solver->paths[i][j].location<<" ";
@@ -167,7 +192,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
     ONLYDEV(g_timer.record_p("run_LNS_s");)
     // continue optimizing paths
-    bool succ=lns->run_parallel();
+    bool succ=lns->run(read_param_json<double>(config,"cutoffTime"));
     if (succ)
     {
         cout<<"lns succeed"<<endl;
@@ -180,27 +205,27 @@ void LNSSolver::plan(const SharedEnvironment & env){
     for (int i=0;i<lns->agents.size();++i) {
         if (lns->agents[i].path.size()==1) {
             // in this case, actually the goal is the same as the start
-            lns->agents[i].path.push_back(lns->agents[i].path.back());
+            lns->agents[i].path.nodes.push_back(lns->agents[i].path.back());
         }
     }
     ONLYDEV(g_timer.record_d("run_LNS_s","run_LNS_e","run_LNS");)
 
     // save to paths
     ONLYDEV(g_timer.record_p("copy_paths_3_s");)
-    // cerr<<"lns path lengths:"<<endl;
+    // std::cerr<<"lns paths:"<<endl;
     for (int i=0;i<paths.size();++i) {
         auto & path=paths[i];
         path.resize(executed_plan_step+1);
         auto & new_path=lns->agents[i].path;
         // cerr<<"agent "<<i<<" "<<new_path.size()<<": "<<new_path<<endl;
         for (int j=1;j<new_path.size();++j) {
-            path.emplace_back(new_path[j].location, env.curr_timestep+j, -1);
+            path.emplace_back(new_path[j].location, env.curr_timestep+j, new_path[j].orientation);
             if (new_path[j].location==env.goal_locations[i][0].first){
                 break;
             }
         }
         // cerr<<"agent "<<i<<" s:"<<env.curr_states[i]<<" e:"<<env.goal_locations[i][0].first<<" c:"<<executed_plan_step<<endl;
-        // cerr<<"agent "<<i<<" "<<path.size()<<": "<<path<<endl;
+        // std::cerr<<"agent "<<i<<" "<<env.curr_states[i]<<"->"<<env.goal_locations[i][0].first<<" "<<path.size()<<": "<<path<<endl;
     }
     ONLYDEV(g_timer.record_d("copy_paths_3_s","copy_paths_3_e","copy_paths_3");)
 
@@ -249,7 +274,7 @@ void LNSSolver::observe(const SharedEnvironment & env){
             cerr<<"executed_plan_step exceed the plan:"<<executed_plan_step+1<<paths[i].size()<<endl;
             exit(-1);
         }
-        if (paths[i][executed_plan_step+1].location!=env.curr_states[i].location){
+        if (paths[i][executed_plan_step+1].location!=env.curr_states[i].location || paths[i][executed_plan_step+1].orientation!=env.curr_states[i].orientation){
             match=false;
         }
     }
@@ -293,26 +318,26 @@ void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> &
 
 #ifndef NO_ROT
     // get current state and current timestep
-    vector<State> planned_next_states;
-    vector<State> next_states;
-    int next_plan_step=executed_plan_step+1;
-    for (int i=0;i<env.num_of_agents;++i) {
-        if (next_plan_step>=paths[i].size()){
-            // todo: we need to wait for the new plan to come out.
-            exit(-1);
-        }    
-        planned_next_states.emplace_back(paths[i][next_plan_step].location,-1,-1);
-        next_states.emplace_back(-1,-1,-1);
-    }
+    // vector<State> planned_next_states;
+    // vector<State> next_states;
+    // int next_plan_step=executed_plan_step+1;
+    // for (int i=0;i<env.num_of_agents;++i) {
+    //     if (next_plan_step>=paths[i].size()){
+    //         // todo: we need to wait for the new plan to come out.
+    //         exit(-1);
+    //     }    
+    //     planned_next_states.emplace_back(paths[i][next_plan_step].location,-1,-1);
+    //     next_states.emplace_back(-1,-1,-1);
+    // }
 
-    slow_executor.execute(&(env.curr_states),&planned_next_states,&next_states);
+    // slow_executor.execute(&(env.curr_states),&planned_next_states,&next_states);
 
-    for (int i=0;i<env.num_of_agents;++i) {
-        if (next_states[i].timestep!=env.curr_states[i].timestep+1) {
-            std::cerr<<"agent "<<i<<"'s plan doesn't show consecutive timesteps: "<<next_states[i].timestep<<" "<<env.curr_states[i].timestep<<endl;
-            exit(-1);
-        }
-    }
+    // for (int i=0;i<env.num_of_agents;++i) {
+    //     if (next_states[i].timestep!=env.curr_states[i].timestep+1) {
+    //         std::cerr<<"agent "<<i<<"'s plan doesn't show consecutive timesteps: "<<next_states[i].timestep<<" "<<env.curr_states[i].timestep<<endl;
+    //         exit(-1);
+    //     }
+    // }
 
     // get actions from current state and next state
     for (int i=0;i<env.num_of_agents;++i) {
@@ -321,7 +346,13 @@ void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> &
             cerr<<"wierd error for agent "<<i<<". path length: "<<paths[i].size()<<", "<<"executed_plan_step+1: "<<executed_plan_step+1<<endl;
             exit(-1);
         }
-        actions.push_back(get_action_from_states(env.curr_states[i],next_states[i]));
+
+        if (paths[i][executed_plan_step].location!=env.curr_states[i].location || paths[i][executed_plan_step].orientation!=env.curr_states[i].orientation) {
+            cerr<<"agent "<<i<<"'s current state doesn't match with the executed plan"<<endl;
+            exit(-1);
+        }
+
+        actions.push_back(get_action_from_states(env.curr_states[i],paths[i][executed_plan_step+1]));
     }
 #else
 

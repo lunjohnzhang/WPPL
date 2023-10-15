@@ -74,6 +74,91 @@ void PathTable::deletePath(int agent_id, const Path& _path,bool verbose)
     // }
 }
 
+
+void PathTable::insertPath(int agent_id, const Parallel::Path& _path, bool verbose)
+{
+
+    if (verbose) {
+        std::cerr<<"insertPath for agent "<<agent_id<<" paths: ";
+        for (auto p : _path.nodes) {
+            std::cerr<<p.location<<","<<p.orientation<<" ";
+        }
+        std::cerr<<std::endl;
+    }
+
+    if (_path.nodes.empty())
+        return;
+    
+    int T = (int) _path.nodes.size();
+    if (window_size>0 && window_size+1<_path.nodes.size()) {
+        T = window_size+1;
+    }
+
+    auto & path=_path.nodes;
+
+
+    for (int t = 0; t < T; t++)
+    {
+        if (table[path[t].location].size() <= t)
+            table[path[t].location].resize(t + 1, NO_AGENT);
+        // assert(table[path[t].location][t] == NO_AGENT);
+            
+        // cerr<<t<<","<<table[path[t].location][t]<<" ";
+        table[path[t].location][t] = agent_id;
+    }
+    // cerr<<endl;
+
+    // TODO(rivers): check whether we need maintain goals and makespan in the life-long setting
+    assert(goals[path.back().location] == MAX_TIMESTEP);
+    goals[path.back().location] = T-1;
+    makespan = max(makespan, T-1);
+}
+
+void PathTable::deletePath(int agent_id, const Parallel::Path& _path,bool verbose)
+{
+    if (verbose) {
+        std::cerr<<"deletePath for agent "<<agent_id<<" paths: ";
+        for (auto p : _path.nodes) {
+            std::cerr<<p.location<<","<<p.orientation<<" ";
+        }
+        std::cerr<<std::endl;
+    }
+
+    if (_path.nodes.empty())
+        return;
+    
+    int T = (int) _path.nodes.size();
+    if (window_size>0 && window_size+1<_path.nodes.size()) {
+        T = window_size+1;
+    }
+
+    auto & path=_path.nodes;
+    
+    for (int t = 0; t < T ; t++)
+    {
+        assert(table[path[t].location].size() > t && table[path[t].location][t] == agent_id);
+        table[path[t].location][t] = NO_AGENT;
+    }
+    // TODO(rivers): check whether we need maintain goals and makespan  in the life-long setting
+    goals[path.back().location] = MAX_TIMESTEP;
+
+    // TODO(rivers): when we use window size, we ignore this for now, maybe we can use a better data structure such as ordered_set/heap to maintain the makespan. 
+    // if (makespan == (int) path.size() - 1) // re-compute makespan
+    // {
+    //     makespan = 0;
+    //     for (int time : goals)
+    //     {
+    //         if (time < MAX_TIMESTEP && time > makespan)
+    //             makespan = time;
+    //     }
+
+    // }
+}
+
+
+
+
+
 bool PathTable::constrained(int from, int to, int to_time) const
 {
     if (!table.empty())
@@ -84,11 +169,11 @@ bool PathTable::constrained(int from, int to, int to_time) const
                  table[to][to_time - 1] != NO_AGENT && table[from][to_time] == table[to][to_time - 1])
             return true;  // edge conflict with agent table[to][to_time - 1]
     }
-    if (!goals.empty())
-    {
-        if (goals[to] <= to_time)
-            return true; // target conflict
-    }
+    // if (!goals.empty())
+    // {
+    //     if (goals[to] <= to_time)
+    //         return true; // target conflict
+    // }
     return false;
 }
 

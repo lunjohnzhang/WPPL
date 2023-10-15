@@ -35,6 +35,8 @@ public:
     LNS * lns = nullptr;
     Instance * instance = nullptr;
     std::shared_ptr<HeuristicTable> HT; // instance
+    std::shared_ptr<std::vector<int> > map_weights; // map weights
+
     LaCAM2::Executor executor;
     LaCAM2::SlowExecutor slow_executor;
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;
@@ -45,6 +47,7 @@ public:
     LNSSolver(
         const std::shared_ptr<HeuristicTable> & HT,
         SharedEnvironment * env,
+        std::shared_ptr<std::vector<int> > & map_weights, // map weights
         nlohmann::json & config,
         std::shared_ptr<LaCAM2::LaCAM2Solver> & lacam2_solver
     );
