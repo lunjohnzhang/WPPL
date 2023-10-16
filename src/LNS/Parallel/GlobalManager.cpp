@@ -22,13 +22,9 @@ GlobalManager::GlobalManager(
 
     num_threads=omp_get_max_threads();
 
-    g_logger.debug("debug");
-    g_logger.flush();
-
     for (auto w: *map_weights){
         if (w!=1){
-            g_logger.error("we cannot support weighted map now for LNS! because in that way, we may need two different heuristic table. one for path cost estimation, one for path length estimation.");
-            g_logger.flush();
+            DEV_ERROR("we cannot support weighted map now for LNS! because in that way, we may need two different heuristic table. one for path cost estimation, one for path length estimation.");
             exit(-1);
         }
     }
