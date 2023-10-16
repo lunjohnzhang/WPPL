@@ -90,13 +90,22 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
             // we need to copy the new planned paths into paths
             // std::cerr<<"lacam2 paths:"<<endl;
+            int num_inconsistent=0;
             for (int i=0;i<env.num_of_agents;++i){
+                for (int j=0;j<lacam2_solver->paths[i].size()-1;++j){
+                    if (paths[i][j+executed_plan_step].location!=lacam2_solver->paths[i][j].location || paths[i][j+executed_plan_step].orientation!=lacam2_solver->paths[i][j].orientation){
+                        ++num_inconsistent;
+                        break;
+                    }
+                }
+
                 paths[i].resize(executed_plan_step+1);
                 for (int j=1;j<lacam2_solver->paths[i].size();++j){
                     paths[i].emplace_back(lacam2_solver->paths[i][j].location,executed_plan_step+j,lacam2_solver->paths[i][j].orientation);
                 }
                 // std::cerr<<"agent "<<i<<" "<<env.curr_states[i]<<"->"<<env.goal_locations[i][0].first<<" "<<paths[i].size()<<": "<<paths[i]<<std::endl;
             }
+            std::cerr<<"num_inconsistent/total: "<<num_inconsistent<<"/"<<env.num_of_agents<<"="<<num_inconsistent/(float)env.num_of_agents<<std::endl;
             ONLYDEV(g_timer.record_d("lacam2_plan_s","lacam2_plan_e","lacam2_plan");)
         }
 
