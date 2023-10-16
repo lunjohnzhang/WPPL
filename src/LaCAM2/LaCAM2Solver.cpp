@@ -131,7 +131,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
             ONLYDEV(g_timer.record_d("copy_suo_paths_s","copy_suo_paths");)
         }
 
-        auto planner = Planner(&instance,HT,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap,use_orient_in_heuristic);
+        auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap,use_orient_in_heuristic);
         auto additional_info = std::string("");
         const auto solution=planner.solve(additional_info);
         const auto comp_time_ms = deadline.elapsed_ms();

@@ -79,6 +79,7 @@ struct Planner {
   const uint N;       // number of agents
   const uint V_size;  // number o vertices
   std::shared_ptr<HeuristicTable> HT;
+  std::shared_ptr<std::vector<int> > map_weights; // map weights
   uint loop_cnt;      // auxiliary
 
   // used in PIBT
@@ -88,7 +89,9 @@ struct Planner {
   Agents occupied_now;                          // for quick collision checking
   Agents occupied_next;                         // for quick collision checking
 
-  Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const Deadline* _deadline, std::mt19937* _MT,
+  int get_cost_move(int pst,int ped);
+
+  Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<int> > & map_weights, const Deadline* _deadline, std::mt19937* _MT,
           const int _verbose = 0,
           // other parameters
           const Objective _objective = OBJ_NONE,

@@ -95,7 +95,7 @@ HNode::~HNode()
   }
 }
 
-Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const Deadline* _deadline,
+Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<int> > & map_weights, const Deadline* _deadline,
                  std::mt19937* _MT, const int _verbose,
                  const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic)
     : ins(_ins),
@@ -107,6 +107,7 @@ Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & H
       N(ins->N),
       V_size(ins->G.size()),
       HT(HT),
+      map_weights(map_weights),
       loop_cnt(0),
       C_next(N),
       tie_breakers(V_size, 0),
@@ -572,6 +573,35 @@ int get_neighbor_orientation(const Graph & G, int loc1, int loc2, int default_va
 
 }
 
+int get_o_dist(int o1, int o2) {
+  return std::min((o2-o1+4)%4,(o1-o2+4)%4);
+}
+
+int Planner::get_cost_move(int pst, int ped) {
+  // the problem is we need to decide which direction?
+  if (ped-pst==1) {
+    // east
+    return (*map_weights)[pst*5+0];
+  } else if (ped-pst==ins->G.width) {
+    // south
+    return (*map_weights)[pst*5+1];
+  } else if (ped-pst==-1) {
+    // west
+    return (*map_weights)[pst*5+2];
+  } else if (ped-pst==-ins->G.width) {
+    // north
+    return (*map_weights)[pst*5+3];
+  } else if (ped-pst==0) {
+    // stay
+    return 0; // means no move is needed.
+  }
+  else {
+    std::cerr<<"invalid move: "<<pst<<" "<<ped<<endl;
+    exit(-1);
+  }
+
+}
+
 bool Planner::funcPIBT(Agent* ai, HNode * H)
 {
   const auto i = ai->id;
@@ -596,15 +626,20 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
             [&](Vertex* const v, Vertex* const u) {
 
+    // TODO(rivers): we should move these computation outside to speed up...
+    
     // TODO(rivers): deal with arrivals: maybe just select randomly
     int o0=H->C.orients[i];
 
     int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index,o0);
     int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index,o0);
 
-    const int n_orients=4;
-    double o_dist1=std::min((o1-o0+n_orients)%n_orients,(o0-o1+n_orients)%n_orients)*1.1+(v->index==ai->v_now->index)*0.5;
-    double o_dist2=std::min((o2-o0+n_orients)%n_orients,(o0-o2+n_orients)%n_orients)*1.1+(u->index==ai->v_now->index)*0.5;
+    // TODO(rivers): we should maintain the const somewhere else
+    // perhaps: we should wrap a class for map weights...
+    int cost_rot=(*map_weights)[ai->v_now->index*5+4];
+    const double decay=0.9; // TODO(rivers): BUG? so that we encourage to move? =1 would cause bug... why not just slap me in the face???
+    double o_dist1=get_o_dist(o0,o1)*cost_rot+get_cost_move(ai->v_now->index,v->index)*decay;
+    double o_dist2=get_o_dist(o0,o2)*cost_rot+get_cost_move(ai->v_now->index,u->index)*decay;
 
     // cerr<<o1<<" "<<o2<<" "<<o0<<" "<<o_dist1<<" "<<o_dist2<<endl;
 
