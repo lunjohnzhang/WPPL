@@ -1,6 +1,7 @@
 #pragma once
 #include "LNS/Parallel/NeighborGenerator.h"
 #include "LNS/Parallel/LocalOptimizer.h"
+#include "util/TimeLimiter.h"
 #include <memory>
 
 namespace LNS {
@@ -42,9 +43,10 @@ public:
     );
 
     void getInitialSolution(Neighbor & neighbor);
-    bool run(double time_limit);
+    bool run(TimeLimiter & time_limiter);
     void update(Neighbor & neighbor, bool recheck);
     void update(Neighbor & neighbor);
+    void reset();
 
     string getSolverName() const { return "LNS(" + init_algo_name + ";" + replan_algo_name + ")"; }
 

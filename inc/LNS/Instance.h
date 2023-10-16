@@ -21,6 +21,8 @@ public:
 	Instance(const SharedEnvironment & env);
 
 
+	void set_starts_and_goals(const SharedEnvironment & env);
+
 	void printAgents() const;
 	string getMapFile() const {return map_fname;};
     vector<int> getStarts() const {return start_locations;};

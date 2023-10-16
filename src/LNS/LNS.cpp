@@ -5,6 +5,7 @@
 #include "util/Timer.h"
 #include "util/Dev.h"
 #include "LNS/Parallel/GlobalManager.h"
+#include "util/TimeLimiter.h"
 
 namespace LNS {
 
@@ -99,7 +100,7 @@ LNS::LNS(Instance& instance, double time_limit, const string & init_algo_name, c
     // sum_of_costs = 0;
 // }
 
-bool LNS::run_parallel(std::shared_ptr<vector<int> > & map_weights) {
+bool LNS::run_parallel(std::shared_ptr<vector<int> > & map_weights, TimeLimiter & time_limiter) {
     bool sipp=true;
     ONLYDEV(g_timer.record_p("build_parallel_s");)
     auto global_manager=std::make_shared<Parallel::GlobalManager>(
@@ -112,7 +113,7 @@ bool LNS::run_parallel(std::shared_ptr<vector<int> > & map_weights) {
     );
     ONLYDEV(g_timer.record_d("build_parallel_s","build_parallel");)
 
-    bool succ=global_manager->run(time_limit);
+    bool succ=global_manager->run(time_limiter);
     return succ;
 }
 

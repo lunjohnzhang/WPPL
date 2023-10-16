@@ -21,6 +21,10 @@ LocalOptimizer::LocalOptimizer(
     path_planner = std::make_shared<TimeSpaceAStarPlanner>(instance, HT, map_weights);
 }
 
+void LocalOptimizer::reset() {
+    path_table.reset();
+}
+
 void LocalOptimizer::update(Neighbor & neighbor) {
     if (neighbor.succ) {
         for (auto & aid: neighbor.agents) {

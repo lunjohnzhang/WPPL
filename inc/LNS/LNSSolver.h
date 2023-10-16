@@ -11,6 +11,7 @@
 #include <unordered_set>
 #include <queue>
 #include "LaCAM2/LaCAM2Solver.hpp"
+#include "LNS/Parallel/GlobalManager.h"
 
 namespace LNS {
 
@@ -32,8 +33,8 @@ public:
     // Action get_action_from_states(const State & state, const State & next_state);
     // [end]
 
-    LNS * lns = nullptr;
-    Instance * instance = nullptr;
+    std::shared_ptr<Parallel::GlobalManager> lns;
+    std::shared_ptr<Instance> instance;
     std::shared_ptr<HeuristicTable> HT; // instance
     std::shared_ptr<std::vector<int> > map_weights; // map weights
 
@@ -43,6 +44,8 @@ public:
     std::set<int> agent_ids_need_replan;
 
     nlohmann::json config;
+
+    double max_plan_time=0;
 
     LNSSolver(
         const std::shared_ptr<HeuristicTable> & HT,

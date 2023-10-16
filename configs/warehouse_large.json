@@ -8,7 +8,7 @@
     "map_weights_path": "",
     "LNS": {
         "seed": 0,
-        "cutoffTime": 0.5,
+        "cutoffTime": 0.9,
         "screen": 0,
         "initAlgo": "LaCAM2",
         "replanAlgo": "PP",

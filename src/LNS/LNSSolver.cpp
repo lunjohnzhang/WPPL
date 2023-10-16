@@ -59,6 +59,12 @@ int get_neighbor_orientation(const SharedEnvironment * env, int loc1,int loc2) {
 }
 
 void LNSSolver::plan(const SharedEnvironment & env){
+    // TODO(rivers): make it configurable.
+    double time_limit=read_param_json<double>(config,"cutoffTime");
+    TimeLimiter time_limiter(time_limit);
+
+    ONLYDEV(g_timer.record_p("_plan_s");)
+
     ONLYDEV(g_timer.record_p("plan_s");)
 
     // TODO(rivers): we need to replan for all agents that has no plan
@@ -120,13 +126,37 @@ void LNSSolver::plan(const SharedEnvironment & env){
     }
 
     ONLYDEV(g_timer.record_p("prepare_LNS_s");)
-    // build instace
-    instance = new Instance(env);
+
+    if (executed_plan_step==0){
+        // TODO(rivers): not sure what's bug making it cannot be placed in initialize()
+        // build instace
+        instance = std::make_shared<Instance>(env);
+        lns = std::make_shared<Parallel::GlobalManager>(
+            *instance,
+            HT,
+            map_weights,
+            read_param_json<int>(config,"neighborSize"),
+            destroy_heuristic::RANDOMWALK, // TODO: always randomwalk
+            true, // TODO: always Adaptive
+            0.01, // TODO: decay factor
+            0.01, // TODO: reaction factor
+            read_param_json<string>(config,"initAlgo"),
+            read_param_json<string>(config,"replanAlgo"),
+            false, // TODO: not sipp
+            read_param_json<int>(config,"window_size_for_CT"),
+            read_param_json<int>(config,"window_size_for_CAT"),
+            read_param_json<int>(config,"window_size_for_PATH"),
+            0 // TODO: screen
+        );
+    } else {
+        lns->reset();
+        instance->set_starts_and_goals(env);
+    }
 
     // build planner
-    PIBTPPS_option pipp_option;
-    pipp_option.windowSize = read_param_json<int>(config,"pibtWindow");
-    pipp_option.winPIBTSoft = read_param_json<int>(config,"winPibtSoftmode");
+    // PIBTPPS_option pipp_option;
+    // pipp_option.windowSize = read_param_json<int>(config,"pibtWindow");
+    // pipp_option.winPIBTSoft = read_param_json<int>(config,"winPibtSoftmode");
 
     // lns = new LNS(
     //     *instance,
@@ -146,25 +176,6 @@ void LNSSolver::plan(const SharedEnvironment & env){
     //     read_param_json<int>(config,"window_size_for_CAT"),
     //     read_param_json<int>(config,"window_size_for_PATH")
     // );
-
-
-    auto lns=new Parallel::GlobalManager(
-        *instance,
-        HT,
-        map_weights,
-        read_param_json<int>(config,"neighborSize"),
-        destroy_heuristic::RANDOMWALK, // TODO: always randomwalk
-        true, // TODO: always Adaptive
-        0.01, // TODO: decay factor
-        0.01, // TODO: reaction factor
-        read_param_json<string>(config,"initAlgo"),
-        read_param_json<string>(config,"replanAlgo"),
-        false, // TODO: not sipp
-        read_param_json<int>(config,"window_size_for_CT"),
-        read_param_json<int>(config,"window_size_for_CAT"),
-        read_param_json<int>(config,"window_size_for_PATH"),
-        0 // TODO: screen
-    );
 
     ONLYDEV(g_timer.record_d("prepare_LNS_s","prepare_LNS_e","prepare_LNS");)
 
@@ -201,7 +212,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
     ONLYDEV(g_timer.record_p("run_LNS_s");)
     // continue optimizing paths
-    bool succ=lns->run(read_param_json<double>(config,"cutoffTime"));
+    bool succ=lns->run(time_limiter);
     if (succ)
     {
         cout<<"lns succeed"<<endl;
@@ -246,11 +257,16 @@ void LNSSolver::plan(const SharedEnvironment & env){
     //     }   
     //     cerr<<endl;
     // }
-
     ONLYDEV(g_timer.record_d("plan_s","plan_e","plan");)
 
-    delete lns;
-    delete instance;
+    ONLYDEV(
+        double plan_time=g_timer.record_d("_plan_s","_plan_e","_plan");  
+        if (plan_time>max_plan_time) {
+            max_plan_time=plan_time;
+        }
+        std::cerr<<"max_plan_time: "<<max_plan_time<<endl;
+        g_timer.remove_d("_plan");  
+    )
 
 }
 
@@ -376,13 +392,15 @@ void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> &
 
 #endif
 
-    if (!action_model.is_valid(env.curr_states,actions)){
-        cerr<<"planed actions are not valid in executed_plan_step "<<executed_plan_step+1<<"!"<<endl;
-        for (int i=0;i<env.num_of_agents;++i) {
-            cerr<<"agent "<<i<<" "<<env.curr_states[i]<<" "<<actions[i]<<endl;
+    ONLYDEV(
+        if (!action_model.is_valid(env.curr_states,actions)){
+            cerr<<"planed actions are not valid in executed_plan_step "<<executed_plan_step+1<<"!"<<endl;
+            for (int i=0;i<env.num_of_agents;++i) {
+                cerr<<"agent "<<i<<" "<<env.curr_states[i]<<" "<<actions[i]<<endl;
+            }
+            exit(-1);
         }
-        ONLYDEV(exit(-1);)
-    }
+    )
 
     ONLYDEV(g_timer.record_d("get_step_actions_s","get_step_actions_e","get_step_actions");)
 }

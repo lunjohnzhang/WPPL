@@ -32,6 +32,14 @@ Instance::Instance(const SharedEnvironment & env) {
 	}
 }
 
+void Instance::set_starts_and_goals(const SharedEnvironment & env) {
+	for (int i=0;i<num_of_agents;++i){
+		start_locations[i]=env.curr_states[i].location;
+		start_orientations[i]=env.curr_states[i].orientation;
+		goal_locations[i]=env.goal_locations[i][0].first;
+	}
+}
+
 Instance::Instance(const string& map_fname, const string& agent_fname, 
 	int num_of_agents, int num_of_rows, int num_of_cols, int num_of_obstacles, int warehouse_width):
 	map_fname(map_fname), agent_fname(agent_fname), num_of_agents(num_of_agents)

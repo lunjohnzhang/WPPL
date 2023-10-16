@@ -1,7 +1,7 @@
 #include "LNS/Parallel/GlobalManager.h"
 #include "util/Timer.h"
 #include "omp.h"
-#include "LNS/Parallel/TimeLimiter.h"
+#include "util/TimeLimiter.h"
 
 namespace LNS {
 
@@ -52,6 +52,28 @@ GlobalManager::GlobalManager(
         ALNS, decay_factor, reaction_factor, 
         num_threads, screen
     );
+}
+
+void GlobalManager::reset() {
+    initial_sum_of_costs=MAX_COST;
+    sum_of_costs=MAX_COST;
+    num_of_failures=0;
+    average_group_size=0;  
+    sum_of_distances=0;
+
+    iteration_stats.clear();
+    path_table.reset();
+    for (auto & agent: agents) {
+        agent.reset();
+    }
+
+    // call reset of neighbor_generator
+    neighbor_generator->reset();
+    // call reset of local_optimizers
+    for (auto & local_optimizer: local_optimizers) {
+        local_optimizer->reset();
+    }
+
 }
 
 void GlobalManager::update(Neighbor & neighbor, bool recheck) {
@@ -176,9 +198,7 @@ void GlobalManager::update(Neighbor & neighbor) {
 
 
 // TODO(rivers): we will do single-thread code refactor first, then we will do the parallelization
-bool GlobalManager::run(double time_limit) {
-
-    TimeLimiter time_limiter(time_limit);
+bool GlobalManager::run(TimeLimiter & time_limiter) {
 
     initial_sum_of_costs=0;
     sum_of_costs=0;

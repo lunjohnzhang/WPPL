@@ -1,7 +1,7 @@
 #pragma once
 #include "LNS/LNS.h"
 #include <queue>
-#include "LNS/Parallel/TimeLimiter.h"
+#include "util/TimeLimiter.h"
 #include "util/HeuristicTable.h"
 
 namespace LNS {
@@ -58,6 +58,8 @@ public:
     void chooseDestroyHeuristicbyALNS();
     bool generateNeighborByRandomWalk(Neighbor & neighbor, int idx);
     bool generateNeighborByIntersection(Neighbor & neighbor);
+
+    void reset();
 
 private:
     int rouletteWheel();

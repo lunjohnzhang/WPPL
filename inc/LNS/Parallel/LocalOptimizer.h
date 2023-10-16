@@ -2,7 +2,7 @@
 #include "LNS/PathTable.h"
 #include "LNS/BasicLNS.h"
 #include "util/HeuristicTable.h"
-#include "LNS/Parallel/TimeLimiter.h"
+#include "util/TimeLimiter.h"
 #include "LNS/Parallel/TimeSpaceAStarPlanner.h"
 
 namespace LNS {
@@ -40,6 +40,8 @@ public:
     void prepare(Neighbor & neighbor);
 
     bool runPP(Neighbor & neighbor, const TimeLimiter & time_limiter);
+
+    void reset();
 
 };
 

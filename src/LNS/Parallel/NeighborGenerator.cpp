@@ -36,6 +36,13 @@ NeighborGenerator::NeighborGenerator(
 
 }
 
+void NeighborGenerator::reset() {
+    destroy_weights.assign(DESTORY_COUNT,1);
+    for (auto & tabu_list:tabu_list_list) {
+        tabu_list.clear();
+    }
+}
+
 void NeighborGenerator::update(Neighbor & neighbor){
     if (ALNS) // update destroy heuristics
     {

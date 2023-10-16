@@ -8,6 +8,7 @@
 #include "util/MyLogger.h"
 #include "boost/format.hpp"
 #include "util/MyCommon.h"
+#include "util/TimeLimiter.h"
 
 struct AstarNode {
     int location;
@@ -248,7 +249,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     // we also need to clean the current action plan if restart
 
     // TODO if time_limit approachs, just return a valid move, e.g. all actions are wait.
-
+    
+    ONLYDEV(
+        g_timer.record_p("_step_s");
+    )
 
     if (lifelong_solver_name=="RHCR") {
         cout<<"using RHCR"<<endl;
@@ -267,6 +271,15 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
         exit(-1);
     }
+
+    ONLYDEV(
+        double step_time=g_timer.record_d("_step_s","_step_e","_step");
+        if (step_time>max_step_time) {
+            max_step_time=step_time;
+        }
+        std::cerr<<"max_step_time: "<<max_step_time<<endl;
+        g_timer.remove_d("_step");
+    )
 
     // for (int i = 0; i < env->num_of_agents; i++) 
     // {

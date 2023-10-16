@@ -49,6 +49,8 @@ public:
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;
     std::shared_ptr<LNS::LNSSolver> lns_solver;
 
+    double max_step_time=0;
+
     std::shared_ptr<std::vector<int> > map_weights;
     nlohmann::json config;
     void load_configs();

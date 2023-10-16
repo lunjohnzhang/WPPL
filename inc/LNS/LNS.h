@@ -13,6 +13,7 @@
 #include "util/HeuristicTable.h"
 #include "SharedEnv.h"
 #include <memory>
+#include "util/TimeLimiter.h"
 
 namespace LNS {
 
@@ -50,7 +51,7 @@ public:
     }
     bool getInitialSolution();
     bool run();
-    bool run_parallel(std::shared_ptr<vector<int> > & map_weights);
+    bool run_parallel(std::shared_ptr<vector<int> > & map_weights, TimeLimiter & time_limiter);
     void validateSolution() const;
     void writeIterStatsToFile(const string & file_name) const;
     void writeResultToFile(const string & file_name) const;

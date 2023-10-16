@@ -50,6 +50,10 @@ struct Agent
         // TODO(rivers): we may need two heuristic table: one for cost, one for path length estimation.
         return getEstimatedPathLength() - HT->get(instance.start_locations[id],instance.start_orientations[id],instance.goal_locations[id]);
     }
+
+    void reset() {
+        path.clear();
+    }
 };
 
 struct Neighbor
