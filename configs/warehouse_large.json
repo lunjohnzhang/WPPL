@@ -2,10 +2,10 @@
     "lifelong_solver_name": [
         {
             "n_agents": 1000000,
-            "value": "LNS"
+            "value": "LaCAM2"
         }
     ],
-    "map_weights_path": "",
+    "map_weights_path": "scripts/warehouse_large_weight_test3.w",
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.9,

@@ -229,6 +229,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver);
         lns_solver->initialize(*env);
         cout<<"LNSSolver initialized"<<endl;
+    } else if (lifelong_solver_name=="DUMMY") {
+        cout<<"using dummy solver"<<endl;
     }
     else {
         cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
@@ -267,7 +269,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         lns_solver->observe(*env);
         lns_solver->plan(*env); 
         lns_solver->get_step_actions(*env,actions);
-    } else {
+    } else if (lifelong_solver_name=="DUMMY") {
+        cout<<"using DUMMY"<<endl;
+    } 
+    else {
         cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
         exit(-1);
     }
