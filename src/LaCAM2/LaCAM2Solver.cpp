@@ -89,16 +89,14 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
 
         vector<::Path> precomputed_paths;
         if (read_param_json<int>(config["SUO"],"iterations")>0) {
-
-#ifndef NO_ROT
-            std::cerr<<"only support NO_ROT now"<<std::endl;
-            exit(-1);
-#endif
-
             ONLYDEV(g_timer.record_p("suo_init_s");)
             SUO::TemporalSpatial::SUO suo(
                 env,
-                1, // only work for no rotation now
+#ifdef NO_ROT
+                1, // for no rotation
+#else
+                4, // for rotation
+#endif
                 *map_weights,
                 HT,
                 read_param_json<float>(config["SUO"],"vertex_collision_cost"),
@@ -122,8 +120,9 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
                     exit(-1);
                 }
                 for (int j=0;j<suo.paths[i].size();++j){
-                    precomputed_paths[i].emplace_back(suo.paths[i][j].pos,-1,-1);
+                    precomputed_paths[i].emplace_back(suo.paths[i][j].pos,j,suo.paths[i][j].orient);
                 }
+                // std::cerr<<i<<precomputed_paths[i]<<endl;
             }
             // we need to change precomputed_paths to suo_paths. because the former one means hard constraints to follow
             // but the latter one is just a suggesion.

@@ -1,10 +1,6 @@
 {
     "lifelong_solver_name": [
         {
-            "n_agents": 600,
-            "value": "DUMMY"
-        },
-        {
             "n_agents": 1000000,
             "value": "LaCAM2"
         }
@@ -44,13 +40,13 @@
     },
     "LaCAM2": {
         "seed": 0,
-        "planning_window": 10,
+        "planning_window": 1,
         "consider_rotation": true,
         "use_orient_in_heuristic": true,
         "use_slow_executor": false,
         "SUO": {
-            "vertex_collision_cost": 1,
-            "iterations": 0,
+            "vertex_collision_cost": 100,
+            "iterations": 1,
             "max_expanded": -1,
             "window": 30,
             "h_weight": 1.0
