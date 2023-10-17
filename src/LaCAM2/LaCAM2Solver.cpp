@@ -4,6 +4,7 @@
 #include "PIBT/util.h"
 #include "LaCAM2/SUO/SpatialSUO.hpp"
 #include "LaCAM2/SUO/TemporalSpatialSUO.hpp"
+#include <omp.h>
 
 namespace LaCAM2 {
 
@@ -60,6 +61,57 @@ int LaCAM2Solver::get_neighbor_orientation(int loc1,int loc2) {
     cerr<<"loc1 and loc2 are not neighbors: "<<loc1<<", "<<loc2<<endl;
     exit(-1);
 
+}
+
+int LaCAM2Solver::get_action_cost(int pst, int ost, int ped, int oed) {
+    auto & map_weights=*(HT->map_weights);
+
+    int offset=ped-pst;
+    if (offset==0) {
+        // stay cost
+        return map_weights[pst*5+4];
+    } else if (offset==1) {
+        // east
+        return map_weights[pst*5+0];
+    } else if (offset==HT->env.cols) {
+        // south
+        return map_weights[pst*5+1];
+    } else if (offset==-1) {
+        // west
+        return map_weights[pst*5+2];
+    } else if (offset==-HT->env.cols) {
+        // north
+        return map_weights[pst*5+3];
+    } else {
+        std::cerr<<"invalid move"<<endl;
+        exit(-1);
+    }
+}
+
+int LaCAM2Solver::eval_solution(const Instance & instance, const Solution & solution) {
+    float cost=0;
+    for (int aid=0;aid<instance.N;++aid) {
+        // TODO(rivers): should we consider the case of arrival here?
+        bool arrived=false;
+        for (int i=0;i<solution.size()-1;++i) {
+            if (solution[i].arrivals[aid]) {
+                arrived=true;
+                break;
+            }
+            int loc=solution[i].locs[aid]->index;
+            int orient=solution[i].orients[aid];
+            int next_loc=solution[i+1].locs[aid]->index;
+            int next_orient=solution[i+1].orients[aid];
+            cost+=get_action_cost(loc,orient,next_loc,next_orient);
+        }
+        if (!arrived){
+            int loc=solution.back().locs[aid]->index;
+            int orient=solution.back().orients[aid];
+            cost += HT->get(loc,orient,instance.goals.locs[aid]->index);
+        }
+    }
+
+    return cost;
 }
 
 void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths){
@@ -131,10 +183,23 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
             ONLYDEV(g_timer.record_d("copy_suo_paths_s","copy_suo_paths");)
         }
 
-        auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap,use_orient_in_heuristic);
-        auto additional_info = std::string("");
-        const auto solution=planner.solve(additional_info);
-        const auto comp_time_ms = deadline.elapsed_ms();
+        int best_cost=INT_MAX;
+        Solution best_solution;
+
+        #pragma omp parallel for
+        for (int i=0;i<1;++i) {
+            auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap,use_orient_in_heuristic);
+            auto additional_info = std::string("");
+            auto solution=planner.solve(additional_info,i);
+            auto cost=eval_solution(instance,solution);
+            #pragma omp critical
+            {
+                if (cost<best_cost) {
+                    best_cost=cost;
+                    best_solution=solution;
+                }
+            }
+        }
 
         // // failure
         // if (solution.empty()) {
@@ -149,9 +214,10 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         // }
 
         // post processing
-        print_stats(verbose, instance, HT, solution, comp_time_ms);
+        auto comp_time_ms = deadline.elapsed_ms();
+        print_stats(verbose, instance, HT, best_solution, comp_time_ms);
 
-        cout<<"solution length:"<<solution.size()<<endl;
+        cout<<"solution length:"<<best_solution.size()<<endl;
         
         // if (solution.size()==1) {
         //     next_config=solution[0];
@@ -165,9 +231,9 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
             //     cerr<<solution[j][i]->index<<" ";
             // }
             // cerr<<endl;
-            int j=solution.size()==1?0:1;
-            for (;j<solution.size();++j) {
-                paths[i].emplace_back(solution[j].locs[i]->index,env.curr_states[i].timestep+j,solution[j].orients[i]);
+            int j=best_solution.size()==1?0:1;
+            for (;j<best_solution.size();++j) {
+                paths[i].emplace_back(best_solution[j].locs[i]->index,env.curr_states[i].timestep+j,best_solution[j].orients[i]);
             }
         }
 

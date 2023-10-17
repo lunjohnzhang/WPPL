@@ -17,7 +17,7 @@ uint HNode::HNODE_CNT = 0;
 
 // for high-level
 HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, const int _g,
-             const int _h, const uint _d)
+             const int _h, const uint _d, int _order_strategy)
     : C(_C),
       parent(_parent),
       neighbor(),
@@ -27,7 +27,8 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
       f(g + h),
       priorities(C.size()),
       order(C.size(), 0),
-      search_tree(std::queue<LNode*>())
+      search_tree(std::queue<LNode*>()),
+      order_strategy(_order_strategy)
 {
   ++HNODE_CNT;
 
@@ -57,11 +58,20 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
         // int h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
         // int h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
 
-        if (h1!=h2) return h1<h2;
 
-        if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
+        if (order_strategy==0) {
+          if (h1!=h2) return h1<h2;
+          if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
+          return a.tie_breaker>b.tie_breaker;
+        } else if (order_strategy==1) {
+          if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
+          if (h1!=h2) return h1<h2;
+          return a.tie_breaker>b.tie_breaker;
+        } else {
+          std::cerr<<"unknown strategy"<<std::endl;
+          exit(-1);
+        }
 
-        return a.tie_breaker>b.tie_breaker;
   });
 
   search_tree.push(new LNode());
@@ -122,7 +132,7 @@ Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & H
 
 Planner::~Planner() {}
 
-Solution Planner::solve(std::string& additional_info)
+Solution Planner::solve(std::string& additional_info, int order_strategy)
 {
   solver_info(1, "start search");
 
@@ -133,7 +143,7 @@ Solution Planner::solve(std::string& additional_info)
   auto OPEN = std::stack<HNode*>();
   auto EXPLORED = std::unordered_map<Config, HNode*, ConfigHasher, Config::ConfigEqual>();
   // insert initial node, 'H': high-level node
-  auto H_init = new HNode(ins->starts, HT, ins, nullptr, 0, get_h_value(ins->starts), 0);
+  auto H_init = new HNode(ins->starts, HT, ins, nullptr, 0, get_h_value(ins->starts), 0, order_strategy);
   OPEN.push(H_init);
   EXPLORED[H_init->C] = H_init;
 
@@ -291,7 +301,7 @@ Solution Planner::solve(std::string& additional_info)
     } else {
       // insert new search node
       const auto H_new = new HNode(
-          C_new, HT, ins, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new), H->d + 1);
+          C_new, HT, ins, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new), H->d + 1, order_strategy);
       EXPLORED[H_new->C] = H_new;
       if (H_goal == nullptr || H_new->f < H_goal->f) OPEN.push(H_new);
     }

@@ -55,9 +55,11 @@ struct HNode {
   std::vector<float> priorities;
   std::vector<uint> order;
   std::queue<LNode*> search_tree;
+  
+  int order_strategy;
 
   HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, const int _g,
-        const int _h, const uint _d);
+        const int _h, const uint _d, int order_strategy);
   ~HNode();
 };
 using HNodes = std::vector<HNode*>;
@@ -102,7 +104,7 @@ struct Planner {
 
   Executor executor;
 
-  Solution solve(std::string& additional_info);
+  Solution solve(std::string& additional_info, int order_strategy);
 
   std::vector<std::tuple<Vertex *,int> > get_successors(Vertex *v, int orient);
 

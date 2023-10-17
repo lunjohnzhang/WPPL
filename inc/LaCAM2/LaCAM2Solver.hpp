@@ -42,6 +42,10 @@ public:
     nlohmann::json config;
 
     Instance build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr);
+
+    int get_action_cost(int pst, int ost, int ped, int oed);
+    int eval_solution(const Instance & instance, const Solution & solution);
+
     int get_neighbor_orientation(int loc1,int loc2);
 
     LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<int> > & map_weights, nlohmann::json & config):
