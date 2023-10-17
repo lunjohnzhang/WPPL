@@ -201,7 +201,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
             }
         }
         // TODO(rivers): it is not correct on weighted maps
-        lns->agents[i].path.path_cost=(lns->agents[i].path.size()-1)+HT->get(lns->agents[i].path.back().location,lns->agents[i].path.back().orientation,env.goal_locations[i][0].first);
+        lns->agents[i].path.path_cost=lns->agents[i].getEstimatedPathLength(lns->agents[i].path,env.goal_locations[i][0].first,HT);
         // cerr<<"agent "<<i<<": ";
         // for (int j=0;j<lns->agents[i].path.size();++j){
         //     cerr<<lacam2_solver->paths[i][j].location<<" ";

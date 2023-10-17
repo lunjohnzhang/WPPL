@@ -22,12 +22,12 @@ GlobalManager::GlobalManager(
 
     num_threads=omp_get_max_threads();
 
-    for (auto w: *map_weights){
-        if (w!=1){
-            DEV_ERROR("we cannot support weighted map now for LNS! because in that way, we may need two different heuristic table. one for path cost estimation, one for path length estimation.");
-            exit(-1);
-        }
-    }
+    // for (auto w: *map_weights){
+    //     if (w!=1){
+    //         DEV_ERROR("we cannot support weighted map now for LNS! because in that way, we may need two different heuristic table. one for path cost estimation, one for path length estimation.");
+    //         exit(-1);
+    //     }
+    // }
     
     for (int i=0;i<instance.num_of_agents;++i) {
         agents.emplace_back(i,instance,HT);

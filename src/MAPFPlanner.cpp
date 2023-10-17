@@ -212,8 +212,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
             exit(-1);
         }
 
-        auto heuristics =std::make_shared<HeuristicTable>(env,read_param_json<bool>(config["LaCAM2"],"use_orient_in_heuristic"));
-        heuristics->preprocess(*map_weights, suffix);
+        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,read_param_json<bool>(config["LaCAM2"],"use_orient_in_heuristic"));
+        heuristics->preprocess(suffix);
         lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,config["LaCAM2"]);
         lacam2_solver->initialize(*env);
         cout<<"LaCAMSolver2 initialized"<<endl;
@@ -222,8 +222,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
             std::cerr<<"In LNS, must not consider rotation when compiled with NO_ROT unset"<<std::endl;
             exit(-1);
         }
-        auto heuristics =std::make_shared<HeuristicTable>(env,true);
-        heuristics->preprocess(*map_weights, suffix);
+        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,true);
+        heuristics->preprocess(suffix);
         //heuristics->preprocess();
         auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,config["LNS"]["LaCAM2"]);
         lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver);

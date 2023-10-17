@@ -149,6 +149,12 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter
                 exit(-1);
             } 
         // }
+
+        int _path = agents[id].getEstimatedPathLength(neighbor.m_paths[id], goal_pos, HT);
+        if (_path!=neighbor.m_paths[id].path_cost) {
+            std::cerr<<"path cost "<<neighbor.m_paths[id].path_cost<<" is not equal to estimated path cost "<<_path<<std::endl;
+            exit(-1);
+        }
         neighbor.sum_of_costs += neighbor.m_paths[id].path_cost;
 
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs){

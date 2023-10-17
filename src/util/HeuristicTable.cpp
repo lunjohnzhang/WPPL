@@ -1,7 +1,11 @@
 #include "util/HeuristicTable.h"
     
     
-HeuristicTable::HeuristicTable(SharedEnvironment * _env, bool consider_rotation):env(*_env),action_model(_env),consider_rotation(consider_rotation){
+HeuristicTable::HeuristicTable(SharedEnvironment * _env, const std::shared_ptr<std::vector<int> > & map_weights, bool consider_rotation):
+    env(*_env),
+    action_model(_env),
+    consider_rotation(consider_rotation),
+    map_weights(map_weights) {
     if (consider_rotation) {
         n_orientations=4;
     } else {
@@ -47,7 +51,7 @@ HeuristicTable::~HeuristicTable() {
 }
 
 // weights is an array of [loc_size*n_orientations]
-void HeuristicTable::compute_heuristics(const std::vector<int> & weights){
+void HeuristicTable::compute_weighted_heuristics(){
     DEV_DEBUG("[start] Compute heuristics.");
     g_timer.record_p("heu/compute_start");
 
@@ -59,7 +63,7 @@ void HeuristicTable::compute_heuristics(const std::vector<int> & weights){
     unsigned short * values = new unsigned short[n_threads*n_orientations*state_size];
     RIVERS::SPATIAL::SpatialAStar ** planners= new RIVERS::SPATIAL::SpatialAStar* [n_threads];
     for (int i=0;i<n_threads;++i) {
-        planners[i]=new RIVERS::SPATIAL::SpatialAStar(env,n_orientations,weights);
+        planners[i]=new RIVERS::SPATIAL::SpatialAStar(env,n_orientations,*map_weights);
     }
 
     cerr<<"created"<<endl;
@@ -75,7 +79,7 @@ void HeuristicTable::compute_heuristics(const std::vector<int> & weights){
 
         int s_idx=thread_id*n_orientations*state_size;
 
-        _compute_heuristics(loc_idx,values+s_idx,planners[thread_id]);
+        _compute_weighted_heuristics(loc_idx,values+s_idx,planners[thread_id]);
 
 
         #pragma omp critical
@@ -108,7 +112,7 @@ void HeuristicTable::compute_heuristics(const std::vector<int> & weights){
     DEV_DEBUG("[end] Compute heuristics. (duration: {:.3f})", g_timer.get_d("heu/compute"));
 }
 
-void HeuristicTable::_compute_heuristics(
+void HeuristicTable::_compute_weighted_heuristics(
     int start_loc_idx,
     unsigned short * values,
     RIVERS::SPATIAL::SpatialAStar * planner
@@ -430,7 +434,7 @@ void HeuristicTable::preprocess() {
 
 }
 
-void HeuristicTable::preprocess(const std::vector<int> & weights, string suffix) {
+void HeuristicTable::preprocess(string suffix) {
 
     string fname=env.map_name.substr(0,env.map_name.size()-4);
     string folder=env.file_storage_path;
@@ -447,7 +451,7 @@ void HeuristicTable::preprocess(const std::vector<int> & weights, string suffix)
     if (boost::filesystem::exists(fpath)) {
         load(fpath);
     } else {
-        compute_heuristics(weights);
+        compute_weighted_heuristics();
         ONLYDEV(save(fpath));
     }
 }

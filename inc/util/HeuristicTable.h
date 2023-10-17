@@ -35,13 +35,15 @@ public:
     size_t state_size;
     bool consider_rotation=true;
 
-    HeuristicTable(SharedEnvironment * _env, bool consider_rotation=true);
+    std::shared_ptr<std::vector<int> > map_weights;
+
+    HeuristicTable(SharedEnvironment * _env, const std::shared_ptr<std::vector<int> > & map_weights, bool consider_rotation=true);
     ~HeuristicTable();
 
     // weights is an array of [loc_size*n_orientations]
-    void compute_heuristics(const std::vector<int> & weights);
+    void compute_weighted_heuristics();
 
-    void _compute_heuristics(
+    void _compute_weighted_heuristics(
         int start_loc_idx,
         unsigned short * values,
         RIVERS::SPATIAL::SpatialAStar * planner
@@ -68,7 +70,7 @@ public:
     int get(int loc1, int orient1, int loc2, int orient2);
 
     void preprocess();
-    void preprocess(const std::vector<int> & weights, string suffix="");
+    void preprocess(string suffix="");
     void save(const string & fpath);
     void load(const string & fpath);
 };
