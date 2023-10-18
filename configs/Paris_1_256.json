@@ -1,14 +1,18 @@
 {
     "lifelong_solver_name": [
         {
+            "n_agents": 1000,
+            "value": "DUMMY"
+        },
+        {
             "n_agents": 1000000,
-            "value": "LaCAM2"
+            "value": "LNS"
         }
     ],
     "map_weights_path": "scripts/paris_weight_001.w",
     "LNS": {
         "seed": 0,
-        "cutoffTime": 0.6,
+        "cutoffTime": 0.8,
         "screen": 0,
         "initAlgo": "LaCAM2",
         "replanAlgo": "PP",
@@ -20,12 +24,12 @@
         "sipp": true,
         "pibtWindow": 5,
         "winPibtSoftmode": true,
-        "window_size_for_CT": 20,
-        "window_size_for_CAT": 20,
-        "window_size_for_PATH": 20,
+        "window_size_for_CT": 10,
+        "window_size_for_CAT": 10,
+        "window_size_for_PATH": 10,
         "LaCAM2": {
             "seed": 0,
-            "planning_window": 20,
+            "planning_window": 10,
             "consider_rotation": false,
             "use_orient_in_heuristic": true,
             "use_slow_executor": false,
