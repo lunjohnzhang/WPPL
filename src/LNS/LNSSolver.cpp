@@ -58,6 +58,14 @@ int get_neighbor_orientation(const SharedEnvironment * env, int loc1,int loc2) {
 
 }
 
+std::vector<State> subvector(std::vector<State> & v, int start, int end) {
+    std::vector<State> ret;
+    for (int i=start;i<end;++i) {
+        ret.push_back(v[i]);
+    }
+    return ret;
+}
+
 void LNSSolver::plan(const SharedEnvironment & env){
     // TODO(rivers): make it configurable.
     double time_limit=read_param_json<double>(config,"cutoffTime");
@@ -235,8 +243,21 @@ void LNSSolver::plan(const SharedEnvironment & env){
     // std::cerr<<"lns paths:"<<endl;
     for (int i=0;i<paths.size();++i) {
         auto & path=paths[i];
-        path.resize(executed_plan_step+1);
         auto & new_path=lns->agents[i].path;
+
+        // compare
+        // for (int j=1;j<new_path.size();++j) {
+        //     if (path[executed_plan_step+j].location!=new_path[j].location || path[executed_plan_step+j].orientation!=new_path[j].orientation){
+        //         std::cerr<<"agent "<<i<<" has updated lns path"<<endl;
+        //         std::cerr<<subvector(path,executed_plan_step,path.size())<<endl;
+        //         std::cerr<<new_path<<endl;
+        //         // std::cerr<<lns->agents[i].path<<endl;
+        //         break;
+        //     }
+        // }
+
+        path.resize(executed_plan_step+1);
+
         // cerr<<"agent "<<i<<" "<<new_path.size()<<": "<<new_path<<endl;
         for (int j=1;j<new_path.size();++j) {
             path.emplace_back(new_path[j].location, env.curr_timestep+j, new_path[j].orientation);

@@ -29,6 +29,9 @@ struct Path {
 
 };
 
+std::ostream & operator << (std::ostream &out, const PathEntry &pe);
+std::ostream & operator << (std::ostream &out, const Path &p);
+
 struct Agent
 {
     int id;
