@@ -5,7 +5,7 @@
             "value": "LaCAM2"
         }
     ],
-    "map_weights_path": "scripts/warehouse_large_weight_test3.w",
+    "map_weights_path": "scripts/warehouse_large_weight_003.w",
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.9,
