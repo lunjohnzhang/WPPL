@@ -2,13 +2,13 @@
     "lifelong_solver_name": [
         {
             "n_agents": 1000000,
-            "value": "LNS"
+            "value": "DUMMY"
         }
     ],
     "map_weights_path": "scripts/warehouse_large_weight_003.w",
     "LNS": {
         "seed": 0,
-        "cutoffTime": 0.9,
+        "cutoffTime": 0.85,
         "screen": 0,
         "initAlgo": "LaCAM2",
         "replanAlgo": "PP",

@@ -1,10 +1,6 @@
 {
     "lifelong_solver_name": [
         {
-            "n_agents": 9000,
-            "value": "LaCAM2"
-        },
-        {
             "n_agents": 1000000,
             "value": "DUMMY"
         }

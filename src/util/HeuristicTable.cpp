@@ -153,7 +153,12 @@ void HeuristicTable::_compute_weighted_heuristics(
                     if (cost==-1) {
                         cost=USHRT_MAX;
                     }
-                    
+                    if (cost>USHRT_MAX) {
+                        cost=USHRT_MAX;
+                        // std::cerr<<"cost: "<<cost<<" > "<<USHRT_MAX<<endl;
+                        // exit(-1);
+                    }
+
                     size_t value_idx=start_orient*state_size+loc_idx*n_orientations+orient;
                     values[value_idx]=cost;
 
