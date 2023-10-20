@@ -5,7 +5,7 @@
             "value": "DUMMY"
         }
     ],
-    "map_weights_path": "scripts/random_weight_001.weight",
+    "map_weights_path": "",
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.9,
