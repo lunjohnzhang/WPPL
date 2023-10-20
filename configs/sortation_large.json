@@ -8,7 +8,7 @@
     "map_weights_path": "scripts/sortation_large_weight_001.w",
     "LNS": {
         "seed": 0,
-        "cutoffTime": 0.85,
+        "cutoffTime": 0.8,
         "screen": 0,
         "initAlgo": "LaCAM2",
         "replanAlgo": "PP",
