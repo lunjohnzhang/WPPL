@@ -134,7 +134,9 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
     if (need_replan) {
         const int verbose = 10;
         const int time_limit_sec = 2;
+        ONLYDEV(g_timer.record_p("lacam_build_instance_s");)
         auto instance = build_instance(env, precomputed_paths);
+        ONLYDEV(g_timer.record_d("lacam_build_instance_s","lacam_build_instance");)
         const auto deadline = Deadline(time_limit_sec * 1000);
         bool use_swap=false;
         bool use_orient_in_heuristic=read_param_json<bool>(config,"use_orient_in_heuristic");
@@ -186,13 +188,17 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         int best_cost=INT_MAX;
         Solution best_solution;
 
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for (int i=0;i<1;++i) {
+            ONLYDEV(g_timer.record_p("lacam_build_planner_s");)
             auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap,use_orient_in_heuristic);
+            ONLYDEV(g_timer.record_d("lacam_build_planner_s","lacam_build_planner");)
             auto additional_info = std::string("");
+            ONLYDEV(g_timer.record_p("lacam_solve_s");)
             auto solution=planner.solve(additional_info,i);
+            ONLYDEV(g_timer.record_d("lacam_solve_s","lacam_solve");)
             auto cost=eval_solution(instance,solution);
-            #pragma omp critical
+            // #pragma omp critical
             {
                 if (cost<best_cost) {
                     best_cost=cost;
