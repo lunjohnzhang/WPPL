@@ -8,7 +8,7 @@ using State=TimeSpaceAStarState;
 
 TimeSpaceAStarPlanner::TimeSpaceAStarPlanner(Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<int> > weights): instance(instance), HT(HT), weights(weights) {};
 
-void TimeSpaceAStarPlanner::findPath(int start_pos, int start_orient, int goal_pos, ConstraintTable & constraint_table) {
+void TimeSpaceAStarPlanner::findPath(int start_pos, int start_orient, int goal_pos, ConstraintTable & constraint_table, const TimeLimiter & time_limiter) {
     clear();
 
     State * start_state = new State(start_pos, start_orient, 0, 0, HT->get(start_pos, start_orient, goal_pos), 0, nullptr);
@@ -19,7 +19,8 @@ void TimeSpaceAStarPlanner::findPath(int start_pos, int start_orient, int goal_p
     // assert(constraint_table.length_min==0); // the length_min should be at least 1 (otherwise the agent can't reach its goal location
     // auto holding_time = constraint_table.getHoldingTime(goal_pos, constraint_table.length_min); // the earliest timestep that the agent can hold its goal location. The length_min is considered here.
 
-    while (!open_list.empty()) {
+    while (!open_list.empty() && !time_limiter.timeout()) {
+
         State * curr=open_list.top();
         open_list.pop();
         curr->closed=true;

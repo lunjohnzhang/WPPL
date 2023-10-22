@@ -6,6 +6,7 @@
 #include "LNS/ConstraintTable.h"
 #include "util/HeuristicTable.h"
 #include "LNS/Parallel/DataStructure.h"
+#include "util/TimeLimiter.h"
 
 namespace LNS {
 
@@ -32,7 +33,7 @@ public:
     static const int n_orients=4; // east, south, west, north
 
     TimeSpaceAStarPlanner(Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<int> > weights);
-    void findPath(int start_pos, int start_orient, int goal_pos, ConstraintTable & constraint_table);
+    void findPath(int start_pos, int start_orient, int goal_pos, ConstraintTable & constraint_table, const TimeLimiter & time_limiter);
     void clear();
     void buildPath(TimeSpaceAStarState * curr, int goal_pos);
     void getSuccessors(TimeSpaceAStarState * state, int goal_pos, ConstraintTable & constraint_table);

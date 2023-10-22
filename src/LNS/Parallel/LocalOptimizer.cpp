@@ -119,7 +119,7 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter
                  << "Agent " << agents[id].id << endl;
         if (search_priority==1) {
             //ONLYDEV(g_timer.record_p("findPath_s");)
-            path_planner->findPath(start_pos,start_orient,goal_pos,constraint_table);
+            path_planner->findPath(start_pos,start_orient,goal_pos,constraint_table, time_limiter);
             neighbor.m_paths[id] = path_planner->path;
             //ONLYDEV(g_timer.record_d("findPath_s","findPath_e","findPath");)
         } else if (search_priority==2) {

@@ -254,6 +254,9 @@ bool GlobalManager::run(TimeLimiter & time_limiter) {
         neighbor_generator->generate_parallel(time_limiter);
         g_timer.record_d("neighbor_generate_s","neighbor_generate");
 
+        if (time_limiter.timeout())
+            break;
+
         // 2. optimize the neighbor
         // auto neighbor_ptr = neighbor_generator.neighbors.front();
         // auto & neighbor = *neighbor_ptr;
@@ -271,18 +274,32 @@ bool GlobalManager::run(TimeLimiter & time_limiter) {
         }
         g_timer.record_d("loc_opt_s","loc_opt");
 
+        if (time_limiter.timeout())
+            break;
+
         // TODO(rivers): validate solution
 
         // 3. update path_table, statistics & maybe adjust strategies
         g_timer.record_p("neighbor_update_s");
         // TODO(rivers): it seems we should not modify neighbor in the previous update
         for (auto & neighbor_ptr: neighbor_generator->neighbors){
+            if (time_limiter.timeout()) {
+                break;
+            } 
             auto & neighbor=*neighbor_ptr;
             neighbor_generator->update(neighbor);
         }
         g_timer.record_d("neighbor_update_s","neighbor_update");
 
+        if (time_limiter.timeout()) {
+            break;
+        } 
+
+
         for (auto & neighbor_ptr: neighbor_generator->neighbors){
+            if (time_limiter.timeout()) {
+                break;
+            } 
             auto & neighbor=*neighbor_ptr;
             update(neighbor,true);
 
