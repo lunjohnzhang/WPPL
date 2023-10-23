@@ -287,9 +287,9 @@ void LNSSolver::plan(const SharedEnvironment & env){
         }
         std::cerr<<"max_plan_time: "<<max_plan_time<<endl;
         g_timer.remove_d("_plan");  
-        if (plan_time>1.0){
-            exit(-1);
-        }
+        // if (plan_time>1.0){
+        //     exit(-1);
+        // }
     )
 
 }
