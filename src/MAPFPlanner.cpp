@@ -261,15 +261,15 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         rhcr_solver->plan(*env);
         rhcr_solver->get_step_actions(*env, actions);
     } else if (lifelong_solver_name=="LaCAM2") {
-        cout<<"using LaCAM2"<<endl;
-        g_timer.record_p("mapf_lacam2_plan_s");
+        ONLYDEV(cout<<"using LaCAM2"<<endl;)
+        ONLYDEV(g_timer.record_p("mapf_lacam2_plan_s");)
         lacam2_solver->plan(*env);
-        g_timer.record_d("mapf_lacam2_plan_s","mapf_lacam2_plan");
-        g_timer.record_p("mapf_lacam2_get_step_s");
+        ONLYDEV(g_timer.record_d("mapf_lacam2_plan_s","mapf_lacam2_plan");)
+        ONLYDEV(g_timer.record_p("mapf_lacam2_get_step_s");)
         lacam2_solver->get_step_actions(*env,actions);
-        g_timer.record_d("mapf_lacam2_get_step_s","mapf_lacam2_get_step");
+        ONLYDEV(g_timer.record_d("mapf_lacam2_get_step_s","mapf_lacam2_get_step");)
     } else if (lifelong_solver_name=="LNS") {
-        cout<<"using LNS"<<endl;
+        ONLYDEV(cout<<"using LNS"<<endl;)
         lns_solver->observe(*env);
         lns_solver->plan(*env); 
         lns_solver->get_step_actions(*env,actions);
@@ -288,12 +288,6 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         }
 
         std::cerr<<"max_step_time: "<<max_step_time<<endl;
-
-                if (max_step_time>0.25) {
-                    std::cerr<<"wierd timeout"<<endl;
-                    g_timer.print_all_d();
-                    exit(-1);
-                }
         g_timer.remove_d("_step");
     )
 

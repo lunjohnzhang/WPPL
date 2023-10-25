@@ -41,7 +41,7 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
   // TODO(rivers_: probably we should set a basic ordering at the begining, because it is time consuming to sort everytime with large-scale agents
   std::iota(order.begin(), order.end(), 0);
 
-  g_timer.record_p("HNode_order_sort_s");
+  ONLYDEV(g_timer.record_p("HNode_order_sort_s");)
 
   std::vector<std::tuple<bool,bool,bool,int,int,int,int>> scores;
   for (auto i:order) {
@@ -106,7 +106,7 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
   //       }
 
   // });
-  g_timer.record_d("HNode_order_sort_s","HNode_order_sort");
+  ONLYDEV(g_timer.record_d("HNode_order_sort_s","HNode_order_sort");)
 
   search_tree.push(new LNode());
 
@@ -323,22 +323,22 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
     }
 
     // check explored list
-    // const auto iter = EXPLORED.find(C_new);
-    // if (iter != EXPLORED.end()) {
-    //   // case found
-    //   rewrite(H, iter->second, H_goal, OPEN);
-    //   // re-insert or random-restart
-    //   auto H_insert = (MT != nullptr && get_random_float(MT) >= RESTART_RATE)
-    //                       ? iter->second
-    //                       : H_init;
-    //   if (H_goal == nullptr || H_insert->f < H_goal->f) OPEN.push(H_insert);
-    // } else {
+  //   const auto iter = EXPLORED.find(C_new);
+  //   if (iter != EXPLORED.end()) {
+  //     // case found
+  //     rewrite(H, iter->second, H_goal, OPEN);
+  //     // re-insert or random-restart
+  //     auto H_insert = (MT != nullptr && get_random_float(MT) >= RESTART_RATE)
+  //                         ? iter->second
+  //                         : H_init;
+  //     if (H_goal == nullptr || H_insert->f < H_goal->f) OPEN.push(H_insert);
+  //   } else {
       // insert new search node
       const auto H_new = new HNode(
           C_new, HT, ins, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new), H->d + 1, order_strategy);
-      // EXPLORED[H_new->C] = H_new;
+      EXPLORED[H_new->C] = H_new;
       if (H_goal == nullptr || H_new->f < H_goal->f) OPEN.push(H_new);
-    // }
+  //   }
   }
 
   // backtrack
@@ -669,7 +669,7 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   // }
 
   // sort
-  g_timer.record_p("PIBT_sort_s");
+  ONLYDEV(g_timer.record_p("PIBT_sort_s");)
 
   // pre_d, d, o_dist
   std::vector<std::tuple<int,double,double,Vertex *> > scores;
@@ -803,7 +803,7 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   //   //   return o2<o1;
   //   // }
   // });
-  g_timer.record_d("PIBT_sort_s","PIBT_sort");
+  ONLYDEV(g_timer.record_d("PIBT_sort_s","PIBT_sort");)
 
   Agent* swap_agent=nullptr;
   if (use_swap) {

@@ -53,7 +53,7 @@ HeuristicTable::~HeuristicTable() {
 // weights is an array of [loc_size*n_orientations]
 void HeuristicTable::compute_weighted_heuristics(){
     DEV_DEBUG("[start] Compute heuristics.");
-    g_timer.record_p("heu/compute_start");
+    ONLYDEV(g_timer.record_p("heu/compute_start");)
 
     int n_threads=omp_get_max_threads();
     // BS::thread_pool pool(n_threads);

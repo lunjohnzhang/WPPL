@@ -99,7 +99,7 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
                     int to_time=i+1;
                     // TODO(rivers): we need to ignore the conflicts with agents in the neighbor.
                     if (path_table.constrained(from,to,to_time,neighbor.agents)) {
-                        std::cerr<<aid<<" "<<i<<" invalid"<<std::endl;
+                        ONLYDEV(std::cerr<<aid<<" "<<i<<" invalid"<<std::endl;)
                         valid=false;
                         break;
                     }
@@ -109,7 +109,7 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
 
             if (!valid) {
                 neighbor.succ=false;
-                std::cerr<<"invalid"<<std::endl;
+                ONLYDEV(std::cerr<<"invalid"<<std::endl;)
                 return;
             }
 
@@ -122,7 +122,7 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
             // TODO(rivers): use < or <= here?
             if (old_sum_of_costs<=neighbor.sum_of_costs) {
                 neighbor.succ=false;
-                std::cerr<<"incost"<<std::endl;
+                ONLYDEV(std::cerr<<"incost"<<std::endl;)
                 return;
             } 
 

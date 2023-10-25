@@ -5,7 +5,7 @@
             "value": "LNS"
         }
     ],
-    "map_weights_path": "scripts/random_weight_001.w",
+    "map_weights_path": "",
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.9,
@@ -40,7 +40,7 @@
     },
     "LaCAM2": {
         "seed": 0,
-        "planning_window": 1,
+        "planning_window": 10,
         "consider_rotation": true,
         "use_orient_in_heuristic": true,
         "use_slow_executor": false,

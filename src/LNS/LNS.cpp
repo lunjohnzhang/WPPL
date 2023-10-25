@@ -377,9 +377,9 @@ bool LNS::checkPrecomputed()
         if (agents[i].path.back().location!=agents[i].path_planner->goal_location) {
             neighbor.sum_of_costs+=HT->get(agents[i].path.back().location,agents[i].path_planner->goal_location);
         }
-        g_timer.record_p("insert_path_s");
+        ONLYDEV(g_timer.record_p("insert_path_s");)
         path_table.insertPath(agents[i].id, agents[i].path);
-        g_timer.record_d("insert_path_s","insert_path_e","insert_path");
+        ONLYDEV(g_timer.record_d("insert_path_s","insert_path_e","insert_path");)
         // cerr<<agents[i].id<<" "<< agents[i].path.size()-1<<endl;
     }
 
