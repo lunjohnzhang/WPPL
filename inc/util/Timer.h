@@ -51,6 +51,7 @@ private:
     std::unordered_map<string,steady_clock::time_point> time_points;
     std::unordered_map<string,double> time_durations;
     std::unordered_map<string,size_t> time_duration_counters;
+    std::unordered_map<string,double> time_durations_last;
 };
 
 extern Timer g_timer;

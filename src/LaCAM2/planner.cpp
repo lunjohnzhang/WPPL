@@ -43,9 +43,11 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
 
   g_timer.record_p("HNode_order_sort_s");
 
-  std::vector<std::tuple<bool,bool,int,int,int,int>> scores;
+  std::vector<std::tuple<bool,bool,bool,int,int,int,int>> scores;
   for (auto i:order) {
     const AgentInfo & a=ins->agent_infos[i];
+    Vertex * v=C.locs[i];
+    bool non_corner=(v->neighbor.size()!=1);
     bool arrival=C.arrivals[i];
     bool precomputed=false;
     if (ins->precomputed_paths!=nullptr){
@@ -54,18 +56,26 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
     int h=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
     int elapse=a.elapsed;
     int tie_breaker=a.tie_breaker;
-    scores.emplace_back(arrival,precomputed,h,elapse,tie_breaker,i);
+    scores.emplace_back(non_corner,arrival,precomputed,h,elapse,tie_breaker,i);
   }
 
 
   std::sort(scores.begin(),scores.end());
   for (int i=0;i<N;++i) {
-    order[i]=std::get<5>(scores[i]);
+    order[i]=std::get<6>(scores[i]);
   }
 
   // std::sort(order.begin(), order.end(), [&](int i, int j) { 
   //       const AgentInfo & a=ins->agent_infos[i];
   //       const AgentInfo & b=ins->agent_infos[j];
+
+  //       Vertex * v=C.locs[i];
+  //       bool non_corner_a=(v->neighbor.size()!=1);
+
+  //       Vertex * u=C.locs[j];
+  //       bool non_corner_b=(u->neighbor.size()!=1);
+
+  //       if (non_corner_a!=non_corner_b) return non_corner_a>non_corner_b;
 
   //       if (C.arrivals[i]!=C.arrivals[j]) return C.arrivals[i]<C.arrivals[j];
 
@@ -313,22 +323,22 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
     }
 
     // check explored list
-    const auto iter = EXPLORED.find(C_new);
-    if (iter != EXPLORED.end()) {
-      // case found
-      rewrite(H, iter->second, H_goal, OPEN);
-      // re-insert or random-restart
-      auto H_insert = (MT != nullptr && get_random_float(MT) >= RESTART_RATE)
-                          ? iter->second
-                          : H_init;
-      if (H_goal == nullptr || H_insert->f < H_goal->f) OPEN.push(H_insert);
-    } else {
+    // const auto iter = EXPLORED.find(C_new);
+    // if (iter != EXPLORED.end()) {
+    //   // case found
+    //   rewrite(H, iter->second, H_goal, OPEN);
+    //   // re-insert or random-restart
+    //   auto H_insert = (MT != nullptr && get_random_float(MT) >= RESTART_RATE)
+    //                       ? iter->second
+    //                       : H_init;
+    //   if (H_goal == nullptr || H_insert->f < H_goal->f) OPEN.push(H_insert);
+    // } else {
       // insert new search node
       const auto H_new = new HNode(
           C_new, HT, ins, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new), H->d + 1, order_strategy);
-      EXPLORED[H_new->C] = H_new;
+      // EXPLORED[H_new->C] = H_new;
       if (H_goal == nullptr || H_new->f < H_goal->f) OPEN.push(H_new);
-    }
+    // }
   }
 
   // backtrack
@@ -542,6 +552,8 @@ bool Planner::get_new_config(HNode* H, LNode* L)
   // }
 
   // add constraints
+  // std::cerr<<"H->depth"<<H->d<<endl;
+  // std::cerr<<"L->depth"<<L->depth<<endl;
   for (uint k = 0; k < L->depth; ++k) {
     const auto i = L->who[k];        // agent
     const auto l = std::get<0>(L->where[k])->id;  // loc
@@ -570,8 +582,8 @@ bool Planner::get_new_config(HNode* H, LNode* L)
   for (auto k : H->order) {
     auto a = A[k];
     if (a->v_next == nullptr && !funcPIBT(a,H)){
-      // cerr<<"planning failture"<<endl;
-      // exit(-1);
+      cerr<<"planning failture: "<<k<<endl;
+      exit(-1);
       return false;  // planning failure
     } 
   }
@@ -700,96 +712,96 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   // std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
   //           [&](Vertex* const v, Vertex* const u) {
 
-    // // TODO(rivers): we should move these computation outside to speed up...
+  //   // TODO(rivers): we should move these computation outside to speed up...
     
-    // // TODO(rivers): deal with arrivals: maybe just select randomly
-    // int o0=H->C.orients[i];
+  //   // TODO(rivers): deal with arrivals: maybe just select randomly
+  //   int o0=H->C.orients[i];
 
-    // int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index,o0);
-    // int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index,o0);
+  //   int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index,o0);
+  //   int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index,o0);
 
-    // // TODO(rivers): we should maintain the const somewhere else
-    // // perhaps: we should wrap a class for map weights...
-    // int cost_rot=(*map_weights)[ai->v_now->index*5+4];
-    // const double decay=0.9; // TODO(rivers): BUG? so that we encourage to move? =1 would cause bug... why not just slap me in the face???
-    // double o_dist1=get_o_dist(o0,o1)*cost_rot+get_cost_move(ai->v_now->index,v->index)*decay;
-    // double o_dist2=get_o_dist(o0,o2)*cost_rot+get_cost_move(ai->v_now->index,u->index)*decay;
+  //   // TODO(rivers): we should maintain the const somewhere else
+  //   // perhaps: we should wrap a class for map weights...
+  //   int cost_rot=(*map_weights)[ai->v_now->index*5+4];
+  //   const double decay=0.9; // TODO(rivers): BUG? so that we encourage to move? =1 would cause bug... why not just slap me in the face???
+  //   double o_dist1=get_o_dist(o0,o1)*cost_rot+get_cost_move(ai->v_now->index,v->index)*decay;
+  //   double o_dist2=get_o_dist(o0,o2)*cost_rot+get_cost_move(ai->v_now->index,u->index)*decay;
 
-    // // cerr<<o1<<" "<<o2<<" "<<o0<<" "<<o_dist1<<" "<<o_dist2<<endl;
+  //   // cerr<<o1<<" "<<o2<<" "<<o0<<" "<<o_dist1<<" "<<o_dist2<<endl;
 
-    // double d1,d2;
-    // if (use_orient_in_heuristic){
-    //   d1=HT->get(v->index,o1,ins->goals.locs[i]->index)+o_dist1;
-    //   d2=HT->get(u->index,o2,ins->goals.locs[i]->index)+o_dist2;      
-    // } else {
-    //   d1=HT->get(v->index,ins->goals.locs[i]->index);
-    //   d2=HT->get(u->index,ins->goals.locs[i]->index);
-    // }
+  //   double d1,d2;
+  //   if (use_orient_in_heuristic){
+  //     d1=HT->get(v->index,o1,ins->goals.locs[i]->index)+o_dist1;
+  //     d2=HT->get(u->index,o2,ins->goals.locs[i]->index)+o_dist2;      
+  //   } else {
+  //     d1=HT->get(v->index,ins->goals.locs[i]->index);
+  //     d2=HT->get(u->index,ins->goals.locs[i]->index);
+  //   }
 
-    // // TODO(rivers): we should still think about the following codes. 
-    // // the former one seems to fit LNS but doesn't work with SUO
-    // // the latter one ssems to fit SUO but doesn't work with LNS
-    // // the latter one is problematic with wait action?
+  //   // TODO(rivers): we should still think about the following codes. 
+  //   // the former one seems to fit LNS but doesn't work with SUO
+  //   // the latter one ssems to fit SUO but doesn't work with LNS
+  //   // the latter one is problematic with wait action?
+
+  //   if (ins->precomputed_paths!=nullptr){
+  //     int pre_d1=1;
+  //     int pre_d2=1;
+  //     auto path=(*ins->precomputed_paths)[i];
+  //     // for (int j=path.size()-1;j>=0;--j){
+  //       int j=H->d;
+  //       if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
+  //         if (path[j+1].orientation==o1) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
+  //           pre_d1=0;
+  //           // break;
+  //         }
+  //         if (path[j+1].orientation==o2) { // && ((o2==o0 && path[j+1].location==u->index) || (o2!=o0))) {
+  //           pre_d2=0;
+  //           // break;
+  //         }
+  //       }
+  //     // }
+  //     if (pre_d1!=pre_d2) return pre_d1<pre_d2;
+  //   }
 
     // if (ins->precomputed_paths!=nullptr){
-    //   int pre_d1=1;
-    //   int pre_d2=1;
     //   auto path=(*ins->precomputed_paths)[i];
-    //   // for (int j=path.size()-1;j>=0;--j){
-    //     int j=H->d;
-    //     if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
-    //       if (path[j+1].orientation==o1) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
-    //         pre_d1=0;
+    //   for (int j=path.size()-1;j>=0;--j){
+    //     // int j=H->d;
+    //     if (j<path.size()-1 && path[j].location==ai->v_now->index) {
+    //       if (path[j+1].location==v->index) {
+    //         d1=0.1;
     //         // break;
     //       }
-    //       if (path[j+1].orientation==o2) { // && ((o2==o0 && path[j+1].location==u->index) || (o2!=o0))) {
-    //         pre_d2=0;
+    //       if (path[j+1].location==u->index) {
+    //         d2=0.1;
     //         // break;
     //       }
     //     }
-    //   // }
-    //   if (pre_d1!=pre_d2) return pre_d1<pre_d2;
+    //   }
     // }
 
-    // // if (ins->precomputed_paths!=nullptr){
-    // //   auto path=(*ins->precomputed_paths)[i];
-    // //   for (int j=path.size()-1;j>=0;--j){
-    // //     // int j=H->d;
-    // //     if (j<path.size()-1 && path[j].location==ai->v_now->index) {
-    // //       if (path[j+1].location==v->index) {
-    // //         d1=0.1;
-    // //         // break;
-    // //       }
-    // //       if (path[j+1].location==u->index) {
-    // //         d2=0.1;
-    // //         // break;
-    // //       }
-    // //     }
-    // //   }
-    // // }
+    // cerr<<d1<<" "<<d2<<endl;
 
-    // // cerr<<d1<<" "<<d2<<endl;
+    // TODO(rivers): The PIBT thing is just too sensitive to the hyper-parameters and the implementation...
 
-    // // TODO(rivers): The PIBT thing is just too sensitive to the hyper-parameters and the implementation...
+  //   if (d1!=d2) return d1<d2;
 
-    // if (d1!=d2) return d1<d2;
+  //   // if (MC_idx==0){
+  //   //   return o_dist1<o_dist2;
+  //   // } else {
+  //   //   return tie_breakers[v->id] < tie_breakers[u->id];
+  //   // }
+  //   // TODO(rivers): check this. may be bad.
+  //   // return tie_breakers[v->id] < tie_breakers[u->id];
 
-    // // if (MC_idx==0){
-    // //   return o_dist1<o_dist2;
-    // // } else {
-    // //   return tie_breakers[v->id] < tie_breakers[u->id];
-    // // }
-    // // TODO(rivers): check this. may be bad.
-    // // return tie_breakers[v->id] < tie_breakers[u->id];
-
-    // // if (o_dist1!=o_dist2) 
-    // return o_dist1<o_dist2;
-    // // return tie_breakers[v->id] < tie_breakers[u->id];
-    // // if (i%2==0){
-    // //   return o1<o2;
-    // // } else {
-    // //   return o2<o1;
-    // // }
+  //   // if (o_dist1!=o_dist2) 
+  //   return o_dist1<o_dist2;
+  //   // return tie_breakers[v->id] < tie_breakers[u->id];
+  //   // if (i%2==0){
+  //   //   return o1<o2;
+  //   // } else {
+  //   //   return o2<o1;
+  //   // }
   // });
   g_timer.record_d("PIBT_sort_s","PIBT_sort");
 

@@ -119,12 +119,20 @@ void print_stats(const int verbose, const Instance& ins, const std::shared_ptr<H
   // const auto sum_of_costs = get_sum_of_costs(solution);
   const auto sum_of_costs_lb = get_sum_of_costs_lower_bound(ins, HT);
   const auto sum_of_loss = get_sum_of_loss(ins,HT,solution);
+  g_timer.record_p("info_s");
+  // TODO(rivers): not sure why it is so slow...
+  // ONLYDEV(
+  //   g_logger.info("solved: {} ms makespan: {} (lb={}, ratio={}) sum_of_loss: {} (lb={}, ratio={})",
+  //   comp_time_ms, makespan, makespan_lb, ceil((float)makespan / makespan_lb),
+  //   sum_of_loss, sum_of_costs_lb, ceil((float)sum_of_loss / sum_of_costs_lb));
+  // )
   info(1, verbose, "solved: ", comp_time_ms, "ms", "\tmakespan: ", makespan,
        " (lb=", makespan_lb, ", ratio=", ceil((float)makespan / makespan_lb), ")",
       //  "\tsum_of_costs: ", sum_of_costs, " (lb=", sum_of_costs_lb,
       //  ", ub=", ceil((float)sum_of_costs / sum_of_costs_lb), ")",
        "\tsum_of_loss: ", sum_of_loss, " (lb=", sum_of_costs_lb,
        ", ratio=", ceil((float)sum_of_loss / sum_of_costs_lb), ")");
+  g_timer.record_d("info_s", "info");
 }
 
 // for log of map_name

@@ -115,6 +115,10 @@ int LaCAM2Solver::eval_solution(const Instance & instance, const Solution & solu
 }
 
 void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths){
+    g_timer.record_p("lacam2_plan_pre_s");
+    std::cerr<<"random :"<<get_random_int(MT,0,100)<<std::endl;
+
+
     if (timestep==0) {
         for (int i=0;i<env.num_of_agents;++i) {
             paths[i].push_back(env.curr_states[i]);
@@ -141,61 +145,62 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         bool use_swap=false;
         bool use_orient_in_heuristic=read_param_json<bool>(config,"use_orient_in_heuristic");
 
-        vector<::Path> precomputed_paths;
-        if (read_param_json<int>(config["SUO"],"iterations")>0) {
+        // vector<::Path> precomputed_paths;
+//         if (read_param_json<int>(config["SUO"],"iterations")>0) {
 
-#ifndef NO_ROT
-            std::cerr<<"only support NO_ROT now"<<std::endl;
-            exit(-1);
-#endif
+// #ifndef NO_ROT
+//             std::cerr<<"only support NO_ROT now"<<std::endl;
+//             exit(-1);
+// #endif
 
-            ONLYDEV(g_timer.record_p("suo_init_s");)
-            SUO::TemporalSpatial::SUO suo(
-                env,
-                1, // only work for no rotation now
-                *map_weights,
-                HT,
-                read_param_json<float>(config["SUO"],"vertex_collision_cost"),
-                read_param_json<int>(config["SUO"],"iterations"),
-                read_param_json<int>(config["SUO"],"max_expanded"),
-                read_param_json<int>(config["SUO"],"window"),
-                read_param_json<float>(config["SUO"],"h_weight")
-            );
-            ONLYDEV(g_timer.record_d("suo_init_s","suo_init");)
-            ONLYDEV(g_timer.record_p("suo_plan_s");)
-            suo.plan();
-            ONLYDEV(g_timer.record_d("suo_plan_s","suo_plan");)
-            g_timer.print_all_d();
+//             ONLYDEV(g_timer.record_p("suo_init_s");)
+//             SUO::TemporalSpatial::SUO suo(
+//                 env,
+//                 1, // only work for no rotation now
+//                 *map_weights,
+//                 HT,
+//                 read_param_json<float>(config["SUO"],"vertex_collision_cost"),
+//                 read_param_json<int>(config["SUO"],"iterations"),
+//                 read_param_json<int>(config["SUO"],"max_expanded"),
+//                 read_param_json<int>(config["SUO"],"window"),
+//                 read_param_json<float>(config["SUO"],"h_weight")
+//             );
+//             ONLYDEV(g_timer.record_d("suo_init_s","suo_init");)
+//             ONLYDEV(g_timer.record_p("suo_plan_s");)
+//             suo.plan();
+//             ONLYDEV(g_timer.record_d("suo_plan_s","suo_plan");)
+//             g_timer.print_all_d();
 
-            ONLYDEV(g_timer.record_p("copy_suo_paths_s");)
+//             ONLYDEV(g_timer.record_p("copy_suo_paths_s");)
             
-            precomputed_paths.resize(env.num_of_agents);
-            for (int i=0;i<env.num_of_agents;++i){
-                if (suo.paths[i][0].pos!=env.curr_states[i].location){
-                    cerr<<"agent "<<i<<"'s current state doesn't match with the plan"<<endl;
-                    exit(-1);
-                }
-                for (int j=0;j<suo.paths[i].size();++j){
-                    precomputed_paths[i].emplace_back(suo.paths[i][j].pos,-1,-1);
-                }
-            }
-            // we need to change precomputed_paths to suo_paths. because the former one means hard constraints to follow
-            // but the latter one is just a suggesion.
-            instance.precomputed_paths=&precomputed_paths;
-            ONLYDEV(g_timer.record_d("copy_suo_paths_s","copy_suo_paths");)
-        }
+//             precomputed_paths.resize(env.num_of_agents);
+//             for (int i=0;i<env.num_of_agents;++i){
+//                 if (suo.paths[i][0].pos!=env.curr_states[i].location){
+//                     cerr<<"agent "<<i<<"'s current state doesn't match with the plan"<<endl;
+//                     exit(-1);
+//                 }
+//                 for (int j=0;j<suo.paths[i].size();++j){
+//                     precomputed_paths[i].emplace_back(suo.paths[i][j].pos,-1,-1);
+//                 }
+//             }
+//             // we need to change precomputed_paths to suo_paths. because the former one means hard constraints to follow
+//             // but the latter one is just a suggesion.
+//             instance.precomputed_paths=&precomputed_paths;
+//             ONLYDEV(g_timer.record_d("copy_suo_paths_s","copy_suo_paths");)
+//         }
 
         int best_cost=INT_MAX;
         Solution best_solution;
+        g_timer.record_d("lacam2_plan_pre_s","lacam2_plan_pre");
 
         // #pragma omp parallel for
-        for (int i=0;i<1;++i) {
+        // for (int i=0;i<1;++i) {
             ONLYDEV(g_timer.record_p("lacam_build_planner_s");)
-            auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.001F,use_swap,use_orient_in_heuristic);
+            auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.0F,use_swap,use_orient_in_heuristic);
             ONLYDEV(g_timer.record_d("lacam_build_planner_s","lacam_build_planner");)
             auto additional_info = std::string("");
             ONLYDEV(g_timer.record_p("lacam_solve_s");)
-            auto solution=planner.solve(additional_info,i);
+            auto solution=planner.solve(additional_info,0);
             ONLYDEV(g_timer.record_d("lacam_solve_s","lacam_solve");)
             auto cost=eval_solution(instance,solution);
             // #pragma omp critical
@@ -205,7 +210,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
                     best_solution=solution;
                 }
             }
-        }
+        // }
 
         // // failure
         // if (solution.empty()) {
@@ -218,19 +223,23 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         //     info(0, verbose, "invalid solution");
         //     exit(2);
         // }
-
+        g_timer.record_p("lacam2_plan_post_s");
         // post processing
-        auto comp_time_ms = deadline.elapsed_ms();
-        print_stats(verbose, instance, HT, best_solution, comp_time_ms);
+        // auto comp_time_ms = deadline.elapsed_ms();
+        g_timer.record_p("lacam2_plan_print_s");
+        // print_stats(verbose, instance, HT, best_solution, comp_time_ms);
+        // cout<<"solution length:"<<best_solution.size()<<endl;
+        // cout<<"solution cost"<<best_cost<<endl;
+        g_timer.record_d("lacam2_plan_print_s","lacam2_plan_print");
 
-        cout<<"solution length:"<<best_solution.size()<<endl;
+
         
         // if (solution.size()==1) {
         //     next_config=solution[0];
         // } else {  
         //     next_config=solution[1];
         // }
-
+        g_timer.record_p("lacam2_plan_copy_path_s");
         for (int i=0;i<env.num_of_agents;++i) {
             // cerr<<"xagent "<<i<<": ";
             // for (int j=1;j<solution.size();++j) {
@@ -242,7 +251,8 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
                 paths[i].emplace_back(best_solution[j].locs[i]->index,env.curr_states[i].timestep+j,best_solution[j].orients[i]);
             }
         }
-
+        g_timer.record_d("lacam2_plan_copy_path_s","lacam2_plan_copy_path");
+        g_timer.record_d("lacam2_plan_post_s","lacam2_plan_post");
     
 
         // if (!read_param_json<bool>(config,"consider_rotation")) {

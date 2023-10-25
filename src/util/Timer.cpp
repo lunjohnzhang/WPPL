@@ -35,11 +35,13 @@ double Timer::record_d(const string & old_pkey, const string & new_pkey, const s
     {
         time_durations[dkey]+=d;
         time_duration_counters[dkey]++;
+        time_durations_last[dkey]=d;
     }
     else
     {
         time_durations[dkey]=d;
         time_duration_counters[dkey]=1;
+        time_durations_last[dkey]=d;
     }
     return d;
 }
@@ -68,6 +70,10 @@ double Timer::get_d(const string & dkey, int mode) const
     if (mode==1)
     {
         ret=ret/double(time_duration_counters.at(dkey));
+    }
+    if (mode==2) 
+    {
+        return time_durations_last.at(dkey);
     }
     return ret;
 }
@@ -103,12 +109,14 @@ void Timer::remove_d(const string & dkey)
         exit(-1);
     }
     time_duration_counters.erase(dkey);
+    time_durations_last.erase(dkey);
 }
 
 void Timer::clear_d()
 {
     time_durations.clear();
     time_duration_counters.clear();
+    time_durations_last.clear();
 }
 
 void Timer::clear_p()
@@ -126,10 +134,12 @@ void Timer::print_d(const string & dkey) const
 {
     double sum_d=get_d(dkey,0);
     double mean_d=get_d(dkey,1);
-    DEV_DEBUG("the time cost of {} is sum: {:.3f}, mean: {:.3f}.",
+    double last_d=get_d(dkey,2);
+    DEV_DEBUG("the time cost of {} is sum: {:.3f}, mean: {:.3f}, last:{:.3f}.",
         dkey,
         sum_d,
-        mean_d
+        mean_d,
+        last_d
     );
 }
 
