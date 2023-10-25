@@ -72,7 +72,7 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
         const AgentInfo & a=ins->agent_infos[i];
         const AgentInfo & b=ins->agent_infos[j];
 
-        // if (a.stuck_order!=b.stuck_order) return a.stuck_order>b.stuck_order;
+        if (a.stuck_order!=b.stuck_order) return a.stuck_order>b.stuck_order;
 
         // Vertex * v=C.locs[i];
         // bool non_corner_a=(v->neighbor.size()!=1);
