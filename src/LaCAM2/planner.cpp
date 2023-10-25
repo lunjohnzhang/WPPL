@@ -602,9 +602,10 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
     if (all_waiting) {
       int base_order=ins->agent_infos[a->id].stuck_order;
-      for (auto &p: waiting_flags) {
+      for (int i=0;i<waiting_flags.size();++i) {
+        auto &p=waiting_flags[i];
         if (p.first!=a->id) {
-          ins->agent_infos[p.first].stuck_order=base_order+1;
+          ins->agent_infos[p.first].stuck_order=base_order+waiting_flags.size()-i-1;
         }
       }  
     }
