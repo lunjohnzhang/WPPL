@@ -43,69 +43,74 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
 
   ONLYDEV(g_timer.record_p("HNode_order_sort_s");)
 
-  std::vector<std::tuple<bool,bool,bool,int,int,int,int>> scores;
-  for (auto i:order) {
-    const AgentInfo & a=ins->agent_infos[i];
-    Vertex * v=C.locs[i];
-    bool non_corner=(v->neighbor.size()!=1);
-    bool arrival=C.arrivals[i];
-    bool precomputed=false;
-    if (ins->precomputed_paths!=nullptr){
-      precomputed=(*(ins->precomputed_paths))[i].size()>(d+1);
-    }
-    int h=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
-    int elapse=a.elapsed;
-    int tie_breaker=a.tie_breaker;
-    scores.emplace_back(non_corner,arrival,precomputed,h,elapse,tie_breaker,i);
-  }
+  // TODO: we need to carefully deal with ascending or descending order
+  // exit(-1);
+  // std::vector<std::tuple<int,bool,bool,bool,int,int,int,int>> scores;
+  // for (auto i:order) {
+  //   const AgentInfo & a=ins->agent_infos[i];
+  //   Vertex * v=C.locs[i];
+  //   int stuck_order=-a.stuck_order;
+  //   bool non_corner=(v->neighbor.size()!=1);
+  //   bool arrival=C.arrivals[i];
+  //   bool precomputed=false;
+  //   if (ins->precomputed_paths!=nullptr){
+  //     precomputed=(*(ins->precomputed_paths))[i].size()>(d+1);
+  //   }
+  //   int h=-HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
+  //   int elapse=a.elapsed;
+  //   int tie_breaker=a.tie_breaker;
+  //   scores.emplace_back(stuck_order,non_corner,arrival,precomputed,h,elapse,tie_breaker,i);
+  // }
 
 
-  std::sort(scores.begin(),scores.end());
-  for (int i=0;i<N;++i) {
-    order[i]=std::get<6>(scores[i]);
-  }
+  // std::sort(scores.begin(),scores.end());
+  // for (int i=0;i<N;++i) {
+  //   order[i]=std::get<6>(scores[i]);
+  // }
 
-  // std::sort(order.begin(), order.end(), [&](int i, int j) { 
-  //       const AgentInfo & a=ins->agent_infos[i];
-  //       const AgentInfo & b=ins->agent_infos[j];
+  std::sort(order.begin(), order.end(), [&](int i, int j) { 
+        const AgentInfo & a=ins->agent_infos[i];
+        const AgentInfo & b=ins->agent_infos[j];
 
-  //       Vertex * v=C.locs[i];
-  //       bool non_corner_a=(v->neighbor.size()!=1);
+        if (a.stuck_order!=b.stuck_order) return a.stuck_order>b.stuck_order;
 
-  //       Vertex * u=C.locs[j];
-  //       bool non_corner_b=(u->neighbor.size()!=1);
+        // Vertex * v=C.locs[i];
+        // bool non_corner_a=(v->neighbor.size()!=1);
 
-  //       if (non_corner_a!=non_corner_b) return non_corner_a>non_corner_b;
+        // Vertex * u=C.locs[j];
+        // bool non_corner_b=(u->neighbor.size()!=1);
 
-  //       if (C.arrivals[i]!=C.arrivals[j]) return C.arrivals[i]<C.arrivals[j];
+        // if (non_corner_a!=non_corner_b) return non_corner_a<non_corner_b;
 
-  //       if (ins->precomputed_paths!=nullptr){
-  //         bool precomputed_a = (*(ins->precomputed_paths))[i].size()>(d+1);
-  //         bool precomputed_b = (*(ins->precomputed_paths))[j].size()>(d+1);
-  //         if (precomputed_a != precomputed_b) return (int)precomputed_a>(int)precomputed_b;
-  //       }
+        if (C.arrivals[i]!=C.arrivals[j]) return C.arrivals[i]<C.arrivals[j];
 
-  //       int h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
-  //       int h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
+        if (ins->precomputed_paths!=nullptr){
+          bool precomputed_a = (*(ins->precomputed_paths))[i].size()>(d+1);
+          bool precomputed_b = (*(ins->precomputed_paths))[j].size()>(d+1);
+          if (precomputed_a != precomputed_b) return (int)precomputed_a>(int)precomputed_b;
+        }
 
-  //       // int h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
-  //       // int h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
+        int h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
+        int h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
+
+        // int h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
+        // int h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
 
 
-  //       if (order_strategy==0) {
-  //         if (h1!=h2) return h1<h2;
-  //         if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
-  //         return a.tie_breaker>b.tie_breaker;
-  //       } else if (order_strategy==1) {
-  //         if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
-  //         if (h1!=h2) return h1<h2;
-  //         return a.tie_breaker>b.tie_breaker;
-  //       } else {
-  //         std::cerr<<"unknown strategy"<<std::endl;
-  //         exit(-1);
-  //       }
+        if (order_strategy==0) {
+          if (h1!=h2) return h1<h2;
+          if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
+          return a.tie_breaker>b.tie_breaker;
+        } else if (order_strategy==1) {
+          if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
+          if (h1!=h2) return h1<h2;
+          return a.tie_breaker>b.tie_breaker;
+        } else {
+          std::cerr<<"unknown strategy"<<std::endl;
+          exit(-1);
+        }
 
-  // });
+  });
   ONLYDEV(g_timer.record_d("HNode_order_sort_s","HNode_order_sort");)
 
   search_tree.push(new LNode());
@@ -581,11 +586,29 @@ bool Planner::get_new_config(HNode* H, LNode* L)
   // perform PIBT
   for (auto k : H->order) {
     auto a = A[k];
-    if (a->v_next == nullptr && !funcPIBT(a,H)){
+    std::vector<std::pair<int, bool> > waiting_flags;
+    if (a->v_next == nullptr && !funcPIBT(a,H,waiting_flags)){
       cerr<<"planning failture: "<<k<<endl;
       exit(-1);
       return false;  // planning failure
     } 
+
+    bool all_waiting=true;
+    for (auto &p: waiting_flags) {
+      if (!p.second) {
+        all_waiting=false;break;
+      }
+    }
+
+    if (all_waiting) {
+      int base_order=ins->agent_infos[a->id].stuck_order;
+      for (auto &p: waiting_flags) {
+        if (p.first!=a->id) {
+          ins->agent_infos[p.first].stuck_order=base_order+1;
+        }
+      }  
+    }
+
   }
   return true;
 }
@@ -648,7 +671,7 @@ int Planner::get_cost_move(int pst, int ped) {
 
 }
 
-bool Planner::funcPIBT(Agent* ai, HNode * H)
+bool Planner::funcPIBT(Agent* ai, HNode * H, std::vector<std::pair<int,bool> > & waiting_flags)
 {
   const auto i = ai->id;
   const auto K = ai->v_now->neighbor.size();
@@ -671,6 +694,7 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   // sort
   ONLYDEV(g_timer.record_p("PIBT_sort_s");)
 
+  // TODO(rivers): we need to check all are in ascending order.
   // pre_d, d, o_dist
   std::vector<std::tuple<int,double,double,Vertex *> > scores;
 
@@ -829,7 +853,7 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
     ai->v_next = u;
 
     // priority inheritance
-    if (ak != nullptr && ak != ai && ak->v_next == nullptr && !funcPIBT(ak,H))
+    if (ak != nullptr && ak != ai && ak->v_next == nullptr && !funcPIBT(ak,H,waiting_flags))
       continue;
 
     // success to plan next one step
@@ -841,12 +865,15 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
         occupied_next[swap_agent->v_next->id] = swap_agent;
       }
     }
+
+    waiting_flags.emplace_back(ai->id,ai->v_next==ai->v_now);
     return true;
   }
 
   // failed to secure node
   occupied_next[ai->v_now->id] = ai;
   ai->v_next = ai->v_now;
+  waiting_flags.emplace_back(ai->id,ai->v_next==ai->v_now);
   return false;
 }
 

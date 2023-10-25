@@ -6,7 +6,7 @@ Instance::Instance(
     const Graph & G,
     const std::vector<std::pair<uint,int> >& start_indexes,
     const std::vector<std::pair<uint,int> >& goal_indexes,
-    const std::vector<AgentInfo>& agent_infos,
+    std::vector<AgentInfo>& agent_infos,
     int planning_window,
     std::vector<::Path> * _precomputed_paths
     ):

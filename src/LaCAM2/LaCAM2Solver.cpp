@@ -31,6 +31,7 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
             agent_info.goal_location=goal_location;
             agent_info.elapsed=0;
             agent_info.tie_breaker=getRandomFloat(0,1,MT);
+            agent_info.stuck_order=0;
         } else {
             agent_info.elapsed+=1;
         }

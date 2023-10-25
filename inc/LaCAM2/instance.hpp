@@ -16,8 +16,9 @@ public:
     float elapsed;
     float tie_breaker;
     int id;
+    int stuck_order;
 
-    AgentInfo():id(-1),goal_location(-1),elapsed(-1),tie_breaker(-1){};
+    AgentInfo():id(-1),goal_location(-1),elapsed(-1),tie_breaker(-1), stuck_order(0){};
 };
 
 
@@ -26,7 +27,7 @@ struct Instance {
   Config starts;  // initial configuration
   Config goals;   // goal configuration
   const uint N;   // number of agents
-  const vector<AgentInfo> & agent_infos;
+  vector<AgentInfo> & agent_infos;
   int planning_window=-1;
   std::vector<::Path> * precomputed_paths;
 
@@ -44,7 +45,7 @@ struct Instance {
     const Graph & G,
     const std::vector<std::pair<uint,int> >& start_indexes,
     const std::vector<std::pair<uint,int> >& goal_indexes,
-    const std::vector<AgentInfo> & agent_infos,
+    std::vector<AgentInfo> & agent_infos,
     int planning_window=-1,
     std::vector<::Path> * precomputed_paths=nullptr
   );
