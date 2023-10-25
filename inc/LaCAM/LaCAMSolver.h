@@ -21,6 +21,7 @@ public:
     bool need_replan = true;
     int total_feasible_timestep = 0;
     int timestep = 0;
+    bool flag = false;
     void initialize(const SharedEnvironment & env);
     void plan(const SharedEnvironment & env);
     void get_step_actions(const SharedEnvironment & env, vector<Action> & actions);

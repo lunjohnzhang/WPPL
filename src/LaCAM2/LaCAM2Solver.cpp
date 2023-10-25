@@ -5,6 +5,7 @@
 #include "LaCAM2/SUO/SpatialSUO.hpp"
 #include "LaCAM2/SUO/TemporalSpatialSUO.hpp"
 #include <omp.h>
+#include <thread>
 
 namespace LaCAM2 {
 
@@ -362,6 +363,19 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
             assert(false);
         }
         actions.push_back(get_action_from_states(paths[i][timestep],paths[i][timestep+1]));
+    }
+
+    bool all_waiting=true;
+    for (auto action:actions) {
+        if (action!=Action::W) {
+            all_waiting=false;
+            break;
+        }
+    }
+    if (all_waiting && !this->flag) {
+        std::cerr<<"dead lock!"<<endl;
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+        this->flag=true;
     }
 
     // for (int i=0;i<env.num_of_agents;++i) {

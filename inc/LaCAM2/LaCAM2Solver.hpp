@@ -29,6 +29,8 @@ public:
     // Action get_action_from_states(const State & state, const State & next_state);
     // [end]
 
+    bool flag = false;
+
     std::shared_ptr<Graph> G; // graph
     std::shared_ptr<HeuristicTable> HT; // instance
     std::shared_ptr<std::vector<int> > map_weights; // map weights
