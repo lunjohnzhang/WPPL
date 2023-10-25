@@ -365,14 +365,16 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
         actions.push_back(get_action_from_states(paths[i][timestep],paths[i][timestep+1]));
     }
 
-    bool all_waiting=true;
+    int waiting_ctr=0;
     for (auto action:actions) {
-        if (action!=Action::W) {
-            all_waiting=false;
-            break;
+        if (action==Action::W) {
+            ++waiting_ctr;
         }
     }
-    if (all_waiting && !this->flag) {
+    double waiting_ratio=(double)waiting_ctr/actions.size();
+
+
+    if (waiting_ratio>0.8 && !this->flag) {
         std::cerr<<"dead lock!"<<endl;
         exit(-1);
         std::this_thread::sleep_for(std::chrono::seconds(2));
