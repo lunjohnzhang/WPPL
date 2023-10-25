@@ -374,6 +374,7 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
     }
     if (all_waiting && !this->flag) {
         std::cerr<<"dead lock!"<<endl;
+        exit(-1);
         std::this_thread::sleep_for(std::chrono::seconds(2));
         this->flag=true;
     }
