@@ -867,14 +867,14 @@ bool Planner::funcPIBT(Agent* ai, HNode * H, std::vector<std::pair<int,bool> > &
       }
     }
 
-    waiting_flags.emplace_back(ai->id,ai->v_next==ai->v_now);
+    waiting_flags.emplace_back(ai->id,ai->v_next->index==ai->v_now->index);
     return true;
   }
 
   // failed to secure node
   occupied_next[ai->v_now->id] = ai;
   ai->v_next = ai->v_now;
-  waiting_flags.emplace_back(ai->id,ai->v_next==ai->v_now);
+  waiting_flags.emplace_back(ai->id,ai->v_next->index==ai->v_now->index);
   return false;
 }
 

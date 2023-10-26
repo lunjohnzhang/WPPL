@@ -2,7 +2,7 @@
     "lifelong_solver_name": [
         {
             "n_agents": 1000000,
-            "value": "DUMMY"
+            "value": "LNS"
         }
     ],
     "map_weights_path": "scripts/sortation_large_weight_002.w",
@@ -20,12 +20,12 @@
         "sipp": true,
         "pibtWindow": 5,
         "winPibtSoftmode": true,
-        "window_size_for_CT": 10,
-        "window_size_for_CAT": 10,
-        "window_size_for_PATH": 10,
+        "window_size_for_CT": 20,
+        "window_size_for_CAT": 20,
+        "window_size_for_PATH": 20,
         "LaCAM2": {
             "seed": 0,
-            "planning_window": 10,
+            "planning_window": 20,
             "consider_rotation": false,
             "use_orient_in_heuristic": true,
             "use_slow_executor": false,
@@ -40,7 +40,7 @@
     },
     "LaCAM2": {
         "seed": 0,
-        "planning_window": 10,
+        "planning_window": 1,
         "consider_rotation": true,
         "use_orient_in_heuristic": true,
         "use_slow_executor": false,
