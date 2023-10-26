@@ -6,7 +6,7 @@ Dockerfile
 test.json/
 large_files/
 test.json
-test_rot.json
+test_*.json
 my_viz/*.png
 my_viz/*.gif
 *.weight

@@ -58,13 +58,14 @@ void SUO::plan() {
                 auto planner = planners[tid];
                 int agent_idx = orders[i];
                 int start_pos = env.curr_states[agent_idx].location;
+                int start_orient = env.curr_states[agent_idx].orientation;
                 int goal_pos = env.goal_locations[agent_idx][0].first;
                 
                 auto & old_path=paths[agent_idx];
 
                 planner->reset_plan();
                 planner->remove_path_cost(old_path, vertex_collision_cost);
-                State * goal_state = planner->search(start_pos, -1, goal_pos);
+                State * goal_state = planner->search(start_pos, start_orient, goal_pos);
                 if (goal_state==nullptr) {
                     cerr<<"SUO: agent "<<agent_idx<<" failed to find a path"<<endl;
                     exit(-1);
@@ -114,18 +115,24 @@ void SUO::update_path(int agent_idx, State * goal_state) {
         
     // remove old path from the cost map
     for (auto &state: path) {
-        deltas.emplace_back(State(state.pos,state.t), -vertex_collision_cost);
+        deltas.emplace_back(State(state.pos,state.orient,state.t), -vertex_collision_cost);
+        if (state.t+1<path.size()) {
+            deltas.emplace_back(State(state.pos,state.orient,state.t+1), -vertex_collision_cost);
+        }
+        if (state.t-1>=0) {
+            deltas.emplace_back(State(state.pos,state.orient,state.t-1), -vertex_collision_cost);
+        }
     }
 
     path_costs[agent_idx]=goal_state->f;
     path.clear();
 
     State * s=goal_state;
-    // std::cerr<<"goal state: "<<goal_state->pos<<" "<<goal_state->t<<std::endl;
-    path.push_back(State(s->pos,s->t));
+    // std::cerr<<"goal state: "<<goal_state->pos<<" "<<goal_state->orient<<" "<<goal_state->t<<std::endl;
+    path.push_back(State(s->pos,s->orient,s->t));
     while (s->prev!=nullptr) {
         s=s->prev;
-        path.push_back(State(s->pos,s->t));
+        path.push_back(State(s->pos,s->orient,s->t));
     }
 
     std::reverse(path.begin(), path.end());
@@ -133,7 +140,13 @@ void SUO::update_path(int agent_idx, State * goal_state) {
     // add new path to the cost map
     for (auto &state: path) {
         // std::cerr<<"add path cost: "<<state.pos<<" "<<state.t<<" "<<vertex_collision_cost<<std::endl;
-        deltas.emplace_back(State(state.pos,state.t),vertex_collision_cost);
+        deltas.emplace_back(State(state.pos,state.orient,state.t),vertex_collision_cost);
+        if (state.t+1<path.size()) {
+            deltas.emplace_back(State(state.pos,state.orient,state.t+1), vertex_collision_cost);
+        }
+        if (state.t-1>=0) {
+            deltas.emplace_back(State(state.pos,state.orient,state.t-1), vertex_collision_cost);
+        }
     }
 
 }
