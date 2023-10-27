@@ -29,6 +29,18 @@ Instance::Instance(
 
 }
 
+void Instance::set_starts_and_goals(std::vector<::State> * starts_ptr, std::vector<::State> * goals_ptr) {
+  auto & starts=*starts_ptr;
+  auto & goals=*goals_ptr;
+
+  for (int i=0;i<N;++i) {
+    this->starts.locs[i]=G.U[starts[i].location];
+    this->starts.orients[i]=starts[i].orientation;
+    this->goals.locs[i]=G.U[goals[i].location];
+    this->goals.orients[i]=goals[i].orientation;
+  }
+}
+
 // // for load instance
 // static const std::regex r_instance =
 //     std::regex(R"(\d+\t.+\.map\t\d+\t\d+\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t.+)");

@@ -51,6 +51,8 @@ struct Instance {
   );
   ~Instance() {}
 
+  void set_starts_and_goals(std::vector<::State> * starts, std::vector<::State> * goals);
+
   // simple feasibility check of instance
   bool is_valid(const int verbose = 0) const;
 };

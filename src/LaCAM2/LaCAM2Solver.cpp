@@ -116,35 +116,45 @@ int LaCAM2Solver::eval_solution(const Instance & instance, const Solution & solu
     return cost;
 }
 
-void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths){
+void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths, std::vector<::State> * starts, std::vector<::State> * goals){
     ONLYDEV(g_timer.record_p("lacam2_plan_pre_s");)
     // std::cerr<<"random :"<<get_random_int(MT,0,100)<<std::endl;
 
 
-    if (timestep==0) {
-        for (int i=0;i<env.num_of_agents;++i) {
-            paths[i].push_back(env.curr_states[i]);
-        }
-    }
-
-    if (precomputed_paths!=nullptr) {
-        // we need to check the initial states are the same.
-        for (int i=0;i<env.num_of_agents;++i) {
-            if ((*precomputed_paths)[i].size()==0 || (*precomputed_paths)[i][0].location!=env.curr_states[i].location) {
-                cerr<<"agent "<<i<<" has zero-length precomputed paths or initial states are not the same!"<<endl;
-                exit(-1);
-            }
-        }
-    }
+    // if (timestep==0) {
+    //     for (int i=0;i<env.num_of_agents;++i) {
+    //         paths[i].push_back(env.curr_states[i]);
+    //     }
+    // }
 
     if (need_replan) {
         const int verbose = 10;
         const int time_limit_sec = 2;
         ONLYDEV(g_timer.record_p("lacam_build_instance_s");)
         auto instance = build_instance(env, precomputed_paths);
+        if (starts!=nullptr) {
+            if (goals==nullptr) {
+                std::cerr<<"not supported now! goals must be specified as well"<<endl;
+                exit(-1);
+            }
+            instance.set_starts_and_goals(starts,goals);
+        }
+
+        if (precomputed_paths!=nullptr) {
+            // we need to check the initial states are the same.
+            for (int i=0;i<env.num_of_agents;++i) {
+                if ((*precomputed_paths)[i].size()==0 || (*precomputed_paths)[i][0].location!=instance.starts.locs[i]->index) {
+                    cerr<<"agent "<<i<<" has zero-length precomputed paths or initial states are not the same!"<<endl;
+                    cerr<<"size: "<<(*precomputed_paths)[i].size()<<endl;
+                    cerr<<"states: "<<(*precomputed_paths)[i][0]<<" vs "<<instance.starts.locs[i]<<endl;
+                    exit(-1);
+                }
+            }
+        }
+
         ONLYDEV(g_timer.record_d("lacam_build_instance_s","lacam_build_instance");)
         const auto deadline = Deadline(time_limit_sec * 1000);
-        bool use_swap=false;
+        bool use_swap=false; // TODO: we need try use_swap
         bool use_orient_in_heuristic=read_param_json<bool>(config,"use_orient_in_heuristic");
 
         // vector<::Path> precomputed_paths;
@@ -248,9 +258,11 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
             //     cerr<<solution[j][i]->index<<" ";
             // }
             // cerr<<endl;
-            int j=best_solution.size()==1?0:1;
-            for (;j<best_solution.size();++j) {
-                paths[i].emplace_back(best_solution[j].locs[i]->index,env.curr_states[i].timestep+j,best_solution[j].orients[i]);
+            for (int j=0;j<best_solution.size();++j) {
+                paths[i].emplace_back(best_solution[j].locs[i]->index,j,best_solution[j].orients[i]);
+            }
+            if (paths[i].size()==1) {
+                paths[i].emplace_back(paths[i].back().location,paths[i].size(),paths[i].back().orientation);
             }
         }
         ONLYDEV(g_timer.record_d("lacam2_plan_copy_path_s","lacam2_plan_copy_path");)
@@ -396,10 +408,11 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
 #else
         actions.resize(env.num_of_agents, Action::W);
 #endif
-    } else {
-        // NOTE(hj): only successfully executing a planned step will increase this internal timestep, which is different from the real timestep used in the simulation system.
-        timestep+=1;
-    }
+    } 
+    // else {
+    //     // NOTE(hj): only successfully executing a planned step will increase this internal timestep, which is different from the real timestep used in the simulation system.
+    //     timestep+=1;
+    // }
 
     // TODO(hj): when we need to replan?
     need_replan=true;
@@ -438,10 +451,10 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
 
     if (need_replan) {
         for (int i=0;i<env.num_of_agents;++i) {
-            paths[i].resize(timestep+1);
+            // paths[i].resize(timestep+1);
+            paths[i].clear();
         }
     }
-    
 }
 
 

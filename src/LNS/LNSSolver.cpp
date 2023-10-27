@@ -26,8 +26,21 @@ LNSSolver::LNSSolver(
 
 void LNSSolver::initialize(const SharedEnvironment & env){
     lacam2_solver->initialize(env);
-    paths.resize(env.num_of_agents);
-    executed_plan_step = -1;
+    execution_paths.resize(env.num_of_agents);
+    planning_paths.resize(env.num_of_agents);
+
+    // TODO(rivers): make it attribute of the class.
+    int window_size_for_CT=read_param_json<int>(config,"window_size_for_CT");
+    int window_size_for_PATH=read_param_json<int>(config,"window_size_for_PATH");
+    int LaCAM2_planning_window=read_param_json<int>(config["LaCAM2"],"planning_window");
+    if (window_size_for_CT==-1 || LaCAM2_planning_window!=window_size_for_CT || window_size_for_PATH!=window_size_for_CT) {
+        cerr<<"not fully supported now! need to modify the padding path code in lns->"<<endl;
+        exit(-1);
+    }
+
+    planning_window=window_size_for_CT; // TODO(rivers): read from config & initialized in constructor
+    execution_window=5; // TODO(rivers): read from config & initialized in constructor
+
 }
 
 int get_neighbor_orientation(const SharedEnvironment * env, int loc1,int loc2) {
@@ -75,14 +88,22 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
     ONLYDEV(g_timer.record_p("plan_s");)
 
+    std::vector<::State> starts;
+    std::vector<::State> goals;
+
+    for (int i=0;i<env.num_of_agents;++i) {
+        starts.emplace_back(execution_paths[i].back().location,-1,execution_paths[i].back().orientation);
+        goals.emplace_back(env.goal_locations[i][0].first,-1,-1);
+    }
+
     // TODO(rivers): we need to replan for all agents that has no plan
     // later we may think of padding all agents to the same length
-
-    if (need_replan) {
+    if (planning_paths[0].size()<planning_window+1) {
+        // TODO(rivers): maybe we should directly build lacam2 planner in this class.
         if (read_param_json<string>(config,"initAlgo")=="LaCAM2"){
             ONLYDEV(g_timer.record_p("lacam2_plan_s");)
             // use lacam2 to get a initial solution
-            // TODO: it is possible easier we clear everything first of lacam2
+            // TODO(rivers): the following line may need to be optimized. There is no need to rebuild the graph G again.
             lacam2_solver->clear(env);
             
             // TODO(rivers): we should avoid copy here. we may use deque for paths.
@@ -90,41 +111,51 @@ void LNSSolver::plan(const SharedEnvironment & env){
             vector<::Path> precomputed_paths;
             precomputed_paths.resize(env.num_of_agents);
             for (int i=0;i<env.num_of_agents;++i){
-                if (paths[i][executed_plan_step].location!=env.curr_states[i].location || paths[i][executed_plan_step].orientation!=env.curr_states[i].orientation){
-                    cerr<<"agent "<<i<<"'s current state doesn't match with the plan"<<endl;
+                if (planning_paths[i][0].location!=execution_paths[i].back().location || planning_paths[i][0].orientation!=execution_paths[i].back().orientation){
+                    cerr<<"agent "<<i<<"'s current state doesn't match with the plan"<<endl; // TODO: modify this cerr.
                     exit(-1);
                 }
-                for (int j=executed_plan_step;j<paths[i].size();++j){
-                    precomputed_paths[i].emplace_back(paths[i][j]);
+                for (int j=0;j<planning_paths[i].size();++j){
+                    precomputed_paths[i].emplace_back(planning_paths[i][j]);
+                    // we could break if we arrive at goal eariler here.
+                    if (j>1 && planning_paths[i][j].location==env.goal_locations[i][0].first){
+                        break;
+                    }
                 }
+                // std::cerr<<"agent "<<i<<std::endl;
+                // std::cerr<<planning_paths[i]<<std::endl;
+                // std::cerr<<precomputed_paths[i]<<std::endl;
             }
             ONLYDEV(g_timer.record_d("copy_paths_1_s","copy_paths_1_e","copy_paths_1");)
 
-            lacam2_solver->plan(env, &precomputed_paths);
+
+            // TODO: lacam2_solver should plan with starts differnt from env.curr_states but goals the same as env.goals because they are up-to-date. 
+            lacam2_solver->plan(env, &precomputed_paths, &starts, &goals);
 
             // we need to copy the new planned paths into paths
             // std::cerr<<"lacam2 paths:"<<endl;
+            // for (int i=0;i<env.num_of_agents;++i) {
+            //     std::cerr<<"before agent "<<i<<" "<<env.curr_states[i]<<"->"<<env.goal_locations[i][0].first<<" "<<planning_paths[i].size()<<": "<<planning_paths[i]<<std::endl;
+            //     std::cerr<<lacam2_solver->paths[i]<<endl;
+            // }
             int num_inconsistent=0;
             for (int i=0;i<env.num_of_agents;++i){
-                for (int j=0;j<lacam2_solver->paths[i].size()-1;++j){
-                    if (paths[i][j+executed_plan_step].location!=lacam2_solver->paths[i][j].location || paths[i][j+executed_plan_step].orientation!=lacam2_solver->paths[i][j].orientation){
+                for (int j=0;j<planning_paths[i].size()-1;++j){
+                    if (planning_paths[i][j].location!=lacam2_solver->paths[i][j].location || planning_paths[i][j].orientation!=lacam2_solver->paths[i][j].orientation){
                         ++num_inconsistent;
                         break;
                     }
                 }
 
-                paths[i].resize(executed_plan_step+1);
-                for (int j=1;j<lacam2_solver->paths[i].size();++j){
-                    paths[i].emplace_back(lacam2_solver->paths[i][j].location,executed_plan_step+j,lacam2_solver->paths[i][j].orientation);
+                planning_paths[i].clear();
+                for (int j=0;j<lacam2_solver->paths[i].size();++j){
+                    planning_paths[i].emplace_back(lacam2_solver->paths[i][j].location,j,lacam2_solver->paths[i][j].orientation);
                 }
-                // std::cerr<<"agent "<<i<<" "<<env.curr_states[i]<<"->"<<env.goal_locations[i][0].first<<" "<<paths[i].size()<<": "<<paths[i]<<std::endl;
+                // std::cerr<<"agent "<<i<<" "<<env.curr_states[i]<<"->"<<env.goal_locations[i][0].first<<" "<<planning_paths[i].size()<<": "<<planning_paths[i]<<std::endl;
             }
-            std::cerr<<"num_inconsistent/total: "<<num_inconsistent<<"/"<<env.num_of_agents<<"="<<num_inconsistent/(float)env.num_of_agents<<std::endl;
+            ONLYDEV(std::cerr<<"num_inconsistent/total: "<<num_inconsistent<<"/"<<env.num_of_agents<<"="<<num_inconsistent/(float)env.num_of_agents<<std::endl;)
             ONLYDEV(g_timer.record_d("lacam2_plan_s","lacam2_plan_e","lacam2_plan");)
         }
-
-
-
 
         // ONLYDEV(analyzer.snapshot(
         //     "analysis/ppaths/lacam2",
@@ -133,10 +164,10 @@ void LNSSolver::plan(const SharedEnvironment & env){
         // );)
     }
 
-    ONLYDEV(g_timer.record_p("prepare_LNS_s");)
 
-    if (executed_plan_step==0){
-        // TODO(rivers): not sure what's bug making it cannot be placed in initialize()
+    // TODO(rivers): not sure what's bug making it cannot be placed in initialize()    
+    ONLYDEV(g_timer.record_p("prepare_LNS_s");)
+    if (env.curr_timestep==0){
         // build instace
         instance = std::make_shared<Instance>(env);
         lns = std::make_shared<Parallel::GlobalManager>(
@@ -156,11 +187,13 @@ void LNSSolver::plan(const SharedEnvironment & env){
             read_param_json<int>(config,"window_size_for_PATH"),
             0 // TODO: screen
         );
-    } else {
-        lns->reset();
-        instance->set_starts_and_goals(env);
     }
 
+    lns->reset();
+    instance->set_starts_and_goals(starts,goals);
+    ONLYDEV(g_timer.record_d("prepare_LNS_s","prepare_LNS_e","prepare_LNS");)
+
+    // ONLYDEV(g_timer.record_p("prepare_LNS_s");)
     // build planner
     // PIBTPPS_option pipp_option;
     // pipp_option.windowSize = read_param_json<int>(config,"pibtWindow");
@@ -185,7 +218,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
     //     read_param_json<int>(config,"window_size_for_PATH")
     // );
 
-    ONLYDEV(g_timer.record_d("prepare_LNS_s","prepare_LNS_e","prepare_LNS");)
+    // ONLYDEV(g_timer.record_d("prepare_LNS_s","prepare_LNS_e","prepare_LNS");)
 
     // ONLYDEV(g_timer.record_p("modify_goals_s");)
     // TODO(rivers): this might not be necessary
@@ -193,6 +226,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
     // ONLYDEV(g_timer.record_d("modify_goals_s","modify_goals_e","modify_goals");)
 
     // copy current paths to lns paths
+    // we need to do this every timestep because the goal might be updated.
     ONLYDEV(g_timer.record_p("copy_paths_2_s");)
     for (int i=0;i<lns->agents.size();i++){
         if (lns->agents[i].id!=i) {
@@ -201,9 +235,9 @@ void LNSSolver::plan(const SharedEnvironment & env){
         }
         lns->agents[i].path.clear();
         bool goal_arrived=false;
-        for (int j=executed_plan_step;j<paths[i].size();++j){
-            lns->agents[i].path.nodes.emplace_back(paths[i][j].location,paths[i][j].orientation);
-            if (paths[i][j].location==env.goal_locations[i][0].first){
+        for (int j=0;j<planning_paths[i].size();++j){
+            lns->agents[i].path.nodes.emplace_back(planning_paths[i][j].location,planning_paths[i][j].orientation);
+            if (planning_paths[i][j].location==env.goal_locations[i][0].first){
                 goal_arrived=true;
                 // break;
             }
@@ -241,8 +275,8 @@ void LNSSolver::plan(const SharedEnvironment & env){
     // save to paths
     ONLYDEV(g_timer.record_p("copy_paths_3_s");)
     // std::cerr<<"lns paths:"<<endl;
-    for (int i=0;i<paths.size();++i) {
-        auto & path=paths[i];
+    for (int i=0;i<planning_paths.size();++i) {
+        auto & path=planning_paths[i];
         auto & new_path=lns->agents[i].path;
 
         // compare
@@ -256,17 +290,22 @@ void LNSSolver::plan(const SharedEnvironment & env){
         //     }
         // }
 
-        path.resize(executed_plan_step+1);
+        // std::cerr<<"agent "<<i<<" has updated lns path"<<endl;
+        // std::cerr<<path<<endl;
+        // std::cerr<<new_path<<endl;
+
+        path.clear();
 
         // cerr<<"agent "<<i<<" "<<new_path.size()<<": "<<new_path<<endl;
-        for (int j=1;j<new_path.size();++j) {
-            path.emplace_back(new_path[j].location, env.curr_timestep+j, new_path[j].orientation);
-            if (new_path[j].location==env.goal_locations[i][0].first){
-                break;
-            }
+        for (int j=0;j<new_path.size();++j) {
+            path.emplace_back(new_path[j].location, j, new_path[j].orientation);
+            // if (need_new_execution_paths && new_path[j].location==env.goal_locations[i][0].first){
+            //     break;
+            // }
         }
         // cerr<<"agent "<<i<<" s:"<<env.curr_states[i]<<" e:"<<env.goal_locations[i][0].first<<" c:"<<executed_plan_step<<endl;
         // std::cerr<<"agent "<<i<<" "<<env.curr_states[i]<<"->"<<env.goal_locations[i][0].first<<" "<<path.size()<<": "<<path<<endl;
+        // std::cerr<<path<<endl;
     }
     ONLYDEV(g_timer.record_d("copy_paths_3_s","copy_paths_3_e","copy_paths_3");)
 
@@ -301,60 +340,38 @@ void LNSSolver::observe(const SharedEnvironment & env){
 
     ONLYDEV(g_timer.record_p("observe_s");)
 
-    if (paths[0].size()==0) {
+    if (execution_paths[0].size()==0) {
+        // the first step?
         for (int i=0;i<env.num_of_agents;++i) {
-            paths[i].push_back(env.curr_states[i]);
+            execution_paths[i].push_back(env.curr_states[i]);
+            planning_paths[i].push_back(env.curr_states[i]);
+            // std::cerr<<"agent "<<i<<" "<<env.curr_states[i]<<"->"<<env.goal_locations[i][0].first<<std::endl;
         }
-    }
-
-    // need_replan=true;
-    // executed_plan_step=0;
-
-    // need_replan=false;
-
-    // TODO: we need to check the state is at leat the previous one in the plan or the current one.
-    // otherwise, it goes out of control.
-    // update current executed_plan_step if current state match with the plan
-    bool match=true;
-    for (int i=0;i<paths.size();++i){
-        // cerr<<"agent "<<i<<" curr state:"<<env.curr_states[i]<<", "<<" goal:"<<env.goal_locations[i][0].first<<endl;
-        if (executed_plan_step+1>=paths[i].size()){
-            // todo
-            cerr<<"executed_plan_step exceed the plan:"<<executed_plan_step+1<<paths[i].size()<<endl;
-            exit(-1);
-        }
-        if (paths[i][executed_plan_step+1].location!=env.curr_states[i].location || paths[i][executed_plan_step+1].orientation!=env.curr_states[i].orientation){
-            match=false;
-        }
-    }
-    if (match){
-        ++executed_plan_step;
-    }
-
-    // check if we need to replan
-    // TODO(rivers): make it attribute of the class.
-    int window_size_for_CT=read_param_json<int>(config,"window_size_for_CT");
-    int window_size_for_PATH=read_param_json<int>(config,"window_size_for_PATH");
-    int LaCAM2_planning_window=read_param_json<int>(config["LaCAM2"],"planning_window");
-    if (window_size_for_CT==-1 || LaCAM2_planning_window!=window_size_for_CT || window_size_for_PATH!=window_size_for_CT) {
-        cerr<<"not fully supported now! need to modify the padding path code in lns->"<<endl;
-        exit(-1);
-    }
-    agent_ids_need_replan.clear();
-    for (int i=0;i<paths.size();++i) {
-        // cerr<<"agent "<<i<<" need replan lengths:"<<executed_plan_step+window_size_for_CT<<" vs "<<paths[i].size()<<" locations:"<<paths[i].back().location<<" vs "<<env.goal_locations[i][0].first<<endl;
-        // we ensure that we always has a planed path of window_size_for_CT for each agent.
-        if (executed_plan_step+window_size_for_CT>=paths[i].size()) {
-            agent_ids_need_replan.insert(i);
-        }
-    }
-
-    if (agent_ids_need_replan.size()>0){
-        cerr<<"need replan"<<endl;
-        need_replan=true;
+        executed_step=0;
     } else {
-        cerr<<"no need to replan"<<endl;
-        need_replan=false;
+        bool match=true;
+        for (int i=0;i<execution_paths.size();++i){
+            // cerr<<"agent "<<i<<" curr state:"<<env.curr_states[i]<<", "<<" goal:"<<env.goal_locations[i][0].first<<endl;
+            if (executed_step+1>=execution_paths[i].size()){
+                cerr<<"executed_step exceed the execution paths:"<<executed_step<<execution_paths[i].size()<<endl;
+                exit(-1);
+            }
+            if (execution_paths[i][executed_step+1].location!=env.curr_states[i].location || execution_paths[i][executed_step+1].orientation!=env.curr_states[i].orientation){
+                match=false;
+            }
+        }
+        // otherwise, the previous execution is delayed.
+        if (match){
+            ++executed_step;
+        }
+    }
+
+    // if run out of execution instructions, we need to copy new ones into execution_paths
+    if (executed_step==execution_paths[0].size()-1){
+        std::cerr<<"need new execution paths"<<std::endl;
+        need_new_execution_paths=true;
+    } else {
+        need_new_execution_paths=false;
     }
 
     ONLYDEV(g_timer.record_d("observe_s","observe_e","observe");)
@@ -388,20 +405,47 @@ void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> &
     //     }
     // }
 
+
+    if (need_new_execution_paths) {
+        // copy planning paths to execution paths
+        for (int i=0;i<env.num_of_agents;++i) {
+            execution_paths[i].clear();
+            for (int j=0;j<execution_window+1;++j) {
+                execution_paths[i].emplace_back(planning_paths[i][j].location,j,planning_paths[i][j].orientation);
+            }
+            if (execution_paths[i].size()!=execution_window+1) {
+                std::cerr<<"execution paths size is not correct"<<std::endl;
+                exit(-1);
+            }
+            executed_step=0;
+        }
+
+        // keep only the remaining planning paths
+        // std::cerr<<"truncated planning paths"<<std::endl;
+        for (int i=0;i<env.num_of_agents;++i) {
+            planning_paths[i].erase(planning_paths[i].begin(),planning_paths[i].begin()+execution_window);
+            if (planning_paths[i].size()!=planning_window+1-execution_window) {
+                std::cerr<<"planning paths size is not correct"<<std::endl;
+                exit(-1);
+            }
+            // std::cerr<<"agent "<<i<<": "<<planning_paths[i]<<std::endl;
+        }
+    }
+
     // get actions from current state and next state
     for (int i=0;i<env.num_of_agents;++i) {
         // we will get action indexed at executed_plan_step+1
-        if (paths[i].size()<=executed_plan_step+1){
-            cerr<<"wierd error for agent "<<i<<". path length: "<<paths[i].size()<<", "<<"executed_plan_step+1: "<<executed_plan_step+1<<endl;
+        if (execution_paths[i].size()<=executed_step+1){
+            cerr<<"wierd error for agent "<<i<<". path length: "<<execution_paths[i].size()<<", "<<"executed_plan_step+1: "<<executed_step+1<<endl;
             exit(-1);
         }
 
-        if (paths[i][executed_plan_step].location!=env.curr_states[i].location || paths[i][executed_plan_step].orientation!=env.curr_states[i].orientation) {
+        if (execution_paths[i][executed_step].location!=env.curr_states[i].location || execution_paths[i][executed_step].orientation!=env.curr_states[i].orientation) {
             cerr<<"agent "<<i<<"'s current state doesn't match with the executed plan"<<endl;
             exit(-1);
         }
 
-        actions.push_back(get_action_from_states(env.curr_states[i],paths[i][executed_plan_step+1]));
+        actions.push_back(get_action_from_states(execution_paths[i][executed_step],execution_paths[i][executed_step+1]));
     }
 #else
 
@@ -418,7 +462,7 @@ void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> &
 
     ONLYDEV(
         if (!action_model.is_valid(env.curr_states,actions)){
-            cerr<<"planed actions are not valid in executed_plan_step "<<executed_plan_step+1<<"!"<<endl;
+            cerr<<"planed actions are not valid in executed_step "<<executed_step+1<<"!"<<endl;
             for (int i=0;i<env.num_of_agents;++i) {
                 cerr<<"agent "<<i<<" "<<env.curr_states[i]<<" "<<actions[i]<<endl;
             }
