@@ -25,9 +25,9 @@ public:
     const SharedEnvironment & env;
     CompetitionActionModelWithRotate action_model;
     // loc1, loc2
-    unsigned short * main_heuristics;
+    unsigned int * main_heuristics;
     // loc1, loc2, orient1, orient2
-    char * sub_heuristics;
+    unsigned short * sub_heuristics;
     int * empty_locs;
     int * loc_idxs; 
     int n_orientations=4;
@@ -45,31 +45,31 @@ public:
 
     void _compute_weighted_heuristics(
         int start_loc_idx,
-        unsigned short * values,
+        unsigned int * values,
         RIVERS::SPATIAL::SpatialAStar * planner
     );
 
     void dump_main_heuristics(int start_loc, string file_path_prefix);
 
-    void compute_heuristics();
+    // void compute_heuristics();
 
-    void _push(State * queue, State &s, int & e_idx);
-    State _pop(State * queue, int & s_idx);
-    bool _empty(int s_idx, int e_idx);
+    // void _push(State * queue, State &s, int & e_idx);
+    // State _pop(State * queue, int & s_idx);
+    // bool _empty(int s_idx, int e_idx);
 
-    void compute_heuristics(
-        int start_loc_idx,
-        unsigned short * values, 
-        bool * visited,
-        State * queue
-    );
+    // void compute_heuristics(
+    //     int start_loc_idx,
+    //     unsigned short * values, 
+    //     bool * visited,
+    //     State * queue
+    // );
     
     // TODO(hj) add check
     int get(int loc1, int loc2);
     int get(int loc1, int orient1, int loc2);
-    int get(int loc1, int orient1, int loc2, int orient2);
+    // int get(int loc1, int orient1, int loc2, int orient2);
 
-    void preprocess();
+    // void preprocess();
     void preprocess(string suffix="");
     void save(const string & fpath);
     void load(const string & fpath);
