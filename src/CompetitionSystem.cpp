@@ -7,6 +7,7 @@
 #include "util/Timer.h"
 #include "util/Analyzer.h"
 #include "util/MyLogger.h"
+#include <fstream>
 
 using json = nlohmann::ordered_json;
 
@@ -677,6 +678,23 @@ void InfAssignSystem::update_tasks(){
             task_id++;
             task_counter[k]++;
         }
+    }
+}
+
+void InfAssignSystem::resume_from_file(string snapshot_fp, int w){
+    std::ifstream fin(snapshot_fp);
+    int n;
+    fin>>n;
+    if (n!=num_of_agents) {
+        std::cerr<<"number of agents in snapshot file does not match: "<<n<<" vs "<<num_of_agents<<std::endl;
+    }
+    for (int k = 0; k < num_of_agents; k++)
+    {
+        int x,y,o;
+        fin>>x>>y>>o;
+        int p=y*w+x;
+        std::cout<<p<<" "<<x<<" "<<y<<" "<<o<<std::endl;
+        starts[k]=State(p,0,o);
     }
 }
 
