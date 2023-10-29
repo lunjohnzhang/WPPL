@@ -524,16 +524,16 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
     // check vertex collision
     if (occupied_next[l] != nullptr){
-      cerr<<"vertex collision"<<endl;
-      exit(-1);
+      // cerr<<"vertex collision"<<endl;
+      // exit(-1);
       return false;
     }
     // check swap collision
     auto l_pre = H->C.locs[i]->id;
     if (occupied_next[l_pre] != nullptr && occupied_now[l] != nullptr &&
         occupied_next[l_pre]->id == occupied_now[l]->id) {
-          cerr<<"swap collision"<<endl;
-          exit(-1);
+          // cerr<<"swap collision"<<endl;
+          // exit(-1);
       return false;
     }
 
@@ -603,7 +603,7 @@ int Planner::get_cost_move(int pst, int ped) {
     return (*map_weights)[pst*5+3];
   } else if (ped-pst==0) {
     // stay
-    return 0; // means no move is needed.
+    return (*map_weights)[pst*5+4]; // means no move is needed.
   }
   else {
     std::cerr<<"invalid move: "<<pst<<" "<<ped<<endl;
@@ -647,16 +647,21 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
     // TODO(rivers): we should maintain the const somewhere else
     // perhaps: we should wrap a class for map weights...
     int cost_rot=(*map_weights)[ai->v_now->index*5+4];
-    const double decay=0.9; // TODO(rivers): BUG? so that we encourage to move? =1 would cause bug... why not just slap me in the face???
-    double o_dist1=get_o_dist(o0,o1)*cost_rot+get_cost_move(ai->v_now->index,v->index)*decay;
-    double o_dist2=get_o_dist(o0,o2)*cost_rot+get_cost_move(ai->v_now->index,u->index)*decay;
+    int o_dist1=get_o_dist(o0,o1);
+    int o_dist2=get_o_dist(o0,o2);
+
+    double cost1=o_dist1*cost_rot+get_cost_move(ai->v_now->index,v->index);
+    double cost2=o_dist2*cost_rot+get_cost_move(ai->v_now->index,u->index);
+
+    // double cost_next_move_1=ai->v_now->index==v->index?cost_rot:get_cost_move(ai->v_now->index,v->index);
+    // double cost_next_move_2=ai->v_now->index==u->index?cost_rot:get_cost_move(ai->v_now->index,u->index);
 
     // cerr<<o1<<" "<<o2<<" "<<o0<<" "<<o_dist1<<" "<<o_dist2<<endl;
 
     double d1,d2;
     if (use_orient_in_heuristic){
-      d1=HT->get(v->index,o1,ins->goals.locs[i]->index)+o_dist1;
-      d2=HT->get(u->index,o2,ins->goals.locs[i]->index)+o_dist2;      
+      d1=HT->get(v->index,o1,ins->goals.locs[i]->index)+cost1;
+      d2=HT->get(u->index,o2,ins->goals.locs[i]->index)+cost2;      
     } else {
       d1=HT->get(v->index,ins->goals.locs[i]->index);
       d2=HT->get(u->index,ins->goals.locs[i]->index);
@@ -666,6 +671,50 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
     // the former one seems to fit LNS but doesn't work with SUO
     // the latter one ssems to fit SUO but doesn't work with LNS
     // the latter one is problematic with wait action?
+
+
+    // if (ins->precomputed_paths!=nullptr){
+      // int pre_d1=1;
+      // int pre_d2=1;
+      // auto path=(*ins->precomputed_paths)[i];
+      // // for (int j=path.size()-1;j>=0;--j){
+      //   int j=H->d;
+      //   if (path[j].location==ai->v_now->index) {
+      //     auto loc_next=ai->v_now->index;
+      //     for (int m=j;m<path.size();++m) {
+      //       if (path[m].location!=loc_next) {
+      //         loc_next=path[m].location;
+      //         break;
+      //       }
+      //     }
+          
+      //     if (loc_next==v->index) {
+      //       pre_d1=0;
+      //     }
+
+      //     if (loc_next==u->index) {
+      //       pre_d2=0;
+      //     }
+      //     if (pre_d1!=pre_d2) return pre_d1<pre_d2;
+      //   }
+
+
+    //     if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
+    //       if (path[j+1].orientation==o1) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
+    //         pre_d1=0;
+    //         // break;
+    //       }
+    //       if (path[j+1].orientation==o2) { // && ((o2==o0 && path[j+1].location==u->index) || (o2!=o0))) {
+    //         pre_d2=0;
+    //         // break;
+    //       }
+    //     }
+    //   // }
+    //   if (pre_d1!=pre_d2) return pre_d1<pre_d2;
+    // }
+
+
+
 
     if (ins->precomputed_paths!=nullptr){
       int pre_d1=1;

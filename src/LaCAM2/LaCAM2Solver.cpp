@@ -15,6 +15,8 @@ void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     for (int i=0;i<env.num_of_agents;++i) {
         agent_infos[i].id=i;
     }
+    action_costs.resize(env.num_of_agents);
+    total_actions.resize(env.num_of_agents);
     G = std::make_shared<Graph>(env);
 }
 
@@ -364,6 +366,31 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
         }
         actions.push_back(get_action_from_states(paths[i][timestep],paths[i][timestep+1]));
     }
+
+
+    // for (int i=0;i<env.num_of_agents;++i) {
+    //     int action_cost=get_action_cost(paths[i][timestep].location,paths[i][timestep].orientation,paths[i][timestep+1].location,paths[i][timestep+1].orientation);
+    //     action_costs[i].push_back(action_cost);
+    //     int a=get_action_from_states(paths[i][timestep],paths[i][timestep+1]);
+    //     total_actions[i].push_back(a);
+    // }
+
+    // if (env.curr_timestep==3) {
+    //     for (int i=0;i<env.num_of_agents;++i) {
+    //         int curr_loc=env.curr_states[i].location;
+    //         int y=curr_loc/env.cols;
+    //         if (y==7){
+    //             cout<<"agent "<<i<<": ";
+    //             cout<<paths[i]<<endl;
+    //             cout<<endl;
+    //             for (int j=0;j<action_costs[i].size();++j) {
+    //                 cout<<action_costs[i][j]<<" ";
+    //             }
+    //             cout<<endl;
+    //         }
+    //     }
+    // }
+
 
     // int waiting_ctr=0;
     // for (auto action:actions) {
