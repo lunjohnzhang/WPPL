@@ -15,16 +15,10 @@
 #include <pybind11/stl.h>
 #endif
 
-
-#ifdef PYTHON
-#if PYTHON
-#include "pyMAPFPlanner.hpp"
-#include <pybind11/embed.h>
-#endif
-#endif
-
 namespace po = boost::program_options;
 using json = nlohmann::json;
+
+namespace py = pybind11;
 
 po::variables_map vm;
 std::unique_ptr<BaseSystem> system_ptr;
@@ -45,7 +39,7 @@ std::string run(const py::kwargs& kwargs)
 {
     
     // should be a command line string running the code
-    std::string cmd=kwargs["cmd"];
+    std::string cmd=kwargs["cmd"].cast<std::string>();
     std::cout<<"cmd from python is: "<<cmd<<std::endl;
 
     // Declare the supported options.
@@ -68,7 +62,7 @@ std::string run(const py::kwargs& kwargs)
     if (vm.count("help"))
     {
         std::cout << desc << std::endl;
-        return 1;
+        exit(-1);
     }
 
     po::notify(vm);
@@ -182,4 +176,28 @@ std::string run(const py::kwargs& kwargs)
     // delete model;
     // delete logger;
     // return 0;
+}
+
+string playground(){
+	std::string json_string = R"(
+	{
+		"pi": 3.141,
+		"happy": true
+	}
+	)";
+	json ex1 = json::parse(json_string);
+
+	cout << ex1["pi"] << endl;
+
+	return ex1.dump();
+}
+
+
+PYBIND11_MODULE(py_driver, m) {
+	// optional module docstring
+    // m.doc() = ;
+
+    m.def("playground", &playground, "Playground function to test everything");
+    // m.def("add", &add, py::arg("i")=0, py::arg("j")=1);
+    m.def("run", &run, "Function to run warehouse simulation");
 }

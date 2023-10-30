@@ -1,6 +1,7 @@
+cmake_minimum_required(VERSION 3.16)
+
 project(lifelong)
 
-cmake_minimum_required(VERSION 3.16)
 set(CMAKE_CXX_STANDARD 17)
 
 
@@ -43,63 +44,79 @@ include_directories( ${Boost_INCLUDE_DIRS} )
 find_package(OpenMP REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Threads REQUIRED)
-
-IF(PYTHON)
-    include_directories("python")
-    message(STATUS "Python support is enabled")
-
-    find_package(pybind11 REQUIRED)
-    set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ version selection")
+find_package(Python 3.8 COMPONENTS Interpreter Development REQUIRED)
 
 
-    pybind11_add_module(MAPF "./src/Grid.cpp"   "./src/States.cpp" "./python/MAPFbinding.cpp")
-    target_link_libraries(MAPF PRIVATE ) 
+add_subdirectory(pybind11)
 
-    file(GLOB SOURCES "src/*.cpp")
+# IF(PYTHON)
+#     include_directories("python")
+#     message(STATUS "Python support is enabled")
 
-    file(GLOB PY_SOURCES "python/*.cpp")
-    list(FILTER PY_SOURCES EXCLUDE REGEX ".*python/MAPFbinding\.cpp")
-
-    add_executable(lifelong  ${PY_SOURCES} ${SOURCES})
-    target_link_libraries(lifelong PRIVATE pybind11::embed ${Boost_LIBRARIES})
-    target_compile_definitions(lifelong PRIVATE PYTHON=${PYTHON_FLAG})
-
-    if (COPY_PY_PATH_CONFIG)
-        file(COPY "config.json" DESTINATION ${CMAKE_BINARY_DIR})
-    endif()
+#     find_package(pybind11 REQUIRED)
+#     set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ version selection")
 
 
-ELSE()
-    message(STATUS "Python support is disabled")
-    
-    IF(NO_ROT)
-        message(STATUS "Use action model with no rotation")
-        add_definitions(-DNO_ROT)
-        file(GLOB OFFICIAL_SOURCES "src/**.cpp")
-        file(GLOB_RECURSE MY_SOURCES "src/LNS/**.cpp" "src/LaCAM2/**.cpp" "src/util/**.cpp")
-        set(SOURCES ${OFFICIAL_SOURCES} ${MY_SOURCES})
-    ELSE()
-        message(STATUS "Use action model with rotation")
-        file(GLOB OFFICIAL_SOURCES "src/**.cpp")
-        file(GLOB_RECURSE MY_SOURCES "src/LNS/**.cpp" "src/LaCAM2/**.cpp" "src/RHCR/**.cpp" "src/util/**.cpp")
-        list(FILTER OFFICIAL_SOURCES EXCLUDE REGEX ".*analyze_results\.cpp")
-        list(FILTER OFFICIAL_SOURCES EXCLUDE REGEX ".*py_driver\.cpp")
-        set(SOURCES ${OFFICIAL_SOURCES} ${MY_SOURCES})
-    ENDIF()
+#     pybind11_add_module(MAPF "./src/Grid.cpp"   "./src/States.cpp" "./python/MAPFbinding.cpp")
+#     target_link_libraries(MAPF PRIVATE ) 
 
-    IF(DEV)
-        message(STATUS "Dev mode is enabled")
-        add_definitions(-DDEV)
-    ENDIF()
+#     file(GLOB SOURCES "src/*.cpp")
 
-    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wfatal-errors")
+#     file(GLOB PY_SOURCES "python/*.cpp")
+#     list(FILTER PY_SOURCES EXCLUDE REGEX ".*python/MAPFbinding\.cpp")
 
-    add_executable(lifelong ${SOURCES} )
-    target_link_libraries(lifelong ${Boost_LIBRARIES})
-    target_link_libraries(lifelong OpenMP::OpenMP_CXX)
-    target_link_libraries(lifelong spdlog::spdlog)
-    target_compile_definitions(lifelong PRIVATE PYTHON=${PYTHON_FLAG})
+#     add_executable(lifelong  ${PY_SOURCES} ${SOURCES})
+#     target_link_libraries(lifelong PRIVATE pybind11::embed ${Boost_LIBRARIES})
+#     target_compile_definitions(lifelong PRIVATE PYTHON=${PYTHON_FLAG})
+
+#     if (COPY_PY_PATH_CONFIG)
+#         file(COPY "config.json" DESTINATION ${CMAKE_BINARY_DIR})
+#     endif()
+
+
+# ELSE()
+# message(STATUS "Python support is disabled")
+
+# IF(NO_ROT)
+#     message(STATUS "Use action model with no rotation")
+#     add_definitions(-DNO_ROT)
+#     file(GLOB OFFICIAL_SOURCES "src/**.cpp")
+#     file(GLOB_RECURSE MY_SOURCES "src/LNS/**.cpp" "src/LaCAM2/**.cpp" "src/util/**.cpp")
+#     set(SOURCES ${OFFICIAL_SOURCES} ${MY_SOURCES})
+# ELSE()
+message(STATUS "Use action model with rotation")
+file(GLOB OFFICIAL_SOURCES "src/**.cpp")
+file(GLOB_RECURSE MY_SOURCES "src/LNS/**.cpp" "src/LaCAM2/**.cpp" "src/RHCR/**.cpp" "src/util/**.cpp")
+list(FILTER OFFICIAL_SOURCES EXCLUDE REGEX ".*analyze_results\.cpp")
+list(FILTER OFFICIAL_SOURCES EXCLUDE REGEX ".*py_driver\.cpp")
+set(SOURCES ${OFFICIAL_SOURCES} ${MY_SOURCES})
+
+# ENDIF()
+IF(DEV)
+    message(STATUS "Dev mode is enabled")
+    add_definitions(-DDEV)
 ENDIF()
+
+IF (MAP_OPT)
+    message(STATUS "Use map optimization")
+    add_definitions(-DMAP_OPT)
+ENDIF()
+
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wfatal-errors")
+
+add_executable(lifelong ${SOURCES} )
+target_link_libraries(lifelong ${Boost_LIBRARIES})
+target_link_libraries(lifelong OpenMP::OpenMP_CXX)
+target_link_libraries(lifelong spdlog::spdlog)
+target_compile_definitions(lifelong PRIVATE PYTHON=${PYTHON_FLAG})
+
+list(FILTER SOURCES EXCLUDE REGEX "src/driver\.cpp")
+pybind11_add_module(py_driver "src/py_driver.cpp" ${SOURCES})
+target_link_libraries(py_driver PRIVATE OpenMP::OpenMP_CXX)
+target_link_libraries(py_driver PRIVATE spdlog::spdlog)
+target_link_libraries(py_driver PRIVATE ${Boost_LIBRARIES})
+
+# ENDIF()
 
 # add_executable(test_log "test/my_logger.cpp" "src/util/MyLogger.cpp")
 # target_link_libraries(test_log spdlog::spdlog)
@@ -122,6 +139,3 @@ set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
      ${CMAKE_BINARY_DIR}/build;
      ${CMAKE_BINARY_DIR}/*.so"
 )
-
-
-
