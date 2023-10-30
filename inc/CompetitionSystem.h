@@ -9,6 +9,7 @@
 #include "Logger.h"
 #include <pthread.h>
 #include <future>
+#include <cstdlib>
 
 #ifndef NO_ROT
 
@@ -206,6 +207,13 @@ public:
             }
             starts[i] = State(start_locs[i], 0, 0);
         }
+ 
+        char * LOAD_FP=std::getenv("LOAD_FP");
+        std::cerr<<"LOAD_FP: "<<LOAD_FP<<std::endl;
+        if (LOAD_FP!=NULL && strlen(LOAD_FP)!=0) {
+            resume_from_file(LOAD_FP, grid.cols);
+        }
+
     };
 
 	~InfAssignSystem(){};
@@ -218,6 +226,8 @@ private:
     int task_id = 0;
 
 	void update_tasks();
+
+    void resume_from_file(string fname, int w);
 };
 
 #else

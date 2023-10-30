@@ -36,10 +36,11 @@ HeuristicTable::HeuristicTable(SharedEnvironment * _env, const std::shared_ptr<s
     ONLYDEV(assert(loc_idx==loc_size);)
 
     state_size = loc_size*n_orientations;
-    main_heuristics = new unsigned short[loc_size*loc_size];
-    std::fill(main_heuristics,main_heuristics+loc_size*loc_size,USHRT_MAX);
+    main_heuristics = new unsigned int[loc_size*loc_size];
+    std::fill(main_heuristics,main_heuristics+loc_size*loc_size,MAX_HEURISTIC);
+    // we keep start_loc, end_loc, start_orient, namely no goal_orient
     if (consider_rotation)
-        sub_heuristics = new char[state_size*state_size];
+        sub_heuristics = new unsigned short[state_size*loc_size];
 };
 
 HeuristicTable::~HeuristicTable() {
@@ -60,7 +61,7 @@ void HeuristicTable::compute_weighted_heuristics(){
 
     // int n_threads=pool.get_thread_count();
     cout<<"number of threads used for heuristic computation: "<<n_threads<<endl;
-    unsigned short * values = new unsigned short[n_threads*n_orientations*state_size];
+    unsigned int * values = new unsigned int[n_threads*n_orientations*state_size];
     RIVERS::SPATIAL::SpatialAStar ** planners= new RIVERS::SPATIAL::SpatialAStar* [n_threads];
     for (int i=0;i<n_threads;++i) {
         planners[i]=new RIVERS::SPATIAL::SpatialAStar(env,n_orientations,*map_weights);
@@ -114,7 +115,7 @@ void HeuristicTable::compute_weighted_heuristics(){
 
 void HeuristicTable::_compute_weighted_heuristics(
     int start_loc_idx,
-    unsigned short * values,
+    unsigned int * values,
     RIVERS::SPATIAL::SpatialAStar * planner
 ) {
     int start_loc=empty_locs[start_loc_idx];
@@ -131,13 +132,13 @@ void HeuristicTable::_compute_weighted_heuristics(
             }
             int cost=state->g;
             if (cost==-1) {
-                cost=USHRT_MAX;
+                cost=MAX_HEURISTIC;
             }
             size_t main_idx=start_loc_idx*loc_size+loc_idx;
             main_heuristics[main_idx]=cost;
         }
     } else {
-        std::fill(values,values+n_orientations*state_size,USHRT_MAX);
+        std::fill(values,values+n_orientations*state_size,MAX_HEURISTIC);
         for (int start_orient=0;start_orient<n_orientations;++start_orient){
             planner->reset();
             planner->search_for_all(start_loc,start_orient);
@@ -151,13 +152,12 @@ void HeuristicTable::_compute_weighted_heuristics(
                     // }
                     int cost=state->g;
                     if (cost==-1) {
-                        cost=USHRT_MAX;
+                        cost=MAX_HEURISTIC;
                     }
-                    // if (cost>USHRT_MAX) {
-                    //     cost=USHRT_MAX;
-                    //     // std::cerr<<"cost: "<<cost<<" > "<<USHRT_MAX<<endl;
-                    //     // exit(-1);
-                    // }
+                    if (cost>MAX_HEURISTIC) {
+                        std::cerr<<"cost: "<<cost<<" > "<<MAX_HEURISTIC<<endl;
+                        exit(-1);
+                    }
 
                     size_t value_idx=start_orient*state_size+loc_idx*n_orientations+orient;
                     values[value_idx]=cost;
@@ -172,12 +172,27 @@ void HeuristicTable::_compute_weighted_heuristics(
 
         for (int start_orient=0;start_orient<n_orientations;++start_orient){
             for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
+                int cost=MAX_HEURISTIC;
                 for (int orient=0;orient<n_orientations;++orient) {
                     size_t value_idx=start_orient*state_size+loc_idx*n_orientations+orient;
-                    size_t sub_idx=((start_loc_idx*loc_size+loc_idx)*n_orientations+start_orient)*n_orientations+orient;
-                    size_t main_idx=start_loc_idx*loc_size+loc_idx;
-                    sub_heuristics[sub_idx]=char(values[value_idx]-main_heuristics[main_idx]);
+                    auto value=values[value_idx];
+                    if (value<cost) {
+                        cost=value;
+                    }
                 }
+                size_t sub_idx=(start_loc_idx*loc_size+loc_idx)*n_orientations+start_orient;
+                size_t main_idx=start_loc_idx*loc_size+loc_idx;
+                int diff=cost-main_heuristics[main_idx];
+                if (diff<0) {
+                    std::cerr<<"diff: "<<diff<<" < 0"<<endl;
+                    exit(-1);
+                }
+
+                if (diff>USHRT_MAX) {
+                    std::cerr<<"diff: "<<diff<<" > "<<USHRT_MAX<<endl;
+                    exit(-1);
+                }
+                sub_heuristics[sub_idx]=diff;
             }
         }
     }
@@ -195,7 +210,7 @@ void HeuristicTable::dump_main_heuristics(int start_loc, string file_path_prefix
         for (int j=0;j<env.cols;++j) {
             int target_loc=i*env.cols+j;
             int target_loc_idx=loc_idxs[target_loc];
-            int h=USHRT_MAX;
+            int h=MAX_HEURISTIC;
             if (target_loc_idx!=-1){
                 h=main_heuristics[start_loc_idx*loc_size+target_loc_idx];
             }
@@ -208,160 +223,160 @@ void HeuristicTable::dump_main_heuristics(int start_loc, string file_path_prefix
     }
 }
 
-void HeuristicTable::compute_heuristics(){
-    DEV_DEBUG("[start] Compute heuristics.");
-    ONLYDEV(g_timer.record_p("heu/compute_start");)
+// void HeuristicTable::compute_heuristics(){
+//     DEV_DEBUG("[start] Compute heuristics.");
+//     ONLYDEV(g_timer.record_p("heu/compute_start");)
 
-    int n_threads=omp_get_max_threads();
-    cout<<"number of threads used for heuristic computation: "<<n_threads<<endl;
-    unsigned short * values = new unsigned short[n_threads*n_orientations*state_size];
-    bool * visited = new bool[n_threads*n_orientations*state_size];
-    State * queues = new State[n_threads*n_orientations*state_size];
+//     int n_threads=omp_get_max_threads();
+//     cout<<"number of threads used for heuristic computation: "<<n_threads<<endl;
+//     unsigned short * values = new unsigned short[n_threads*n_orientations*state_size];
+//     bool * visited = new bool[n_threads*n_orientations*state_size];
+//     State * queues = new State[n_threads*n_orientations*state_size];
 
-    cerr<<"created"<<endl;
+//     cerr<<"created"<<endl;
 
 
-    int ctr=0;
-    int step=100;
-    auto start = std::chrono::steady_clock::now();
-    #pragma omp parallel for
-    for (int loc_idx=0;loc_idx<loc_size;++loc_idx)
-    {
-        int thread_id=omp_get_thread_num();
+//     int ctr=0;
+//     int step=100;
+//     auto start = std::chrono::steady_clock::now();
+//     #pragma omp parallel for
+//     for (int loc_idx=0;loc_idx<loc_size;++loc_idx)
+//     {
+//         int thread_id=omp_get_thread_num();
 
-        int s_idx=thread_id*n_orientations*state_size;
-        compute_heuristics(loc_idx,values+s_idx,visited+s_idx,queues+s_idx);
+//         int s_idx=thread_id*n_orientations*state_size;
+//         compute_heuristics(loc_idx,values+s_idx,visited+s_idx,queues+s_idx);
         
-        #pragma omp critical
-        {
-            ++ctr;
-            if (ctr%step==0){
-                auto end = std::chrono::steady_clock::now();
-                double elapse=std::chrono::duration<double>(end-start).count();
-                double estimated_remain=elapse/ctr*(loc_size-ctr);
-                cout<<ctr<<"/"<<loc_size<<" completed in "<<elapse<<"s. estimated time to finish all: "<<estimated_remain<<"s.  estimated total time: "<<(estimated_remain+elapse)<<"s."<<endl;
-            }
-        }
-    }
+//         #pragma omp critical
+//         {
+//             ++ctr;
+//             if (ctr%step==0){
+//                 auto end = std::chrono::steady_clock::now();
+//                 double elapse=std::chrono::duration<double>(end-start).count();
+//                 double estimated_remain=elapse/ctr*(loc_size-ctr);
+//                 cout<<ctr<<"/"<<loc_size<<" completed in "<<elapse<<"s. estimated time to finish all: "<<estimated_remain<<"s.  estimated total time: "<<(estimated_remain+elapse)<<"s."<<endl;
+//             }
+//         }
+//     }
 
-    delete [] values;
-    delete [] visited;
-    delete [] queues;
+//     delete [] values;
+//     delete [] visited;
+//     delete [] queues;
 
-    ONLYDEV(g_timer.record_d("heu/compute_start","heu/compute_end","heu/compute");)
+//     ONLYDEV(g_timer.record_d("heu/compute_start","heu/compute_end","heu/compute");)
 
-    DEV_DEBUG("[end] Compute heuristics. (duration: {:.3f})", g_timer.get_d("heu/compute"));
-}
+//     DEV_DEBUG("[end] Compute heuristics. (duration: {:.3f})", g_timer.get_d("heu/compute"));
+// }
 
-void HeuristicTable::_push(State * queue, State &s, int & e_idx) {
-    queue[e_idx]=s;
-    e_idx+=1;
-}
+// void HeuristicTable::_push(State * queue, State &s, int & e_idx) {
+//     queue[e_idx]=s;
+//     e_idx+=1;
+// }
 
-State HeuristicTable::_pop(State * queue, int & s_idx) {
-    State & s = queue[s_idx];
-    s_idx+=1;
-    return s;
-}
+// State HeuristicTable::_pop(State * queue, int & s_idx) {
+//     State & s = queue[s_idx];
+//     s_idx+=1;
+//     return s;
+// }
 
-bool HeuristicTable::_empty(int s_idx, int e_idx) {
-    return s_idx==e_idx;
-}
+// bool HeuristicTable::_empty(int s_idx, int e_idx) {
+//     return s_idx==e_idx;
+// }
 
-void HeuristicTable::compute_heuristics(
-    int start_loc_idx,
-    unsigned short * values, 
-    bool * visited,
-    State * queue
-) {
-    std::fill(values,values+n_orientations*state_size,USHRT_MAX);
-    std::fill(visited,visited+n_orientations*state_size,false);
+// void HeuristicTable::compute_heuristics(
+//     int start_loc_idx,
+//     unsigned short * values, 
+//     bool * visited,
+//     State * queue
+// ) {
+//     std::fill(values,values+n_orientations*state_size,USHRT_MAX);
+//     std::fill(visited,visited+n_orientations*state_size,false);
 
-    int start_loc=empty_locs[start_loc_idx];
+//     int start_loc=empty_locs[start_loc_idx];
 
-    for (int start_orient=0;start_orient<n_orientations;++start_orient) {
-        // this are indexs used for queues.
-        int s_idx=start_orient*state_size;
-        int e_idx=start_orient*state_size;
+//     for (int start_orient=0;start_orient<n_orientations;++start_orient) {
+//         // this are indexs used for queues.
+//         int s_idx=start_orient*state_size;
+//         int e_idx=start_orient*state_size;
 
-        // start
-        State state(start_loc,0,start_orient);
-        ONLYDEV(assert(loc_idxs[state.location]>=0);)
-        // start_orient,loc,orient
-        size_t idx=start_orient*state_size+loc_idxs[state.location]*n_orientations+state.orientation;
-        // because this is uniform-cost bfs, we know the first time is the best time
-        values[idx]=state.timestep;
-        visited[idx]=true;
-        _push(queue,state,e_idx);
+//         // start
+//         State state(start_loc,0,start_orient);
+//         ONLYDEV(assert(loc_idxs[state.location]>=0);)
+//         // start_orient,loc,orient
+//         size_t idx=start_orient*state_size+loc_idxs[state.location]*n_orientations+state.orientation;
+//         // because this is uniform-cost bfs, we know the first time is the best time
+//         values[idx]=state.timestep;
+//         visited[idx]=true;
+//         _push(queue,state,e_idx);
 
-        int ctr=0;
-        while (!_empty(s_idx,e_idx)) {
-            State state=_pop(queue,s_idx);
-            ++ctr;
-            int c=0;
+//         int ctr=0;
+//         while (!_empty(s_idx,e_idx)) {
+//             State state=_pop(queue,s_idx);
+//             ++ctr;
+//             int c=0;
 
-            vector<State> neighbors;
-#ifndef NO_ROT
-            if (consider_rotation){
-                neighbors=action_model.get_state_neighbors(state,false);
-            } else {
-                neighbors=action_model.get_loc_neighbors(state,false);
-            }
-#else
-            if (consider_rotation){
-                cerr<<"no valid to set on consider_rotation when compiled with NO_ROT"<<endl;
-                exit(-1);
-            } else {
-                neighbors=action_model.get_loc_neighbors(state,false);
-            }
-#endif
+//             vector<State> neighbors;
+// #ifndef NO_ROT
+//             if (consider_rotation){
+//                 neighbors=action_model.get_state_neighbors(state,false);
+//             } else {
+//                 neighbors=action_model.get_loc_neighbors(state,false);
+//             }
+// #else
+//             if (consider_rotation){
+//                 cerr<<"no valid to set on consider_rotation when compiled with NO_ROT"<<endl;
+//                 exit(-1);
+//             } else {
+//                 neighbors=action_model.get_loc_neighbors(state,false);
+//             }
+// #endif
 
-            for (auto & next: neighbors){
-                ++c;
-                ONLYDEV(assert(loc_idxs[state.location]>=0);)
-                size_t idx=start_orient*state_size+loc_idxs[next.location]*n_orientations+next.orientation;
-                if (!visited[idx]) {
-                    values[idx]=next.timestep;
-                    assert(next.timestep==state.timestep+1 && next.timestep<USHRT_MAX);
-                    visited[idx]=true;
-                    _push(queue,next,e_idx);
-                }
-            }
-        }
-    }
+//             for (auto & next: neighbors){
+//                 ++c;
+//                 ONLYDEV(assert(loc_idxs[state.location]>=0);)
+//                 size_t idx=start_orient*state_size+loc_idxs[next.location]*n_orientations+next.orientation;
+//                 if (!visited[idx]) {
+//                     values[idx]=next.timestep;
+//                     assert(next.timestep==state.timestep+1 && next.timestep<USHRT_MAX);
+//                     visited[idx]=true;
+//                     _push(queue,next,e_idx);
+//                 }
+//             }
+//         }
+//     }
 
 
-    if (consider_rotation) {
-        for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
-            unsigned short min_val=USHRT_MAX;
-            for (int start_orient=0;start_orient<n_orientations;++start_orient) {
-                for (int orient=0;orient<n_orientations;++orient) {
-                    size_t value_idx=start_orient*state_size+loc_idx*n_orientations+orient;
-                    // cerr<<"helo"<<values[value_idx]<<endl;
-                    if (values[value_idx]<min_val) {
-                        min_val = values[value_idx];
-                    }
-                }
-            }
-            // cerr<<start_loc_idx<<" "<<loc_idx<<" "<<min_val<<endl;
-            size_t main_idx=start_loc_idx*loc_size+loc_idx;
-            main_heuristics[main_idx]=min_val;
-            for (int start_orient=0;start_orient<n_orientations;++start_orient) {
-                for (int orient=0;orient<n_orientations;++orient) {
-                    size_t value_idx=start_orient*state_size+loc_idx*n_orientations+orient;
-                    size_t sub_idx=((start_loc_idx*loc_size+loc_idx)*n_orientations+start_orient)*n_orientations+orient;
-                    sub_heuristics[sub_idx]=char(values[value_idx]-min_val);
-                }
-            }
-        }
-    } else {
-        for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
-            size_t main_idx=start_loc_idx*loc_size+loc_idx;
-            main_heuristics[main_idx]=values[loc_idx];
-        }
-    }
+//     if (consider_rotation) {
+//         for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
+//             unsigned short min_val=USHRT_MAX;
+//             for (int start_orient=0;start_orient<n_orientations;++start_orient) {
+//                 for (int orient=0;orient<n_orientations;++orient) {
+//                     size_t value_idx=start_orient*state_size+loc_idx*n_orientations+orient;
+//                     // cerr<<"helo"<<values[value_idx]<<endl;
+//                     if (values[value_idx]<min_val) {
+//                         min_val = values[value_idx];
+//                     }
+//                 }
+//             }
+//             // cerr<<start_loc_idx<<" "<<loc_idx<<" "<<min_val<<endl;
+//             size_t main_idx=start_loc_idx*loc_size+loc_idx;
+//             main_heuristics[main_idx]=min_val;
+//             for (int start_orient=0;start_orient<n_orientations;++start_orient) {
+//                 for (int orient=0;orient<n_orientations;++orient) {
+//                     size_t value_idx=start_orient*state_size+loc_idx*n_orientations+orient;
+//                     size_t sub_idx=((start_loc_idx*loc_size+loc_idx)*n_orientations+start_orient)*n_orientations+orient;
+//                     sub_heuristics[sub_idx]=char(values[value_idx]-min_val);
+//                 }
+//             }
+//         }
+//     } else {
+//         for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
+//             size_t main_idx=start_loc_idx*loc_size+loc_idx;
+//             main_heuristics[main_idx]=values[loc_idx];
+//         }
+//     }
 
-}
+// }
 
 // TODO(hj) add check
 int HeuristicTable::get(int loc1, int loc2) {
@@ -389,55 +404,57 @@ int HeuristicTable::get(int loc1, int orient1, int loc2) {
         return MAX_HEURISTIC;
     }
 
-    size_t idx=((loc_idx1*loc_size+loc_idx2)*n_orientations+orient1)*n_orientations;
-    char min_v=CHAR_MAX;
-    for (int i=0;i<n_orientations;++i) {
-        if (sub_heuristics[idx+i]<min_v) {
-            min_v=sub_heuristics[idx+i];
-        }
-    }
-    return min_v+main_heuristics[loc_idx1*loc_size+loc_idx2];
+    // size_t idx=((loc_idx1*loc_size+loc_idx2)*n_orientations+orient1)*n_orientations;
+    // char min_v=CHAR_MAX;
+    // for (int i=0;i<n_orientations;++i) {
+    //     if (sub_heuristics[idx+i]<min_v) {
+    //         min_v=sub_heuristics[idx+i];
+    //     }
+    // }
+    size_t main_idx=loc_idx1*loc_size+loc_idx2;
+    size_t sub_idx=(loc_idx1*loc_size+loc_idx2)*n_orientations+orient1;
+    return main_heuristics[main_idx]+sub_heuristics[sub_idx];
 } 
 
-int HeuristicTable::get(int loc1, int orient1, int loc2, int orient2) {
-    if (!consider_rotation) {
-        cerr<<"no valid to use this func if not consider rotation"<<endl;
-        exit(-1);
-    }
-    int loc_idx1=loc_idxs[loc1];
-    int loc_idx2=loc_idxs[loc2];
+// int HeuristicTable::get(int loc1, int orient1, int loc2, int orient2) {
+//     if (!consider_rotation) {
+//         cerr<<"no valid to use this func if not consider rotation"<<endl;
+//         exit(-1);
+//     }
+//     int loc_idx1=loc_idxs[loc1];
+//     int loc_idx2=loc_idxs[loc2];
 
-    if (loc_idx1==-1 || loc_idx2==-1) {
-        return MAX_HEURISTIC;
-    }
+//     if (loc_idx1==-1 || loc_idx2==-1) {
+//         return MAX_HEURISTIC;
+//     }
 
-    size_t idx=((loc_idx1*loc_size+loc_idx2)*n_orientations+orient1)*n_orientations+orient2;
-    return sub_heuristics[idx]+main_heuristics[loc_idx1*loc_size+loc_idx2];
-}
+//     size_t idx=((loc_idx1*loc_size+loc_idx2)*n_orientations+orient1)*n_orientations+orient2;
+//     return sub_heuristics[idx]+main_heuristics[loc_idx1*loc_size+loc_idx2];
+// }
 
 
-void HeuristicTable::preprocess() {
+// void HeuristicTable::preprocess() {
 
-    string fname=env.map_name.substr(0,env.map_name.size()-4);
-    string folder=env.file_storage_path;
-    if (folder[folder.size()-1]!=boost::filesystem::path::preferred_separator){
-        folder+=boost::filesystem::path::preferred_separator;
-    }
-    string fpath;
-    if (consider_rotation) {
-        fpath=folder+fname+"_heuristics_v2.gz";
-    } else {
-        fpath=folder+fname+"_heuristics_no_rotation_v2.gz";
-    }
+//     string fname=env.map_name.substr(0,env.map_name.size()-4);
+//     string folder=env.file_storage_path;
+//     if (folder[folder.size()-1]!=boost::filesystem::path::preferred_separator){
+//         folder+=boost::filesystem::path::preferred_separator;
+//     }
+//     string fpath;
+//     if (consider_rotation) {
+//         fpath=folder+fname+"_heuristics_v2.gz";
+//     } else {
+//         fpath=folder+fname+"_heuristics_no_rotation_v2.gz";
+//     }
 
-    if (boost::filesystem::exists(fpath)) {
-        load(fpath);
-    } else {
-        compute_heuristics();
-        ONLYDEV(save(fpath));
-    }
+//     if (boost::filesystem::exists(fpath)) {
+//         load(fpath);
+//     } else {
+//         compute_heuristics();
+//         ONLYDEV(save(fpath));
+//     }
 
-}
+// }
 
 void HeuristicTable::preprocess(string suffix) {
 
@@ -448,16 +465,16 @@ void HeuristicTable::preprocess(string suffix) {
     }
     string fpath;
     if (consider_rotation) {
-        fpath=folder+fname+"_weighted_heuristics_v2_"+suffix+".gz";
+        fpath=folder+fname+"_weighted_heuristics_v3_"+suffix+".gz";
     } else {
-        fpath=folder+fname+"_weighted_heuristics_no_rotation_v2_"+suffix+".gz";
+        fpath=folder+fname+"_weighted_heuristics_no_rotation_v3_"+suffix+".gz";
     }
 
     if (boost::filesystem::exists(fpath)) {
         load(fpath);
     } else {
         compute_weighted_heuristics();
-        ONLYDEV(save(fpath));
+        // ONLYDEV(save(fpath));
     }
 }
 
@@ -481,11 +498,11 @@ void HeuristicTable::save(const string & fpath) {
     out.write((char*)empty_locs,sizeof(int)*loc_size);
 
     // save main heuristics
-    out.write((char *)main_heuristics,sizeof(unsigned short)*loc_size*loc_size);
+    out.write((char *)main_heuristics,sizeof(unsigned int)*loc_size*loc_size);
 
     // save sub heuristics
     if (consider_rotation)
-        out.write((char *)sub_heuristics,sizeof(char)*state_size*state_size);
+        out.write((char *)sub_heuristics,sizeof(unsigned short)*state_size*loc_size);
 
     boost::iostreams::close(outbuf);
     fout.close();
@@ -530,11 +547,11 @@ void HeuristicTable::load(const string & fpath) {
     }
 
     // load main heurisitcs
-    in.read((char *)main_heuristics,sizeof(unsigned short)*loc_size*loc_size);
+    in.read((char *)main_heuristics,sizeof(unsigned int)*loc_size*loc_size);
     
     // load sub heuristics
     if (consider_rotation)
-        in.read((char *)sub_heuristics,sizeof(char)*state_size*state_size);
+        in.read((char *)sub_heuristics,sizeof(unsigned short)*state_size*loc_size);
 
     ONLYDEV(g_timer.record_d("heu/load_start","heu/load_end","heu/load");)
 

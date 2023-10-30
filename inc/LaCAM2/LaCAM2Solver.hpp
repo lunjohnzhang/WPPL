@@ -36,6 +36,9 @@ public:
     std::shared_ptr<std::vector<int> > map_weights; // map weights
     // Config next_config;
 
+    std::vector<std::vector<int>> action_costs;
+    std::vector<std::vector<int>> total_actions;
+
     vector<AgentInfo> agent_infos;
 
     Executor executor;
