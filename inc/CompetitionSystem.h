@@ -10,6 +10,10 @@
 #include <pthread.h>
 #include <future>
 #include <cstdlib>
+#ifdef MAP_OPT
+#include "nlohmann/json.hpp"
+#include "util/analyze.h"
+#endif
 
 #ifndef NO_ROT
 
@@ -105,6 +109,11 @@ protected:
     void log_preprocessing(bool succ);
     void log_event_assigned(int agent_id, int task_id, int timestep);
     void log_event_finished(int agent_id, int task_id, int timestep);
+
+#ifdef MAP_OPT
+    nlohmann::json analyzeResults();
+#endif
+
 
 };
 

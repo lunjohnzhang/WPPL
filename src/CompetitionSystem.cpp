@@ -7,7 +7,6 @@
 #include "util/Timer.h"
 #include "util/Analyzer.h"
 #include "util/MyLogger.h"
-#include <fstream>
 
 using json = nlohmann::ordered_json;
 
@@ -365,6 +364,208 @@ void BaseSystem::savePaths(const string &fileName, int option) const
     output.close();
 }
 
+#ifdef MAP_OPT
+
+nlohmann::json BaseSystem::analyzeResults()
+{
+    json js;
+    // Save action model
+    js["actionModel"] = "MAPF_T";
+
+    std::string feasible = fast_mover_feasible ? "Yes" : "No";
+    js["AllValid"] = feasible;
+
+    js["teamSize"] = num_of_agents;
+
+    // Save start locations[x,y,orientation]
+    json start = json::array();
+    for (int i = 0; i < num_of_agents; i++)
+    {
+        json s = json::array();
+        s.push_back(starts[i].location/map.cols);
+        s.push_back(starts[i].location%map.cols);
+        switch (starts[i].orientation)
+        {
+        case 0:
+            s.push_back("E");
+            break;
+        case 1:
+            s.push_back("S");
+        case 2:
+            s.push_back("W");
+            break;
+        case 3:
+            s.push_back("N");
+            break;
+        }
+        start.push_back(s);
+    }
+    js["start"] = start;
+
+    js["numTaskFinished"] = num_of_task_finish;
+    int sum_of_cost = 0;
+    int makespan = 0;
+    if (num_of_agents > 0)
+    {
+        sum_of_cost = solution_costs[0];
+        makespan = solution_costs[0];
+        for (int a = 1; a < num_of_agents; a++)
+        {
+            sum_of_cost += solution_costs[a];
+            if (solution_costs[a] > makespan)
+            {
+                makespan = solution_costs[a];
+            }
+        }
+    }
+    js["sumOfCost"] = sum_of_cost;
+    js["makespan"] = makespan;
+  
+    // Save actual paths
+    json apaths = json::array();
+    for (int i = 0; i < num_of_agents; i++)
+    {
+        std::string path;
+        bool first = true;
+        for (const auto action : actual_movements[i])
+        {
+            if (!first)
+            {
+                path+= ",";
+            }
+            else
+            {
+                first = false;
+            }
+
+            if (action == Action::FW)
+            {
+                path+="F";
+            }
+            else if (action == Action::CR)
+            {
+                path+="R";
+            } 
+            else if (action == Action::CCR)
+            {
+                path+="C";
+            }
+            else if (action == Action::NA)
+            {
+                path+="T";
+            }
+            else
+            {
+                path+="W";
+            }
+        }
+        apaths.push_back(path);
+    }
+    js["actualPaths"] = apaths;
+
+    //planned paths
+    json ppaths = json::array();
+    for (int i = 0; i < num_of_agents; i++)
+    {
+        std::string path;
+        bool first = true;
+        for (const auto action : planner_movements[i])
+        {
+            if (!first)
+            {
+                path+= ",";
+            } 
+            else 
+            {
+                first = false;
+            }
+
+            if (action == Action::FW)
+            {
+                path+="F";
+            }
+            else if (action == Action::CR)
+            {
+                path+="R";
+            } 
+            else if (action == Action::CCR)
+            {
+                path+="C";
+            } 
+            else if (action == Action::NA)
+            {
+                path+="T";
+            }
+            else
+            {
+                path+="W";
+            }
+        }  
+        ppaths.push_back(path);
+    }
+    js["plannerPaths"] = ppaths;
+
+    json planning_times = json::array();
+    for (double time: planner_times)
+        planning_times.push_back(time);
+    js["plannerTimes"] = planning_times;
+
+    // Save errors
+    json errors = json::array();
+    for (auto error: model->errors)
+    {
+        std::string error_msg;
+        int agent1;
+        int agent2;
+        int timestep;
+        std::tie(error_msg,agent1,agent2,timestep) = error;
+        json e = json::array();
+        e.push_back(agent1);
+        e.push_back(agent2);
+        e.push_back(timestep);
+        e.push_back(error_msg);
+        errors.push_back(e);
+
+    }
+    js["errors"] = errors;
+  
+    // Save events
+    json events_json = json::array();
+    for (int i = 0; i < num_of_agents; i++)
+    {
+        json event = json::array();
+        for(auto e: events[i])
+        {
+            json ev = json::array();
+            std::string event_msg;
+            int task_id;
+            int timestep;
+            std::tie(task_id,timestep,event_msg) = e;
+            ev.push_back(task_id);
+            ev.push_back(timestep);
+            ev.push_back(event_msg);
+            event.push_back(ev);
+        }
+        events_json.push_back(event);
+    }
+    js["events"] = events_json;
+
+    // Save all tasks
+    json tasks = json::array();
+    for (auto t: all_tasks)
+    {
+        json task = json::array();
+        task.push_back(t.task_id);
+        task.push_back(t.location/map.cols);
+        task.push_back(t.location%map.cols);
+        tasks.push_back(task);
+    }
+    js["tasks"] = tasks;
+
+    return analyze_result_json(js, map.rows, map.cols);
+}
+
+#endif
 
 void BaseSystem::saveResults(const string &fileName) const
 {
