@@ -722,6 +722,26 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
       auto path=(*ins->precomputed_paths)[i];
       // for (int j=path.size()-1;j>=0;--j){
         int j=H->d;
+        // int next_loc=path[j].location;
+        // for (int k=j+1;k<path.size();++k) {
+        //   if (path[k].location!=next_loc) {
+        //     next_loc=path[k].location;
+        //     break;
+        //   }
+        // }
+
+        // if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
+        //   if (v->index==next_loc) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
+        //     pre_d1=0;
+        //     // break;
+        //   }
+        //   if (u->index==next_loc) { // && ((o2==o0 && path[j+1].location==u->index) || (o2!=o0))) {
+        //     pre_d2=0;
+        //     // break;
+        //   }
+        // }        
+
+
         if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
           if (path[j+1].orientation==o1) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
             pre_d1=0;

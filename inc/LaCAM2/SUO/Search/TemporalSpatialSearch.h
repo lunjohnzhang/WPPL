@@ -43,13 +43,17 @@ public:
     void remove_path_cost(const std::vector<State> & path, float vertex_collision_cost) {
         for (const auto & state: path) {
             this->cost_map(state.pos,state.t)-=vertex_collision_cost;
+            if (state.t+1<path.size()) {
+                this->cost_map(state.pos,state.t+1)-=vertex_collision_cost;
+            }
+            if (state.t-1>=0) {
+                this->cost_map(state.pos,state.t-1)-=vertex_collision_cost;
+            }
         }
     }
 
     void add_path_cost(const std::vector<State> & path, float vertex_collision_cost) {
-        for (const auto & state: path) {
-            this->cost_map(state.pos,state.t)+=vertex_collision_cost;
-        }
+        remove_path_cost(path,-vertex_collision_cost);
     }
 
 
@@ -140,15 +144,96 @@ public:
             successors.push_back(new State(next_pos, -1, next_t, curr->g+weights[weight_idx]+collision_cost, h, curr));
 
         } else {
-            DEV_ERROR("Temporal-Spatial Search with orientation is not supported now!");
-            exit(-1);
+            int pos=curr->pos;
+            int x=pos%(env.cols);
+            int y=pos/(env.cols);
+            int orient=curr->orient;
+    
+            int next_t=curr->t+1;
+
+            // FW
+            if (orient==0) {
+                // east
+                if (x+1<env.cols){
+                    int next_pos=pos+1;
+                    int next_orient=orient;
+                    if (env.map[next_pos]==0) {
+                        int weight_idx=pos*n_dirs;
+                        float collision_cost=cost_map(next_pos,next_t);
+                        float h=HT->get(next_pos, next_orient, goal_pos);
+                        successors.push_back(new State(next_pos, next_orient, next_t, curr->g+weights[weight_idx]+collision_cost, h, curr));
+                    }
+                }
+            } else if (orient==1) {
+                // south
+                if (y+1<env.rows) {
+                    int next_pos=pos+env.cols;
+                    int next_orient=orient;
+                    if (env.map[next_pos]==0) {
+                        int weight_idx=pos*n_dirs+1;
+                        float collision_cost=cost_map(next_pos,next_t);
+                        float h=HT->get(next_pos, next_orient, goal_pos);
+                        successors.push_back(new State(next_pos, next_orient, next_t, curr->g+weights[weight_idx]+collision_cost, h, curr));
+                    }
+                }
+            } else if (orient==2) {
+                // west
+                if (x-1>=0) {
+                    int next_pos=pos-1;
+                    int next_orient=orient;
+                    if (env.map[next_pos]==0) {
+                        int weight_idx=pos*n_dirs+2;
+                        float collision_cost=cost_map(next_pos,next_t);
+                        float h=HT->get(next_pos, next_orient, goal_pos);
+                        successors.push_back(new State(next_pos, next_orient, next_t, curr->g+weights[weight_idx]+collision_cost, h, curr));
+                    }
+                }
+            } else if (orient==3) {
+                // north
+                if (y-1>=0) {
+                    int next_pos=pos-env.cols;
+                    int next_orient=orient;
+                    if (env.map[next_pos]==0) {
+                        int weight_idx=pos*n_dirs+3;
+                        float collision_cost=cost_map(next_pos,next_t);
+                        float h=HT->get(next_pos, next_orient, goal_pos);
+                        successors.push_back(new State(next_pos, next_orient, next_t, curr->g+weights[weight_idx]+collision_cost, h, curr));
+                    }
+                }
+            } else {
+                std::cerr<<"spatial search in heuristics: invalid orient: "<<orient<<endl;
+                exit(-1);
+            }
+
+            int next_pos=pos;
+            int next_orient;
+            int weight_idx=pos*n_dirs+4;
+            float collision_cost;
+            float h;
+            // CR
+            next_orient=(orient+1+n_orients)%n_orients;
+            collision_cost=cost_map(next_pos,next_t);
+            h=HT->get(next_pos, next_orient, goal_pos);
+            successors.push_back(new State(next_pos, next_orient, next_t, curr->g+weights[weight_idx]+collision_cost, h, curr));
+
+            // CCR
+            next_orient=(orient-1+n_orients)%n_orients;
+            collision_cost=cost_map(next_pos,next_t);
+            h=HT->get(next_pos, next_orient, goal_pos);
+            successors.push_back(new State(next_pos, next_orient, next_t, curr->g+weights[weight_idx]+collision_cost, h, curr));
+
+            // W
+            collision_cost=cost_map(next_pos,next_t);
+            h=HT->get(next_pos, next_orient, goal_pos);
+            successors.push_back(new State(next_pos, next_orient, next_t, curr->g+weights[weight_idx]+collision_cost, h, curr));
         }
     }
 
     State* search(int start_pos, int start_orient, int goal_pos) {
         // DEV_DEBUG("start search from {} to {} with window {}", start_pos, goal_pos, window);
 
-        State * start=new State(start_pos, -1, 0, 0, 0, nullptr);
+        float h=HT->get(start_pos, start_orient, goal_pos);
+        State * start=new State(start_pos, start_orient, 0, 0, h, nullptr);
         all_states.insert(start);
         start->closed=false;
         start->open_list_handle=open_list.push(start);

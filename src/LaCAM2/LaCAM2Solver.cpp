@@ -213,6 +213,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
                     best_cost=cost;
                     best_solution=solution;
                 }
+                // std::cerr<<i<<precomputed_paths[i]<<endl;
             }
         // }
 

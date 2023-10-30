@@ -18,9 +18,10 @@ struct State {
     State * prev;
 
     State(): pos(-1), orient(-1), t(-1), g(-1), h(0), f(-1), prev(nullptr), closed(false) {};
-    State(int pos): pos(pos), orient(-1), t(-1), g(-1), h(0), f(-1), prev(nullptr), closed(false) {};
-    State(int pos, int t): pos(pos), orient(-1), t(t), g(-1), h(0), f(-1), prev(nullptr), closed(false) {};
-    State(int pos, int t, int g, int h, State * prev): pos(pos), orient(-1), t(t), g(g), h(h), f(g+h), prev(prev), closed(false) {};
+    // State(int pos): pos(pos), orient(-1), t(-1), g(-1), h(0), f(-1), prev(nullptr), closed(false) {};
+    // State(int pos, int t): pos(pos), orient(-1), t(t), g(-1), h(0), f(-1), prev(nullptr), closed(false) {};
+    State(int pos, int orient, int t): pos(pos), orient(orient), t(t), g(-1), h(0), f(-1), prev(nullptr), closed(false) {};
+    // State(int pos, int t, int g, int h, State * prev): pos(pos), orient(-1), t(t), g(g), h(h), f(g+h), prev(prev), closed(false) {};
     State(int pos, int orient, int t, int g, int h, State * prev): pos(pos), orient(orient), t(t), g(g), h(h), f(g+h), prev(prev), closed(false) {};
 
     void copy(const State * s) {

@@ -39,7 +39,7 @@ ARGS="-o test.json --simulationTime 1000 --planTimeLimit 1 --fileStoragePath lar
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_3000.json $ARGS
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_4000.json $ARGS
 # ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_5000.json $ARGS
-./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_8000.json $ARGS
+# ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_8000.json $ARGS
 
 # warehouse:sortation
 # ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_400.json $ARGS
