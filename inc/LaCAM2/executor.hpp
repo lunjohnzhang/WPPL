@@ -58,7 +58,11 @@ public:
         if (curr_state.location==planned_next_state.location) {
             // just need to wait
             next_state.location=curr_state.location;
-            next_state.orientation=curr_state.orientation;
+            if (planned_next_state.orientation!=-1) {
+                next_state.orientation=planned_next_state.orientation;
+            } else {
+                next_state.orientation=curr_state.orientation;
+            }
             next_state.timestep=curr_state.timestep+1;
         } else {
             // need to possibly rotate, then foward
@@ -81,7 +85,11 @@ public:
                     } else {
                         // if parent agent still stays, then we need to wait
                         next_state.location=curr_state.location;
-                        next_state.orientation=curr_state.orientation;
+                        if (planned_next_state.orientation!=-1) {
+                            next_state.orientation=planned_next_state.orientation;
+                        } else {
+                            next_state.orientation=curr_state.orientation;
+                        }
                         next_state.timestep=curr_state.timestep+1;
                     }
                 } else {
@@ -103,7 +111,11 @@ public:
                 }
                 
                 next_state.location=curr_state.location;
-                next_state.orientation=next_orient;
+                if (planned_next_state.orientation!=-1) {
+                    next_state.orientation=planned_next_state.orientation;
+                } else {
+                    next_state.orientation=next_orient;
+                }
                 next_state.timestep=curr_state.timestep+1;
             }
         }

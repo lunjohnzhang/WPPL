@@ -38,6 +38,13 @@ void MAPFPlanner::load_configs() {
     try
     {
         config = nlohmann::json::parse(f);
+
+        char * env_weight_path=getenv("MAP_WEIGHT_PATH");
+        if (env_weight_path!=NULL) {
+            config["map_weights_path"]=env_weight_path;
+            std::cout<<"load weight from "<<env_weight_path<<std::endl;
+        }
+
         std::cerr<<config<<std::endl;
         string s=config.dump();
         std::replace(s.begin(),s.end(),',','|');

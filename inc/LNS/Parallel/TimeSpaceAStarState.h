@@ -54,7 +54,8 @@ public:
     struct Hash {
         std::size_t operator()(const TimeSpaceAStarState *s) const {
             // TODO(rivers): we may replace the hash here!
-            size_t h = std::hash<int>()((s->t<<20)+(s->pos<<2)+s->orient);
+            // TODO(rivers): note this is a bug if << has lower priority than +!
+            size_t h = std::hash<int>()(s->t<<20+s->pos<<4+s->orient);
             return h;        
         }
     };
