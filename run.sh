@@ -17,7 +17,7 @@ ARGS="-o test.json --simulationTime 1000 --planTimeLimit 1 --fileStoragePath lar
 # ./build/lifelong --inputFile example_problems/random.domain/random_100.json $ARGS
 # ./build/lifelong --inputFile example_problems/random.domain/random_200.json $ARGS
 # ./build/lifelong --inputFile example_problems/random.domain/random_400.json $ARGS
-# ./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS
+./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS
 # ./build/lifelong --inputFile example_problems/random.domain/random_800.json $ARGS
 
 # warehouse:warehouse_small

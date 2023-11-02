@@ -8,7 +8,7 @@ namespace LNS {
 namespace Parallel {
 
 GlobalManager::GlobalManager(
-    Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<int> > map_weights,
+    Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<float> > map_weights,
     int neighbor_size, destroy_heuristic destroy_strategy,
     bool ALNS, double decay_factor, double reaction_factor,
     string init_algo_name, string replan_algo_name, bool sipp,
@@ -114,7 +114,7 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
             }
 
             // re-check if the cost is still smaller
-            int old_sum_of_costs=0;
+            float old_sum_of_costs=0;
             for (auto & aid: neighbor.agents) {
                 old_sum_of_costs+=agents[aid].path.path_cost;
             }

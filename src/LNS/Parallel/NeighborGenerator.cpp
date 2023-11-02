@@ -257,7 +257,7 @@ bool NeighborGenerator::generateNeighborByIntersection(Neighbor & neighbor) {
 
 int NeighborGenerator::findMostDelayedAgent(int idx){
     int a = -1;
-    int max_delays = -1;
+    float max_delays = -1;
     auto & tabu_list=tabu_list_list[idx];
     for (int i = 0; i < agents.size(); i++)
     {
@@ -265,7 +265,7 @@ int NeighborGenerator::findMostDelayedAgent(int idx){
         if (i%num_threads!=idx) continue;
         if (tabu_list.find(i) != tabu_list.end())
             continue;
-        int delays = agents[i].getNumOfDelays();
+        float delays = agents[i].getNumOfDelays();
         if (max_delays < delays)
         {
             a = i;
@@ -358,6 +358,8 @@ void NeighborGenerator::randomWalk(int agent_id, int start_timestep, set<int>& c
     auto & path = agents[agent_id].path;
     int loc = path[start_timestep].location;
     int orient = path[start_timestep].orientation;
+    auto & agent = agents[agent_id];
+    float partial_path_cost=agent.getEstimatedPathLength(path,agent.getGoalLocation(),HT,start_timestep);
     for (int t = start_timestep; t < path.size(); ++t)
     {
         auto successors=getSuccessors(loc,orient);
@@ -370,14 +372,16 @@ void NeighborGenerator::randomWalk(int agent_id, int start_timestep, set<int>& c
             int next_loc = iter->first;
             int next_orient = iter->second;
             
-            int next_h_val = HT->get(next_loc, next_orient,instance.goal_locations[agent_id]);
+            int action_cost = agent.get_action_cost(loc, orient, next_loc, next_orient, HT);
+            float next_h_val = HT->get(next_loc, next_orient,instance.goal_locations[agent_id]);
             // if we can find a path with a smaller distance, we try to see who becomes the obstacle.
             // TODO(rivers): this is not correct if we have weighted distance map
-            if (t + next_h_val < path.path_cost) // move to this location
+            if (partial_path_cost+ action_cost + next_h_val < path.path_cost) // move to this location
             {
                 path_table.getConflictingAgents(agent_id, conflicting_agents, loc, next_loc, t + 1);
                 loc = next_loc;
                 orient = next_orient;
+                partial_path_cost += action_cost;
                 break;
             }
             successors.erase(iter);

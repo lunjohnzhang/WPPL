@@ -12,7 +12,7 @@ class SpatialAStar {
 
 public:
     SpatialAStar(
-        const SharedEnvironment & env, int n_orients, const std::vector<int> & weights
+        const SharedEnvironment & env, int n_orients, const std::vector<float> & weights
     ): env(env), n_orients(n_orients), weights(weights) {
         max_states=env.rows*env.cols*n_orients;
         n_states=0;
@@ -57,13 +57,13 @@ public:
     State * successors;
     
     const SharedEnvironment & env;
-    const std::vector<int> & weights;
+    const std::vector<float> & weights;
 
     void clear_successors() {
         n_successors=0;
     }
 
-    void add_successor(int pos, int orient, int g, int h, State * prev) {
+    void add_successor(int pos, int orient, float g, float h, State * prev) {
 
         // std::cerr<<"add successor: "<<pos<<" "<<orient<<" "<<g<<" "<<h<<std::endl;
         successors[n_successors].pos=pos;
@@ -189,7 +189,7 @@ public:
         }
     }
 
-    State * add_state(int pos, int orient, int g, int h, State * prev) {
+    State * add_state(int pos, int orient, float g, float h, State * prev) {
         int index;
         if (orient==-1) {
             index=pos;

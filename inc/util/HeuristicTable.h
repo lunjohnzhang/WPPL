@@ -13,11 +13,10 @@
 #include "util/MyLogger.h"
 #include "boost/format.hpp"
 #include "util/SearchForHeuristics/SpatialSearch.h"
-#include "util/SearchForHeuristics/SpatialSearchBoost.h"
 // #include "bshoshany/BS_thread_pool.hpp"
 
 
-#define MAX_HEURISTIC INT_MAX/16
+#define MAX_HEURISTIC FLT_MAX/16
 
 class HeuristicTable {
 public:
@@ -25,9 +24,9 @@ public:
     const SharedEnvironment & env;
     CompetitionActionModelWithRotate action_model;
     // loc1, loc2
-    unsigned int * main_heuristics;
+    float * main_heuristics;
     // loc1, loc2, orient1, orient2
-    unsigned short * sub_heuristics;
+    float * sub_heuristics;
     int * empty_locs;
     int * loc_idxs; 
     int n_orientations=4;
@@ -35,9 +34,9 @@ public:
     size_t state_size;
     bool consider_rotation=true;
 
-    std::shared_ptr<std::vector<int> > map_weights;
+    std::shared_ptr<std::vector<float> > map_weights;
 
-    HeuristicTable(SharedEnvironment * _env, const std::shared_ptr<std::vector<int> > & map_weights, bool consider_rotation=true);
+    HeuristicTable(SharedEnvironment * _env, const std::shared_ptr<std::vector<float> > & map_weights, bool consider_rotation=true);
     ~HeuristicTable();
 
     // weights is an array of [loc_size*n_orientations]
@@ -45,7 +44,7 @@ public:
 
     void _compute_weighted_heuristics(
         int start_loc_idx,
-        unsigned int * values,
+        float * values,
         RIVERS::SPATIAL::SpatialAStar * planner
     );
 
@@ -65,8 +64,8 @@ public:
     // );
     
     // TODO(hj) add check
-    int get(int loc1, int loc2);
-    int get(int loc1, int orient1, int loc2);
+    float get(int loc1, int loc2);
+    float get(int loc1, int orient1, int loc2);
     // int get(int loc1, int orient1, int loc2, int orient2);
 
     // void preprocess();

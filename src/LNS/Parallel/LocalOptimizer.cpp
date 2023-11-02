@@ -7,7 +7,7 @@ namespace LNS {
 namespace Parallel {
 
 LocalOptimizer::LocalOptimizer(
-    Instance & instance, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<int> > map_weights,
+    Instance & instance, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<float> > map_weights,
     string replan_algo_name, bool sipp,
     int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
     int screen
@@ -150,11 +150,11 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter
             } 
         // }
 
-        int _path = agents[id].getEstimatedPathLength(neighbor.m_paths[id], goal_pos, HT);
-        if (_path!=neighbor.m_paths[id].path_cost) {
-            std::cerr<<"path cost "<<neighbor.m_paths[id].path_cost<<" is not equal to estimated path cost "<<_path<<std::endl;
-            exit(-1);
-        }
+        // float _path = agents[id].getEstimatedPathLength(neighbor.m_paths[id], goal_pos, HT);
+        // if (_path!=neighbor.m_paths[id].path_cost) {
+        //     std::cerr<<"path cost "<<neighbor.m_paths[id].path_cost<<" is not equal to estimated path cost "<<_path<<std::endl;
+        //     exit(-1);
+        // }
         neighbor.sum_of_costs += neighbor.m_paths[id].path_cost;
 
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs){

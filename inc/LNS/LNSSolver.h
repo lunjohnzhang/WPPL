@@ -7,7 +7,6 @@
 #include "LaCAM2/slow_executor.hpp"
 #include "SharedEnv.h"
 #include "common.h"
-#include "LNS/LNS.h"
 #include <unordered_set>
 #include <queue>
 #include "LaCAM2/LaCAM2Solver.hpp"
@@ -36,7 +35,7 @@ public:
     std::shared_ptr<Parallel::GlobalManager> lns;
     std::shared_ptr<Instance> instance;
     std::shared_ptr<HeuristicTable> HT; // instance
-    std::shared_ptr<std::vector<int> > map_weights; // map weights
+    std::shared_ptr<std::vector<float> > map_weights; // map weights
 
     LaCAM2::Executor executor;
     LaCAM2::SlowExecutor slow_executor;
@@ -50,7 +49,7 @@ public:
     LNSSolver(
         const std::shared_ptr<HeuristicTable> & HT,
         SharedEnvironment * env,
-        std::shared_ptr<std::vector<int> > & map_weights, // map weights
+        std::shared_ptr<std::vector<float> > & map_weights, // map weights
         nlohmann::json & config,
         std::shared_ptr<LaCAM2::LaCAM2Solver> & lacam2_solver
     );

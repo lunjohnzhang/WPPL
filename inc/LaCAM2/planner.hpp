@@ -47,9 +47,9 @@ struct HNode {
   uint d;        // depth (might be updated, it might be different from g)
 
   // costs
-  int g;        // g-value (might be updated)
-  const int h;  // h-value
-  int f;        // g + h (might be updated)
+  float g;        // g-value (might be updated)
+  float h;  // h-value
+  float f;        // g + h (might be updated)
 
   // for low-level search
   std::vector<float> priorities;
@@ -58,8 +58,8 @@ struct HNode {
   
   int order_strategy;
 
-  HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, const int _g,
-        const int _h, const uint _d, int order_strategy);
+  HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, float _g,
+        float _h, const uint _d, int order_strategy);
   ~HNode();
 };
 using HNodes = std::vector<HNode*>;
@@ -81,7 +81,7 @@ struct Planner {
   const uint N;       // number of agents
   const uint V_size;  // number o vertices
   std::shared_ptr<HeuristicTable> HT;
-  std::shared_ptr<std::vector<int> > map_weights; // map weights
+  std::shared_ptr<std::vector<float> > map_weights; // map weights
   uint loop_cnt;      // auxiliary
 
   // used in PIBT
@@ -91,13 +91,13 @@ struct Planner {
   Agents occupied_now;                          // for quick collision checking
   Agents occupied_next;                         // for quick collision checking
 
-  int get_cost_move(int pst,int ped);
+  float get_cost_move(int pst,int ped);
 
-  Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<int> > & map_weights, const Deadline* _deadline, std::mt19937* _MT,
+  Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline, std::mt19937* _MT,
           const int _verbose = 0,
           // other parameters
           const Objective _objective = OBJ_NONE,
-          const float _restart_rate = 0.001,
+          const float _restart_rate = 0.001f,
           bool use_swap=false,
           bool use_orient_in_heuristic=false);
   ~Planner();
@@ -111,9 +111,9 @@ struct Planner {
   void expand_lowlevel_tree(HNode* H, LNode* L);
   void rewrite(HNode* H_from, HNode* T, HNode* H_goal,
                std::stack<HNode*>& OPEN);
-  int get_edge_cost(const Config& C1, const Config& C2);
-  int get_edge_cost(HNode* H_from, HNode* H_to);
-  int get_h_value(const Config& C);
+  float get_edge_cost(const Config& C1, const Config& C2);
+  float get_edge_cost(HNode* H_from, HNode* H_to);
+  float get_h_value(const Config& C);
   bool get_new_config(HNode* H, LNode* L);
   bool funcPIBT(Agent* ai, HNode * H);
 

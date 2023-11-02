@@ -1,9 +1,7 @@
 #include "LaCAM2/LaCAM2Solver.hpp"
 #include "util/MyLogger.h"
 #include "LaCAM2/post_processing.hpp"
-#include "PIBT/util.h"
-#include "LaCAM2/SUO/SpatialSUO.hpp"
-#include "LaCAM2/SUO/TemporalSpatialSUO.hpp"
+#include "LaCAM2/utils.hpp"
 #include <omp.h>
 #include <thread>
 
@@ -33,7 +31,7 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
         if (goal_location!=agent_info.goal_location){
             agent_info.goal_location=goal_location;
             agent_info.elapsed=0;
-            agent_info.tie_breaker=getRandomFloat(0,1,MT);
+            agent_info.tie_breaker=get_random_float(MT,0,1);
             agent_info.stuck_order=0;
         } else {
             agent_info.elapsed+=1;
@@ -67,7 +65,7 @@ int LaCAM2Solver::get_neighbor_orientation(int loc1,int loc2) {
 
 }
 
-int LaCAM2Solver::get_action_cost(int pst, int ost, int ped, int oed) {
+float LaCAM2Solver::get_action_cost(int pst, int ost, int ped, int oed) {
     auto & map_weights=*(HT->map_weights);
 
     int offset=ped-pst;
@@ -92,7 +90,7 @@ int LaCAM2Solver::get_action_cost(int pst, int ost, int ped, int oed) {
     }
 }
 
-int LaCAM2Solver::eval_solution(const Instance & instance, const Solution & solution) {
+float LaCAM2Solver::eval_solution(const Instance & instance, const Solution & solution) {
     float cost=0;
     for (int aid=0;aid<instance.N;++aid) {
         // TODO(rivers): should we consider the case of arrival here?
@@ -193,7 +191,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
 //             ONLYDEV(g_timer.record_d("copy_suo_paths_s","copy_suo_paths");)
 //         }
 
-        int best_cost=INT_MAX;
+        float best_cost=FLT_MAX;
         Solution best_solution;
         ONLYDEV(g_timer.record_d("lacam2_plan_pre_s","lacam2_plan_pre");)
 

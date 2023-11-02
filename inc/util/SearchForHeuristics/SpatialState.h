@@ -10,14 +10,14 @@ namespace SPATIAL {
 struct State {
     int pos;
     int orient;
-    int g;
-    int h;
-    int f;
+    float g;
+    float h;
+    float f;
     State * prev;
 
     State(): pos(-1), orient(-1), g(-1), h(0), f(-1), prev(nullptr), closed(false) {};
     // State(int pos, int g, int h, State * prev): pos(pos), orient(-1), g(g), h(h), f(g+h), prev(prev), closed(false) {};
-    State(int pos, int orient, int g, int h, State * prev): pos(pos), orient(orient), g(g), h(h), f(g+h), prev(prev), closed(false) {};
+    State(int pos, int orient, float g, float h, State * prev): pos(pos), orient(orient), g(g), h(h), f(g+h), prev(prev), closed(false) {};
 
     void copy(const State * s) {
         pos = s->pos;

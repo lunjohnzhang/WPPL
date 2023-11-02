@@ -1,8 +1,9 @@
 #pragma once
-#include "LNS/LNS.h"
 #include <queue>
+#include "LNS/Parallel/DataStructure.h"
 #include "util/TimeLimiter.h"
 #include "util/HeuristicTable.h"
+#include "LNS/PathTable.h"
 
 namespace LNS {
 

@@ -51,7 +51,7 @@ public:
 
     double max_step_time=0;
 
-    std::shared_ptr<std::vector<int> > map_weights;
+    std::shared_ptr<std::vector<float> > map_weights;
     nlohmann::json config;
     void load_configs();
     std::string load_map_weights(string weights_path);

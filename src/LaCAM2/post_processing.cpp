@@ -52,12 +52,12 @@ bool is_feasible_solution(const Instance& ins, const Solution& solution,
   return true;
 }
 
-int get_makespan(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT, const Solution& solution)
+float get_makespan(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT, const Solution& solution)
 {
   if (solution.empty()) return 0;
-  int c = 0;
+  float c = 0;
   for (auto i=0;i<ins.N;++i) {
-    c = std::max(c,(int) (solution.size()-1) + HT->get(solution.back().locs[i]->index,solution.back().orients[i],ins.goals.locs[i]->index));
+    c = std::max(c,(float)(solution.size()-1) + HT->get(solution.back().locs[i]->index,solution.back().orients[i],ins.goals.locs[i]->index));
   }
   return c;
 }
@@ -80,30 +80,30 @@ int get_sum_of_costs(const Solution& solution)
   return c;
 }
 
-int get_sum_of_loss(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT, const Solution& solution)
+float get_sum_of_loss(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT, const Solution& solution)
 {
   if (solution.empty()) return 0;
-  int c = 0;
+  float c = 0;
   const auto N = solution.front().size();
   const auto T = solution.size();
   for (size_t i = 0; i < N; ++i) {
-    c+= (int)(solution.size()-1) + HT->get(solution.back().locs[i]->index,solution.back().orients[i],ins.goals.locs[i]->index);
+    c+= (float)(solution.size()-1) + HT->get(solution.back().locs[i]->index,solution.back().orients[i],ins.goals.locs[i]->index);
   }
   return c;
 }
 
-int get_makespan_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT)
+float get_makespan_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT)
 {
-  int c = 0;
+  float c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
     c = std::max(c, HT->get(ins.starts.locs[i]->index,ins.goals.locs[i]->index));
   }
   return c;
 }
 
-int get_sum_of_costs_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT)
+float get_sum_of_costs_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT)
 {
-  int c = 0;
+  float c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
     c += HT->get(ins.starts.locs[i]->index,ins.goals.locs[i]->index);
   }

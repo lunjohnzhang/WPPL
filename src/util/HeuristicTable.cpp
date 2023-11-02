@@ -1,7 +1,7 @@
 #include "util/HeuristicTable.h"
     
     
-HeuristicTable::HeuristicTable(SharedEnvironment * _env, const std::shared_ptr<std::vector<int> > & map_weights, bool consider_rotation):
+HeuristicTable::HeuristicTable(SharedEnvironment * _env, const std::shared_ptr<std::vector<float> > & map_weights, bool consider_rotation):
     env(*_env),
     action_model(_env),
     consider_rotation(consider_rotation),
@@ -36,11 +36,11 @@ HeuristicTable::HeuristicTable(SharedEnvironment * _env, const std::shared_ptr<s
     ONLYDEV(assert(loc_idx==loc_size);)
 
     state_size = loc_size*n_orientations;
-    main_heuristics = new unsigned int[loc_size*loc_size];
+    main_heuristics = new float[loc_size*loc_size];
     std::fill(main_heuristics,main_heuristics+loc_size*loc_size,MAX_HEURISTIC);
     // we keep start_loc, end_loc, start_orient, namely no goal_orient
     if (consider_rotation)
-        sub_heuristics = new unsigned short[state_size*loc_size];
+        sub_heuristics = new float[state_size*loc_size];
 };
 
 HeuristicTable::~HeuristicTable() {
@@ -61,7 +61,7 @@ void HeuristicTable::compute_weighted_heuristics(){
 
     // int n_threads=pool.get_thread_count();
     cout<<"number of threads used for heuristic computation: "<<n_threads<<endl;
-    unsigned int * values = new unsigned int[n_threads*n_orientations*state_size];
+    float * values = new float[n_threads*n_orientations*state_size];
     RIVERS::SPATIAL::SpatialAStar ** planners= new RIVERS::SPATIAL::SpatialAStar* [n_threads];
     for (int i=0;i<n_threads;++i) {
         planners[i]=new RIVERS::SPATIAL::SpatialAStar(env,n_orientations,*map_weights);
@@ -115,7 +115,7 @@ void HeuristicTable::compute_weighted_heuristics(){
 
 void HeuristicTable::_compute_weighted_heuristics(
     int start_loc_idx,
-    unsigned int * values,
+    float * values,
     RIVERS::SPATIAL::SpatialAStar * planner
 ) {
     int start_loc=empty_locs[start_loc_idx];
@@ -130,7 +130,7 @@ void HeuristicTable::_compute_weighted_heuristics(
                 std::cerr<<"loc: "<<loc<<" state->pos: "<<state->pos<<endl;
                 exit(-1);
             }
-            int cost=state->g;
+            float cost=state->g;
             if (cost==-1) {
                 cost=MAX_HEURISTIC;
             }
@@ -150,7 +150,7 @@ void HeuristicTable::_compute_weighted_heuristics(
                     //     std::cerr<<"start_loc: "<<start_loc<<" loc: "<<loc<<" state->pos: "<<state->pos<<" orient: "<<orient<<" state->orient: "<<state->orient<<endl;
                     //     exit(-1);
                     // }
-                    int cost=state->g;
+                    float cost=state->g;
                     if (cost==-1) {
                         cost=MAX_HEURISTIC;
                     }
@@ -172,7 +172,7 @@ void HeuristicTable::_compute_weighted_heuristics(
 
         for (int start_orient=0;start_orient<n_orientations;++start_orient){
             for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
-                int cost=MAX_HEURISTIC;
+                float cost=MAX_HEURISTIC;
                 for (int orient=0;orient<n_orientations;++orient) {
                     size_t value_idx=start_orient*state_size+loc_idx*n_orientations+orient;
                     auto value=values[value_idx];
@@ -182,14 +182,14 @@ void HeuristicTable::_compute_weighted_heuristics(
                 }
                 size_t sub_idx=(start_loc_idx*loc_size+loc_idx)*n_orientations+start_orient;
                 size_t main_idx=start_loc_idx*loc_size+loc_idx;
-                int diff=cost-main_heuristics[main_idx];
+                float diff=cost-main_heuristics[main_idx];
                 if (diff<0) {
                     std::cerr<<"diff: "<<diff<<" < 0"<<endl;
                     exit(-1);
                 }
 
-                if (diff>USHRT_MAX) {
-                    std::cerr<<"diff: "<<diff<<" > "<<USHRT_MAX<<endl;
+                if (diff>MAX_HEURISTIC) {
+                    std::cerr<<"diff: "<<diff<<" > "<<MAX_HEURISTIC<<endl;
                     exit(-1);
                 }
                 sub_heuristics[sub_idx]=diff;
@@ -210,7 +210,7 @@ void HeuristicTable::dump_main_heuristics(int start_loc, string file_path_prefix
         for (int j=0;j<env.cols;++j) {
             int target_loc=i*env.cols+j;
             int target_loc_idx=loc_idxs[target_loc];
-            int h=MAX_HEURISTIC;
+            float h=MAX_HEURISTIC;
             if (target_loc_idx!=-1){
                 h=main_heuristics[start_loc_idx*loc_size+target_loc_idx];
             }
@@ -379,7 +379,7 @@ void HeuristicTable::dump_main_heuristics(int start_loc, string file_path_prefix
 // }
 
 // TODO(hj) add check
-int HeuristicTable::get(int loc1, int loc2) {
+float HeuristicTable::get(int loc1, int loc2) {
     int loc_idx1=loc_idxs[loc1];
     int loc_idx2=loc_idxs[loc2];
 
@@ -391,7 +391,7 @@ int HeuristicTable::get(int loc1, int loc2) {
     return main_heuristics[idx];
 }
 
-int HeuristicTable::get(int loc1, int orient1, int loc2) {
+float HeuristicTable::get(int loc1, int orient1, int loc2) {
     if (!consider_rotation) {
         cerr<<"no valid to use this func if not consider rotation"<<endl;
         exit(-1);
@@ -465,9 +465,9 @@ void HeuristicTable::preprocess(string suffix) {
     }
     string fpath;
     if (consider_rotation) {
-        fpath=folder+fname+"_weighted_heuristics_v3_"+suffix+".gz";
+        fpath=folder+fname+"_weighted_heuristics_v4_"+suffix+".gz";
     } else {
-        fpath=folder+fname+"_weighted_heuristics_no_rotation_v3_"+suffix+".gz";
+        fpath=folder+fname+"_weighted_heuristics_no_rotation_v4_"+suffix+".gz";
     }
 
     if (boost::filesystem::exists(fpath)) {
@@ -498,11 +498,11 @@ void HeuristicTable::save(const string & fpath) {
     out.write((char*)empty_locs,sizeof(int)*loc_size);
 
     // save main heuristics
-    out.write((char *)main_heuristics,sizeof(unsigned int)*loc_size*loc_size);
+    out.write((char *)main_heuristics,sizeof(float)*loc_size*loc_size);
 
     // save sub heuristics
     if (consider_rotation)
-        out.write((char *)sub_heuristics,sizeof(unsigned short)*state_size*loc_size);
+        out.write((char *)sub_heuristics,sizeof(float)*state_size*loc_size);
 
     boost::iostreams::close(outbuf);
     fout.close();
@@ -547,11 +547,11 @@ void HeuristicTable::load(const string & fpath) {
     }
 
     // load main heurisitcs
-    in.read((char *)main_heuristics,sizeof(unsigned int)*loc_size*loc_size);
+    in.read((char *)main_heuristics,sizeof(float)*loc_size*loc_size);
     
     // load sub heuristics
     if (consider_rotation)
-        in.read((char *)sub_heuristics,sizeof(unsigned short)*state_size*loc_size);
+        in.read((char *)sub_heuristics,sizeof(float)*state_size*loc_size);
 
     ONLYDEV(g_timer.record_d("heu/load_start","heu/load_end","heu/load");)
 

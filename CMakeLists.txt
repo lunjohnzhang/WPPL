@@ -5,10 +5,10 @@ project(lifelong)
 set(CMAKE_CXX_STANDARD 17)
 
 
-set(MAP_OPT ON)
+# set(MAP_OPT ON)
 
 # if set, use dev mode, which has a lot of logging and timing.
-# set(DEV ON)
+set(DEV ON)
 # if set, use action model with no rotation.
 # set(NO_ROT ON)
 
@@ -46,8 +46,11 @@ find_package(spdlog REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Python 3.8 COMPONENTS Interpreter Development REQUIRED)
 
+IF (MAP_POT)
+    add_subdirectory(pybind11)
+ENDIF()
 
-add_subdirectory(pybind11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion")
 
 # IF(PYTHON)
 #     include_directories("python")
@@ -110,11 +113,13 @@ target_link_libraries(lifelong OpenMP::OpenMP_CXX)
 target_link_libraries(lifelong spdlog::spdlog)
 target_compile_definitions(lifelong PRIVATE PYTHON=${PYTHON_FLAG})
 
-list(FILTER SOURCES EXCLUDE REGEX "src/driver\.cpp")
-pybind11_add_module(py_driver "src/py_driver.cpp" ${SOURCES})
-target_link_libraries(py_driver PRIVATE OpenMP::OpenMP_CXX)
-target_link_libraries(py_driver PRIVATE spdlog::spdlog)
-target_link_libraries(py_driver PRIVATE ${Boost_LIBRARIES})
+IF (MAP_OPT)
+    list(FILTER SOURCES EXCLUDE REGEX "src/driver\.cpp")
+    pybind11_add_module(py_driver "src/py_driver.cpp" ${SOURCES})
+    target_link_libraries(py_driver PRIVATE OpenMP::OpenMP_CXX)
+    target_link_libraries(py_driver PRIVATE spdlog::spdlog)
+    target_link_libraries(py_driver PRIVATE ${Boost_LIBRARIES})
+ENDIF()
 
 # ENDIF()
 

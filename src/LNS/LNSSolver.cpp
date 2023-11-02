@@ -3,13 +3,14 @@
 #include "util/Timer.h"
 #include "util/Analyzer.h"
 #include "LNS/Parallel/GlobalManager.h"
+#include "LNS/Parallel/DataStructure.h"
 
 namespace LNS {
 
 LNSSolver::LNSSolver(
     const std::shared_ptr<HeuristicTable> & HT,
     SharedEnvironment * env,
-    std::shared_ptr<std::vector<int> > & map_weights,
+    std::shared_ptr<std::vector<float> > & map_weights,
     nlohmann::json & config,
     std::shared_ptr<LaCAM2::LaCAM2Solver> & lacam2_solver
 ):
@@ -119,7 +120,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
                 }
                 // std::cerr<<"agent "<<i<<" "<<env.curr_states[i]<<"->"<<env.goal_locations[i][0].first<<" "<<paths[i].size()<<": "<<paths[i]<<std::endl;
             }
-            std::cerr<<"num_inconsistent/total: "<<num_inconsistent<<"/"<<env.num_of_agents<<"="<<num_inconsistent/(float)env.num_of_agents<<std::endl;
+            std::cout<<"num_inconsistent/total: "<<num_inconsistent<<"/"<<env.num_of_agents<<"="<<num_inconsistent/(float)env.num_of_agents<<std::endl;
             ONLYDEV(g_timer.record_d("lacam2_plan_s","lacam2_plan_e","lacam2_plan");)
         }
 
@@ -144,7 +145,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
             HT,
             map_weights,
             read_param_json<int>(config,"neighborSize"),
-            destroy_heuristic::RANDOMWALK, // TODO: always randomwalk
+            Parallel::destroy_heuristic::RANDOMWALK, // TODO: always randomwalk
             true, // TODO: always Adaptive
             0.01, // TODO: decay factor
             0.01, // TODO: reaction factor

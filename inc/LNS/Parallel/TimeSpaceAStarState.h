@@ -22,7 +22,7 @@ public:
     TimeSpaceAStarState * prev;
 
     TimeSpaceAStarState(): pos(-1), orient(-1), t(-1), g(-1), h(0), f(-1), num_of_conflicts(0), prev(nullptr), closed(false) {};
-    TimeSpaceAStarState(int pos, int orient, int t, int g, int h, int num_of_conflicts, TimeSpaceAStarState * prev):
+    TimeSpaceAStarState(int pos, int orient, int t, float g, float h, int num_of_conflicts, TimeSpaceAStarState * prev):
         pos(pos), orient(orient), t(t), g(g), h(h), f(g+h), num_of_conflicts(num_of_conflicts), prev(prev), closed(false) {};
 
     void copy(const TimeSpaceAStarState * s) {
@@ -54,7 +54,7 @@ public:
     struct Hash {
         std::size_t operator()(const TimeSpaceAStarState *s) const {
             // TODO(rivers): we may replace the hash here!
-            size_t h = std::hash<int>()(s->t<<20+s->pos<<4+s->orient);
+            size_t h = std::hash<int>()((s->t<<20)+(s->pos<<2)+s->orient);
             return h;        
         }
     };

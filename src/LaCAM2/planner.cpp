@@ -16,8 +16,8 @@ LNode::LNode(LNode* parent, uint i, const std::tuple<Vertex*,int > & t)
 uint HNode::HNODE_CNT = 0;
 
 // for high-level
-HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, const int _g,
-             const int _h, const uint _d, int _order_strategy)
+HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, float _g,
+             float _h, const uint _d, int _order_strategy)
     : C(_C),
       parent(_parent),
       neighbor(),
@@ -52,8 +52,8 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
           if (precomputed_a != precomputed_b) return (int)precomputed_a>(int)precomputed_b;
         }
 
-        int h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
-        int h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
+        float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
+        float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
 
         // int h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
         // int h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
@@ -105,7 +105,7 @@ HNode::~HNode()
   }
 }
 
-Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<int> > & map_weights, const Deadline* _deadline,
+Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline,
                  std::mt19937* _MT, const int _verbose,
                  const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic)
     : ins(_ins),
@@ -369,10 +369,10 @@ void Planner::rewrite(HNode* H_from, HNode* H_to, HNode* H_goal,
   }
 }
 
-int Planner::get_edge_cost(const Config& C1, const Config& C2)
+float Planner::get_edge_cost(const Config& C1, const Config& C2)
 {
   if (objective == OBJ_SUM_OF_LOSS) {
-    int cost = 0;
+    float cost = 0;
     for (uint i = 0; i < N; ++i) {
       if ((!C1.arrivals[i] || !C2.arrivals[i])) {
         cost += 1;
@@ -385,18 +385,18 @@ int Planner::get_edge_cost(const Config& C1, const Config& C2)
   return 1;
 }
 
-int Planner::get_edge_cost(HNode* H_from, HNode* H_to)
+float Planner::get_edge_cost(HNode* H_from, HNode* H_to)
 {
   return get_edge_cost(H_from->C, H_to->C);
 }
 
-int Planner::get_h_value(const Config& C)
+float Planner::get_h_value(const Config& C)
 {
-  int cost = 0;
+  float cost = 0;
   if (objective == OBJ_MAKESPAN) {
-    for (auto i = 0; i < N; ++i) cost = std::max(cost, HT->get(C.locs[i]->index, C.orients[i], ins->goals.locs[i]->index)*(1-C.arrivals[i]));
+    for (auto i = 0; i < N; ++i) cost = std::max(cost, HT->get(C.locs[i]->index, C.orients[i], ins->goals.locs[i]->index)*(float)(1-C.arrivals[i]));
   } else if (objective == OBJ_SUM_OF_LOSS) {
-    for (auto i = 0; i < N; ++i) cost += HT->get(C.locs[i]->index, C.orients[i], ins->goals.locs[i]->index)*(1-C.arrivals[i]);
+    for (auto i = 0; i < N; ++i) cost += HT->get(C.locs[i]->index, C.orients[i], ins->goals.locs[i]->index)*(float)(1-C.arrivals[i]);
   }
   return cost;
 }
@@ -587,7 +587,7 @@ int get_o_dist(int o1, int o2) {
   return std::min((o2-o1+4)%4,(o1-o2+4)%4);
 }
 
-int Planner::get_cost_move(int pst, int ped) {
+float Planner::get_cost_move(int pst, int ped) {
   // the problem is we need to decide which direction?
   if (ped-pst==1) {
     // east
@@ -646,19 +646,19 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
 
     // TODO(rivers): we should maintain the const somewhere else
     // perhaps: we should wrap a class for map weights...
-    int cost_rot=(*map_weights)[ai->v_now->index*5+4];
+    float cost_rot=(*map_weights)[ai->v_now->index*5+4];
     int o_dist1=get_o_dist(o0,o1);
     int o_dist2=get_o_dist(o0,o2);
 
-    double cost1=o_dist1*cost_rot+get_cost_move(ai->v_now->index,v->index);
-    double cost2=o_dist2*cost_rot+get_cost_move(ai->v_now->index,u->index);
+    float cost1=(float)o_dist1*cost_rot+get_cost_move(ai->v_now->index,v->index);
+    float cost2=(float)o_dist2*cost_rot+get_cost_move(ai->v_now->index,u->index);
 
     // double cost_next_move_1=ai->v_now->index==v->index?cost_rot:get_cost_move(ai->v_now->index,v->index);
     // double cost_next_move_2=ai->v_now->index==u->index?cost_rot:get_cost_move(ai->v_now->index,u->index);
 
     // cerr<<o1<<" "<<o2<<" "<<o0<<" "<<o_dist1<<" "<<o_dist2<<endl;
 
-    double d1,d2;
+    float d1,d2;
     if (use_orient_in_heuristic){
       d1=HT->get(v->index,o1,ins->goals.locs[i]->index)+cost1;
       d2=HT->get(u->index,o2,ins->goals.locs[i]->index)+cost2;      
@@ -666,6 +666,8 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
       d1=HT->get(v->index,ins->goals.locs[i]->index);
       d2=HT->get(u->index,ins->goals.locs[i]->index);
     }
+
+    // std::cout<<d1<<" "<<d2<<std::endl;
 
     // TODO(rivers): we should still think about the following codes. 
     // the former one seems to fit LNS but doesn't work with SUO

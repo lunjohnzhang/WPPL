@@ -6,6 +6,8 @@ namespace LNS {
 
 namespace Parallel {
 
+enum destroy_heuristic { RANDOMAGENTS, RANDOMWALK, INTERSECTION, DESTORY_COUNT };
+
 struct PathEntry {
     int location;
     int orientation;
@@ -46,7 +48,7 @@ struct Agent
     inline int getGoalLocation() {return instance.goal_locations[id];}
 
 
-    static inline int get_action_cost(int pst, int ost, int ped, int oed, std::shared_ptr<HeuristicTable> & HT) {
+    static inline float get_action_cost(int pst, int ost, int ped, int oed, std::shared_ptr<HeuristicTable> & HT) {
         auto & map_weights=*(HT->map_weights);
 
         int offset=ped-pst;
@@ -71,17 +73,26 @@ struct Agent
         }
     }
 
-    static inline int getEstimatedPathLength(Path & path, int goal_location, std::shared_ptr<HeuristicTable> HT) {
+    static inline float getEstimatedPathLength(Path & path, int goal_location, std::shared_ptr<HeuristicTable> HT, int length=-1) {
         // TODO(rivers): this is actually path cost, not path length
-        int cost=0;
-        for (int i=0;i<path.size()-1;++i) {
+        int T;
+        if (length==-1) {
+            T=path.size()-1;
+        } else {
+            T=length;
+        }
+
+        float cost=0;
+        for (int i=0;i<T;++i) {
             cost+=get_action_cost(path[i].location,path[i].orientation,path[i+1].location,path[i+1].orientation, HT);
         }
 
-        return cost + HT->get(path.back().location, path.back().orientation, goal_location);
+        if (length==-1)
+            cost += HT->get(path.back().location, path.back().orientation, goal_location);
+        return cost;
     }
 
-    inline int getNumOfDelays() {
+    inline float getNumOfDelays() {
         // TODO(rivers): we may need two heuristic table: one for cost, one for path length estimation.
         return getEstimatedPathLength(path,instance.goal_locations[id],HT) - HT->get(instance.start_locations[id],instance.start_orientations[id],instance.goal_locations[id]);
     }
@@ -94,8 +105,8 @@ struct Agent
 struct Neighbor
 {
     vector<int> agents;
-    int sum_of_costs;
-    int old_sum_of_costs;
+    float sum_of_costs;
+    float old_sum_of_costs;
     std::map<int, Path> m_paths; // for temporally storing the new paths. may change to vector later, agent id -> path
     // set<pair<int, int>> colliding_pairs;  // id1 < id2
     // set<pair<int, int>> old_colliding_pairs;  // id1 < id2
