@@ -14,10 +14,11 @@ ARGS="-o test.json --simulationTime 1000 --planTimeLimit 1 --fileStoragePath lar
 # random:random
 # ./build/lifelong --inputFile example_problems/random.domain/random_20.json $ARGS
 # ./build/lifelong --inputFile example_problems/random.domain/random_50.json $ARGS
+# LOAD_FP="random_100_lns_step_500.snapshot" 
 # ./build/lifelong --inputFile example_problems/random.domain/random_100.json $ARGS
 # ./build/lifelong --inputFile example_problems/random.domain/random_200.json $ARGS
 # ./build/lifelong --inputFile example_problems/random.domain/random_400.json $ARGS
-./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS
+# ./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS
 # ./build/lifelong --inputFile example_problems/random.domain/random_800.json $ARGS
 
 # warehouse:warehouse_small

@@ -11,6 +11,7 @@
 #include <queue>
 #include "LaCAM2/LaCAM2Solver.hpp"
 #include "LNS/Parallel/GlobalManager.h"
+#include "util/StatsTree.h"
 
 namespace LNS {
 
@@ -41,6 +42,9 @@ public:
     LaCAM2::SlowExecutor slow_executor;
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;
     std::set<int> agent_ids_need_replan;
+
+    std::shared_ptr<StatsTree> obstacle_stats_tree;
+    std::shared_ptr<StatsTree> agent_stats_tree;
 
     nlohmann::json config;
 

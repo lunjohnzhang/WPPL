@@ -109,9 +109,9 @@ void PathTable::insertPath(int agent_id, const Parallel::Path& _path, bool verbo
     // cerr<<endl;
 
     // TODO(rivers): check whether we need maintain goals and makespan in the life-long setting
-    assert(goals[path.back().location] == MAX_TIMESTEP);
-    goals[path.back().location] = T-1;
-    makespan = max(makespan, T-1);
+    // assert(goals[path.back().location] == MAX_TIMESTEP);
+    // goals[path.back().location] = T-1;
+    // makespan = max(makespan, T-1);
 }
 
 void PathTable::deletePath(int agent_id, const Parallel::Path& _path,bool verbose)
@@ -140,7 +140,7 @@ void PathTable::deletePath(int agent_id, const Parallel::Path& _path,bool verbos
         table[path[t].location][t] = NO_AGENT;
     }
     // TODO(rivers): check whether we need maintain goals and makespan  in the life-long setting
-    goals[path.back().location] = MAX_TIMESTEP;
+    // goals[path.back().location] = MAX_TIMESTEP;
 
     // TODO(rivers): when we use window size, we ignore this for now, maybe we can use a better data structure such as ordered_set/heap to maintain the makespan. 
     // if (makespan == (int) path.size() - 1) // re-compute makespan

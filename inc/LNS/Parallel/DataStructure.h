@@ -73,23 +73,25 @@ struct Agent
         }
     }
 
-    static inline float getEstimatedPathLength(Path & path, int goal_location, std::shared_ptr<HeuristicTable> HT, int length=-1) {
+    static inline float getEstimatedPathLength(Path & path, int goal_location, std::shared_ptr<HeuristicTable> HT, bool arrival_break=false) {
         // TODO(rivers): this is actually path cost, not path length
-        int T;
-        if (length==-1) {
-            T=path.size()-1;
-        } else {
-            T=length;
-        }
-
         float cost=0;
-        for (int i=0;i<T;++i) {
+        bool arrived=false;
+        for (int i=0;i<path.size()-1;++i) {
             cost+=get_action_cost(path[i].location,path[i].orientation,path[i+1].location,path[i+1].orientation, HT);
+            if (path[i].location==goal_location) {
+                arrived=true;
+                if (arrival_break) {
+                    break;
+                }
+            }
         }
 
-        if (length==-1)
-            cost += HT->get(path.back().location, path.back().orientation, goal_location);
-        return cost;
+        if (arrived) {
+            return cost;
+        } else {
+            return cost+HT->get(path.back().location, path.back().orientation, goal_location);
+        }
     }
 
     inline float getNumOfDelays() {

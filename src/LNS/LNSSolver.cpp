@@ -29,6 +29,16 @@ void LNSSolver::initialize(const SharedEnvironment & env){
     lacam2_solver->initialize(env);
     paths.resize(env.num_of_agents);
     executed_plan_step = -1;
+
+    // obstacle_stats_tree = std::make_shared<StatsTree>(env.cols,env.rows);
+
+    // for (int pos=0;pos<env.map.size();++pos) {
+    //     if (env.map[pos]==1) {
+    //         obstacle_stats_tree->update(pos,1);
+    //     }
+    // }
+
+    // agent_stats_tree = std::make_shared<StatsTree>(env.cols,env.rows);
 }
 
 int get_neighbor_orientation(const SharedEnvironment * env, int loc1,int loc2) {
@@ -75,6 +85,14 @@ void LNSSolver::plan(const SharedEnvironment & env){
     ONLYDEV(g_timer.record_p("_plan_s");)
 
     ONLYDEV(g_timer.record_p("plan_s");)
+
+    // ONLYDEV(g_timer.record_p("agent_stats_tree_s");)
+    // std::cout<<agent_stats_tree<<std::endl;
+    // agent_stats_tree->clear();
+    // for (int i = 0; i < env.num_of_agents; ++i) {
+    //     agent_stats_tree->update(env.curr_states[i].location,1);
+    // }
+    // ONLYDEV(g_timer.record_d("agent_stats_tree_s","agent_stats_tree");)
 
     // TODO(rivers): we need to replan for all agents that has no plan
     // later we may think of padding all agents to the same length
