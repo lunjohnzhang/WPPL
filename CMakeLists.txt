@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 # set(MAP_OPT ON)
 
 # if set, use dev mode, which has a lot of logging and timing.
-set(DEV ON)
+# set(DEV ON)
 # if set, use action model with no rotation.
 # set(NO_ROT ON)
 
