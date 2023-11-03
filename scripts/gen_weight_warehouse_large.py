@@ -348,5 +348,51 @@ def gen_weights_warehouse_large_004():
                     if (row,col,dir)!=(139,499,4):
                         f.write(",")
         f.write("]")            
+
+def gen_weights_warehouse_large_005():
+    weights=np.ones((140,500,5),dtype=np.float32)
+    
+    for large in [1.2,1.5,2,2.5,3,4,5,10,20,50]:
+
+        small=1
+
+        up_weights=[
+            small,large,small,large,large,small,large,small
+        ]
+        down_weights=[
+            large,small,large,small,small,large,small,large
+        ]
         
-gen_weights_warehouse_large_004()
+        for col in range(0,500):
+            idx=col%8
+            weights[:,col,1]=down_weights[idx]
+            weights[:,col,3]=up_weights[idx]
+        
+        for row in range(0,140):
+            if row%2==0:
+                weights[row,:,0]=large
+                weights[row,:,2]=small
+            elif row%2==1:
+                weights[row,:,0]=small
+                weights[row,:,2]=large
+
+        with open("warehouse_large_weight_value_{}.weight".format(large),"w") as f:
+            f.write("[")
+            for row in range(140):
+                for col in range(500):
+                    for dir in range(5):
+                        f.write(str(weights[row,col,dir]))
+                        if (row,col,dir)!=(139,499,4):
+                            f.write(",")
+            f.write("]")   
+
+
+
+
+
+
+
+
+
+
+gen_weights_warehouse_large_005()

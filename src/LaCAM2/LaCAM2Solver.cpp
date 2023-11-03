@@ -2,8 +2,10 @@
 #include "util/MyLogger.h"
 #include "LaCAM2/post_processing.hpp"
 #include "LaCAM2/utils.hpp"
+#include "LaCAM2/SUO2/SpatialSUO.h"
 #include <omp.h>
 #include <thread>
+// #include "util/StatsTree.h"
 
 namespace LaCAM2 {
 
@@ -120,6 +122,14 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
     ONLYDEV(g_timer.record_p("lacam2_plan_pre_s");)
     // std::cerr<<"random :"<<get_random_int(MT,0,100)<<std::endl;
 
+    // g_timer.record_p("stats_tree_s");
+    // StatsTree * stats_tree = new StatsTree(env.cols,env.rows);
+    // for (int i=0;i<env.num_of_agents;++i) {
+    //     int x=env.curr_states[i].location%env.cols;
+    //     int y=env.curr_states[i].location/env.cols;
+    //     stats_tree->update(x,y,1);
+    // }
+    // g_timer.record_d("stats_tree_s","stats_tree");
 
     if (timestep==0) {
         for (int i=0;i<env.num_of_agents;++i) {
@@ -147,49 +157,48 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         bool use_swap=false;
         bool use_orient_in_heuristic=read_param_json<bool>(config,"use_orient_in_heuristic");
 
-        // vector<::Path> precomputed_paths;
-//         if (read_param_json<int>(config["SUO"],"iterations")>0) {
+        vector<::Path> precomputed_paths;
+        if (read_param_json<int>(config["SUO"],"iterations")>0) {
+            ONLYDEV(g_timer.record_p("suo_init_s");)
+            SUO2::Spatial::SUO suo(
+                env,
+                *map_weights,
+                HT,
+                read_param_json<float>(config["SUO"],"vertex_collision_cost"),
+                read_param_json<int>(config["SUO"],"iterations"),
+                read_param_json<int>(config["SUO"],"max_expanded"),
+                read_param_json<int>(config["SUO"],"window"),
+                read_param_json<float>(config["SUO"],"h_weight")
+            );
+            ONLYDEV(g_timer.record_d("suo_init_s","suo_init");)
+            ONLYDEV(g_timer.record_p("suo_plan_s");)
+            suo.plan();
+            ONLYDEV(g_timer.record_d("suo_plan_s","suo_plan");)
+            g_timer.print_all_d();
 
-// #ifndef NO_ROT
-//             std::cerr<<"only support NO_ROT now"<<std::endl;
-//             exit(-1);
-// #endif
-
-//             ONLYDEV(g_timer.record_p("suo_init_s");)
-//             SUO::TemporalSpatial::SUO suo(
-//                 env,
-//                 1, // only work for no rotation now
-//                 *map_weights,
-//                 HT,
-//                 read_param_json<float>(config["SUO"],"vertex_collision_cost"),
-//                 read_param_json<int>(config["SUO"],"iterations"),
-//                 read_param_json<int>(config["SUO"],"max_expanded"),
-//                 read_param_json<int>(config["SUO"],"window"),
-//                 read_param_json<float>(config["SUO"],"h_weight")
-//             );
-//             ONLYDEV(g_timer.record_d("suo_init_s","suo_init");)
-//             ONLYDEV(g_timer.record_p("suo_plan_s");)
-//             suo.plan();
-//             ONLYDEV(g_timer.record_d("suo_plan_s","suo_plan");)
-//             g_timer.print_all_d();
-
-//             ONLYDEV(g_timer.record_p("copy_suo_paths_s");)
+            ONLYDEV(g_timer.record_p("copy_suo_paths_s");)
             
-//             precomputed_paths.resize(env.num_of_agents);
-//             for (int i=0;i<env.num_of_agents;++i){
-//                 if (suo.paths[i][0].pos!=env.curr_states[i].location){
-//                     cerr<<"agent "<<i<<"'s current state doesn't match with the plan"<<endl;
-//                     exit(-1);
-//                 }
-//                 for (int j=0;j<suo.paths[i].size();++j){
-//                     precomputed_paths[i].emplace_back(suo.paths[i][j].pos,-1,-1);
-//                 }
-//             }
-//             // we need to change precomputed_paths to suo_paths. because the former one means hard constraints to follow
-//             // but the latter one is just a suggesion.
-//             instance.precomputed_paths=&precomputed_paths;
-//             ONLYDEV(g_timer.record_d("copy_suo_paths_s","copy_suo_paths");)
-//         }
+
+            // std::cout<<"here"<<std::endl;
+            precomputed_paths.resize(env.num_of_agents);
+            for (int i=0;i<env.num_of_agents;++i){
+                if (suo.paths[i][0].pos!=env.curr_states[i].location || suo.paths[i][0].orient!=env.curr_states[i].orientation){
+                    cerr<<"agent "<<i<<"'s current state doesn't match with the plan"<<endl;
+                    exit(-1);
+                }
+                for (int j=0;j<suo.paths[i].size();++j){
+                    precomputed_paths[i].emplace_back(suo.paths[i][j].pos,-1,suo.paths[i][j].orient);
+                }
+                // if (i==0){
+                //     std::cout<<"agent "<<i<<" starts:"<<env.curr_states[i]<<" "<<env.goal_locations[i][0].first<<endl;
+                //     std::cout<<precomputed_paths[i]<<endl;
+                // }
+            }
+            // we need to change precomputed_paths to suo_paths. because the former one means hard constraints to follow
+            // but the latter one is just a suggesion.
+            instance.precomputed_paths=&precomputed_paths;
+            ONLYDEV(g_timer.record_d("copy_suo_paths_s","copy_suo_paths");)
+        }
 
         float best_cost=FLT_MAX;
         Solution best_solution;

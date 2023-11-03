@@ -13,7 +13,6 @@ struct StatsTree {
         row_cum_sum = new int[h*(w+1)];
         col_cum_sum = new int[w*(h+1)];
         clear();
-        // memset(row_cum_sum, 0, sizeof(int)*h*(w+1));
         // memset(col_cum_sum, 0, sizeof(int)*w*(h+1));
     }
 
