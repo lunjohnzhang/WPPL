@@ -27,7 +27,7 @@ void TimeSpaceAStarPlanner::findPath(int start_pos, int start_orient, int goal_p
         curr->closed=true;
         ++n_expanded;
 
-        if (curr->pos==goal_pos && !constraint_table.constrained(curr->pos, curr->t)) {
+        if (curr->pos==goal_pos && curr->t>=1 && !constraint_table.constrained(curr->pos, curr->t)) {
             buildPath(curr,goal_pos);
             return;
         }
@@ -59,10 +59,10 @@ void TimeSpaceAStarPlanner::findPath(int start_pos, int start_orient, int goal_p
                     // we need to update the state
                     old_state->copy(next_state);
                     if (old_state->closed) {
-                        if (!old_state->arrived){
-                            std::cerr<<"reopen"<<std::endl;
-                            exit(-1);
-                        }
+                        // if (!old_state->arrived){
+                        //     std::cerr<<"reopen"<<std::endl;
+                        //     exit(-1);
+                        // }
                         // reopen closed state
                         old_state->closed=false;
                         old_state->open_list_handle=open_list.push(old_state);
