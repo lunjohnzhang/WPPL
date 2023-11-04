@@ -336,7 +336,7 @@ def gen_weights_warehouse_large_004():
             weights[row,:,0]=large
             weights[row,:,2]=small
         elif row%2==1:
-            weights[row,:,0]=small
+            weights[row,:,0]=small+inc
             weights[row,:,2]=large
 
     with open("warehouse_large_weight_004.weight","w") as f:
@@ -387,12 +387,46 @@ def gen_weights_warehouse_large_005():
             f.write("]")   
 
 
+def gen_weights_warehouse_large_007():
+    weights=np.ones((140,500,5),dtype=float)
+    
+    large=1000000
+    small=1
 
+    up_weights=[
+        small,large,small,large,large,small,large,small
+    ]
+    down_weights=[
+        large,small,large,small,small,large,small,large
+    ]
+    
+    for col in range(0,500):
+        idx=col%8
+        weights[:,col,1]=down_weights[idx]
+        weights[:,col,3]=up_weights[idx]
+    
+    for row in range(0,140):
+        if row>=3 and row<=7:
+            inc=0.01
+        elif row>=130 and row<=136:
+            inc=0.01
+        else:
+            inc=0
+        if row%2==0:
+            weights[row,:,0]=large
+            weights[row,:,2]=small+inc
+        elif row%2==1:
+            weights[row,:,0]=small+inc
+            weights[row,:,2]=large
 
+    with open("warehouse_large_weight_007.weight","w") as f:
+        f.write("[")
+        for row in range(140):
+            for col in range(500):
+                for dir in range(5):
+                    f.write(str(weights[row,col,dir]))
+                    if (row,col,dir)!=(139,499,4):
+                        f.write(",")
+        f.write("]")            
 
-
-
-
-
-
-gen_weights_warehouse_large_005()
+gen_weights_warehouse_large_007()

@@ -278,7 +278,8 @@ int NeighborGenerator::findMostDelayedAgent(int idx){
         return -1;
     }
     tabu_list.insert(a);
-    if (tabu_list.size() == agents.size())
+    // TODO(rivers): this is a bug
+    if (tabu_list.size() == (agents.size()/num_threads))
         tabu_list.clear();
     return a;
 }
