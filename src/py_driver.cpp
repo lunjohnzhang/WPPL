@@ -35,6 +35,58 @@ void sigint_handler(int a)
 }
 
 
+int get_Manhattan_distance(int loc1, int loc2, int cols) {
+    return abs(loc1 / cols - loc2 / cols) + abs(loc1 % cols - loc2 % cols);
+}
+
+std::shared_ptr<std::vector<float> > weight_format_conversion(Grid & grid, std::vector<float> & weights)
+{
+    const int WEIGHT_MAX=100000;
+    std::shared_ptr<std::vector<float> > map_weights_ptr = std::make_shared<std::vector<float> >(grid.map.size()*5, WEIGHT_MAX);
+    auto & map_weights=*map_weights_ptr;
+
+    const int dirs[4]={1,-grid.width, -1, grid.width};
+    const int map_weights_idxs[4]={0,3,2,1};
+
+    int j=0;
+
+    ++j; // the 0 indexed weight is for wait
+
+    for (int i=0;i<grid.map.size();++i) {
+        if (grid.map[i] == 0) {
+            continue;
+        }
+
+        map_weights[i*5+4] = weights[0];
+
+        for (int d=0;d<4;++d) {
+            int dir=dirs[d];
+            if (
+                0<=i+dir && i+dir<grid.map.size() &&
+                get_Manhattan_distance(i, i+dir, grid.width) <= 1 &&
+                grid.map[i+dir] != 0
+            )
+            
+            float weight = weights[j];
+            if (weight==-1) {
+                weight=WEIGHT_MAX;
+            }
+
+            int map_weight_idx=map_weights_idxs[d];
+            map_weights[i*5+map_weight_idx]=weight;
+            ++j;
+        }
+    }
+
+    if (j!=weights.size()) {
+        std::cout<<"weight size mismatch"<<std::endl;
+        exit(1);
+    }
+
+    return map_weights_ptr;
+}
+
+
 std::string run(const py::kwargs& kwargs)
 {
     
@@ -118,6 +170,11 @@ std::string run(const py::kwargs& kwargs)
 
     planner->env->map_name = map_path.substr(map_path.find_last_of("/") + 1);
     planner->env->file_storage_path = vm["fileStoragePath"].as<std::string>();
+
+    if (kwargs.contains("weights")) {
+        std::vector<float> weights=kwargs["weights"].cast<std::vector<float> >();
+        planner->map_weights=weight_format_conversion(grid, weights);
+    } 
 
     ActionModelWithRotate *model = new ActionModelWithRotate(grid);
     model->set_logger(logger);

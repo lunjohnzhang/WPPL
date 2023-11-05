@@ -198,9 +198,13 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         analyzer.set_dump_path(config["analysis_output"].get<string>());
         g_logger.init("logs/run");
     )
-
-    std::string weights_path=read_param_json<std::string>(config,"map_weights_path");
-    std::string suffix=load_map_weights(weights_path);
+    
+    std::string weights_path="";
+    std::string suffix="";
+    if (!map_weights) {
+        weights_path=read_param_json<std::string>(config,"map_weights_path");
+        suffix=load_map_weights(weights_path);
+    }
 
     lifelong_solver_name=config["lifelong_solver_name"];
 

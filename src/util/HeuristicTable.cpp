@@ -458,6 +458,11 @@ float HeuristicTable::get(int loc1, int orient1, int loc2) {
 
 void HeuristicTable::preprocess(string suffix) {
 
+    if (suffix=="") { // some temp weights, no cache
+        compute_weighted_heuristics();
+        return;
+    }
+
     string fname=env.map_name.substr(0,env.map_name.size()-4);
     string folder=env.file_storage_path;
     if (folder[folder.size()-1]!=boost::filesystem::path::preferred_separator){
