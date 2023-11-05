@@ -13,6 +13,8 @@ my_viz/*.gif
 *.weights
 *.snapshot
 large_files
+offline_eval
+offline_eval/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
