@@ -8,6 +8,7 @@
 #include <climits>
 #include <memory>
 #include <util/Analyzer.h>
+#include "nlohmann/json.hpp"
 
 #ifdef MAP_OPT
 #include "util/analyze.h"
@@ -41,11 +42,11 @@ int get_Manhattan_distance(int loc1, int loc2, int cols) {
 
 std::shared_ptr<std::vector<float> > weight_format_conversion(Grid & grid, std::vector<float> & weights)
 {
-    const int WEIGHT_MAX=100000;
-    std::shared_ptr<std::vector<float> > map_weights_ptr = std::make_shared<std::vector<float> >(grid.map.size()*5, WEIGHT_MAX);
+    const int max_weight=100000;
+    std::shared_ptr<std::vector<float> > map_weights_ptr = std::make_shared<std::vector<float> >(grid.map.size()*5, max_weight);
     auto & map_weights=*map_weights_ptr;
 
-    const int dirs[4]={1,-grid.width, -1, grid.width};
+    const int dirs[4]={1,-grid.cols, -1, grid.cols};
     const int map_weights_idxs[4]={0,3,2,1};
 
     int j=0;
@@ -53,7 +54,7 @@ std::shared_ptr<std::vector<float> > weight_format_conversion(Grid & grid, std::
     ++j; // the 0 indexed weight is for wait
 
     for (int i=0;i<grid.map.size();++i) {
-        if (grid.map[i] == 0) {
+        if (grid.map[i] == 1) {
             continue;
         }
 
@@ -63,23 +64,29 @@ std::shared_ptr<std::vector<float> > weight_format_conversion(Grid & grid, std::
             int dir=dirs[d];
             if (
                 0<=i+dir && i+dir<grid.map.size() &&
-                get_Manhattan_distance(i, i+dir, grid.width) <= 1 &&
-                grid.map[i+dir] != 0
-            )
-            
-            float weight = weights[j];
-            if (weight==-1) {
-                weight=WEIGHT_MAX;
-            }
+                get_Manhattan_distance(i, i+dir, grid.cols) <= 1 &&
+                grid.map[i+dir] != 1
+            ) {
+                float weight = weights.at(j);
+                if (weight==-1) {
+                    weight=max_weight;
+                }
 
-            int map_weight_idx=map_weights_idxs[d];
-            map_weights[i*5+map_weight_idx]=weight;
-            ++j;
+                int map_weight_idx=map_weights_idxs[d];
+                map_weights[i*5+map_weight_idx]=weight;
+                ++j;
+            }
         }
     }
 
+    // std::cout<<"map weights: ";
+    // for (auto i=0;i<map_weights.size();++i) {
+    //     std::cout<<map_weights[i]<<" ";
+    // }
+    // std::cout<<endl;
+
     if (j!=weights.size()) {
-        std::cout<<"weight size mismatch"<<std::endl;
+        std::cout<<"weight size mismatch: "<<j<<" vs "<<weights.size()<<std::endl;
         exit(1);
     }
 
@@ -172,7 +179,12 @@ std::string run(const py::kwargs& kwargs)
     planner->env->file_storage_path = vm["fileStoragePath"].as<std::string>();
 
     if (kwargs.contains("weights")) {
-        std::vector<float> weights=kwargs["weights"].cast<std::vector<float> >();
+        std::string weight_str=kwargs["weights"].cast<std::string>();
+        nlohmann::json weight_json=nlohmann::json::parse(weight_str);
+        std::vector<float> weights;
+        for (auto & w:weight_json) {
+            weights.push_back(w.get<float>());
+        }
         planner->map_weights=weight_format_conversion(grid, weights);
     } 
 
