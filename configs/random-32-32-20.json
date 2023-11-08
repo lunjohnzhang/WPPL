@@ -5,7 +5,7 @@
             "value": "LNS"
         }
     ],
-    "map_weights_path": "scripts/random_weight_010.weight",
+    "map_weights_path": "scripts/random_weight_010.w",
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.9,
