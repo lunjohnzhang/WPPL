@@ -46,10 +46,11 @@ void MAPFPlanner::load_configs() {
         }
 
         std::cerr<<config<<std::endl;
+        config["lifelong_solver_name"]=read_conditional_value(config,"lifelong_solver_name",env->num_of_agents);
+        config["map_weights_path"]=read_conditional_value(config,"map_weights_path",env->num_of_agents);
         string s=config.dump();
         std::replace(s.begin(),s.end(),',','|');
         config["details"]=s;
-        config["lifelong_solver_name"]=read_conditional_value(config,"lifelong_solver_name",env->num_of_agents);
     }
     catch (nlohmann::json::parse_error error)
     {

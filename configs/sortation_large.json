@@ -5,7 +5,12 @@
             "value": "DUMMY"
         }
     ],
-    "map_weights_path": "scripts/sortation_large_weight_007.w",
+    "map_weights_path": [
+        {
+            "n_agents": 1000000,
+            "value": "scripts/sortation_large_weight_007.w"
+        }
+    ],
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.9,
