@@ -1,8 +1,12 @@
 {
     "lifelong_solver_name": [
         {
-            "n_agents": 1000000,
+            "n_agents": 3000,
             "value": "DUMMY"
+        },
+        {
+            "n_agents": 100000,
+            "value": "LACAM2"
         }
     ],
     "map_weights_path": "scripts/paris_weight_001.w",
@@ -40,7 +44,7 @@
     },
     "LaCAM2": {
         "seed": 0,
-        "planning_window": 10,
+        "planning_window": 1,
         "consider_rotation": true,
         "use_orient_in_heuristic": true,
         "use_slow_executor": false,
