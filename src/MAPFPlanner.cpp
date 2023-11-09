@@ -222,7 +222,11 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
 
         auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,read_param_json<bool>(config["LaCAM2"],"use_orient_in_heuristic"));
         heuristics->preprocess(suffix);
-        lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,config["LaCAM2"]);
+        int max_agents_in_use=read_param_json<int>(config,"max_agents_in_use",-1);
+        if (max_agents_in_use==-1) {
+            max_agents_in_use=env->num_of_agents;
+        }
+        lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,config["LaCAM2"]);
         lacam2_solver->initialize(*env);
         cout<<"LaCAMSolver2 initialized"<<endl;
     } else if (lifelong_solver_name=="LNS") {
@@ -233,7 +237,12 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,true);
         heuristics->preprocess(suffix);
         //heuristics->preprocess();
-        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,config["LNS"]["LaCAM2"]);
+        int max_agents_in_use=read_param_json<int>(config,"max_agents_in_use",-1);
+        if (max_agents_in_use==-1) {
+            max_agents_in_use=env->num_of_agents;
+        }
+        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,config["LNS"]["LaCAM2"]);
+        lacam2_solver->initialize(*env);
         lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver);
         lns_solver->initialize(*env);
         cout<<"LNSSolver initialized"<<endl;

@@ -8,7 +8,8 @@ namespace LNS {
 namespace Parallel {
 
 GlobalManager::GlobalManager(
-    Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<float> > map_weights,
+    Instance & instance, std::shared_ptr<HeuristicTable> HT, 
+    std::shared_ptr<vector<float> > map_weights, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
     int neighbor_size, destroy_heuristic destroy_strategy,
     bool ALNS, double decay_factor, double reaction_factor,
     string init_algo_name, string replan_algo_name, bool sipp,
@@ -18,7 +19,7 @@ GlobalManager::GlobalManager(
     instance(instance), path_table(instance.map_size,window_size_for_PATH), HT(HT), map_weights(map_weights),
     init_algo_name(init_algo_name), replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
-    screen(screen) {
+    screen(screen), agent_infos(agent_infos) {
 
     num_threads=omp_get_max_threads();
 
@@ -30,7 +31,7 @@ GlobalManager::GlobalManager(
     // }
     
     for (int i=0;i<instance.num_of_agents;++i) {
-        agents.emplace_back(i,instance,HT);
+        agents.emplace_back(i,instance,HT,agent_infos);
     }
 
     // cout<<num_threads<<endl;
@@ -38,7 +39,7 @@ GlobalManager::GlobalManager(
 
     for (auto i=0;i<num_threads;++i) {
         auto local_optimizer=std::make_shared<LocalOptimizer>(
-            instance, agents, HT, map_weights,
+            instance, agents, HT, map_weights, agent_infos,
             replan_algo_name, sipp,
             window_size_for_CT, window_size_for_CAT, window_size_for_PATH,
             screen
@@ -47,7 +48,7 @@ GlobalManager::GlobalManager(
     }
 
     neighbor_generator=std::make_shared<NeighborGenerator>(
-        instance, HT, path_table, agents, 
+        instance, HT, path_table, agents, agent_infos,
         neighbor_size, destroy_strategy, 
         ALNS, decay_factor, reaction_factor, 
         num_threads, screen

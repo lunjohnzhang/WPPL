@@ -7,12 +7,13 @@ namespace LNS {
 namespace Parallel {
 
 LocalOptimizer::LocalOptimizer(
-    Instance & instance, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<float> > map_weights,
+    Instance & instance, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT, 
+    std::shared_ptr<vector<float> > map_weights, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
     string replan_algo_name, bool sipp,
     int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
     int screen
 ):
-    instance(instance), path_table(instance.map_size,window_size_for_CT), agents(agents), HT(HT), map_weights(map_weights),
+    instance(instance), path_table(instance.map_size,window_size_for_CT), agents(agents), HT(HT), map_weights(map_weights), agent_infos(agent_infos),
     replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
     screen(screen) {
@@ -84,6 +85,12 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter
     //ONLYDEV(g_timer.record_p("run_pp_s");)
     auto shuffled_agents = neighbor.agents;
     std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
+
+    std::stable_sort(shuffled_agents.begin(), shuffled_agents.end(), [&](int a, int b) {
+        return (*agent_infos)[a].disabled<(*agent_infos)[b].disabled; // not disabled first.
+    });
+    // TODO: we need also to remove the cost of disabled agents.
+
     if (screen >= 2) {
         for (auto aid : shuffled_agents)
             cout << aid << "(" << agents[aid].getNumOfDelays()<<"), ";

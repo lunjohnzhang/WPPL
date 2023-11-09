@@ -11,13 +11,27 @@ namespace LaCAM2 {
 
 void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     paths.resize(env.num_of_agents);
-    agent_infos.resize(env.num_of_agents);
+    agent_infos=std::make_shared<std::vector<AgentInfo> >(env.num_of_agents);
     for (int i=0;i<env.num_of_agents;++i) {
-        agent_infos[i].id=i;
+        (*agent_infos)[i].id=i;
     }
-    action_costs.resize(env.num_of_agents);
-    total_actions.resize(env.num_of_agents);
+    // action_costs.resize(env.num_of_agents);
+    // total_actions.resize(env.num_of_agents);
     G = std::make_shared<Graph>(env);
+
+    // random select some agents to be disabled
+
+    std::vector<int> agents_id;
+    for (int i=0;i<env.num_of_agents;++i) {
+        agents_id.push_back(i);
+    }
+    std::random_shuffle(agents_id.begin(),agents_id.end());
+
+    int disabled_agents_num=env.num_of_agents-max_agents_in_use;
+    for (int i=0;i<disabled_agents_num;++i) {
+        (*agent_infos)[i].disabled=true;
+    }
+    std::cout<<"#disabled agents: "<<disabled_agents_num<<std::endl;
 }
 
 Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths) {
@@ -27,8 +41,11 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
         starts.emplace_back(env.curr_states[i].location, env.curr_states[i].orientation);
         assert(env.goal_locations[i].size()>0);
         int goal_location=env.goal_locations[i][0].first;
+        if ((*agent_infos)[i].disabled) {
+            goal_location=env.curr_states[i].location;
+        }
         goals.emplace_back(goal_location, -1);
-        auto & agent_info=agent_infos[i];
+        auto & agent_info=(*agent_infos)[i];
         // cerr<<"0\trandom-32-32-20.map\t32\t32\t"<<starts[i]%32<<"\t"<<starts[i]/32<<"\t"<<goals[i]%32<<"\t"<<goals[i]/32<<"\t0"<<endl;
         if (goal_location!=agent_info.goal_location){
             agent_info.goal_location=goal_location;
@@ -39,7 +56,7 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
             agent_info.elapsed+=1;
         }
     }
-    return Instance(*G, starts, goals, agent_infos, read_param_json<int>(config,"planning_window",-1), precomputed_paths);
+    return Instance(*G, starts, goals, *agent_infos, read_param_json<int>(config,"planning_window",-1), precomputed_paths);
 }
 
 int LaCAM2Solver::get_neighbor_orientation(int loc1,int loc2) {

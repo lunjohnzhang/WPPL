@@ -44,6 +44,8 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
         const AgentInfo & a=ins->agent_infos[i];
         const AgentInfo & b=ins->agent_infos[j];
 
+        if (a.disabled!=b.disabled) return a.disabled<b.disabled; // not disabled first.
+
         if (C.arrivals[i]!=C.arrivals[j]) return C.arrivals[i]<C.arrivals[j];
 
         if (ins->precomputed_paths!=nullptr){

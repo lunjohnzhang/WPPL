@@ -12,6 +12,7 @@
 #include "LaCAM2/LaCAM2Solver.hpp"
 #include "LNS/Parallel/GlobalManager.h"
 #include "util/StatsTree.h"
+#include "LaCAM2/instance.hpp"
 
 namespace LNS {
 
@@ -37,6 +38,8 @@ public:
     std::shared_ptr<Instance> instance;
     std::shared_ptr<HeuristicTable> HT; // instance
     std::shared_ptr<std::vector<float> > map_weights; // map weights
+
+    std::shared_ptr<vector<LaCAM2::AgentInfo> > agent_infos;
 
     LaCAM2::Executor executor;
     LaCAM2::SlowExecutor slow_executor;

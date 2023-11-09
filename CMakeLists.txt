@@ -26,7 +26,7 @@ endif()
 message(STATUS "PYTHON: ${PYTHON}")
 
 IF(NOT CMAKE_BUILD_TYPE)
-    # SET(CMAKE_BUILD_TYPE "DEBUG")
+    #SET(CMAKE_BUILD_TYPE "DEBUG")
     SET(CMAKE_BUILD_TYPE "RELEASE")
     #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
     #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
@@ -46,7 +46,7 @@ find_package(spdlog REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Python 3.8 COMPONENTS Interpreter Development REQUIRED)
 
-IF (MAP_POT)
+IF (MAP_OPT)
     add_subdirectory(pybind11)
 ENDIF()
 

@@ -2,13 +2,13 @@
     "lifelong_solver_name": [
         {
             "n_agents": 100000,
-            "value": "LaCAM2"
+            "value": "DUMMY"
         }
     ],
     "map_weights_path": [
         {
             "n_agents": 100000,
-            "value": "scripts/paris_weight_002.weight"
+            "value": "scripts/paris_weight_002.w"
         }
     ],
     "LNS": {

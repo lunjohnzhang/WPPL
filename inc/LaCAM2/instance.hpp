@@ -17,8 +17,9 @@ public:
     float tie_breaker;
     int id;
     int stuck_order;
+    bool disabled;
 
-    AgentInfo():id(-1),goal_location(-1),elapsed(-1),tie_breaker(-1), stuck_order(0){};
+    AgentInfo():id(-1),goal_location(-1),elapsed(-1),tie_breaker(-1), stuck_order(0), disabled(false) {};
 };
 
 

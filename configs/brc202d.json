@@ -2,7 +2,7 @@
     "lifelong_solver_name": [
         {
             "n_agents": 1000000,
-            "value": "DUMMY"
+            "value": "LaCAM2"
         }
     ],
     "map_weights_path": [
@@ -11,6 +11,7 @@
             "value": "scripts/brc202d_weight_002.w"
         }
     ],
+    "max_agents_in_use": 2500,
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.9,

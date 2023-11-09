@@ -21,12 +21,12 @@ LNSSolver::LNSSolver(
     slow_executor(env),
     config(config),
     MT(new std::mt19937(read_param_json<uint>(config,"seed",0))),
-    lacam2_solver(lacam2_solver){
+    lacam2_solver(lacam2_solver),
+    agent_infos(lacam2_solver->agent_infos) {
 };
 
 
 void LNSSolver::initialize(const SharedEnvironment & env){
-    lacam2_solver->initialize(env);
     paths.resize(env.num_of_agents);
     executed_plan_step = -1;
 
@@ -162,6 +162,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
             *instance,
             HT,
             map_weights,
+            agent_infos,
             read_param_json<int>(config,"neighborSize"),
             Parallel::destroy_heuristic::RANDOMWALK, // TODO: always randomwalk
             true, // TODO: always Adaptive

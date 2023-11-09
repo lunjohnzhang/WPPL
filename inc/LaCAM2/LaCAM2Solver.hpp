@@ -34,12 +34,15 @@ public:
     std::shared_ptr<Graph> G; // graph
     std::shared_ptr<HeuristicTable> HT; // instance
     std::shared_ptr<std::vector<float> > map_weights; // map weights
+
+    std::shared_ptr<std::vector<AgentInfo> > agent_infos;
+
+    int max_agents_in_use;
+
     // Config next_config;
 
-    std::vector<std::vector<int>> action_costs;
-    std::vector<std::vector<int>> total_actions;
-
-    vector<AgentInfo> agent_infos;
+    // std::vector<std::vector<int>> action_costs;
+    // std::vector<std::vector<int>> total_actions;
 
     Executor executor;
     SlowExecutor slow_executor;
@@ -53,13 +56,14 @@ public:
 
     int get_neighbor_orientation(int loc1,int loc2);
 
-    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<float> > & map_weights, nlohmann::json & config):
+    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<float> > & map_weights, int max_agents_in_use, nlohmann::json & config):
         HT(HT),
         map_weights(map_weights),
         action_model(env),executor(env),slow_executor(env),
         config(config),
-        MT(new std::mt19937(read_param_json<uint>(config,"seed",0))){
-
+        MT(new std::mt19937(read_param_json<uint>(config,"seed",0))),
+        max_agents_in_use(max_agents_in_use) {
+            
     };
 
     ~LaCAM2Solver(){
@@ -71,15 +75,17 @@ public:
         int num_of_agents=paths.size();
 
         paths.clear();
+        paths.resize(env.num_of_agents);
+        
         need_replan = true;
         total_feasible_timestep = 0;
         timestep = 0;
         delete MT;
         MT = new std::mt19937(read_param_json(config,"seed",0));
         // next_config = Config();
-        agent_infos.clear();
+        // agent_infos.clear();
 
-        initialize(env);
+        // initialize(env);
     }
 
     Action get_action_from_states(const State & state, const State & next_state){
