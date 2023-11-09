@@ -37,61 +37,61 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
   // update neighbor
   if (parent != nullptr) parent->neighbor.insert(this);
 
-  std::vector<std::tuple<bool,bool,bool,float,float,float,int> > scores;
-  for (int i=0;i<N;++i) {
-    const AgentInfo & a=ins->agent_infos[i];
-    bool disabled=a.disabled;
-    bool arrived=C.arrivals[i];
-    bool not_precomputed = ins->precomputed_paths!=nullptr && (*(ins->precomputed_paths))[i].size()<(d+1); // not not precomputed first
-    float h=HT->get(ins->starts.locs[i]->index,ins->goals.locs[i]->index); // smaller h first
-    float elapse=0; // larger elapse first
-    float tie_breaker=0; 
-    scores.emplace_back(not_precomputed,disabled,arrived,h,elapse,tie_breaker,i);
-  }
+  // std::vector<std::tuple<bool,bool,bool,float,float,float,int> > scores;
+  // for (int i=0;i<N;++i) {
+  //   const AgentInfo & a=ins->agent_infos[i];
+  //   bool disabled=a.disabled;
+  //   bool arrived=C.arrivals[i];
+  //   bool not_precomputed = ins->precomputed_paths!=nullptr && (*(ins->precomputed_paths))[i].size()<(d+1); // not not precomputed first
+  //   float h=HT->get(ins->starts.locs[i]->index,ins->goals.locs[i]->index); // smaller h first
+  //   float elapse=0; // larger elapse first
+  //   float tie_breaker=0; 
+  //   scores.emplace_back(not_precomputed,disabled,arrived,h,elapse,tie_breaker,i);
+  // }
 
-  std::sort(scores.begin(),scores.end());
-  for (int i=0;i<N;++i) {
-    order[i]=std::get<6>(scores[i]);
-  }
+  // std::sort(scores.begin(),scores.end());
+  // for (int i=0;i<N;++i) {
+  //   order[i]=std::get<6>(scores[i]);
+  // }
 
-  // // set order
-  // // TODO(rivers_: probably we should set a basic ordering at the begining, because it is time consuming to sort everytime with large-scale agents
-  // std::iota(order.begin(), order.end(), 0);
-  // std::sort(order.begin(), order.end(), [&](int i, int j) { 
-  //       const AgentInfo & a=ins->agent_infos[i];
-  //       const AgentInfo & b=ins->agent_infos[j];
+  // set order
+  // TODO(rivers_: probably we should set a basic ordering at the begining, because it is time consuming to sort everytime with large-scale agents
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int i, int j) { 
+        const AgentInfo & a=ins->agent_infos[i];
+        const AgentInfo & b=ins->agent_infos[j];
 
-  //       if (a.disabled!=b.disabled) return a.disabled<b.disabled; // not disabled first.
+        if (a.disabled!=b.disabled) return a.disabled<b.disabled; // not disabled first.
 
-  //       if (C.arrivals[i]!=C.arrivals[j]) return C.arrivals[i]<C.arrivals[j];
+        if (C.arrivals[i]!=C.arrivals[j]) return C.arrivals[i]<C.arrivals[j];
 
-  //       if (ins->precomputed_paths!=nullptr){
-  //         bool precomputed_a = (*(ins->precomputed_paths))[i].size()>(d+1);
-  //         bool precomputed_b = (*(ins->precomputed_paths))[j].size()>(d+1);
-  //         if (precomputed_a != precomputed_b) return (int)precomputed_a>(int)precomputed_b;
-  //       }
+        if (ins->precomputed_paths!=nullptr){
+          bool precomputed_a = (*(ins->precomputed_paths))[i].size()>(d+1);
+          bool precomputed_b = (*(ins->precomputed_paths))[j].size()>(d+1);
+          if (precomputed_a != precomputed_b) return (int)precomputed_a>(int)precomputed_b;
+        }
 
-  //       float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
-  //       float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
+        float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
+        float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
 
-  //       // int h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
-  //       // int h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
+        // int h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
+        // int h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
 
 
-  //       if (order_strategy==0) {
-  //         if (h1!=h2) return h1<h2;
-  //         if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
-  //         return a.tie_breaker>b.tie_breaker;
-  //       } else if (order_strategy==1) {
-  //         if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
-  //         if (h1!=h2) return h1<h2;
-  //         return a.tie_breaker>b.tie_breaker;
-  //       } else {
-  //         std::cerr<<"unknown strategy"<<std::endl;
-  //         exit(-1);
-  //       }
+        if (order_strategy==0) {
+          if (h1!=h2) return h1<h2;
+          if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
+          return a.tie_breaker>b.tie_breaker;
+        } else if (order_strategy==1) {
+          if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
+          if (h1!=h2) return h1<h2;
+          return a.tie_breaker>b.tie_breaker;
+        } else {
+          std::cerr<<"unknown strategy"<<std::endl;
+          exit(-1);
+        }
 
-  // });
+  });
 
   search_tree.push(new LNode());
 
