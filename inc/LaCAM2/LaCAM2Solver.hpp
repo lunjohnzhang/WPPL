@@ -82,6 +82,16 @@ public:
         timestep = 0;
         delete MT;
         MT = new std::mt19937(read_param_json(config,"seed",0));
+
+        for (int i=0;i<env.num_of_agents;++i) {
+            auto & agent_info=(*agent_infos)[i];
+            agent_info.goal_location=-1;
+            agent_info.elapsed=-1;
+            agent_info.tie_breaker=-1;
+            agent_info.stuck_order=0;
+        }
+
+
         // next_config = Config();
         // agent_infos.clear();
 
