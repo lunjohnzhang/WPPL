@@ -14,12 +14,13 @@ GlobalManager::GlobalManager(
     bool ALNS, double decay_factor, double reaction_factor,
     string init_algo_name, string replan_algo_name, bool sipp,
     int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
+    bool has_disabled_agents,
     int screen
 ): 
     instance(instance), path_table(instance.map_size,window_size_for_PATH), HT(HT), map_weights(map_weights),
     init_algo_name(init_algo_name), replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
-    screen(screen), agent_infos(agent_infos) {
+    screen(screen), agent_infos(agent_infos), has_disabled_agents(has_disabled_agents) {
 
     num_threads=omp_get_max_threads();
 
@@ -42,6 +43,7 @@ GlobalManager::GlobalManager(
             instance, agents, HT, map_weights, agent_infos,
             replan_algo_name, sipp,
             window_size_for_CT, window_size_for_CAT, window_size_for_PATH,
+            has_disabled_agents,
             screen
         );
         local_optimizers.push_back(local_optimizer);

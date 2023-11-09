@@ -174,6 +174,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
             read_param_json<int>(config,"window_size_for_CT"),
             read_param_json<int>(config,"window_size_for_CAT"),
             read_param_json<int>(config,"window_size_for_PATH"),
+            lacam2_solver->max_agents_in_use!=env.num_of_agents, // TODO: has disabled agents
             0 // TODO: screen
         );
     } else {

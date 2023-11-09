@@ -11,11 +11,13 @@ LocalOptimizer::LocalOptimizer(
     std::shared_ptr<vector<float> > map_weights, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
     string replan_algo_name, bool sipp,
     int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
+    bool has_disabled_agents,
     int screen
 ):
     instance(instance), path_table(instance.map_size,window_size_for_CT), agents(agents), HT(HT), map_weights(map_weights), agent_infos(agent_infos),
     replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
+    has_disabled_agents(has_disabled_agents),
     screen(screen) {
 
     // TODO(rivers): for agent_id, we just use 0 to initialize the path planner. but we need to change it (also starts and goals) everytime before planning
@@ -86,9 +88,11 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter
     auto shuffled_agents = neighbor.agents;
     std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
 
-    std::stable_sort(shuffled_agents.begin(), shuffled_agents.end(), [&](int a, int b) {
-        return (*agent_infos)[a].disabled<(*agent_infos)[b].disabled; // not disabled first.
-    });
+    if (has_disabled_agents) {
+        std::stable_sort(shuffled_agents.begin(), shuffled_agents.end(), [&](int a, int b) {
+            return (*agent_infos)[a].disabled<(*agent_infos)[b].disabled; // not disabled first.
+        });
+    }
     // TODO: we need also to remove the cost of disabled agents.
 
     if (screen >= 2) {
