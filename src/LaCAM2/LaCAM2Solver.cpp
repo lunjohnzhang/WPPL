@@ -21,15 +21,15 @@ void LaCAM2Solver::initialize(const SharedEnvironment & env) {
 
     // random select some agents to be disabled
 
-    std::vector<int> agents_id;
+    std::vector<int> agents_ids;
     for (int i=0;i<env.num_of_agents;++i) {
-        agents_id.push_back(i);
+        agents_ids.push_back(i);
     }
-    std::random_shuffle(agents_id.begin(),agents_id.end());
+    std::random_shuffle(agents_ids.begin(),agents_ids.end());
 
     int disabled_agents_num=env.num_of_agents-max_agents_in_use;
     for (int i=0;i<disabled_agents_num;++i) {
-        (*agent_infos)[i].disabled=true;
+        (*agent_infos)[agents_ids[i]].disabled=true;
     }
     std::cout<<"#disabled agents: "<<disabled_agents_num<<std::endl;
 }
