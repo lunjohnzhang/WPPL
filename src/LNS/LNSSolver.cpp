@@ -226,7 +226,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
             lns->agents[i].path.nodes.emplace_back(paths[i][j].location,paths[i][j].orientation);
             if (paths[i][j].location==env.goal_locations[i][0].first){
                 goal_arrived=true;
-                // break;
+                break;
             }
         }
         // TODO(rivers): it is not correct on weighted maps

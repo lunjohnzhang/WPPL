@@ -15,6 +15,7 @@
             "value": "scripts/random_weight_010.w"
         }
     ],
+    "max_agents_in_use": -1,
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.9,
