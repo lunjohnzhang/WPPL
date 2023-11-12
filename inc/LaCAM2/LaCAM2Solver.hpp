@@ -38,6 +38,7 @@ public:
     std::shared_ptr<std::vector<AgentInfo> > agent_infos;
 
     int max_agents_in_use;
+    bool disable_corner_target_agents;
 
     // Config next_config;
 
@@ -56,13 +57,14 @@ public:
 
     int get_neighbor_orientation(int loc1,int loc2);
 
-    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<float> > & map_weights, int max_agents_in_use, nlohmann::json & config):
+    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<float> > & map_weights, int max_agents_in_use, bool disable_corner_target_agents, nlohmann::json & config):
         HT(HT),
         map_weights(map_weights),
         action_model(env),executor(env),slow_executor(env),
         config(config),
         MT(new std::mt19937(read_param_json<uint>(config,"seed",0))),
-        max_agents_in_use(max_agents_in_use) {
+        max_agents_in_use(max_agents_in_use),
+        disable_corner_target_agents(disable_corner_target_agents) {
             
     };
 

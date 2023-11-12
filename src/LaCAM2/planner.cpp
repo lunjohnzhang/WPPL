@@ -16,7 +16,7 @@ LNode::LNode(LNode* parent, uint i, const std::tuple<Vertex*,int > & t)
 uint HNode::HNODE_CNT = 0;
 
 // for high-level
-HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, float _g,
+HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Instance * ins, HNode* _parent, float _g,
              float _h, const uint _d, int _order_strategy)
     : C(_C),
       parent(_parent),
@@ -54,6 +54,34 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
   //   order[i]=std::get<6>(scores[i]);
   // }
 
+
+  // std::vector<bool> disabled(N,false);
+  // for (int aid=0;aid<N;++aid) {
+  //   auto & a=ins->agent_infos[aid];
+  //   if (ins->goals.locs[aid]->neighbor.size()<=1) {
+  //     ins->goals.locs[aid]=C.locs[aid];
+  //     disabled[aid]=true;
+  //   }
+  //   // if (C.locs[aid]->neighbor.size()<=1) {
+  //   //   ins->goals.locs[aid]=C.locs[aid];
+  //   //   disabled[aid]=true;
+  //   // }
+
+  //   // int x=ins->goals.locs[aid]->index%ins->G.width;
+  //   // int y=ins->goals.locs[aid]->index/ins->G.width;
+  //   // if (x>=29 && y>=29) {
+  //   //   ins->goals.locs[aid]=C.locs[aid];
+  //   //   disabled[aid]=true;
+  //   // }
+  // }
+
+  for (int aid=0;aid<N;++aid) {
+    if (ins->agent_infos[aid].disabled) {
+      ins->goals.locs[aid]=C.locs[aid];
+    }
+  }
+
+
   // set order
   // TODO(rivers_: probably we should set a basic ordering at the begining, because it is time consuming to sort everytime with large-scale agents
   std::iota(order.begin(), order.end(), 0);
@@ -62,6 +90,8 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
         const AgentInfo & b=ins->agent_infos[j];
 
         if (a.disabled!=b.disabled) return a.disabled<b.disabled; // not disabled first.
+
+        // if (disabled[i]!=disabled[j]) return disabled[i]<disabled[j];
 
         if (C.arrivals[i]!=C.arrivals[j]) return C.arrivals[i]<C.arrivals[j];
 
@@ -74,8 +104,8 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
         float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
         float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
 
-        // int h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
-        // int h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
+        // float h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
+        // float h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
 
 
         if (order_strategy==0) {
@@ -124,7 +154,7 @@ HNode::~HNode()
   }
 }
 
-Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline,
+Planner::Planner(Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline,
                  std::mt19937* _MT, const int _verbose,
                  const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic)
     : ins(_ins),

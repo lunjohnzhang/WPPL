@@ -16,6 +16,7 @@
         }
     ],
     "max_agents_in_use": -1,
+    "disable_corner_target_agents": true,
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.9,

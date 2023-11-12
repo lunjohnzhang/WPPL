@@ -59,14 +59,14 @@ struct HNode {
   
   int order_strategy;
 
-  HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, float _g,
+  HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Instance * ins, HNode* _parent, float _g,
         float _h, const uint _d, int order_strategy);
   ~HNode();
 };
 using HNodes = std::vector<HNode*>;
 
 struct Planner {
-  const Instance* ins;
+  Instance* ins;
   const Deadline* deadline;
   std::mt19937* MT;
   const int verbose;
@@ -94,7 +94,7 @@ struct Planner {
 
   float get_cost_move(int pst,int ped);
 
-  Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline, std::mt19937* _MT,
+  Planner(Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline, std::mt19937* _MT,
           const int _verbose = 0,
           // other parameters
           const Objective _objective = OBJ_NONE,

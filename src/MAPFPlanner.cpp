@@ -226,7 +226,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         if (max_agents_in_use==-1) {
             max_agents_in_use=env->num_of_agents;
         }
-        lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,config["LaCAM2"]);
+        bool disable_corner_target_agents=read_param_json<bool>(config,"disable_corner_target_agents",false);
+        lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,disable_corner_target_agents,config["LaCAM2"]);
         lacam2_solver->initialize(*env);
         cout<<"LaCAMSolver2 initialized"<<endl;
     } else if (lifelong_solver_name=="LNS") {
@@ -241,7 +242,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         if (max_agents_in_use==-1) {
             max_agents_in_use=env->num_of_agents;
         }
-        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,config["LNS"]["LaCAM2"]);
+        bool disable_corner_target_agents=read_param_json<bool>(config,"disable_corner_target_agents",false);
+        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,disable_corner_target_agents,config["LNS"]["LaCAM2"]);
         lacam2_solver->initialize(*env);
         lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver);
         lns_solver->initialize(*env);

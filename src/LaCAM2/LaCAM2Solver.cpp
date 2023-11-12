@@ -20,7 +20,6 @@ void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     G = std::make_shared<Graph>(env);
 
     // random select some agents to be disabled
-
     std::vector<int> agents_ids;
     for (int i=0;i<env.num_of_agents;++i) {
         agents_ids.push_back(i);
@@ -31,21 +30,31 @@ void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     for (int i=0;i<disabled_agents_num;++i) {
         (*agent_infos)[agents_ids[i]].disabled=true;
     }
+
     std::cout<<"#disabled agents: "<<disabled_agents_num<<std::endl;
 }
 
 Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths) {
     auto starts=vector<std::pair<uint,int> >();
     auto goals=vector<std::pair<uint,int> >();
+
+    int ctr=0;
     for (int i=0;i<env.num_of_agents;++i) {
         starts.emplace_back(env.curr_states[i].location, env.curr_states[i].orientation);
         assert(env.goal_locations[i].size()>0);
         int goal_location=env.goal_locations[i][0].first;
-        if ((*agent_infos)[i].disabled) {
+        auto & agent_info=(*agent_infos)[i];
+        if (disable_corner_target_agents) {
+            // disable agent if its goal is a corner
+            if (G->U[goal_location]->neighbor.size()<=1) {
+                agent_info.disabled=true;
+                ++ctr;
+            }
+        }
+        if (agent_info.disabled) {
             goal_location=env.curr_states[i].location;
         }
         goals.emplace_back(goal_location, -1);
-        auto & agent_info=(*agent_infos)[i];
         // cerr<<"0\trandom-32-32-20.map\t32\t32\t"<<starts[i]%32<<"\t"<<starts[i]/32<<"\t"<<goals[i]%32<<"\t"<<goals[i]/32<<"\t0"<<endl;
         if (goal_location!=agent_info.goal_location){
             agent_info.goal_location=goal_location;
@@ -56,6 +65,7 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
             agent_info.elapsed+=1;
         }
     }
+    std::cout<<"ctr: "<<ctr<<std::endl;
     return Instance(*G, starts, goals, *agent_infos, read_param_json<int>(config,"planning_window",-1), precomputed_paths);
 }
 
