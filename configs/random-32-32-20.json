@@ -2,7 +2,7 @@
     "lifelong_solver_name": [
         {
             "n_agents": 100000,
-            "value": "LNS"
+            "value": "LaCAM2"
         }
     ],
     "map_weights_path": [

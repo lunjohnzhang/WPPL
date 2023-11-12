@@ -101,16 +101,16 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Insta
           if (precomputed_a != precomputed_b) return (int)precomputed_a>(int)precomputed_b;
         }
 
-        float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
-        float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
+        // float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
+        // float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
 
-        // float h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
-        // float h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
+        float h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
+        float h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
 
 
         if (order_strategy==0) {
-          if (h1!=h2) return h1<h2;
           if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
+          if (h1!=h2) return h1<h2;
           return a.tie_breaker>b.tie_breaker;
         } else if (order_strategy==1) {
           if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
