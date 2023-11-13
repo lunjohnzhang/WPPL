@@ -2,8 +2,8 @@
 import json
 import numpy as np
 
-input_fp='../test_warehouse.json'
-output_fp='../test_warehouse_task_curve.png'
+input_fp='../test.json'
+output_fp='../test_task_curve.png'
 
 with open(input_fp) as f:
     data = json.load(f)
@@ -39,7 +39,7 @@ accumulated_tasks_assigned_by_step=np.cumsum(tasks_assigned_by_step)
 accumulated_tasks_completed_by_step=np.cumsum(tasks_completed_by_step)
 
 
-plt.plot(np.arange(len(accumulated_tasks_completed_by_step)),tasks_completed_by_step,label="completed")
+plt.plot(np.arange(len(accumulated_tasks_completed_by_step)),accumulated_tasks_completed_by_step,label="completed")
 
 plt.show()
 

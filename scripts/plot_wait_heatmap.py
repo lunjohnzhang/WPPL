@@ -3,11 +3,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 snapshot_step=5000
-input_fp='test_warehouse_fix_nb.json'
-# output_fn='test_100_lns_weight1_step_{}'.format(snapshot_step)
-h=140
-w=500
+input_fp='../test.json'
+output_fn=input_fp.replace(".json","_wait_map.png")
+wait_heatmap_fn=input_fp.replace(".json","_wait_heatmap.json")
+h=32
+w=32
 
+def save_wait_heatmap(wait_heatmap, wait_heatmap_fn):
+    import json
+    with open(wait_heatmap_fn,'w') as f:
+        json.dump([int(v) for v in wait_heatmap.flatten()],f)
 
 with open(input_fp) as f:
     data = json.load(f)
@@ -49,7 +54,7 @@ tasks=data["tasks"]
 
 MAXT=(len(actual_paths[0])+1)//2
 
-T=snapshot_step
+T=MAXT
 
 arr=np.zeros((team_size,T+1,3),dtype=int)
 
@@ -77,31 +82,14 @@ for aid in range(team_size):
         arr[aid,t+1,1]=y
         arr[aid,t+1,2]=orient
         
-print(wait_heatmap.sum())
+print(wait_heatmap.max(),wait_heatmap.max()/MAXT)
+
+save_wait_heatmap(wait_heatmap,wait_heatmap_fn)
 
 plt.imshow(wait_heatmap)
+
+
+plt.colorbar()
+plt.tight_layout()
+plt.savefig(output_fn)
 plt.show()
-
-# for aid in range(team_size):
-#     events_for_agent=events[aid]
-#     for event in range(len(events_for_agent)-1,-1,-1):
-#         tid,timestep,info=events_for_agent[event]
-#         if info=="assigned":
-#             goal_x = tasks[tid][2]
-#             goal_y = tasks[tid][1]
-#             goal_locs[aid]=goal_y*w+goal_x
-#             break
-
-
-
-# print(arr[0])
-# print("team_size",team_size)
-
-# with open(output_fn+".snapshot",'w') as f:
-#     f.write("{}\n".format(team_size))
-#     for aid in range(team_size):
-#         f.write("{} {} {}\n".format(arr[aid,snapshot_step,0],arr[aid,snapshot_step,1],arr[aid,snapshot_step,2]))
-        
-# with open(output_fn+".goals",'w') as f:
-#     for aid in range(team_size):
-#         f.write("{}\n".format(goal_locs[aid]))
