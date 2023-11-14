@@ -57,6 +57,8 @@ public:
 
     int get_neighbor_orientation(int loc1,int loc2);
 
+    void solution_convert(const SharedEnvironment & env, Solution & solution, std::vector<Path> & paths);
+
     LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<float> > & map_weights, int max_agents_in_use, bool disable_corner_target_agents, nlohmann::json & config):
         HT(HT),
         map_weights(map_weights),
@@ -102,7 +104,7 @@ public:
 
     Action get_action_from_states(const State & state, const State & next_state){
 #ifndef NO_ROT
-        assert(state.timestep+1==next_state.timestep);
+        // assert(state.timestep+1==next_state.timestep);
         
         if (state.location==next_state.location){
             // either turn or wait

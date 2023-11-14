@@ -251,6 +251,16 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
             }
         // }
 
+        // std::cout<<"old:"<<std::endl;
+        // for (int i=0;i<env.num_of_agents;++i) {
+        //     std::cout<<i<<" "<<paths[i]<<std::endl;
+        // }
+        solution_convert(env,best_solution,paths);
+        std::cout<<"replan:"<<paths[0].size()<<std::endl;
+        // for (int i=0;i<env.num_of_agents;++i) {
+        //     std::cout<<i<<" "<<paths[i]<<std::endl;
+        // }
+
         // // failure
         // if (solution.empty()) {
         //     info(1, verbose, "failed to solve");
@@ -278,20 +288,20 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         // } else {  
         //     next_config=solution[1];
         // }
-        ONLYDEV(g_timer.record_p("lacam2_plan_copy_path_s");)
-        for (int i=0;i<env.num_of_agents;++i) {
-            // cerr<<"xagent "<<i<<": ";
-            // for (int j=1;j<solution.size();++j) {
-            //     cerr<<solution[j][i]->index<<" ";
-            // }
-            // cerr<<endl;
-            int j=best_solution.size()==1?0:1;
-            for (;j<best_solution.size();++j) {
-                paths[i].emplace_back(best_solution[j].locs[i]->index,env.curr_states[i].timestep+j,best_solution[j].orients[i]);
-            }
-        }
-        ONLYDEV(g_timer.record_d("lacam2_plan_copy_path_s","lacam2_plan_copy_path");)
-        ONLYDEV(g_timer.record_d("lacam2_plan_post_s","lacam2_plan_post");)
+        // ONLYDEV(g_timer.record_p("lacam2_plan_copy_path_s");)
+        // for (int i=0;i<env.num_of_agents;++i) {
+        //     // cerr<<"xagent "<<i<<": ";
+        //     // for (int j=1;j<solution.size();++j) {
+        //     //     cerr<<solution[j][i]->index<<" ";
+        //     // }
+        //     // cerr<<endl;
+        //     int j=best_solution.size()==1?0:1;
+        //     for (;j<best_solution.size();++j) {
+        //         paths[i].emplace_back(best_solution[j].locs[i]->index,env.curr_states[i].timestep+j,best_solution[j].orients[i]);
+        //     }
+        // }
+        // ONLYDEV(g_timer.record_d("lacam2_plan_copy_path_s","lacam2_plan_copy_path");)
+        // ONLYDEV(g_timer.record_d("lacam2_plan_post_s","lacam2_plan_post");)
     
 
         // if (!read_param_json<bool>(config,"consider_rotation")) {
@@ -388,6 +398,70 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
 
 }
 
+void LaCAM2Solver::solution_convert(const SharedEnvironment & env, Solution & solution, std::vector<Path> & _paths) {
+
+    int num_steps=0;
+
+    int N=paths.size();
+
+    // int planning_window=read_param_json<int>(config,"planning_window");
+
+    auto & curr_config=solution[0];
+
+    std::vector<::State> curr_states;
+    for (int aid=0;aid<N;++aid) {
+        curr_states.emplace_back(curr_config.locs[aid]->index,0,curr_config.orients[aid]);
+        // _paths[aid].push_back(curr_states[aid]);
+    }
+
+    // std::cout<<solution.size()<<std::endl;
+
+    for (int i=1;i<solution.size();++i) {
+        auto & next_config=solution[i];
+        while (true) {
+            std::vector<::State> planned_next_states;
+            std::vector<::State> next_states;
+        
+            planned_next_states.reserve(N);
+            next_states.reserve(N);
+
+            for (int i=0;i<N;++i){
+                planned_next_states.emplace_back(next_config.locs[i]->index,-1,-1);
+                next_states.emplace_back(-1,-1,-1);
+            }
+
+            executor.execute(&curr_states,&planned_next_states,&next_states);
+
+            curr_states=next_states;
+            ++num_steps;
+
+            for (int aid=0;aid<N;++aid) {
+                _paths[aid].push_back(next_states[aid]);
+            }
+
+            // if (num_steps>=planning_window) {
+            //     break;
+            // }
+
+            // check if arrived
+            bool arrived=true;
+            for (int aid=0;aid<N;++aid) {
+                if (planned_next_states[aid].location!=next_states[aid].location) {
+                    arrived=false;
+                    break;
+                }
+            }
+
+            if (arrived) {
+                break;
+            }
+        }
+
+        // if (num_steps>=planning_window) {
+        //     break;
+        // }
+    }
+}
 
 void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action> & actions) {
     // check empty
@@ -463,8 +537,18 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
         timestep+=1;
     }
 
+    std::cout<<"timestep: "<<timestep<<" "<<paths[0].size()<<std::endl;
+
     // TODO(hj): when we need to replan?
-    need_replan=true;
+    if (timestep==paths[0].size()-1) {
+        need_replan=true;
+    } else {
+        need_replan=false;
+    }
+
+    std::cout<<"need_replan"<<need_replan<<std::endl;
+
+    // need_replan=true;
    
     // need_replan=false;
 
