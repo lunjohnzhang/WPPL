@@ -2,8 +2,8 @@
 import json
 import numpy as np
 
-input_fp='../test.json'
-output_fp='../test_task_curve.png'
+input_fp='test_random_800_w010.json'
+output_fp=input_fp.replace(".json","_task_curve.png")
 
 with open(input_fp) as f:
     data = json.load(f)

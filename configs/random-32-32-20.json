@@ -7,12 +7,16 @@
     ],
     "map_weights_path": [
         {
-            "n_agents": 300,
+            "n_agents": 200,
             "value": "scripts/random_weight_003.w"
         },
         {
             "n_agents": 500,
             "value": "scripts/random_weight_011.w"
+        },
+        {
+            "n_agents": 600,
+            "value": "scripts/random_weight_012.w"
         },
         {
             "n_agents": 1000000,

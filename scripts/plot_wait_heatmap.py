@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 snapshot_step=5000
-input_fp='../test.json'
+input_fp='test_random_800_w010.json'
 output_fn=input_fp.replace(".json","_wait_map.png")
 wait_heatmap_fn=input_fp.replace(".json","_wait_heatmap.json")
 h=32
