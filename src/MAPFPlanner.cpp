@@ -33,7 +33,12 @@ struct cmp {
 
 void MAPFPlanner::load_configs() {
     // load configs
-	string config_path="configs/"+env->map_name.substr(0,env->map_name.find_last_of("."))+".json";
+    char * config_root_path=getenv("CONFIG_ROOT_PATH");
+    if (config_root_path==NULL) {
+        config_root_path="configs/";
+    }
+
+	string config_path=config_root_path+env->map_name.substr(0,env->map_name.find_last_of("."))+".json";
     std::ifstream f(config_path);
     try
     {
@@ -45,7 +50,7 @@ void MAPFPlanner::load_configs() {
             std::cout<<"load weight from "<<env_weight_path<<std::endl;
         }
 
-        std::cerr<<config<<std::endl;
+        std::cout<<config<<std::endl;
         string s=config.dump();
         std::replace(s.begin(),s.end(),',','|');
         config["details"]=s;
@@ -53,8 +58,8 @@ void MAPFPlanner::load_configs() {
     }
     catch (nlohmann::json::parse_error error)
     {
-        std::cerr << "Failed to load " << config_path << std::endl;
-        std::cerr << "Message: " << error.what() << std::endl;
+        std::cout << "Failed to load configs" << config_path << std::endl;
+        std::cout << "Message: " << error.what() << std::endl;
         exit(1);
     }
 }
@@ -177,8 +182,8 @@ std::string MAPFPlanner::load_map_weights(string weights_path) {
         }
         catch (nlohmann::json::parse_error error)
         {
-            std::cerr << "Failed to load " << weights_path << std::endl;
-            std::cerr << "Message: " << error.what() << std::endl;
+            std::cout << "Failed to load weights: " << weights_path << std::endl;
+            std::cout << "Message: " << error.what() << std::endl;
             exit(1);
         }
 
