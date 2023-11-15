@@ -74,7 +74,11 @@ cmd=f"{EXECUTABLE} --inputFile {INPUT_FILE} -o {OUTPUT_FILE} --simulationTime {S
 ret=py_driver.run(cmd=cmd,weights=compressed_weights_json_str)
 
 import json
+import numpy as np
 
 analysis=json.loads(ret)
+print(analysis.keys())
+print(np.array(analysis["tile_usage"]).shape)
+print(np.array(analysis["edge_pair_usage"]).shape)
 
 print(analysis["throughput"],analysis["edge_pair_usage_mean"],analysis["edge_pair_usage_std"])

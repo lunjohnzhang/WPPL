@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.4)
 
-project(lifelong)
+project(lifelong_comp)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -68,9 +68,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion")
 #     file(GLOB PY_SOURCES "python/*.cpp")
 #     list(FILTER PY_SOURCES EXCLUDE REGEX ".*python/MAPFbinding\.cpp")
 
-#     add_executable(lifelong  ${PY_SOURCES} ${SOURCES})
-#     target_link_libraries(lifelong PRIVATE pybind11::embed ${Boost_LIBRARIES})
-#     target_compile_definitions(lifelong PRIVATE PYTHON=${PYTHON_FLAG})
+#     add_executable(lifelong_comp  ${PY_SOURCES} ${SOURCES})
+#     target_link_libraries(lifelong_comp PRIVATE pybind11::embed ${Boost_LIBRARIES})
+#     target_compile_definitions(lifelong_comp PRIVATE PYTHON=${PYTHON_FLAG})
 
 #     if (COPY_PY_PATH_CONFIG)
 #         file(COPY "config.json" DESTINATION ${CMAKE_BINARY_DIR})
@@ -107,11 +107,11 @@ ENDIF()
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wfatal-errors")
 
-add_executable(lifelong ${SOURCES} )
-target_link_libraries(lifelong ${Boost_LIBRARIES})
-target_link_libraries(lifelong OpenMP::OpenMP_CXX)
-target_link_libraries(lifelong spdlog::spdlog)
-target_compile_definitions(lifelong PRIVATE PYTHON=${PYTHON_FLAG})
+add_executable(lifelong_comp ${SOURCES} )
+target_link_libraries(lifelong_comp ${Boost_LIBRARIES})
+target_link_libraries(lifelong_comp OpenMP::OpenMP_CXX)
+target_link_libraries(lifelong_comp spdlog::spdlog)
+target_compile_definitions(lifelong_comp PRIVATE PYTHON=${PYTHON_FLAG})
 
 IF (MAP_OPT)
     list(FILTER SOURCES EXCLUDE REGEX "src/driver\.cpp")
@@ -133,14 +133,14 @@ ENDIF()
 add_custom_target(clean_all
     COMMAND ${CMAKE_BUILD_TOOL} clean
     COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/CMakeCache.txt
-    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/lifelong
+    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/lifelong_comp
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/build
     COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/*.so
 )
 
 
 set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
-    "${CMAKE_BINARY_DIR}/lifelong;
+    "${CMAKE_BINARY_DIR}/lifelong_comp;
      ${CMAKE_BINARY_DIR}/build;
      ${CMAKE_BINARY_DIR}/*.so"
 )
