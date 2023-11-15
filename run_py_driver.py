@@ -77,4 +77,4 @@ import json
 
 analysis=json.loads(ret)
 
-print(analysis["throughput"])
+print(analysis["throughput"],analysis["edge_pair_usage_mean"],analysis["edge_pair_usage_std"])

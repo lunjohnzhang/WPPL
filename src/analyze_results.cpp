@@ -23,10 +23,10 @@ int main(int argc, char ** argv){
         exit(1);
     }
 
-    auto analysis=analyze_result_json(result, h, w);
+    // auto analysis=analyze_result_json(result, h, w);
 
-    std::ofstream f(out_path,std::ios_base::trunc |std::ios_base::out);
-    f << std::setw(4) << analysis;
+    // std::ofstream f(out_path,std::ios_base::trunc |std::ios_base::out);
+    // f << std::setw(4) << analysis;
 
 
     // std::cout<<analysis["throughput"]<<std::endl;

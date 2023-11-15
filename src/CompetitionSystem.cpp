@@ -563,7 +563,7 @@ nlohmann::json BaseSystem::analyzeResults()
     }
     js["tasks"] = tasks;
 
-    return analyze_result_json(js, map.rows, map.cols);
+    return analyze_result_json(js, map);
 }
 
 #endif

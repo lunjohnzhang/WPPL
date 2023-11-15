@@ -1,5 +1,6 @@
 #include "common.h"
 #include "nlohmann/json.hpp"
+#include "Grid.h"
 
 int get_orient_idx(string o) {
     if (o=="E") return 0;
@@ -37,24 +38,86 @@ void move(int & x,int & y,int & o, char action) {
 
 }
 
-nlohmann::json analyze_result_json(const nlohmann::json & result, int h, int w) {
+double get_sum(std::vector<double> v)
+{
+    double sum = std::accumulate(v.begin(), v.end(), 0.0);
+    return sum;
+}
+
+std::tuple<double, double> get_mean_std(std::vector<double> v)
+{
+    if (v.size() == 0)
+        return std::make_tuple(0, 0);
+    double sum = get_sum(v);
+    double mean = sum / v.size();
+
+    std::vector<double> diff(v.size());
+    std::transform(v.begin(), v.end(), diff.begin(),
+                    [mean](double x)
+                    { return x - mean; });
+
+    double sq_sum = std::inner_product(diff.begin(), diff.end(),
+                                        diff.begin(), 0.0);
+    double sigma = sqrt(sq_sum / v.size());
+    return std::make_tuple(mean, sigma);
+}
+
+
+int get_Manhattan_distance(int loc1, int loc2, int cols) {
+    return abs(loc1 / cols - loc2 / cols) + abs(loc1 % cols - loc2 % cols);
+}
+
+tuple<vector<double>, double, double> edge_pair_usage_mean_std(Grid & grid, vector<vector<double>> &edge_usage)
+{
+    // For each pair of valid edges (i, j) and (j, i), calculate the absolute
+    // of their edge usage difference, and calculate mean and std.
+    vector<double> edge_pair_usage;
+    int valid_edge_id = 0;
+    int n_vertices = grid.rows * grid.cols;
+    for (int i = 0; i < n_vertices; i++)
+	{
+        // Start from i+1 to ignore wait actions
+        for (int j = i + 1; j < n_vertices; j++)
+        {
+            if (grid.map[i] ==0 && grid.map[j] == 0 &&
+                get_Manhattan_distance(i, j, grid.cols) <= 1)
+            {
+                edge_pair_usage.push_back(abs(edge_usage[i][j] - edge_usage[j][i]));
+                valid_edge_id += 1;
+            }
+        }
+	}
+    // cout << "Number of valid edge pairs: " << edge_pair_usage.size() << endl;
+    // cout << "End of valid edge pair counter: " << valid_edge_id << endl;
+    double mean, std;
+    std::tie(mean, std) = get_mean_std(edge_pair_usage);
+    return make_tuple(edge_pair_usage, mean, std);
+}
+
+nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
+
+    int h=grid.rows;
+    int w=grid.cols;
+
     // objective: throughput
     double throughput=result["numTaskFinished"].get<double>();
-    std::cerr<<"throughput: "<<throughput<<std::endl;
+    auto actions_str = result["actualPaths"][0].get<std::string>();
+    int T=actions_str.size()/2+1;
+    // std::cout<<"T: "<<T<<std::endl;
+
+    double avg_throughput=throughput/T;
+    // std::cout<<"total throughput: "<<throughput<<" avg throughput:"<<avg_throughput<<std::endl;
 
     // statistics:
     // 1. vertex usage
     // 2. edge usage
+    // 3. 
     int map_size=h*w;
     std::vector<double> vertex_usage(map_size,0);
     std::vector<std::vector<double> > edge_usage(map_size, std::vector<double>(map_size,0));
 
     int team_size=result["teamSize"].get<int>();
-    std::cerr<<"team size: "<<team_size<<std::endl;
-
-    auto actions_str = result["actualPaths"][0].get<std::string>();
-    int T=actions_str.size()/2+1;
-    std::cerr<<"T: "<<T<<std::endl;
+    // std::cout<<"team size: "<<team_size<<std::endl;
 
     for (int aid=0;aid<team_size;++aid) {
         auto actions_str = result["actualPaths"][aid].get<std::string>();
@@ -99,11 +162,17 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, int h, int w) 
         }
     }
 
+    double edge_pair_usage_mean, edge_pair_usage_std;
+    vector<double> edge_pair_usage;
+    std::tie(edge_pair_usage, edge_pair_usage_mean, edge_pair_usage_std) = edge_pair_usage_mean_std(grid, edge_usage);
+
     nlohmann::json analysis;
     analysis = {
-        {"throughput", throughput},
-        {"vertexUsage", vertex_usage},
-        {"edgeUsage", edge_usage}
+        {"throughput", avg_throughput},
+        {"tile_usage", vertex_usage},
+        {"edge_pair_usage", edge_pair_usage},
+        {"edge_pair_usage_mean", edge_pair_usage_mean},
+        {"edge_pair_usage_std", edge_pair_usage_std}
     };
     return analysis;
 }

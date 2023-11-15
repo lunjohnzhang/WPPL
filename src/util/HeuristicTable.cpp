@@ -67,7 +67,7 @@ void HeuristicTable::compute_weighted_heuristics(){
         planners[i]=new RIVERS::SPATIAL::SpatialAStar(env,n_orientations,*map_weights);
     }
 
-    cerr<<"created"<<endl;
+    // cerr<<"created"<<endl;
 
     int ctr=0;
     int step=100;
@@ -90,7 +90,7 @@ void HeuristicTable::compute_weighted_heuristics(){
                 auto end = std::chrono::steady_clock::now();
                 double elapse=std::chrono::duration<double>(end-start).count();
                 double estimated_remain=elapse/ctr*(loc_size-ctr);
-                cout<<ctr<<"/"<<loc_size<<" completed in "<<elapse<<"s. estimated time to finish all: "<<estimated_remain<<"s.  estimated total time: "<<(estimated_remain+elapse)<<"s."<<endl;
+                // cout<<ctr<<"/"<<loc_size<<" completed in "<<elapse<<"s. estimated time to finish all: "<<estimated_remain<<"s.  estimated total time: "<<(estimated_remain+elapse)<<"s."<<endl;
             }
         }
 

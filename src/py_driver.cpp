@@ -36,7 +36,7 @@ void sigint_handler(int a)
 }
 
 
-int get_Manhattan_distance(int loc1, int loc2, int cols) {
+int _get_Manhattan_distance(int loc1, int loc2, int cols) {
     return abs(loc1 / cols - loc2 / cols) + abs(loc1 % cols - loc2 % cols);
 }
 
@@ -64,7 +64,7 @@ std::shared_ptr<std::vector<float> > weight_format_conversion(Grid & grid, std::
             int dir=dirs[d];
             if (
                 0<=i+dir && i+dir<grid.map.size() &&
-                get_Manhattan_distance(i, i+dir, grid.cols) <= 1 &&
+                _get_Manhattan_distance(i, i+dir, grid.cols) <= 1 &&
                 grid.map[i+dir] != 1
             ) {
                 float weight = weights.at(j);
