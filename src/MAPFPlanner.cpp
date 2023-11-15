@@ -50,7 +50,7 @@ void MAPFPlanner::load_configs() {
             std::cout<<"load weight from "<<env_weight_path<<std::endl;
         }
 
-        std::cout<<config<<std::endl;
+        // std::cout<<config<<std::endl;
         string s=config.dump();
         std::replace(s.begin(),s.end(),',','|');
         config["details"]=s;
