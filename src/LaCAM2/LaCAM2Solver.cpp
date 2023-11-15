@@ -45,6 +45,8 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
         int goal_location=env.goal_locations[i][0].first;
         auto & agent_info=(*agent_infos)[i];
         if (disable_corner_target_agents) {
+            int g_x=goal_location%env.cols;
+            int g_y=goal_location/env.cols;
             // disable agent if its goal is a corner
             if (G->U[goal_location]->neighbor.size()<=1) {
                 agent_info.disabled=true;
@@ -145,7 +147,7 @@ float LaCAM2Solver::eval_solution(const Instance & instance, const Solution & so
     return cost;
 }
 
-void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths){
+void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths, std::vector<::State> * starts, std::vector<::State> * goals){
     ONLYDEV(g_timer.record_p("lacam2_plan_pre_s");)
     // std::cerr<<"random :"<<get_random_int(MT,0,100)<<std::endl;
 
@@ -158,30 +160,40 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
     // }
     // g_timer.record_d("stats_tree_s","stats_tree");
 
-    if (timestep==0) {
-        for (int i=0;i<env.num_of_agents;++i) {
-            paths[i].push_back(env.curr_states[i]);
-        }
-    }
-
-    if (precomputed_paths!=nullptr) {
-        // we need to check the initial states are the same.
-        for (int i=0;i<env.num_of_agents;++i) {
-            if ((*precomputed_paths)[i].size()==0 || (*precomputed_paths)[i][0].location!=env.curr_states[i].location) {
-                cerr<<"agent "<<i<<" has zero-length precomputed paths or initial states are not the same!"<<endl;
-                exit(-1);
-            }
-        }
-    }
+    // if (timestep==0) {
+    //     for (int i=0;i<env.num_of_agents;++i) {
+    //         paths[i].push_back(env.curr_states[i]);
+    //     }
+    // }
 
     if (need_replan) {
         const int verbose = 10;
         const int time_limit_sec = 2;
         ONLYDEV(g_timer.record_p("lacam_build_instance_s");)
         auto instance = build_instance(env, precomputed_paths);
+        if (starts!=nullptr) {
+            if (goals==nullptr) {
+                std::cerr<<"not supported now! goals must be specified as well"<<endl;
+                exit(-1);
+            }
+            instance.set_starts_and_goals(starts,goals);
+        }
+
+        if (precomputed_paths!=nullptr) {
+            // we need to check the initial states are the same.
+            for (int i=0;i<env.num_of_agents;++i) {
+                if ((*precomputed_paths)[i].size()==0 || (*precomputed_paths)[i][0].location!=instance.starts.locs[i]->index) {
+                    cerr<<"agent "<<i<<" has zero-length precomputed paths or initial states are not the same!"<<endl;
+                    cerr<<"size: "<<(*precomputed_paths)[i].size()<<endl;
+                    cerr<<"states: "<<(*precomputed_paths)[i][0]<<" vs "<<instance.starts.locs[i]<<endl;
+                    exit(-1);
+                }
+            }
+        }
+
         ONLYDEV(g_timer.record_d("lacam_build_instance_s","lacam_build_instance");)
         const auto deadline = Deadline(time_limit_sec * 1000);
-        bool use_swap=false;
+        bool use_swap=false; // TODO: we need try use_swap
         bool use_orient_in_heuristic=read_param_json<bool>(config,"use_orient_in_heuristic");
 
         vector<::Path> precomputed_paths;
@@ -282,12 +294,6 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         ONLYDEV(g_timer.record_d("lacam2_plan_print_s","lacam2_plan_print");)
 
 
-        
-        // if (solution.size()==1) {
-        //     next_config=solution[0];
-        // } else {  
-        //     next_config=solution[1];
-        // }
         // ONLYDEV(g_timer.record_p("lacam2_plan_copy_path_s");)
         // for (int i=0;i<env.num_of_agents;++i) {
         //     // cerr<<"xagent "<<i<<": ";
@@ -295,9 +301,11 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         //     //     cerr<<solution[j][i]->index<<" ";
         //     // }
         //     // cerr<<endl;
-        //     int j=best_solution.size()==1?0:1;
-        //     for (;j<best_solution.size();++j) {
-        //         paths[i].emplace_back(best_solution[j].locs[i]->index,env.curr_states[i].timestep+j,best_solution[j].orients[i]);
+        //     for (int j=0;j<best_solution.size();++j) {
+        //         paths[i].emplace_back(best_solution[j].locs[i]->index,j,best_solution[j].orients[i]);
+        //     }
+        //     if (paths[i].size()==1) {
+        //         paths[i].emplace_back(paths[i].back().location,paths[i].size(),paths[i].back().orientation);
         //     }
         // }
         // ONLYDEV(g_timer.record_d("lacam2_plan_copy_path_s","lacam2_plan_copy_path");)
@@ -402,16 +410,16 @@ void LaCAM2Solver::solution_convert(const SharedEnvironment & env, Solution & so
 
     int num_steps=0;
 
-    int N=paths.size();
+    int N=_paths.size();
 
-    // int planning_window=read_param_json<int>(config,"planning_window");
+    int planning_window=read_param_json<int>(config,"planning_window");
 
     auto & curr_config=solution[0];
 
     std::vector<::State> curr_states;
     for (int aid=0;aid<N;++aid) {
         curr_states.emplace_back(curr_config.locs[aid]->index,0,curr_config.orients[aid]);
-        // _paths[aid].push_back(curr_states[aid]);
+        _paths[aid].push_back(curr_states[aid]);
     }
 
     // std::cout<<solution.size()<<std::endl;
@@ -439,9 +447,9 @@ void LaCAM2Solver::solution_convert(const SharedEnvironment & env, Solution & so
                 _paths[aid].push_back(next_states[aid]);
             }
 
-            // if (num_steps>=planning_window) {
-            //     break;
-            // }
+            if (num_steps>=planning_window) {
+                break;
+            }
 
             // check if arrived
             bool arrived=true;
@@ -457,9 +465,9 @@ void LaCAM2Solver::solution_convert(const SharedEnvironment & env, Solution & so
             }
         }
 
-        // if (num_steps>=planning_window) {
-        //     break;
-        // }
+        if (num_steps>=planning_window) {
+            break;
+        }
     }
 }
 
@@ -532,7 +540,8 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
 #else
         actions.resize(env.num_of_agents, Action::W);
 #endif
-    } else {
+    } 
+    else {
         // NOTE(hj): only successfully executing a planned step will increase this internal timestep, which is different from the real timestep used in the simulation system.
         timestep+=1;
     }
@@ -584,10 +593,11 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
 
     if (need_replan) {
         for (int i=0;i<env.num_of_agents;++i) {
-            paths[i].resize(timestep+1);
+            // paths[i].resize(timestep+1);
+            paths[i].clear();
+            timestep=0;
         }
     }
-    
 }
 
 

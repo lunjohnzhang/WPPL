@@ -24,7 +24,7 @@ public:
     int total_feasible_timestep = 0;
     int timestep = 0;
     void initialize(const SharedEnvironment & env);
-    void plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr);
+    void plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr, std::vector<::State> * starts=nullptr, std::vector<::State> * goals=nullptr);
     void get_step_actions(const SharedEnvironment & env, vector<Action> & actions);
     // Action get_action_from_states(const State & state, const State & next_state);
     // [end]

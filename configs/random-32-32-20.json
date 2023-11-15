@@ -31,7 +31,7 @@
     "disable_corner_target_agents": true,
     "LNS": {
         "seed": 0,
-        "cutoffTime": 0.9,
+        "cutoffTime": 0.95,
         "screen": 0,
         "initAlgo": "LaCAM2",
         "replanAlgo": "PP",
@@ -63,7 +63,7 @@
     },
     "LaCAM2": {
         "seed": 0,
-        "planning_window": 1,
+        "planning_window": 3,
         "consider_rotation": true,
         "use_orient_in_heuristic": true,
         "use_slow_executor": false,
