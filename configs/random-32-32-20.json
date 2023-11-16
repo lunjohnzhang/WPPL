@@ -1,14 +1,43 @@
 {
     "lifelong_solver_name": [
         {
-            "n_agents": 1000000,
+            "n_agents": 800,
             "value": "LaCAM2"
         }
     ],
-    "map_weights_path": "../scripts/random_weight_001.w",
+    "map_weights_path": [
+        {
+            "n_agents": 200,
+            "value": "../scripts/random_weight_003.w"
+        },
+        {
+            "n_agents": 500,
+            "value": "../scripts/random_weight_011.w"
+        },
+        {
+            "n_agents": 600,
+            "value": "../scripts/random_weight_012.w"
+        },
+        {
+            "n_agents": 1000000,
+            "value": "../scripts/random_weight_011.w"
+        }
+    ],
+    "max_task_completed": [
+        {
+            "n_agents": 600,
+            "value": 10000000
+        },
+        {
+            "n_agents": 1000000,
+            "value": 10000000
+        }
+    ],
+    "max_agents_in_use": -1,
+    "disable_corner_target_agents": true,
     "LNS": {
         "seed": 0,
-        "cutoffTime": 0.9,
+        "cutoffTime": 0.95,
         "screen": 0,
         "initAlgo": "LaCAM2",
         "replanAlgo": "PP",
@@ -23,9 +52,12 @@
         "window_size_for_CT": 10,
         "window_size_for_CAT": 10,
         "window_size_for_PATH": 10,
+        "execution_window": 1,
         "LaCAM2": {
             "seed": 0,
             "planning_window": 10,
+            "execution_window": 1,
+            "use_external_executor": false,
             "consider_rotation": false,
             "use_orient_in_heuristic": true,
             "use_slow_executor": false,
@@ -40,7 +72,9 @@
     },
     "LaCAM2": {
         "seed": 0,
-        "planning_window": 1,
+        "planning_window": 3,
+        "execution_window": 3,
+        "use_external_executor": true,
         "consider_rotation": true,
         "use_orient_in_heuristic": true,
         "use_slow_executor": false,

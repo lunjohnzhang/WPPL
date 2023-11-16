@@ -17,8 +17,9 @@ public:
     float tie_breaker;
     int id;
     int stuck_order;
+    bool disabled;
 
-    AgentInfo():id(-1),goal_location(-1),elapsed(-1),tie_breaker(-1), stuck_order(0){};
+    AgentInfo():id(-1),goal_location(-1),elapsed(-1),tie_breaker(-1), stuck_order(0), disabled(false) {};
 };
 
 
@@ -50,6 +51,8 @@ struct Instance {
     std::vector<::Path> * precomputed_paths=nullptr
   );
   ~Instance() {}
+
+  void set_starts_and_goals(std::vector<::State> * starts, std::vector<::State> * goals);
 
   // simple feasibility check of instance
   bool is_valid(const int verbose = 0) const;

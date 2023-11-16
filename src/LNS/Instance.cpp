@@ -40,6 +40,14 @@ void Instance::set_starts_and_goals(const SharedEnvironment & env) {
 	}
 }
 
+void Instance::set_starts_and_goals(const std::vector<::State> & starts, const std::vector<::State> & goals) {
+	for (int i=0;i<num_of_agents;++i){
+		start_locations[i]=starts[i].location;
+		start_orientations[i]=starts[i].orientation;
+		goal_locations[i]=goals[i].location;
+	}
+}
+
 Instance::Instance(const string& map_fname, const string& agent_fname, 
 	int num_of_agents, int num_of_rows, int num_of_cols, int num_of_obstacles, int warehouse_width):
 	map_fname(map_fname), agent_fname(agent_fname), num_of_agents(num_of_agents)

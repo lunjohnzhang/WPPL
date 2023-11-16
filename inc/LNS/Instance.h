@@ -1,6 +1,7 @@
 #pragma once
 #include"common.h"
 #include "SharedEnv.h"
+#include "States.h"
 
 namespace LNS {
 
@@ -22,6 +23,7 @@ public:
 
 
 	void set_starts_and_goals(const SharedEnvironment & env);
+	void set_starts_and_goals(const std::vector<::State> & starts, const std::vector<::State> & goals);
 
 	void printAgents() const;
 	string getMapFile() const {return map_fname;};

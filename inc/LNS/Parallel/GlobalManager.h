@@ -4,6 +4,7 @@
 #include "LNS/Parallel/LocalOptimizer.h"
 #include "util/TimeLimiter.h"
 #include <memory>
+#include "LaCAM2/instance.hpp"
 
 namespace LNS {
 
@@ -34,12 +35,18 @@ public:
     int screen;
     int num_threads;
 
+    std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos;
+
+    bool has_disabled_agents=false;
+
     GlobalManager(
-        Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<float> > map_weights,
+        Instance & instance, std::shared_ptr<HeuristicTable> HT, 
+        std::shared_ptr<vector<float> > map_weights, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
         int neighbor_size, destroy_heuristic destroy_strategy,
         bool ALNS, double decay_factor, double reaction_factor,
         string init_algo_name, string replan_algo_name, bool sipp,
         int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
+        bool has_disabled_agents,
         int screen
     );
 

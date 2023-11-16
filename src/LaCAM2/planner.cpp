@@ -2,6 +2,35 @@
 
 namespace LaCAM2 {
 
+int get_neighbor_orientation(const Graph & G, int loc1, int loc2, int default_value=5) {
+
+    // 0:east, 1:south, 2:west, 3:north
+
+    if (loc1+1==loc2) {
+        return 0;
+    }
+
+    if (loc1+G.width==loc2) {
+        return 1;
+    }
+
+    if (loc1-1==loc2) {
+        return 2;
+    }
+
+    if (loc1-G.width==loc2) {
+        return 3;
+    }
+
+    if (loc1==loc2) {
+      return default_value;
+    }
+
+    std::cerr<<"loc1 and loc2 are not neighbors: "<<loc1<<", "<<loc2<<endl;
+    exit(-1);
+
+}
+
 LNode::LNode(LNode* parent, uint i, const std::tuple<Vertex*,int > & t)
     : who(), where(), depth(parent == nullptr ? 0 : parent->depth + 1)
 {
@@ -16,7 +45,7 @@ LNode::LNode(LNode* parent, uint i, const std::tuple<Vertex*,int > & t)
 uint HNode::HNODE_CNT = 0;
 
 // for high-level
-HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const Instance * ins, HNode* _parent, float _g,
+HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Instance * ins, HNode* _parent, float _g,
              float _h, const uint _d, int _order_strategy)
     : C(_C),
       parent(_parent),
@@ -37,12 +66,61 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
   // update neighbor
   if (parent != nullptr) parent->neighbor.insert(this);
 
+  // std::vector<std::tuple<bool,bool,bool,float,float,float,int> > scores;
+  // for (int i=0;i<N;++i) {
+  //   const AgentInfo & a=ins->agent_infos[i];
+  //   bool disabled=a.disabled;
+  //   bool arrived=C.arrivals[i];
+  //   bool not_precomputed = ins->precomputed_paths!=nullptr && (*(ins->precomputed_paths))[i].size()<(d+1); // not not precomputed first
+  //   float h=HT->get(ins->starts.locs[i]->index,ins->goals.locs[i]->index); // smaller h first
+  //   float elapse=0; // larger elapse first
+  //   float tie_breaker=0; 
+  //   scores.emplace_back(not_precomputed,disabled,arrived,h,elapse,tie_breaker,i);
+  // }
+
+  // std::sort(scores.begin(),scores.end());
+  // for (int i=0;i<N;++i) {
+  //   order[i]=std::get<6>(scores[i]);
+  // }
+
+
+  // std::vector<bool> disabled(N,false);
+  // for (int aid=0;aid<N;++aid) {
+  //   auto & a=ins->agent_infos[aid];
+  //   if (ins->goals.locs[aid]->neighbor.size()<=1) {
+  //     ins->goals.locs[aid]=C.locs[aid];
+  //     disabled[aid]=true;
+  //   }
+  //   // if (C.locs[aid]->neighbor.size()<=1) {
+  //   //   ins->goals.locs[aid]=C.locs[aid];
+  //   //   disabled[aid]=true;
+  //   // }
+
+  //   // int x=ins->goals.locs[aid]->index%ins->G.width;
+  //   // int y=ins->goals.locs[aid]->index/ins->G.width;
+  //   // if (x>=29 && y>=29) {
+  //   //   ins->goals.locs[aid]=C.locs[aid];
+  //   //   disabled[aid]=true;
+  //   // }
+  // }
+
+  for (int aid=0;aid<N;++aid) {
+    if (ins->agent_infos[aid].disabled) {
+      ins->goals.locs[aid]=C.locs[aid];
+    }
+  }
+
+
   // set order
   // TODO(rivers_: probably we should set a basic ordering at the begining, because it is time consuming to sort everytime with large-scale agents
   std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) { 
         const AgentInfo & a=ins->agent_infos[i];
         const AgentInfo & b=ins->agent_infos[j];
+
+        if (a.disabled!=b.disabled) return a.disabled<b.disabled; // not disabled first.
+
+        // if (disabled[i]!=disabled[j]) return disabled[i]<disabled[j];
 
         if (C.arrivals[i]!=C.arrivals[j]) return C.arrivals[i]<C.arrivals[j];
 
@@ -52,16 +130,16 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, const
           if (precomputed_a != precomputed_b) return (int)precomputed_a>(int)precomputed_b;
         }
 
-        float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
-        float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
+        // float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
+        // float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
 
-        // int h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
-        // int h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
+        float h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
+        float h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
 
 
         if (order_strategy==0) {
-          if (h1!=h2) return h1<h2;
           if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
+          if (h1!=h2) return h1<h2;
           return a.tie_breaker>b.tie_breaker;
         } else if (order_strategy==1) {
           if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
@@ -105,9 +183,9 @@ HNode::~HNode()
   }
 }
 
-Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline,
+Planner::Planner(Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline,
                  std::mt19937* _MT, const int _verbose,
-                 const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic)
+                 const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic, bool use_external_executor)
     : ins(_ins),
       deadline(_deadline),
       MT(_MT),
@@ -126,7 +204,8 @@ Planner::Planner(const Instance* _ins, const std::shared_ptr<HeuristicTable> & H
       occupied_next(V_size, nullptr),
       use_swap(use_swap),
       use_orient_in_heuristic(use_orient_in_heuristic),
-      executor(_ins->G.height,_ins->G.width)
+      executor(_ins->G.height,_ins->G.width),
+      use_external_executor(use_external_executor)
 {
 }
 
@@ -260,32 +339,42 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
     //   continue;
     // }
 
-
-
-    // we need map no rotation action to rotation action here and create the new configuration for the next step.
-    std::vector<::State> curr_states;
-    std::vector<::State> planned_next_states;
-    std::vector<::State> next_states;
     
-    curr_states.reserve(N);
-    planned_next_states.reserve(N);
-    next_states.reserve(N);
+      // we need map no rotation action to rotation action here and create the new configuration for the next step.
+      std::vector<::State> curr_states;
+      std::vector<::State> planned_next_states;
+      std::vector<::State> next_states;
+      
+      curr_states.reserve(N);
+      planned_next_states.reserve(N);
+      next_states.reserve(N);
 
-    for (int i=0;i<N;++i){
-      // cerr<<"ddd "<<i<<" "<<H->C.locs[i]->index<<" "<<H->C.orients[i]<<" "<<A[i]->v_next->index<<endl;
-      curr_states.emplace_back(H->C.locs[i]->index,0,H->C.orients[i]);
-      planned_next_states.emplace_back(A[i]->v_next->index,-1,-1);
-      next_states.emplace_back(-1,-1,-1);
-    }
+      for (int i=0;i<N;++i){
+        // cerr<<"ddd "<<i<<" "<<H->C.locs[i]->index<<" "<<H->C.orients[i]<<" "<<A[i]->v_next->index<<endl;
+        curr_states.emplace_back(H->C.locs[i]->index,0,H->C.orients[i]);
+        planned_next_states.emplace_back(A[i]->v_next->index,-1,-1);
+        next_states.emplace_back(-1,-1,-1);
+      }
 
-    executor.execute(&curr_states,&planned_next_states,&next_states);
+    if (!use_external_executor) {
 
+      executor.execute(&curr_states,&planned_next_states,&next_states);
 
-    // create new configuration
-    for (int i=0;i<N;++i) {
-      C_new.locs[i] = ins->G.U[next_states[i].location];
-      C_new.orients[i] = next_states[i].orientation;
-      C_new.arrivals[i] = H->C.arrivals[i] | (next_states[i].location==ins->goals.locs[i]->index);
+      // create new configuration
+      for (int i=0;i<N;++i) {
+        C_new.locs[i] = ins->G.U[next_states[i].location];
+        C_new.orients[i] = next_states[i].orientation;
+        C_new.arrivals[i] = H->C.arrivals[i] | (next_states[i].location==ins->goals.locs[i]->index);
+      }
+
+    } else {
+
+      for (int i=0;i<N;++i) {
+        C_new.locs[i] = A[i]->v_next;
+        C_new.orients[i] = get_neighbor_orientation(ins->G,A[i]->v_now->index,A[i]->v_next->index,H->C.orients[i]);
+        C_new.arrivals[i] = H->C.arrivals[i] | (A[i]->v_next->index==ins->goals.locs[i]->index);
+      }
+
     }
 
     // check explored list
@@ -554,34 +643,7 @@ bool Planner::get_new_config(HNode* H, LNode* L)
   return true;
 }
 
-int get_neighbor_orientation(const Graph & G, int loc1, int loc2, int default_value=5) {
 
-    // 0:east, 1:south, 2:west, 3:north
-
-    if (loc1+1==loc2) {
-        return 0;
-    }
-
-    if (loc1+G.width==loc2) {
-        return 1;
-    }
-
-    if (loc1-1==loc2) {
-        return 2;
-    }
-
-    if (loc1-G.width==loc2) {
-        return 3;
-    }
-
-    if (loc1==loc2) {
-      return default_value;
-    }
-
-    std::cerr<<"loc1 and loc2 are not neighbors: "<<loc1<<", "<<loc2<<endl;
-    exit(-1);
-
-}
 
 int get_o_dist(int o1, int o2) {
   return std::min((o2-o1+4)%4,(o1-o2+4)%4);
@@ -630,6 +692,36 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   // for (int j=0;j<K+1;++j){
   //     std::cerr<<"check C_next "<<j<<" "<<K<<endl;
   //     std::cerr<<C_next[i][j]<<endl;
+  // }
+
+  // std::vector<std::tuple<int, float, float, Vertex *> > scores;
+
+  // int o0=H->C.orients[i];
+  // float cost_rot=(*map_weights)[ai->v_now->index*5+4];
+  // for (int k=0;k<=K;++k) {
+  //   auto & v=C_next[i][k];
+  //   int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index,o0);
+  //   int o_dist1=get_o_dist(o0,o1);
+  //   float cost1=(float)o_dist1*cost_rot+get_cost_move(ai->v_now->index,v->index);
+  //   float d1=d1=HT->get(v->index,o1,ins->goals.locs[i]->index)+cost1;
+  //   int pre_d1=1;
+  //   if (ins->precomputed_paths!=nullptr){
+  //     auto & path=(*ins->precomputed_paths)[i];
+  //     int j=H->d;
+  //     if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
+  //         if (path[j+1].orientation==o1) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
+  //           pre_d1=0;
+  //           // break;
+  //         }
+  //       }
+  //   }
+  //   scores.emplace_back(pre_d1, d1, o_dist1, v);
+  // }
+
+  // std::sort(scores.begin(),scores.end()); // do we need stable sort?
+
+  // for (int k=0;k<=K;++k) {
+  //   C_next[i][k]=std::get<3>(scores[k]);
   // }
 
   // sort

@@ -1,18 +1,20 @@
 {
     "lifelong_solver_name": [
         {
-            "n_agents": 4000,
-            "value": "LaCAM2"
-        },
-        {
             "n_agents": 1000000,
-            "value": "DUMMY"
+            "value": "LNS"
         }
     ],
-    "map_weights_path": "scripts/brc202d_weight_002.w",
+    "map_weights_path": [
+        {
+            "n_agents": 1000000,
+            "value": "scripts/brc202d_weight_002.w"
+        }
+    ],
+    "max_agents_in_use": -1,
     "LNS": {
         "seed": 0,
-        "cutoffTime": 0.9,
+        "cutoffTime": 0.95,
         "screen": 0,
         "initAlgo": "LaCAM2",
         "replanAlgo": "PP",

@@ -11,24 +11,52 @@ namespace LaCAM2 {
 
 void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     paths.resize(env.num_of_agents);
-    agent_infos.resize(env.num_of_agents);
+    agent_infos=std::make_shared<std::vector<AgentInfo> >(env.num_of_agents);
     for (int i=0;i<env.num_of_agents;++i) {
-        agent_infos[i].id=i;
+        (*agent_infos)[i].id=i;
     }
-    action_costs.resize(env.num_of_agents);
-    total_actions.resize(env.num_of_agents);
+    // action_costs.resize(env.num_of_agents);
+    // total_actions.resize(env.num_of_agents);
     G = std::make_shared<Graph>(env);
+
+    // random select some agents to be disabled
+    std::vector<int> agents_ids;
+    for (int i=0;i<env.num_of_agents;++i) {
+        agents_ids.push_back(i);
+    }
+    std::random_shuffle(agents_ids.begin(),agents_ids.end());
+
+    int disabled_agents_num=env.num_of_agents-max_agents_in_use;
+    for (int i=0;i<disabled_agents_num;++i) {
+        (*agent_infos)[agents_ids[i]].disabled=true;
+    }
+
+    std::cout<<"#disabled agents: "<<disabled_agents_num<<std::endl;
 }
 
 Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths) {
     auto starts=vector<std::pair<uint,int> >();
     auto goals=vector<std::pair<uint,int> >();
+
+    int ctr=0;
     for (int i=0;i<env.num_of_agents;++i) {
         starts.emplace_back(env.curr_states[i].location, env.curr_states[i].orientation);
         assert(env.goal_locations[i].size()>0);
         int goal_location=env.goal_locations[i][0].first;
+        auto & agent_info=(*agent_infos)[i];
+        if (disable_corner_target_agents) {
+            int g_x=goal_location%env.cols;
+            int g_y=goal_location/env.cols;
+            // disable agent if its goal is a corner
+            if (G->U[goal_location]->neighbor.size()<=1) {
+                agent_info.disabled=true;
+                ++ctr;
+            }
+        }
+        if (agent_info.disabled) {
+            goal_location=env.curr_states[i].location;
+        }
         goals.emplace_back(goal_location, -1);
-        auto & agent_info=agent_infos[i];
         // cerr<<"0\trandom-32-32-20.map\t32\t32\t"<<starts[i]%32<<"\t"<<starts[i]/32<<"\t"<<goals[i]%32<<"\t"<<goals[i]/32<<"\t0"<<endl;
         if (goal_location!=agent_info.goal_location){
             agent_info.goal_location=goal_location;
@@ -39,7 +67,8 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
             agent_info.elapsed+=1;
         }
     }
-    return Instance(*G, starts, goals, agent_infos, read_param_json<int>(config,"planning_window",-1), precomputed_paths);
+    // std::cout<<"ctr: "<<ctr<<std::endl;
+    return Instance(*G, starts, goals, *agent_infos, read_param_json<int>(config,"planning_window",-1), precomputed_paths);
 }
 
 int LaCAM2Solver::get_neighbor_orientation(int loc1,int loc2) {
@@ -118,7 +147,7 @@ float LaCAM2Solver::eval_solution(const Instance & instance, const Solution & so
     return cost;
 }
 
-void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths){
+void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths, std::vector<::State> * starts, std::vector<::State> * goals){
     ONLYDEV(g_timer.record_p("lacam2_plan_pre_s");)
     // std::cerr<<"random :"<<get_random_int(MT,0,100)<<std::endl;
 
@@ -131,30 +160,40 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
     // }
     // g_timer.record_d("stats_tree_s","stats_tree");
 
-    if (timestep==0) {
-        for (int i=0;i<env.num_of_agents;++i) {
-            paths[i].push_back(env.curr_states[i]);
-        }
-    }
-
-    if (precomputed_paths!=nullptr) {
-        // we need to check the initial states are the same.
-        for (int i=0;i<env.num_of_agents;++i) {
-            if ((*precomputed_paths)[i].size()==0 || (*precomputed_paths)[i][0].location!=env.curr_states[i].location) {
-                cerr<<"agent "<<i<<" has zero-length precomputed paths or initial states are not the same!"<<endl;
-                exit(-1);
-            }
-        }
-    }
+    // if (timestep==0) {
+    //     for (int i=0;i<env.num_of_agents;++i) {
+    //         paths[i].push_back(env.curr_states[i]);
+    //     }
+    // }
 
     if (need_replan) {
         const int verbose = 10;
         const int time_limit_sec = 2;
         ONLYDEV(g_timer.record_p("lacam_build_instance_s");)
         auto instance = build_instance(env, precomputed_paths);
+        if (starts!=nullptr) {
+            if (goals==nullptr) {
+                std::cerr<<"not supported now! goals must be specified as well"<<endl;
+                exit(-1);
+            }
+            instance.set_starts_and_goals(starts,goals);
+        }
+
+        if (precomputed_paths!=nullptr) {
+            // we need to check the initial states are the same.
+            for (int i=0;i<env.num_of_agents;++i) {
+                if ((*precomputed_paths)[i].size()==0 || (*precomputed_paths)[i][0].location!=instance.starts.locs[i]->index) {
+                    cerr<<"agent "<<i<<" has zero-length precomputed paths or initial states are not the same!"<<endl;
+                    cerr<<"size: "<<(*precomputed_paths)[i].size()<<endl;
+                    cerr<<"states: "<<(*precomputed_paths)[i][0]<<" vs "<<instance.starts.locs[i]<<endl;
+                    exit(-1);
+                }
+            }
+        }
+
         ONLYDEV(g_timer.record_d("lacam_build_instance_s","lacam_build_instance");)
         const auto deadline = Deadline(time_limit_sec * 1000);
-        bool use_swap=false;
+        bool use_swap=false; // TODO: we need try use_swap
         bool use_orient_in_heuristic=read_param_json<bool>(config,"use_orient_in_heuristic");
 
         vector<::Path> precomputed_paths;
@@ -207,7 +246,11 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         // #pragma omp parallel for
         // for (int i=0;i<1;++i) {
             ONLYDEV(g_timer.record_p("lacam_build_planner_s");)
-            auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.0F,use_swap,use_orient_in_heuristic);
+            auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.0F,
+                use_swap,
+                use_orient_in_heuristic,
+                use_external_executor
+            );
             ONLYDEV(g_timer.record_d("lacam_build_planner_s","lacam_build_planner");)
             auto additional_info = std::string("");
             ONLYDEV(g_timer.record_p("lacam_solve_s");)
@@ -222,6 +265,42 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
                 }
                 // std::cerr<<i<<precomputed_paths[i]<<endl;
             }
+        // }
+
+        // std::cout<<"old:"<<std::endl;
+        // for (int i=0;i<env.num_of_agents;++i) {
+        //     std::cout<<i<<" "<<paths[i]<<std::endl;
+        // }
+
+        if (use_external_executor) {
+
+            solution_convert(env,best_solution,paths);
+
+        } else {
+            
+            ONLYDEV(g_timer.record_p("lacam2_plan_copy_path_s");)
+            for (int i=0;i<env.num_of_agents;++i) {
+                // cerr<<"xagent "<<i<<": ";
+                // for (int j=1;j<solution.size();++j) {
+                //     cerr<<solution[j][i]->index<<" ";
+                // }
+                // cerr<<endl;
+                for (int j=0;j<best_solution.size();++j) {
+                    paths[i].emplace_back(best_solution[j].locs[i]->index,j,best_solution[j].orients[i]);
+                }
+                if (paths[i].size()==1) {
+                    paths[i].emplace_back(paths[i].back().location,paths[i].size(),paths[i].back().orientation);
+                }
+            }
+            ONLYDEV(g_timer.record_d("lacam2_plan_copy_path_s","lacam2_plan_copy_path");)
+
+        }
+
+        //std::cout<<"replan:"<<paths[0].size()<<std::endl;
+
+
+        // for (int i=0;i<env.num_of_agents;++i) {
+        //     std::cout<<i<<" "<<paths[i]<<std::endl;
         // }
 
         // // failure
@@ -244,28 +323,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         // cout<<"solution cost"<<best_cost<<endl;
         ONLYDEV(g_timer.record_d("lacam2_plan_print_s","lacam2_plan_print");)
 
-
-        
-        // if (solution.size()==1) {
-        //     next_config=solution[0];
-        // } else {  
-        //     next_config=solution[1];
-        // }
-        ONLYDEV(g_timer.record_p("lacam2_plan_copy_path_s");)
-        for (int i=0;i<env.num_of_agents;++i) {
-            // cerr<<"xagent "<<i<<": ";
-            // for (int j=1;j<solution.size();++j) {
-            //     cerr<<solution[j][i]->index<<" ";
-            // }
-            // cerr<<endl;
-            int j=best_solution.size()==1?0:1;
-            for (;j<best_solution.size();++j) {
-                paths[i].emplace_back(best_solution[j].locs[i]->index,env.curr_states[i].timestep+j,best_solution[j].orients[i]);
-            }
-        }
-        ONLYDEV(g_timer.record_d("lacam2_plan_copy_path_s","lacam2_plan_copy_path");)
         ONLYDEV(g_timer.record_d("lacam2_plan_post_s","lacam2_plan_post");)
-    
 
         // if (!read_param_json<bool>(config,"consider_rotation")) {
         //     for (int i=0;i<env.num_of_agents;++i) {
@@ -361,20 +419,95 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
 
 }
 
+void LaCAM2Solver::solution_convert(const SharedEnvironment & env, Solution & solution, std::vector<Path> & _paths) {
+
+    int num_steps=0;
+
+    int N=_paths.size();
+
+    int planning_window=read_param_json<int>(config,"planning_window");
+
+    auto & curr_config=solution[0];
+
+    std::vector<::State> curr_states;
+    for (int aid=0;aid<N;++aid) {
+        curr_states.emplace_back(curr_config.locs[aid]->index,0,curr_config.orients[aid]);
+        _paths[aid].push_back(curr_states[aid]);
+    }
+
+    // std::cout<<solution.size()<<std::endl;
+
+    for (int i=1;i<solution.size();++i) {
+        auto & next_config=solution[i];
+        while (true) {
+            std::vector<::State> planned_next_states;
+            std::vector<::State> next_states;
+        
+            planned_next_states.reserve(N);
+            next_states.reserve(N);
+
+            for (int i=0;i<N;++i){
+                planned_next_states.emplace_back(next_config.locs[i]->index,-1,-1);
+                next_states.emplace_back(-1,-1,-1);
+            }
+
+            executor.execute(&curr_states,&planned_next_states,&next_states);
+
+            curr_states=next_states;
+            ++num_steps;
+
+            for (int aid=0;aid<N;++aid) {
+                _paths[aid].push_back(next_states[aid]);
+            }
+
+            if (num_steps>=planning_window) {
+                break;
+            }
+
+            // check if arrived
+            bool arrived=true;
+            for (int aid=0;aid<N;++aid) {
+                if (planned_next_states[aid].location!=next_states[aid].location) {
+                    arrived=false;
+                    break;
+                }
+            }
+
+            if (arrived) {
+                break;
+            }
+        }
+
+        if (num_steps>=planning_window) {
+            break;
+        }
+    }
+}
 
 void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action> & actions) {
     // check empty
     assert(actions.empty());
 
-    for (int i=0;i<env.num_of_agents;++i) {
-        // we will get action indexed at timestep+1
-        if (paths[i].size()<=timestep+1){
-            cerr<<"wierd error for agent "<<i<<". path length: "<<paths[i].size()<<", "<<"timestep+1: "<<timestep+1<<endl;
-            assert(false);
-        }
-        actions.push_back(get_action_from_states(paths[i][timestep],paths[i][timestep+1]));
-    }
 
+    if (num_task_completed>=max_task_completed) { // only for competition purpose, don't reveal too much information, otherwise it is too tired to overfit... do something fun instead!
+        for (int i=0;i<env.num_of_agents;++i) {
+            actions.push_back(Action::W);
+        }
+    } else {
+        for (int i=0;i<env.num_of_agents;++i) {
+            // we will get action indexed at timestep+1
+            if (paths[i].size()<=timestep+1){
+                cerr<<"wierd error for agent "<<i<<". path length: "<<paths[i].size()<<", "<<"timestep+1: "<<timestep+1<<endl;
+                assert(false);
+            }
+            actions.push_back(get_action_from_states(paths[i][timestep],paths[i][timestep+1]));
+        
+            // assume perfect execution
+            if (paths[i][timestep+1].location==env.goal_locations[i][0].first){
+                ++num_task_completed;
+            }
+        }
+    }
 
     // for (int i=0;i<env.num_of_agents;++i) {
     //     int action_cost=get_action_cost(paths[i][timestep].location,paths[i][timestep].orientation,paths[i][timestep+1].location,paths[i][timestep+1].orientation);
@@ -431,13 +564,24 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
 #else
         actions.resize(env.num_of_agents, Action::W);
 #endif
-    } else {
+    } 
+    else {
         // NOTE(hj): only successfully executing a planned step will increase this internal timestep, which is different from the real timestep used in the simulation system.
         timestep+=1;
     }
 
+    // std::cout<<"timestep: "<<timestep<<" "<<paths[0].size()<<std::endl;
+
     // TODO(hj): when we need to replan?
-    need_replan=true;
+    if (timestep+planning_window-execution_window==paths[0].size()-1) {
+        need_replan=true;
+    } else {
+        need_replan=false;
+    }
+
+    // std::cout<<"need_replan"<<need_replan<<std::endl;
+
+    // need_replan=true;
    
     // need_replan=false;
 
@@ -473,10 +617,11 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
 
     if (need_replan) {
         for (int i=0;i<env.num_of_agents;++i) {
-            paths[i].resize(timestep+1);
+            // paths[i].resize(timestep+1);
+            paths[i].clear();
+            timestep=0;
         }
     }
-    
 }
 
 

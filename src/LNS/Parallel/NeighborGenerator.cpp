@@ -10,12 +10,14 @@ namespace LNS {
 namespace Parallel {
 
 NeighborGenerator::NeighborGenerator(
-    Instance & instance, std::shared_ptr<HeuristicTable> HT, PathTable & path_table, std::vector<Agent> & agents, 
+    Instance & instance, std::shared_ptr<HeuristicTable> HT, PathTable & path_table, 
+    std::vector<Agent> & agents, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
     int neighbor_size, destroy_heuristic destroy_strategy, 
     bool ALNS, double decay_factor, double reaction_factor, 
     int num_threads, int screen
 ):
-    instance(instance), HT(HT), path_table(path_table), agents(agents),
+    instance(instance), HT(HT), path_table(path_table), 
+    agents(agents), agent_infos(agent_infos),
     neighbor_size(neighbor_size), destroy_strategy(destroy_strategy),
     ALNS(ALNS), decay_factor(decay_factor), reaction_factor(reaction_factor),
     num_threads(num_threads), screen(screen) {
@@ -265,6 +267,10 @@ int NeighborGenerator::findMostDelayedAgent(int idx){
         if (i%num_threads!=idx) continue;
         if (tabu_list.find(i) != tabu_list.end())
             continue;
+        if ((*agent_infos)[i].disabled) {
+            tabu_list.insert(i);
+            continue;
+        }
         float delays = agents[i].getNumOfDelays();
         if (max_delays < delays)
         {
@@ -360,7 +366,7 @@ void NeighborGenerator::randomWalk(int agent_id, int start_timestep, set<int>& c
     int loc = path[start_timestep].location;
     int orient = path[start_timestep].orientation;
     // auto & agent = agents[agent_id];
-    // float partial_path_cost=agent.getEstimatedPathLength(path,agent.getGoalLocation(),HT,start_timestep);
+    // float partial_path_cost=agent.getEstimatedPathLength(path,agent.getGoalLocation(),HT, false, start_timestep);
     for (int t = start_timestep; t < path.size(); ++t)
     {
         auto successors=getSuccessors(loc,orient);

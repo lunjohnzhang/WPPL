@@ -24,7 +24,7 @@ public:
     int total_feasible_timestep = 0;
     int timestep = 0;
     void initialize(const SharedEnvironment & env);
-    void plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr);
+    void plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr, std::vector<::State> * starts=nullptr, std::vector<::State> * goals=nullptr);
     void get_step_actions(const SharedEnvironment & env, vector<Action> & actions);
     // Action get_action_from_states(const State & state, const State & next_state);
     // [end]
@@ -34,12 +34,24 @@ public:
     std::shared_ptr<Graph> G; // graph
     std::shared_ptr<HeuristicTable> HT; // instance
     std::shared_ptr<std::vector<float> > map_weights; // map weights
+
+    std::shared_ptr<std::vector<AgentInfo> > agent_infos;
+
+    int max_agents_in_use;
+    bool disable_corner_target_agents;
+
+    int execution_window;
+    int planning_window;
+
+    bool use_external_executor=false; 
+
+    int num_task_completed=0;
+    int max_task_completed;
+
     // Config next_config;
 
-    std::vector<std::vector<int>> action_costs;
-    std::vector<std::vector<int>> total_actions;
-
-    vector<AgentInfo> agent_infos;
+    // std::vector<std::vector<int>> action_costs;
+    // std::vector<std::vector<int>> total_actions;
 
     Executor executor;
     SlowExecutor slow_executor;
@@ -53,13 +65,25 @@ public:
 
     int get_neighbor_orientation(int loc1,int loc2);
 
-    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<float> > & map_weights, nlohmann::json & config):
+    void solution_convert(const SharedEnvironment & env, Solution & solution, std::vector<Path> & paths);
+
+    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<float> > & map_weights, int max_agents_in_use, bool disable_corner_target_agents,
+     int max_task_completed,
+     nlohmann::json & config):
         HT(HT),
         map_weights(map_weights),
         action_model(env),executor(env),slow_executor(env),
         config(config),
-        MT(new std::mt19937(read_param_json<uint>(config,"seed",0))){
+        MT(new std::mt19937(read_param_json<uint>(config,"seed",0))),
+        max_agents_in_use(max_agents_in_use),
+        disable_corner_target_agents(disable_corner_target_agents),
+        max_task_completed(max_task_completed)
+        {
 
+        use_external_executor=read_param_json<bool>(config,"use_external_executor");
+        planning_window=read_param_json<int>(config,"planning_window");
+        execution_window=read_param_json<int>(config,"execution_window");
+            
     };
 
     ~LaCAM2Solver(){
@@ -71,20 +95,32 @@ public:
         int num_of_agents=paths.size();
 
         paths.clear();
+        paths.resize(env.num_of_agents);
+        
         need_replan = true;
         total_feasible_timestep = 0;
         timestep = 0;
         delete MT;
         MT = new std::mt19937(read_param_json(config,"seed",0));
-        // next_config = Config();
-        agent_infos.clear();
 
-        initialize(env);
+        for (int i=0;i<env.num_of_agents;++i) {
+            auto & agent_info=(*agent_infos)[i];
+            agent_info.goal_location=-1;
+            agent_info.elapsed=-1;
+            agent_info.tie_breaker=-1;
+            agent_info.stuck_order=0;
+        }
+
+
+        // next_config = Config();
+        // agent_infos.clear();
+
+        // initialize(env);
     }
 
     Action get_action_from_states(const State & state, const State & next_state){
 #ifndef NO_ROT
-        assert(state.timestep+1==next_state.timestep);
+        // assert(state.timestep+1==next_state.timestep);
         
         if (state.location==next_state.location){
             // either turn or wait
