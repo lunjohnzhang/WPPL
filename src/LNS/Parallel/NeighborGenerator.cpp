@@ -366,7 +366,7 @@ void NeighborGenerator::randomWalk(int agent_id, int start_timestep, set<int>& c
     int loc = path[start_timestep].location;
     int orient = path[start_timestep].orientation;
     // auto & agent = agents[agent_id];
-    // float partial_path_cost=agent.getEstimatedPathLength(path,agent.getGoalLocation(),HT,start_timestep);
+    // float partial_path_cost=agent.getEstimatedPathLength(path,agent.getGoalLocation(),HT, false, start_timestep);
     for (int t = start_timestep; t < path.size(); ++t)
     {
         auto successors=getSuccessors(loc,orient);

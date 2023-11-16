@@ -79,15 +79,20 @@ struct Agent
         }
     }
 
-    inline float getEstimatedPathLength(Path & path, int goal_location, std::shared_ptr<HeuristicTable> HT, bool arrival_break=false) {
+    inline float getEstimatedPathLength(Path & path, int goal_location, std::shared_ptr<HeuristicTable> HT, bool arrival_break=false, int T=-1) {
         if ((*agent_infos)[id].disabled) { // if disabled, we just set its estimated path length to 0. namely ignore it anyway.
             return 0;
+        }
+
+        int max_steps=(int)path.size()-1;
+        if (T!=-1) {
+            max_steps=T;
         }
 
         // TODO(rivers): this is actually path cost, not path length
         float cost=0;
         bool arrived=false;
-        for (int i=0;i<path.size()-1;++i) {
+        for (int i=0;i<max_steps;++i) {
             cost+=get_action_cost(path[i].location,path[i].orientation,path[i+1].location,path[i+1].orientation, HT);
             if (path[i].location==goal_location) {
                 arrived=true;
@@ -97,7 +102,7 @@ struct Agent
             }
         }
 
-        if (arrived) {
+        if (arrived || T!=-1) {
             return cost;
         } else {
             return cost+HT->get(path.back().location, path.back().orientation, goal_location);

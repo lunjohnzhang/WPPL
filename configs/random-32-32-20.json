@@ -27,6 +27,16 @@
             "value": "scripts/random_weight_011.w"
         }
     ],
+    "max_task_completed": [
+        {
+            "n_agents": 600,
+            "value": 10000000
+        },
+        {
+            "n_agents": 1000000,
+            "value": 10000000
+        }
+    ],
     "max_agents_in_use": -1,
     "disable_corner_target_agents": true,
     "LNS": {

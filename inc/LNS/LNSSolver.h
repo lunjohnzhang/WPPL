@@ -60,12 +60,16 @@ public:
     int execution_window; // TODO: read it from config
     int planning_window; // TODO: read it from config
 
+    int num_task_completed=0;
+    int max_task_completed;
+
     LNSSolver(
         const std::shared_ptr<HeuristicTable> & HT,
         SharedEnvironment * env,
         std::shared_ptr<std::vector<float> > & map_weights, // map weights
         nlohmann::json & config,
-        std::shared_ptr<LaCAM2::LaCAM2Solver> & lacam2_solver
+        std::shared_ptr<LaCAM2::LaCAM2Solver> & lacam2_solver,
+        int max_task_completed
     );
 
     ~LNSSolver(){

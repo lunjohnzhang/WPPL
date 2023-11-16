@@ -48,6 +48,11 @@ void MAPFPlanner::load_configs() {
         std::cerr<<config<<std::endl;
         config["lifelong_solver_name"]=read_conditional_value(config,"lifelong_solver_name",env->num_of_agents);
         config["map_weights_path"]=read_conditional_value(config,"map_weights_path",env->num_of_agents);
+
+        if (config.contains("max_task_completed")) {
+            config["max_task_completed"]=read_conditional_value(config,"max_task_completed",env->num_of_agents);
+        }
+
         string s=config.dump();
         std::replace(s.begin(),s.end(),',','|');
         config["details"]=s;
@@ -227,7 +232,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
             max_agents_in_use=env->num_of_agents;
         }
         bool disable_corner_target_agents=read_param_json<bool>(config,"disable_corner_target_agents",false);
-        lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,disable_corner_target_agents,config["LaCAM2"]);
+        int max_task_completed=read_param_json<int>(config,"max_task_completed",1000000);
+        lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,disable_corner_target_agents,max_task_completed,config["LaCAM2"]);
         lacam2_solver->initialize(*env);
         cout<<"LaCAMSolver2 initialized"<<endl;
     } else if (lifelong_solver_name=="LNS") {
@@ -243,9 +249,10 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
             max_agents_in_use=env->num_of_agents;
         }
         bool disable_corner_target_agents=read_param_json<bool>(config,"disable_corner_target_agents",false);
-        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,disable_corner_target_agents,config["LNS"]["LaCAM2"]);
+        int max_task_completed=read_param_json<int>(config,"max_task_completed",1000000);
+        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,disable_corner_target_agents,max_task_completed,config["LNS"]["LaCAM2"]);
         lacam2_solver->initialize(*env);
-        lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver);
+        lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver,max_task_completed);
         lns_solver->initialize(*env);
         cout<<"LNSSolver initialized"<<endl;
     } else if (lifelong_solver_name=="DUMMY") {

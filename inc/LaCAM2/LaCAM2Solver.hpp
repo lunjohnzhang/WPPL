@@ -45,6 +45,9 @@ public:
 
     bool use_external_executor=false; 
 
+    int num_task_completed=0;
+    int max_task_completed;
+
     // Config next_config;
 
     // std::vector<std::vector<int>> action_costs;
@@ -64,14 +67,18 @@ public:
 
     void solution_convert(const SharedEnvironment & env, Solution & solution, std::vector<Path> & paths);
 
-    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<float> > & map_weights, int max_agents_in_use, bool disable_corner_target_agents, nlohmann::json & config):
+    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<float> > & map_weights, int max_agents_in_use, bool disable_corner_target_agents,
+     int max_task_completed,
+     nlohmann::json & config):
         HT(HT),
         map_weights(map_weights),
         action_model(env),executor(env),slow_executor(env),
         config(config),
         MT(new std::mt19937(read_param_json<uint>(config,"seed",0))),
         max_agents_in_use(max_agents_in_use),
-        disable_corner_target_agents(disable_corner_target_agents) {
+        disable_corner_target_agents(disable_corner_target_agents),
+        max_task_completed(max_task_completed)
+        {
 
         use_external_executor=read_param_json<bool>(config,"use_external_executor");
         planning_window=read_param_json<int>(config,"planning_window");
