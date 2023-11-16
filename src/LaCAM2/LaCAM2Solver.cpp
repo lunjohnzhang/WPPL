@@ -246,7 +246,11 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         // #pragma omp parallel for
         // for (int i=0;i<1;++i) {
             ONLYDEV(g_timer.record_p("lacam_build_planner_s");)
-            auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.0F,use_swap,use_orient_in_heuristic);
+            auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.0F,
+                use_swap,
+                use_orient_in_heuristic,
+                use_external_executor
+            );
             ONLYDEV(g_timer.record_d("lacam_build_planner_s","lacam_build_planner");)
             auto additional_info = std::string("");
             ONLYDEV(g_timer.record_p("lacam_solve_s");)
@@ -267,8 +271,34 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         // for (int i=0;i<env.num_of_agents;++i) {
         //     std::cout<<i<<" "<<paths[i]<<std::endl;
         // }
-        solution_convert(env,best_solution,paths);
+
+        if (use_external_executor) {
+
+            solution_convert(env,best_solution,paths);
+
+        } else {
+            
+            ONLYDEV(g_timer.record_p("lacam2_plan_copy_path_s");)
+            for (int i=0;i<env.num_of_agents;++i) {
+                // cerr<<"xagent "<<i<<": ";
+                // for (int j=1;j<solution.size();++j) {
+                //     cerr<<solution[j][i]->index<<" ";
+                // }
+                // cerr<<endl;
+                for (int j=0;j<best_solution.size();++j) {
+                    paths[i].emplace_back(best_solution[j].locs[i]->index,j,best_solution[j].orients[i]);
+                }
+                if (paths[i].size()==1) {
+                    paths[i].emplace_back(paths[i].back().location,paths[i].size(),paths[i].back().orientation);
+                }
+            }
+            ONLYDEV(g_timer.record_d("lacam2_plan_copy_path_s","lacam2_plan_copy_path");)
+
+        }
+
         std::cout<<"replan:"<<paths[0].size()<<std::endl;
+
+
         // for (int i=0;i<env.num_of_agents;++i) {
         //     std::cout<<i<<" "<<paths[i]<<std::endl;
         // }
@@ -293,24 +323,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         // cout<<"solution cost"<<best_cost<<endl;
         ONLYDEV(g_timer.record_d("lacam2_plan_print_s","lacam2_plan_print");)
 
-
-        // ONLYDEV(g_timer.record_p("lacam2_plan_copy_path_s");)
-        // for (int i=0;i<env.num_of_agents;++i) {
-        //     // cerr<<"xagent "<<i<<": ";
-        //     // for (int j=1;j<solution.size();++j) {
-        //     //     cerr<<solution[j][i]->index<<" ";
-        //     // }
-        //     // cerr<<endl;
-        //     for (int j=0;j<best_solution.size();++j) {
-        //         paths[i].emplace_back(best_solution[j].locs[i]->index,j,best_solution[j].orients[i]);
-        //     }
-        //     if (paths[i].size()==1) {
-        //         paths[i].emplace_back(paths[i].back().location,paths[i].size(),paths[i].back().orientation);
-        //     }
-        // }
-        // ONLYDEV(g_timer.record_d("lacam2_plan_copy_path_s","lacam2_plan_copy_path");)
-        // ONLYDEV(g_timer.record_d("lacam2_plan_post_s","lacam2_plan_post");)
-    
+        ONLYDEV(g_timer.record_d("lacam2_plan_post_s","lacam2_plan_post");)
 
         // if (!read_param_json<bool>(config,"consider_rotation")) {
         //     for (int i=0;i<env.num_of_agents;++i) {
@@ -549,7 +562,7 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
     std::cout<<"timestep: "<<timestep<<" "<<paths[0].size()<<std::endl;
 
     // TODO(hj): when we need to replan?
-    if (timestep==paths[0].size()-1) {
+    if (timestep+planning_window-execution_window==paths[0].size()-1) {
         need_replan=true;
     } else {
         need_replan=false;

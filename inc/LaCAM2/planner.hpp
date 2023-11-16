@@ -72,6 +72,7 @@ struct Planner {
   const int verbose;
   bool use_swap;  // use swap operation or not
   bool use_orient_in_heuristic;  // use orientation in heuristic or not
+  bool use_external_executor;  // use external executor or not
   int MC_idx;
 
   // hyper parameters
@@ -100,7 +101,8 @@ struct Planner {
           const Objective _objective = OBJ_NONE,
           const float _restart_rate = 0.001f,
           bool use_swap=false,
-          bool use_orient_in_heuristic=false);
+          bool use_orient_in_heuristic=false,
+          bool use_external_executor=false);
   ~Planner();
 
   Executor executor;

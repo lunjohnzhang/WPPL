@@ -40,6 +40,11 @@ public:
     int max_agents_in_use;
     bool disable_corner_target_agents;
 
+    int execution_window;
+    int planning_window;
+
+    bool use_external_executor=false; 
+
     // Config next_config;
 
     // std::vector<std::vector<int>> action_costs;
@@ -67,6 +72,10 @@ public:
         MT(new std::mt19937(read_param_json<uint>(config,"seed",0))),
         max_agents_in_use(max_agents_in_use),
         disable_corner_target_agents(disable_corner_target_agents) {
+
+        use_external_executor=read_param_json<bool>(config,"use_external_executor");
+        planning_window=read_param_json<int>(config,"planning_window");
+        execution_window=read_param_json<int>(config,"execution_window");
             
     };
 

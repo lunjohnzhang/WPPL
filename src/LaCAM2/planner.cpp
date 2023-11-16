@@ -185,7 +185,7 @@ HNode::~HNode()
 
 Planner::Planner(Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline,
                  std::mt19937* _MT, const int _verbose,
-                 const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic)
+                 const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic, bool use_external_executor)
     : ins(_ins),
       deadline(_deadline),
       MT(_MT),
@@ -204,7 +204,8 @@ Planner::Planner(Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, con
       occupied_next(V_size, nullptr),
       use_swap(use_swap),
       use_orient_in_heuristic(use_orient_in_heuristic),
-      executor(_ins->G.height,_ins->G.width)
+      executor(_ins->G.height,_ins->G.width),
+      use_external_executor(use_external_executor)
 {
 }
 
@@ -338,38 +339,42 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
     //   continue;
     // }
 
-
-
-    // we need map no rotation action to rotation action here and create the new configuration for the next step.
-    // std::vector<::State> curr_states;
-    // std::vector<::State> planned_next_states;
-    // std::vector<::State> next_states;
     
-    // curr_states.reserve(N);
-    // planned_next_states.reserve(N);
-    // next_states.reserve(N);
+      // we need map no rotation action to rotation action here and create the new configuration for the next step.
+      std::vector<::State> curr_states;
+      std::vector<::State> planned_next_states;
+      std::vector<::State> next_states;
+      
+      curr_states.reserve(N);
+      planned_next_states.reserve(N);
+      next_states.reserve(N);
 
-    // for (int i=0;i<N;++i){
-    //   // cerr<<"ddd "<<i<<" "<<H->C.locs[i]->index<<" "<<H->C.orients[i]<<" "<<A[i]->v_next->index<<endl;
-    //   curr_states.emplace_back(H->C.locs[i]->index,0,H->C.orients[i]);
-    //   planned_next_states.emplace_back(A[i]->v_next->index,-1,-1);
-    //   next_states.emplace_back(-1,-1,-1);
-    // }
+      for (int i=0;i<N;++i){
+        // cerr<<"ddd "<<i<<" "<<H->C.locs[i]->index<<" "<<H->C.orients[i]<<" "<<A[i]->v_next->index<<endl;
+        curr_states.emplace_back(H->C.locs[i]->index,0,H->C.orients[i]);
+        planned_next_states.emplace_back(A[i]->v_next->index,-1,-1);
+        next_states.emplace_back(-1,-1,-1);
+      }
 
-    // executor.execute(&curr_states,&planned_next_states,&next_states);
+    if (!use_external_executor) {
 
+      executor.execute(&curr_states,&planned_next_states,&next_states);
 
-    // // create new configuration
-    // for (int i=0;i<N;++i) {
-    //   C_new.locs[i] = ins->G.U[next_states[i].location];
-    //   C_new.orients[i] = next_states[i].orientation;
-    //   C_new.arrivals[i] = H->C.arrivals[i] | (next_states[i].location==ins->goals.locs[i]->index);
-    // }
+      // create new configuration
+      for (int i=0;i<N;++i) {
+        C_new.locs[i] = ins->G.U[next_states[i].location];
+        C_new.orients[i] = next_states[i].orientation;
+        C_new.arrivals[i] = H->C.arrivals[i] | (next_states[i].location==ins->goals.locs[i]->index);
+      }
 
-    for (int i=0;i<N;++i) {
-      C_new.locs[i] = A[i]->v_next;
-      C_new.orients[i] = get_neighbor_orientation(ins->G,A[i]->v_now->index,A[i]->v_next->index,H->C.orients[i]);
-      C_new.arrivals[i] = H->C.arrivals[i] | (A[i]->v_next->index==ins->goals.locs[i]->index);
+    } else {
+
+      for (int i=0;i<N;++i) {
+        C_new.locs[i] = A[i]->v_next;
+        C_new.orients[i] = get_neighbor_orientation(ins->G,A[i]->v_now->index,A[i]->v_next->index,H->C.orients[i]);
+        C_new.arrivals[i] = H->C.arrivals[i] | (A[i]->v_next->index==ins->goals.locs[i]->index);
+      }
+
     }
 
     // check explored list
