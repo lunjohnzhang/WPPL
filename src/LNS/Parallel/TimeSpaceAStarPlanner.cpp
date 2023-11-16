@@ -27,10 +27,10 @@ void TimeSpaceAStarPlanner::findPath(int start_pos, int start_orient, int goal_p
         curr->closed=true;
         ++n_expanded;
 
-        // if (curr->pos==goal_pos && curr->t>=1 && !constraint_table.constrained(curr->pos, curr->t)) {
-        //     buildPath(curr,goal_pos);
-        //     return;
-        // }
+        if (curr->pos==goal_pos && curr->t>=1 && !constraint_table.constrained(curr->pos, curr->t)) {
+            buildPath(curr,goal_pos);
+            return;
+        }
 
         if (curr->t>=constraint_table.window_size_for_PATH) {
             // std::cerr<<"collision: "<<curr->num_of_conflicts<<std::endl;

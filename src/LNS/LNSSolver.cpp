@@ -50,7 +50,7 @@ void LNSSolver::initialize(const SharedEnvironment & env){
     }
 
     planning_window=window_size_for_CT; // TODO(rivers): read from config & initialized in constructor
-    execution_window=3; // TODO(rivers): read from config & initialized in constructor
+    execution_window=read_param_json<int>(config,"execution_window"); // TODO(rivers): read from config & initialized in constructor
 
 }
 
@@ -278,9 +278,9 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
     // deal with a special case when the goal and the start are the same.
     for (int i=0;i<lns->agents.size();++i) {
-        if (lns->agents[i].path.size()==1) {
+        if (lns->agents[i].path.size()<planning_window+1) {
             // in this case, actually the goal is the same as the start
-            lns->agents[i].path.nodes.push_back(lns->agents[i].path.back());
+            lns->agents[i].path.nodes.resize(planning_window+1,lns->agents[i].path.back());
         }
     }
     ONLYDEV(g_timer.record_d("run_LNS_s","run_LNS_e","run_LNS");)
