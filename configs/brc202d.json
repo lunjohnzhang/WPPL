@@ -12,6 +12,13 @@
         }
     ],
     "max_agents_in_use": -1,
+    "disable_corner_target_agents": false,
+    "max_task_completed": [
+        {
+            "n_agents": 1000000,
+            "value": 1950
+        }
+    ],
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.95,
@@ -29,9 +36,12 @@
         "window_size_for_CT": 10,
         "window_size_for_CAT": 10,
         "window_size_for_PATH": 10,
+        "execution_window": 1,
         "LaCAM2": {
             "seed": 0,
             "planning_window": 10,
+            "execution_window": 1,
+            "use_external_executor": false,
             "consider_rotation": false,
             "use_orient_in_heuristic": true,
             "use_slow_executor": false,
@@ -47,6 +57,8 @@
     "LaCAM2": {
         "seed": 0,
         "planning_window": 1,
+        "execution_window": 1,
+        "use_external_executor": false,
         "consider_rotation": true,
         "use_orient_in_heuristic": true,
         "use_slow_executor": false,

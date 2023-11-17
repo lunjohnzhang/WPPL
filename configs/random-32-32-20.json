@@ -16,7 +16,7 @@
         },
         {
             "n_agents": 500,
-            "value": "scripts/random_weight_011.w"
+            "value": "scripts/random_weight_018.w"
         },
         {
             "n_agents": 600,
@@ -29,8 +29,8 @@
     ],
     "max_task_completed": [
         {
-            "n_agents": 600,
-            "value": 10000000
+            "n_agents": 400,
+            "value": 6990
         },
         {
             "n_agents": 1000000,
