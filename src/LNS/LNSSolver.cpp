@@ -36,9 +36,9 @@ void LNSSolver::initialize(const SharedEnvironment & env){
     //         obstacle_stats_tree->update(pos,1);
     //     }
     // }
-
-    // agent_stats_tree = std::make_shared<StatsTree>(env.cols,env.rows);
-    lacam2_solver->initialize(env);
+    
+    // agent_stats_tree = std::make_shared<StatsTree>(env.cols,env.rows); 
+    // lacam2_solver->initialize(env); // it is initialized already outside.
     execution_paths.resize(env.num_of_agents);
     planning_paths.resize(env.num_of_agents);
 
@@ -104,10 +104,20 @@ void LNSSolver::plan(const SharedEnvironment & env){
     std::vector<::State> starts;
     std::vector<::State> goals;
 
+    int disabled_agent_count=0;
     for (int i=0;i<env.num_of_agents;++i) {
+        if ((*agent_infos)[i].disabled) {
+            ++disabled_agent_count;
+        }
         starts.emplace_back(execution_paths[i].back().location,-1,execution_paths[i].back().orientation);
-        goals.emplace_back(env.goal_locations[i][0].first,-1,-1);
+        if ((*agent_infos)[i].disabled) {
+            goals.emplace_back(env.curr_states[i].location,-1,-1);
+        } else {
+            goals.emplace_back(env.goal_locations[i][0].first,-1,-1);
+        }
     }
+
+    ONLYDEV(std::cout<<"disabled_agents:"<<disabled_agent_count<<std::endl;)
 
     // TODO(rivers): we need to replan for all agents that has no plan
     // later we may think of padding all agents to the same length
