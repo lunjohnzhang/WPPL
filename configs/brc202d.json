@@ -11,12 +11,12 @@
             "value": "scripts/brc202d_weight_002.w"
         }
     ],
-    "max_agents_in_use": -1,
+    "max_agents_in_use": 2500,
     "disable_corner_target_agents": false,
     "max_task_completed": [
         {
             "n_agents": 1000000,
-            "value": 1950
+            "value": 19000
         }
     ],
     "LNS": {

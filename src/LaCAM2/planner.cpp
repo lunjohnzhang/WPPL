@@ -138,8 +138,8 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Insta
 
 
         if (order_strategy==0) {
-          if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
           if (h1!=h2) return h1<h2;
+          if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
           return a.tie_breaker>b.tie_breaker;
         } else if (order_strategy==1) {
           if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
