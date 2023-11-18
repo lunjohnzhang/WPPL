@@ -24,7 +24,7 @@ void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     for (int i=0;i<env.num_of_agents;++i) {
         agents_ids.push_back(i);
     }
-    std::random_shuffle(agents_ids.begin(),agents_ids.end());
+    std::shuffle(agents_ids.begin(),agents_ids.end(),MT);
 
     int disabled_agents_num=env.num_of_agents-max_agents_in_use;
     for (int i=0;i<disabled_agents_num;++i) {
