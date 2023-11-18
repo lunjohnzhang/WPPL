@@ -2,7 +2,7 @@
     "lifelong_solver_name": [
         {
             "n_agents": 700,
-            "value": "DUMMY"
+            "value": "LaCAM2"
         },
         {
             "n_agents": 800,
@@ -88,7 +88,21 @@
             "max_expanded": -1,
             "window": 30,
             "h_weight": 1.0
-        }
+        },
+        "order_strategy": [
+            {
+                "n_agents": 400,
+                "value": "early_time"
+            },
+            {
+                "n_agents": 600,
+                "value": "early_time"
+            },
+            {
+                "n_agents": 1000000,
+                "value": "early_time"
+            }
+        ]
     },
     "PIBT": {
         "prior_type": "early_time"

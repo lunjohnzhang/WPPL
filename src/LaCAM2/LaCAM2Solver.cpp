@@ -295,7 +295,19 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         ONLYDEV(g_timer.record_d("lacam2_plan_pre_s","lacam2_plan_pre");)
 
         // #pragma omp parallel for
-        // for (int i=0;i<1;++i) {
+        // for (int i=1;i<2;++i) {
+            
+            int order_strategy=1;
+            string _order_strategy=read_param_json<string>(config,"order_strategy");
+            if (_order_strategy=="early_time") {
+                order_strategy=1;
+            } else if (_order_strategy=="short_dist") {
+                order_strategy=0;
+            } else {
+                cout<<"unknown order strategy: "<<_order_strategy<<endl;
+                exit(-1);
+            }
+
             ONLYDEV(g_timer.record_p("lacam_build_planner_s");)
             auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.0F,
                 use_swap,
@@ -305,7 +317,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
             ONLYDEV(g_timer.record_d("lacam_build_planner_s","lacam_build_planner");)
             auto additional_info = std::string("");
             ONLYDEV(g_timer.record_p("lacam_solve_s");)
-            auto solution=planner.solve(additional_info,0);
+            auto solution=planner.solve(additional_info,order_strategy);
             ONLYDEV(g_timer.record_d("lacam_solve_s","lacam_solve");)
             auto cost=eval_solution(instance,solution);
             // #pragma omp critical

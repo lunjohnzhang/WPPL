@@ -74,7 +74,13 @@
             "max_expanded": -1,
             "window": 30,
             "h_weight": 1.0
-        }
+        },
+        "order_strategy": [
+            {
+                "n_agents": 1000000,
+                "value": "early_time"
+            }
+        ]
     },
     "PIBT": {
         "prior_type": "early_time"
