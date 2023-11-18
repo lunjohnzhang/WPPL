@@ -16,7 +16,7 @@
     "max_task_completed": [
         {
             "n_agents": 1000000,
-            "value": 10000
+            "value": 19000
         }
     ],
     "LNS": {

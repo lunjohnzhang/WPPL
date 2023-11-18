@@ -9,6 +9,27 @@
 
 namespace LaCAM2 {
 
+std::set<int> load_tabu_locs(string fp) {
+    std::ifstream f(fp);
+    try
+    {
+        auto tabu_locs = nlohmann::json::parse(f);
+        std::set<int> tabu_locs_set;
+        for (int i=0;i<tabu_locs.size();++i) {
+            int loc=tabu_locs[i].get<int>();
+            tabu_locs_set.insert(loc);
+        }
+
+        return tabu_locs_set;
+    }
+    catch (nlohmann::json::parse_error error)
+    {
+        std::cout << "Failed to load " << fp << std::endl;
+        std::cout << "Message: " << error.what() << std::endl;
+        exit(1);
+    }
+}
+
 void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     paths.resize(env.num_of_agents);
     agent_infos=std::make_shared<std::vector<AgentInfo> >(env.num_of_agents);
@@ -18,20 +39,45 @@ void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     // action_costs.resize(env.num_of_agents);
     // total_actions.resize(env.num_of_agents);
     G = std::make_shared<Graph>(env);
+}
 
-    // random select some agents to be disabled
-    std::vector<int> agents_ids;
-    for (int i=0;i<env.num_of_agents;++i) {
-        agents_ids.push_back(i);
+void LaCAM2Solver::disable_agents(const SharedEnvironment & env, const string & strategy) {
+
+    int disabled_agents_num;
+    if (strategy=="uniform") {
+        // random select some agents to be disabled
+        std::vector<int> agents_ids;
+        for (int i=0;i<env.num_of_agents;++i) {
+            agents_ids.push_back(i);
+        }
+        std::shuffle(agents_ids.begin(),agents_ids.end(),*MT);
+
+        disabled_agents_num=env.num_of_agents-max_agents_in_use;
+        for (int i=0;i<disabled_agents_num;++i) {
+            (*agent_infos)[agents_ids[i]].disabled=true;
+        }
+    } else if (strategy=="tabu_locs") {
+        // disable agents not in the tabu locs set
+        string tabu_locs_fp="scripts/brc202d_tabu_locs.txt";
+        auto tabu_locs = load_tabu_locs(tabu_locs_fp);
+
+        std::vector<int> agents_ids;
+        for (int i=0;i<env.num_of_agents;++i) {
+            if (tabu_locs.find(env.curr_states[i].location)==tabu_locs.end()) {
+                agents_ids.push_back(i);
+            }
+        }
+        std::shuffle(agents_ids.begin(),agents_ids.end(),*MT);
+
+        disabled_agents_num=env.num_of_agents-max_agents_in_use;
+        disabled_agents_num=std::min(disabled_agents_num,(int)agents_ids.size());
+        for (int i=0;i<disabled_agents_num;++i) {
+            (*agent_infos)[agents_ids[i]].disabled=true;
+        }
     }
-    std::shuffle(agents_ids.begin(),agents_ids.end(),MT);
 
-    int disabled_agents_num=env.num_of_agents-max_agents_in_use;
-    for (int i=0;i<disabled_agents_num;++i) {
-        (*agent_infos)[agents_ids[i]].disabled=true;
-    }
-
-    std::cout<<"#disabled agents: "<<disabled_agents_num<<std::endl;
+    std::cout<<"strategy: "<<strategy<<" #disabled agents: "<<disabled_agents_num<<std::endl;
+    
 }
 
 Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths) {
@@ -165,6 +211,11 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
     //         paths[i].push_back(env.curr_states[i]);
     //     }
     // }
+
+    if (env.curr_timestep==0) {
+        disable_agents(env,"tabu_locs");
+    }
+
 
     if (need_replan) {
         const int verbose = 10;

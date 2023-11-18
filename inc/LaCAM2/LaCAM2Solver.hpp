@@ -118,6 +118,8 @@ public:
         // initialize(env);
     }
 
+    void disable_agents(const SharedEnvironment & env, const string & strategy);
+
     Action get_action_from_states(const State & state, const State & next_state){
 #ifndef NO_ROT
         // assert(state.timestep+1==next_state.timestep);
