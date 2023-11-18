@@ -53,6 +53,10 @@ void MAPFPlanner::load_configs() {
             config["max_task_completed"]=read_conditional_value(config,"max_task_completed",env->num_of_agents);
         }
 
+        if (config.contains("max_execution_steps")) {
+            config["max_execution_steps"]=read_conditional_value(config,"max_execution_steps",env->num_of_agents);
+        }
+
         string s=config.dump();
         std::replace(s.begin(),s.end(),',','|');
         config["details"]=s;
@@ -205,6 +209,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         g_logger.init("logs/run");
     )
 
+    max_execution_steps = read_param_json<int>(config,"max_execution_steps",1000000);
+
     std::string weights_path=read_param_json<std::string>(config,"map_weights_path");
     std::string suffix=load_map_weights(weights_path);
 
@@ -281,6 +287,13 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     ONLYDEV(
         g_timer.record_p("_step_s");
     )
+
+    if (env->curr_timestep>=max_execution_steps-1) {
+        for (int i=0;i<env->num_of_agents;++i) {
+            actions.push_back(Action::W);
+        }
+        return;
+    }
 
     if (lifelong_solver_name=="RHCR") {
         cout<<"using RHCR"<<endl;
