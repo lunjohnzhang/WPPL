@@ -41,7 +41,9 @@ void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     G = std::make_shared<Graph>(env);
 }
 
-void LaCAM2Solver::disable_agents(const SharedEnvironment & env, const string & strategy) {
+void LaCAM2Solver::disable_agents(const SharedEnvironment & env) {
+
+    string strategy=read_param_json<string>(config,"disable_agent_strategy");
 
     int disabled_agents_num;
     if (strategy=="uniform") {
@@ -58,12 +60,17 @@ void LaCAM2Solver::disable_agents(const SharedEnvironment & env, const string & 
         }
     } else if (strategy=="tabu_locs") {
         // disable agents not in the tabu locs set
-        string tabu_locs_fp="scripts/brc202d_tabu_locs.txt";
+        string tabu_locs_fp=read_param_json<string>(config,"tabu_locs_fp");
         auto tabu_locs = load_tabu_locs(tabu_locs_fp);
 
         std::vector<int> agents_ids;
         for (int i=0;i<env.num_of_agents;++i) {
-            if (tabu_locs.find(env.curr_states[i].location)==tabu_locs.end()) {
+            // if (tabu_locs.find(env.curr_states[i].location)==tabu_locs.end()) {
+            //     agents_ids.push_back(i);
+            // }
+            int x=env.curr_states[i].location%env.cols;
+            int y=env.curr_states[i].location/env.cols;
+            if (y>15) {
                 agents_ids.push_back(i);
             }
         }
@@ -212,8 +219,8 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
     //     }
     // }
 
-    if (env.curr_timestep==0) {
-        disable_agents(env,"tabu_locs");
+    if (env.curr_timestep==0 && max_agents_in_use<env.num_of_agents) {
+        disable_agents(env);
     }
 
 

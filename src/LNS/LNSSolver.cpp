@@ -110,11 +110,11 @@ void LNSSolver::plan(const SharedEnvironment & env){
             ++disabled_agent_count;
         }
         starts.emplace_back(execution_paths[i].back().location,-1,execution_paths[i].back().orientation);
-        if ((*agent_infos)[i].disabled) {
-            goals.emplace_back(env.curr_states[i].location,-1,-1);
-        } else {
+        // if ((*agent_infos)[i].disabled) {
+        //     goals.emplace_back(env.curr_states[i].location,-1,-1);
+        // } else {
             goals.emplace_back(env.goal_locations[i][0].first,-1,-1);
-        }
+        // }
     }
 
     ONLYDEV(std::cout<<"disabled_agents:"<<disabled_agent_count<<std::endl;)

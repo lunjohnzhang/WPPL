@@ -2,11 +2,11 @@
     "lifelong_solver_name": [
         {
             "n_agents": 700,
-            "value": "LaCAM2"
+            "value": "LNS"
         },
         {
             "n_agents": 800,
-            "value": "DUMMY"
+            "value": "LNS"
         }
     ],
     "map_weights_path": [
@@ -20,7 +20,7 @@
         },
         {
             "n_agents": 600,
-            "value": "scripts/random_weight_012.w"
+            "value": "scripts/random_weight_015.weight"
         },
         {
             "n_agents": 1000000,
@@ -71,7 +71,23 @@
                 "max_expanded": -1,
                 "window": 30,
                 "h_weight": 1.0
-            }
+            },
+            "order_strategy": [
+                {
+                    "n_agents": 400,
+                    "value": "early_time"
+                },
+                {
+                    "n_agents": 600,
+                    "value": "early_time"
+                },
+                {
+                    "n_agents": 1000000,
+                    "value": "early_time"
+                }
+            ],
+            "disable_agent_strategy": "uniform",
+            "tabu_locs_fp": "scripts/random_600_tabu_locs.txt"
         }
     },
     "LaCAM2": {
@@ -96,13 +112,15 @@
             },
             {
                 "n_agents": 600,
-                "value": "early_time"
+                "value": "short_dist"
             },
             {
                 "n_agents": 1000000,
                 "value": "early_time"
             }
-        ]
+        ],
+        "disable_agent_strategy": "tabu_locs",
+        "tabu_locs_fp": "scripts/random_600_tabu_locs.txt"
     },
     "PIBT": {
         "prior_type": "early_time"
