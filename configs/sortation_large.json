@@ -45,7 +45,15 @@
                 "max_expanded": -1,
                 "window": 30,
                 "h_weight": 1.0
-            }
+            },
+            "order_strategy": [
+                {
+                    "n_agents": 1000000,
+                    "value": "early_time"
+                }
+            ],
+            "disable_agent_strategy": "uniform",
+            "tabu_locs_fp": ""
         }
     },
     "LaCAM2": {
@@ -68,7 +76,9 @@
                 "n_agents": 1000000,
                 "value": "early_time"
             }
-        ]
+        ],
+        "disable_agent_strategy": "uniform",
+        "tabu_locs_fp": ""
     },
     "PIBT": {
         "prior_type": "early_time"
