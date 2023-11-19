@@ -24,7 +24,7 @@
         },
         {
             "n_agents": 1000000,
-            "value": "scripts/random_800_uncompressed_weights.w"
+            "value": ""
         }
     ],
     "max_task_completed": [
@@ -42,7 +42,16 @@
         }
     ],
     "max_agents_in_use": -1,
-    "disable_corner_target_agents": true,
+    "disable_corner_target_agents": [
+        {
+            "n_agents": 200,
+            "value": false
+        },
+        {
+            "n_agents": 1000000,
+            "value": true
+        }
+    ],
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.95,

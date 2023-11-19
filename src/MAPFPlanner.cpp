@@ -59,6 +59,7 @@ void MAPFPlanner::load_configs() {
 
         config["LaCAM2"]["order_strategy"]=read_conditional_value(config["LaCAM2"],"order_strategy",env->num_of_agents);
         config["LNS"]["LaCAM2"]["order_strategy"]=read_conditional_value(config["LNS"]["LaCAM2"],"order_strategy",env->num_of_agents);
+        config["disable_corner_target_agents"]=read_conditional_value(config,"disable_corner_target_agents",env->num_of_agents);
 
         string s=config.dump();
         std::replace(s.begin(),s.end(),',','|');
@@ -66,8 +67,8 @@ void MAPFPlanner::load_configs() {
     }
     catch (nlohmann::json::parse_error error)
     {
-        std::cerr << "Failed to load " << config_path << std::endl;
-        std::cerr << "Message: " << error.what() << std::endl;
+        std::cout << "Failed to load " << config_path << std::endl;
+        std::cout << "Message: " << error.what() << std::endl;
         exit(1);
     }
 }
@@ -213,6 +214,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     )
 
     max_execution_steps = read_param_json<int>(config,"max_execution_steps",1000000);
+
+    std::cout<<"max execution steps: "<<max_execution_steps<<std::endl;
 
     std::string weights_path=read_param_json<std::string>(config,"map_weights_path");
     std::string suffix=load_map_weights(weights_path);

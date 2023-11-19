@@ -18,7 +18,12 @@
             "value": 3500
         }
     ],
-    "disable_corner_target_agents": false,
+    "disable_corner_target_agents": [
+        {
+            "n_agents": 1000000,
+            "value": false
+        }
+    ],
     "max_task_completed": [
         {
             "n_agents": 1000000,
