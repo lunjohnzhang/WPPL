@@ -261,11 +261,17 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         if (max_agents_in_use==-1) {
             max_agents_in_use=env->num_of_agents;
         }
+
+        auto all_one_weights=std::make_shared<std::vector<float> >(env->rows*env->cols*5,1);
+        string suffix = "all_one";
+        auto heuristics_all_one = std::make_shared<HeuristicTable>(env,all_one_weights,true);
+        heuristics_all_one->preprocess(suffix); 
+
         bool disable_corner_target_agents=read_param_json<bool>(config,"disable_corner_target_agents",false);
         int max_task_completed=read_param_json<int>(config,"max_task_completed",1000000);
         auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,disable_corner_target_agents,max_task_completed,config["LNS"]["LaCAM2"]);
         lacam2_solver->initialize(*env);
-        lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver,max_task_completed);
+        lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,heuristics_all_one,env,map_weights,config["LNS"],lacam2_solver,max_task_completed);
         lns_solver->initialize(*env);
         cout<<"LNSSolver initialized"<<endl;
     } else if (lifelong_solver_name=="DUMMY") {

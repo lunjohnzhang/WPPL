@@ -10,13 +10,13 @@ namespace LNS {
 namespace Parallel {
 
 NeighborGenerator::NeighborGenerator(
-    Instance & instance, std::shared_ptr<HeuristicTable> HT, PathTable & path_table, 
+    Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<HeuristicTable> HT_all_one, PathTable & path_table, 
     std::vector<Agent> & agents, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
     int neighbor_size, destroy_heuristic destroy_strategy, 
     bool ALNS, double decay_factor, double reaction_factor, 
     int num_threads, int screen
 ):
-    instance(instance), HT(HT), path_table(path_table), 
+    instance(instance), HT(HT), HT_all_one(HT_all_one), path_table(path_table), 
     agents(agents), agent_infos(agent_infos),
     neighbor_size(neighbor_size), destroy_strategy(destroy_strategy),
     ALNS(ALNS), decay_factor(decay_factor), reaction_factor(reaction_factor),

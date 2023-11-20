@@ -15,6 +15,7 @@ class NeighborGenerator
 public:
     Instance & instance;
     std::shared_ptr<HeuristicTable> HT;
+    std::shared_ptr<HeuristicTable> HT_all_one;
     PathTable & path_table;
     std::vector<Agent> & agents;
 
@@ -47,7 +48,7 @@ public:
     std::vector<std::shared_ptr<Neighbor>> neighbors; // the generated neighbors for usage
 
     NeighborGenerator(
-        Instance & instance, std::shared_ptr<HeuristicTable> HT, PathTable & path_table, 
+        Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<HeuristicTable> HT_all_one, PathTable & path_table, 
         std::vector<Agent> & agents, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
         int neighbor_size, destroy_heuristic destroy_strategy, 
         bool ALNS, double decay_factor, double reaction_factor, 

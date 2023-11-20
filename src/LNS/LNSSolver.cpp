@@ -9,6 +9,7 @@ namespace LNS {
 
 LNSSolver::LNSSolver(
     const std::shared_ptr<HeuristicTable> & HT,
+    const std::shared_ptr<HeuristicTable> & HT_all_one,
     SharedEnvironment * env,
     std::shared_ptr<std::vector<float> > & map_weights,
     nlohmann::json & config,
@@ -16,6 +17,7 @@ LNSSolver::LNSSolver(
     int max_task_completed
 ):
     HT(HT),
+    HT_all_one(HT_all_one),
     map_weights(map_weights),
     action_model(env),
     executor(env),
@@ -198,6 +200,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
         lns = std::make_shared<Parallel::GlobalManager>(
             *instance,
             HT,
+            HT_all_one,
             map_weights,
             agent_infos,
             read_param_json<int>(config,"neighborSize"),
@@ -255,6 +258,9 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
     // copy current paths to lns paths
     // we need to do this every timestep because the goal might be updated.
+
+    bool use_HT_all_one=false;
+
     ONLYDEV(g_timer.record_p("copy_paths_2_s");)
     for (int i=0;i<lns->agents.size();i++){
         if (lns->agents[i].id!=i) {
@@ -271,7 +277,11 @@ void LNSSolver::plan(const SharedEnvironment & env){
             }
         }
         // TODO(rivers): it is not correct on weighted maps
-        lns->agents[i].path.path_cost=lns->agents[i].getEstimatedPathLength(lns->agents[i].path,env.goal_locations[i][0].first,HT);
+        if (use_HT_all_one) {
+            lns->agents[i].path.path_cost=lns->agents[i].getEstimatedPathLength(lns->agents[i].path,env.goal_locations[i][0].first,HT_all_one);
+        } else {
+            lns->agents[i].path.path_cost=lns->agents[i].getEstimatedPathLength(lns->agents[i].path,env.goal_locations[i][0].first,HT);
+        }
         // cerr<<"agent "<<i<<": ";
         // for (int j=0;j<lns->agents[i].path.size();++j){
         //     cerr<<lacam2_solver->paths[i][j].location<<" ";

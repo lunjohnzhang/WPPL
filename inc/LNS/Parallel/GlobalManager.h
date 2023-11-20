@@ -31,6 +31,7 @@ public:
     PathTable path_table;
     std::vector<Agent> agents;
     std::shared_ptr<HeuristicTable> HT;
+    std::shared_ptr<HeuristicTable> HT_all_one;
     std::shared_ptr<vector<float> > map_weights;
     int screen;
     int num_threads;
@@ -40,7 +41,7 @@ public:
     bool has_disabled_agents=false;
 
     GlobalManager(
-        Instance & instance, std::shared_ptr<HeuristicTable> HT, 
+        Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<HeuristicTable> HT_all_one,
         std::shared_ptr<vector<float> > map_weights, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
         int neighbor_size, destroy_heuristic destroy_strategy,
         bool ALNS, double decay_factor, double reaction_factor,

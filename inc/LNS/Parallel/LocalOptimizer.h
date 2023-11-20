@@ -17,6 +17,7 @@ public:
     PathTable path_table; // maintain a copy
     std::vector<Agent> & agents; // remove in the future, currently we can visit it for agent id but not do anything else.
     std::shared_ptr<HeuristicTable> HT;
+    std::shared_ptr<HeuristicTable> HT_all_one;
     std::shared_ptr<vector<float> > map_weights;
     std::shared_ptr<TimeSpaceAStarPlanner> path_planner;
 
@@ -32,7 +33,7 @@ public:
     bool has_disabled_agents=false;
 
     LocalOptimizer(
-        Instance & instance, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT, 
+        Instance & instance, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<HeuristicTable> HT_all_one, 
         std::shared_ptr<vector<float> > map_weights, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
         string replan_algo_name, bool sipp,
         int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH, int execution_window,

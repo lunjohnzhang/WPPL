@@ -37,6 +37,7 @@ public:
     std::shared_ptr<Parallel::GlobalManager> lns;
     std::shared_ptr<Instance> instance;
     std::shared_ptr<HeuristicTable> HT; // instance
+    std::shared_ptr<HeuristicTable> HT_all_one; // instance
     std::shared_ptr<std::vector<float> > map_weights; // map weights
 
     std::shared_ptr<vector<LaCAM2::AgentInfo> > agent_infos;
@@ -65,6 +66,7 @@ public:
 
     LNSSolver(
         const std::shared_ptr<HeuristicTable> & HT,
+        const std::shared_ptr<HeuristicTable> & HT_all_one,
         SharedEnvironment * env,
         std::shared_ptr<std::vector<float> > & map_weights, // map weights
         nlohmann::json & config,

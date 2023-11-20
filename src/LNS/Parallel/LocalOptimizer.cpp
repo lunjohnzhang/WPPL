@@ -7,14 +7,14 @@ namespace LNS {
 namespace Parallel {
 
 LocalOptimizer::LocalOptimizer(
-    Instance & instance, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT, 
+    Instance & instance, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<HeuristicTable> HT_all_one,
     std::shared_ptr<vector<float> > map_weights, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
     string replan_algo_name, bool sipp,
     int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH, int execution_window,
     bool has_disabled_agents,
     int screen
 ):
-    instance(instance), path_table(instance.map_size,window_size_for_CT), agents(agents), HT(HT), map_weights(map_weights), agent_infos(agent_infos),
+    instance(instance), path_table(instance.map_size,window_size_for_CT), agents(agents), HT(HT), HT_all_one(HT_all_one), map_weights(map_weights), agent_infos(agent_infos),
     replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
     has_disabled_agents(has_disabled_agents),
