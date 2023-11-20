@@ -272,9 +272,9 @@ void LNSSolver::plan(const SharedEnvironment & env){
     bool succ=lns->run(time_limiter);
     if (succ)
     {
-        cout<<"lns succeed"<<endl;
+        //cout<<"lns succeed"<<endl;
     } else {
-        cout<<"lns failed"<<endl;
+        //cout<<"lns failed"<<endl;
         exit(-1);
     }
 
