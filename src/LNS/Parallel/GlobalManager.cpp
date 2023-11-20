@@ -13,7 +13,7 @@ GlobalManager::GlobalManager(
     int neighbor_size, destroy_heuristic destroy_strategy,
     bool ALNS, double decay_factor, double reaction_factor,
     string init_algo_name, string replan_algo_name, bool sipp,
-    int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
+    int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH, int execution_window,
     bool has_disabled_agents,
     int screen
 ): 
@@ -42,7 +42,7 @@ GlobalManager::GlobalManager(
         auto local_optimizer=std::make_shared<LocalOptimizer>(
             instance, agents, HT, map_weights, agent_infos,
             replan_algo_name, sipp,
-            window_size_for_CT, window_size_for_CAT, window_size_for_PATH,
+            window_size_for_CT, window_size_for_CAT, window_size_for_PATH, execution_window,
             has_disabled_agents,
             screen
         );

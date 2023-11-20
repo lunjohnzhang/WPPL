@@ -45,7 +45,7 @@ public:
         int neighbor_size, destroy_heuristic destroy_strategy,
         bool ALNS, double decay_factor, double reaction_factor,
         string init_algo_name, string replan_algo_name, bool sipp,
-        int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
+        int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH, int execution_window,
         bool has_disabled_agents,
         int screen
     );
