@@ -10,7 +10,7 @@ LocalOptimizer::LocalOptimizer(
     Instance & instance, std::vector<Agent> & agents, std::shared_ptr<HeuristicTable> HT, 
     std::shared_ptr<vector<float> > map_weights, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
     string replan_algo_name, bool sipp,
-    int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH,
+    int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH, int execution_window,
     bool has_disabled_agents,
     int screen
 ):
@@ -21,7 +21,7 @@ LocalOptimizer::LocalOptimizer(
     screen(screen) {
 
     // TODO(rivers): for agent_id, we just use 0 to initialize the path planner. but we need to change it (also starts and goals) everytime before planning
-    path_planner = std::make_shared<TimeSpaceAStarPlanner>(instance, HT, map_weights);
+    path_planner = std::make_shared<TimeSpaceAStarPlanner>(instance, HT, map_weights, execution_window);
 }
 
 void LocalOptimizer::reset() {

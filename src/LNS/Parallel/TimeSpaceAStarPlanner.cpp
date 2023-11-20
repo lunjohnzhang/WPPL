@@ -6,7 +6,7 @@ namespace Parallel {
 
 using State=TimeSpaceAStarState;
 
-TimeSpaceAStarPlanner::TimeSpaceAStarPlanner(Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<float> > weights): instance(instance), HT(HT), weights(weights) {};
+TimeSpaceAStarPlanner::TimeSpaceAStarPlanner(Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<vector<float> > weights, int execution_window): instance(instance), HT(HT), weights(weights), execution_window(execution_window) {};
 
 void TimeSpaceAStarPlanner::findPath(int start_pos, int start_orient, int goal_pos, ConstraintTable & constraint_table, const TimeLimiter & time_limiter) {
     clear();
@@ -27,7 +27,7 @@ void TimeSpaceAStarPlanner::findPath(int start_pos, int start_orient, int goal_p
         curr->closed=true;
         ++n_expanded;
 
-        if (curr->pos==goal_pos && curr->t>=1 && !constraint_table.constrained(curr->pos, curr->t)) {
+        if (execution_window==1 && curr->pos==goal_pos && curr->t>=1 && !constraint_table.constrained(curr->pos, curr->t)) {
             buildPath(curr,goal_pos);
             return;
         }
