@@ -91,26 +91,29 @@ void change_weights(int row, int col, int action, int rows, int cols, std::vecto
     return;
 }
 
-void update_weights(std::vector<std::vector<float>> old_metrics, std::vector<std::vector<float>> new_metrics, std::vector<float>& map_weights,const int& rows, const int& cols){
+void update_weights(std::vector<std::vector<float>> new_metrics, std::vector<float>& map_weights,const int& rows, const int& cols){
     /*TODO:updates weights based on frequency metrics ::::::: May have a smarter way to update weights
     * 1. compare old frequency metrics and new frequency metrics
     * 2. update weights based on the difference
     */
-    const int updateFactor = 100;
+    const int updateFactor = 10;
     for (int i = 0; i < new_metrics.size(); i++){
         for (int j = 0; j < new_metrics[0].size(); j++){
-            if (new_metrics[i][j] == std::numeric_limits<float>::quiet_NaN()){
+            if (std::isnan(new_metrics[i][j])){
                 continue;
             }
             else{
-                // float diff = new_metrics[i][j] - old_metrics[i][j];
-                for (int k = 0; k < 5; k++){
+                // for actions 0, 1, 2, 3
+                for (int k = 0; k < 4; k++){
                     // need deeper thoughts on how to update weights
                     float old_weight = get_weight(i, j, k, rows, cols, map_weights);
                     // if q value is positive, increase weight, if q value is negative, decrease weight
                     float new_weight = old_weight *(1+new_metrics[i][j]/updateFactor);
                     change_weights(i, j, k, rows, cols, map_weights, new_weight);
                 }
+                // for action 4
+                float old_weight = get_weight(i, j, 4, rows, cols, map_weights);
+                float new_weight = old_weight *(1-new_metrics[i][j]/updateFactor);
             }
         }
     }
@@ -321,6 +324,7 @@ std::vector<std::vector<float>> get_frequency_metrics(std::vector<std::vector<in
         }
     }
     mean = mean / count;   
+    std::cout << "mean: " << mean << std::endl;
 
     // mean offset sum
     long int meanOffsetSum = 0;
@@ -335,6 +339,7 @@ std::vector<std::vector<float>> get_frequency_metrics(std::vector<std::vector<in
     
     // find standard deviation of the map
     int standardDeviation = sqrt(meanOffsetSum / count);
+    std::cout << "standard deviation: " << standardDeviation << std::endl;
 
     // find q value for the map
     for (int i = 0; i < travel_frequency.size(); i++){
@@ -343,7 +348,7 @@ std::vector<std::vector<float>> get_frequency_metrics(std::vector<std::vector<in
                 metric_map[i][j] = std::numeric_limits<float>::quiet_NaN();
             }
             else{
-                metric_map[i][j] = (travel_frequency[i][j] - mean)/standardDeviation;
+                metric_map[i][j] = static_cast<float>(travel_frequency[i][j] - mean) / standardDeviation;
             }
         }
     }
@@ -389,6 +394,7 @@ std::vector<std::vector<int>> process_starting_point(int i, int j, int k, bool**
 }
 
 int main(int argc, char* argv[]) {
+    // record start time
     if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " <map_file_path>" << argv[1] << " <weight_file_path>" << std::endl;
         return 1;
@@ -412,9 +418,12 @@ int main(int argc, char* argv[]) {
     int num_threads = std::thread::hardware_concurrency();
     // int num_threads = 1;
 
-    int maxEpoch = 1;
+    int maxEpoch = 3;
 
     for (int epoch = 0; epoch < maxEpoch; epoch++){
+        auto start = std::chrono::high_resolution_clock::now();
+        std::cout << "Epoch " << epoch << " started" << std::endl;
+        travel_frequency = std::vector<std::vector<int>>(height, std::vector<int>(width, 0));
         // Create a thread pool with the desired number of threads
         ctpl::thread_pool pool(num_threads);
 
@@ -428,7 +437,7 @@ int main(int argc, char* argv[]) {
                 for (int k = 0; k < 4; k++) {
                     futures.push_back(pool.push([i, j, k, &mapArray, &height, &width, &map_weights](int id) {
                         auto result = process_starting_point(i, j, k, mapArray, height, width, map_weights);
-                        std::cout << "Thread " << id << " completed: y " << i << " x " << j << " Ori " << k <<std::endl;
+                        // std::cout << "Thread " << id << " completed: y " << i << " x " << j << " Ori " << k <<std::endl;
                         return result;
                     }));
                 }
@@ -468,7 +477,8 @@ int main(int argc, char* argv[]) {
 
         // save frequency to a file
         std::ofstream frequency_file;
-        frequency_file.open("frequency.txt");
+        std::string frequencyFileName = "frequency_epoch" + std::to_string(epoch) + ".txt";
+        frequency_file.open(frequencyFileName);
         for (int i = 0; i < travel_frequency.size(); i++){
             for (int j = 0; j < travel_frequency[0].size(); j++){
                 frequency_file << travel_frequency[i][j] << " ";
@@ -476,9 +486,32 @@ int main(int argc, char* argv[]) {
             frequency_file << "\n";
         }
 
-        // get frequency metrics
-        std::vector<std::vector<float>> metric_map = get_frequency_metrics(travel_frequency);
+        // // load frequency from a file, save time for testing
+        // std::ifstream frequency_file;
+        // frequency_file.open("frequency.txt");
+        // for (int i = 0; i < travel_frequency.size(); i++){
+        //     for (int j = 0; j < travel_frequency[0].size(); j++){
+        //         frequency_file >> travel_frequency[i][j];
+        //     }
+        // }
 
+        // get frequency metrics and update weights
+        std::vector<std::vector<float>> metric_map = get_frequency_metrics(travel_frequency);
+        update_weights(metric_map, map_weights, height, width);
+
+        // weights to file
+        std::ofstream weight_file;
+        std::string weightFileName = "weights_epoch" + std::to_string(epoch) + ".w";
+        weight_file.open(weightFileName);
+        weight_file << "[" ;
+        for (int i = 0; i < map_weights.size(); i++){
+            weight_file << map_weights[i] << ",";
+        }
+        weight_file << "]";
+        // record epoch time
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Epoch " << epoch << " completed in " << elapsed.count() << " seconds" << std::endl;
     }
     
 
