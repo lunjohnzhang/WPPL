@@ -2,7 +2,7 @@
     "lifelong_solver_name": [
         {
             "n_agents": 1000000,
-            "value": "DUMMY"
+            "value": "LNS"
         }
     ],
     "map_weights_path": [
@@ -11,7 +11,12 @@
             "value": "scripts/brc202d_weight_002.w"
         }
     ],
-    "max_agents_in_use": 2500,
+    "max_agents_in_use": [
+        {
+            "n_agents": 1000000,
+            "value": 2500
+        }
+    ],
     "max_execution_steps": [
         {
             "n_agents": 1000000,

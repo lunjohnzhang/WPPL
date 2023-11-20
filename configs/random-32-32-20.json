@@ -1,12 +1,12 @@
 {
     "lifelong_solver_name": [
         {
-            "n_agents": 400,
+            "n_agents": 600,
             "value": "LNS"
         },
         {
             "n_agents": 800,
-            "value": "DUMMY"
+            "value": "LaCAM2"
         }
     ],
     "map_weights_path": [
@@ -27,6 +27,20 @@
             "value": ""
         }
     ],
+    "max_execution_steps": [
+        {
+            "n_agents": 400,
+            "value": 1000000
+        },
+        {
+            "n_agents": 600,
+            "value": 800
+        },
+        {
+            "n_agents": 1000000,
+            "value": 10000000
+        }
+    ],
     "max_task_completed": [
         {
             "n_agents": 400,
@@ -41,7 +55,20 @@
             "value": 10000000
         }
     ],
-    "max_agents_in_use": -1,
+    "max_agents_in_use": [
+        {
+            "n_agents": 400,
+            "value": -1
+        },
+        {
+            "n_agents": 600,
+            "value": 400
+        },
+        {
+            "n_agents": 1000000,
+            "value": -1
+        }
+    ],
     "disable_corner_target_agents": [
         {
             "n_agents": 200,
