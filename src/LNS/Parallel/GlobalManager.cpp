@@ -22,7 +22,9 @@ GlobalManager::GlobalManager(
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
     screen(screen), agent_infos(agent_infos), has_disabled_agents(has_disabled_agents) {
 
-    num_threads=omp_get_max_threads();
+    // omp_set_num_threads(1);
+
+    num_threads=1;//omp_get_max_threads();
 
     // for (auto w: *map_weights){
     //     if (w!=1){
@@ -35,7 +37,7 @@ GlobalManager::GlobalManager(
         agents.emplace_back(i,instance,HT,agent_infos);
     }
 
-    // cout<<num_threads<<endl;
+    cout<<"num_threads:"<<num_threads<<endl;
     // exit(-1);
 
     for (auto i=0;i<num_threads;++i) {
@@ -154,7 +156,7 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
         } else {
             g_timer.record_p("init_loc_opt_update_s");
         }
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for (int i=0;i<num_threads;++i) {
             local_optimizers[i]->update(neighbor);
         }
@@ -268,7 +270,7 @@ bool GlobalManager::run(TimeLimiter & time_limiter) {
         // in the single-thread setting, local_optimizer directly modify paths
         // but we should first recover the path table, then redo it after all local optimizers finishes.
         g_timer.record_p("loc_opt_s");
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for (auto i=0;i<neighbor_generator->neighbors.size();++i) {
             // cerr<<i<<" "<<neighbor_generator.neighbors[i]->agents.size()<<endl;
             auto & neighbor_ptr = neighbor_generator->neighbors[i];

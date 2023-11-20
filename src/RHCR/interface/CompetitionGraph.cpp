@@ -118,7 +118,7 @@ void CompetitionGraph::preprocessing(bool consider_rotation, const string & file
 
 		// }
 
-        int n_threads=omp_get_max_threads();               
+        int n_threads=1;//omp_get_max_threads();               
         cout<<"number of threads used for heuristic computation: "<<n_threads<<endl;
         int n_directions=4;
         // maybe let's just use c way to speed up?
@@ -129,16 +129,16 @@ void CompetitionGraph::preprocessing(bool consider_rotation, const string & file
         int ctr=0;
         int step=100;
         auto start = std::chrono::steady_clock::now();
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for (int i=0;i<idxs.size();++i)
 		{
-            int thread_id=omp_get_thread_num();
+            int thread_id=0;//omp_get_thread_num();
 
             int idx=idxs[i];
             int s_idx=thread_id*this->size()*n_directions;
             compute_heuristics(idx,lengths+s_idx,visited+s_idx,queues+s_idx,heuristics[idx],n_directions);
             
-            #pragma omp critical
+            //#pragma omp critical
             {
                 ++ctr;
                 if (ctr%step==0){
@@ -266,7 +266,7 @@ bool CompetitionGraph::load_heuristics_table(std::ifstream& myfile)
     // NOTE(hj): currently, the heuristic table in the memory is still N*M size double-type.
     // TODO(hj): the same wierd bug in save_heuristics_table function also happens here! it seems that we are not allowed to create a too large array at a time, but who restrict this?
     // but heuristics table is also large, why it is allowed?
-    int n_threads=omp_get_max_threads();              
+    int n_threads=0;//omp_get_max_threads();              
     auto buff=new unsigned short[N*n_threads];
     end = std::chrono::steady_clock::now();
 	runtime = std::chrono::duration<double>(end-start).count();
@@ -281,7 +281,7 @@ bool CompetitionGraph::load_heuristics_table(std::ifstream& myfile)
         }
         int batch_size=end_idx-start_idx;
         in.read((char*)buff,sizeof(unsigned short)*N*batch_size);
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for (int i=start_idx;i<end_idx;++i){
             for (int j=0;j<N;++j){
                 int idx=i-start_idx;

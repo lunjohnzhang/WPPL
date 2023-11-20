@@ -59,7 +59,7 @@ void NeighborGenerator::update(Neighbor & neighbor){
 }
 
 void NeighborGenerator::generate_parallel(const TimeLimiter & time_limiter) {
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int i = 0; i < num_threads; i++) {
         generate(time_limiter,i);
     }

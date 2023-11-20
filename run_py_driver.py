@@ -56,7 +56,7 @@ import os
 # how do we specify OMP_NUM_THREADS=1, may be directly set in environ?
 os.environ["OMP_NUM_THREADS"] = "1"
 
-EXECUTABLE="./build/lifelong"
+EXECUTABLE="./build/lifelong_comp"
 INPUT_FILE="example_problems/random.domain/random_400.json" # random_xxx means random map with xxx agents. we care about 100,200,400,600,800.
 OUTPUT_FILE="test_py_driver.json" # 
 SIMULATION_TIME=1000 # simulate how many steps # for random_100,200,400,600,800, we use 500,500,1000,1000,1000 steps accordingly.
