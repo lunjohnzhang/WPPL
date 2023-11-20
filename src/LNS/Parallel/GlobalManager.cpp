@@ -332,12 +332,12 @@ bool GlobalManager::run(TimeLimiter & time_limiter) {
         average_group_size /= (double)(iteration_stats.size() - 1);
 
     elapse=time_limiter.get_elapse();
-    cout << getSolverName() << ": "
+    ONLYDEV(cout << getSolverName() << ": "
         << "runtime = " << elapse << ", "
         << "iterations = " << iteration_stats.size()-1 << ", "
         << "solution cost = " << sum_of_costs << ", "
         << "initial solution cost = " << initial_sum_of_costs << ", "
-        << "failed iterations = " << num_of_failures << endl;
+        << "failed iterations = " << num_of_failures << endl;)
 
     return true;
 }
