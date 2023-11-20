@@ -40,7 +40,7 @@
         "window_size_for_CT": 10,
         "window_size_for_CAT": 10,
         "window_size_for_PATH": 10,
-        "execution_window": 1,
+        "execution_window": 3,
         "LaCAM2": {
             "seed": 0,
             "planning_window": 10,
