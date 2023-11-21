@@ -14,13 +14,13 @@ NeighborGenerator::NeighborGenerator(
     std::vector<Agent> & agents, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
     int neighbor_size, destroy_heuristic destroy_strategy, 
     bool ALNS, double decay_factor, double reaction_factor, 
-    int num_threads, int screen
+    int num_threads, int screen, int random_seed
 ):
     instance(instance), HT(HT), path_table(path_table), 
     agents(agents), agent_infos(agent_infos),
     neighbor_size(neighbor_size), destroy_strategy(destroy_strategy),
     ALNS(ALNS), decay_factor(decay_factor), reaction_factor(reaction_factor),
-    num_threads(num_threads), screen(screen) {
+    num_threads(num_threads), screen(screen), MT(random_seed) {
 
     destroy_weights.assign(DESTORY_COUNT,1);
 
@@ -59,6 +59,7 @@ void NeighborGenerator::update(Neighbor & neighbor){
 }
 
 void NeighborGenerator::generate_parallel(const TimeLimiter & time_limiter) {
+    // TODO(rivers): since here we use parallel, we need a random seed generator that support parallelization, that is why we only could use rand() but not MT(), but we can fix this later.
     #pragma omp parallel for
     for (int i = 0; i < num_threads; i++) {
         generate(time_limiter,i);
@@ -249,7 +250,7 @@ bool NeighborGenerator::generateNeighborByIntersection(Neighbor & neighbor) {
     neighbor.agents.assign(neighbors_set.begin(), neighbors_set.end());
     if (neighbor.agents.size() > neighbor_size)
     {
-        std::random_shuffle(neighbor.agents.begin(), neighbor.agents.end());
+        std::shuffle(neighbor.agents.begin(), neighbor.agents.end(),MT);
         neighbor.agents.resize(neighbor_size);
     }
     if (screen >= 2)

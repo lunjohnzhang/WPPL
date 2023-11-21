@@ -20,6 +20,8 @@ public:
     std::shared_ptr<vector<float> > map_weights;
     std::shared_ptr<TimeSpaceAStarPlanner> path_planner;
 
+    std::mt19937 MT; 
+
     std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos;
 
     string replan_algo_name;
@@ -37,7 +39,8 @@ public:
         string replan_algo_name, bool sipp,
         int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH, int execution_window,
         bool has_disable_agents,
-        int screen
+        int screen,
+        int random_seed
     );
 
     // the global manager will push global changes to local optimizer though this function. 

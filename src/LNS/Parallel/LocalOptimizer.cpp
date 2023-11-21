@@ -12,13 +12,14 @@ LocalOptimizer::LocalOptimizer(
     string replan_algo_name, bool sipp,
     int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH, int execution_window,
     bool has_disabled_agents,
-    int screen
+    int screen,
+    int random_seed
 ):
     instance(instance), path_table(instance.map_size,window_size_for_CT), agents(agents), HT(HT), map_weights(map_weights), agent_infos(agent_infos),
     replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
     has_disabled_agents(has_disabled_agents),
-    screen(screen) {
+    screen(screen), MT(random_seed) {
 
     // TODO(rivers): for agent_id, we just use 0 to initialize the path planner. but we need to change it (also starts and goals) everytime before planning
     path_planner = std::make_shared<TimeSpaceAStarPlanner>(instance, HT, map_weights, execution_window);
@@ -86,7 +87,7 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter
 {
     //ONLYDEV(g_timer.record_p("run_pp_s");)
     auto shuffled_agents = neighbor.agents;
-    std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
+    std::shuffle(shuffled_agents.begin(), shuffled_agents.end(), MT);
 
     if (has_disabled_agents) {
         std::stable_sort(shuffled_agents.begin(), shuffled_agents.end(), [&](int a, int b) {

@@ -44,7 +44,7 @@ GlobalManager::GlobalManager(
             replan_algo_name, sipp,
             window_size_for_CT, window_size_for_CAT, window_size_for_PATH, execution_window,
             has_disabled_agents,
-            screen
+            screen, i*2023+1
         );
         local_optimizers.push_back(local_optimizer);
     }
@@ -53,7 +53,7 @@ GlobalManager::GlobalManager(
         instance, HT, path_table, agents, agent_infos,
         neighbor_size, destroy_strategy, 
         ALNS, decay_factor, reaction_factor, 
-        num_threads, screen
+        num_threads, screen, 0
     );
 }
 
