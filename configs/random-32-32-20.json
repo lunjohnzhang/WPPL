@@ -9,7 +9,7 @@
             "value": "LNS"
         },
         {
-            "n_agents": 600,
+            "n_agents": 1000000,
             "value": "DUMMY"
         }
     ],
