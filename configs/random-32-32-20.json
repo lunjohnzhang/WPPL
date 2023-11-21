@@ -1,22 +1,22 @@
 {
     "lifelong_solver_name": [
         {
-            "n_agents": 600,
+            "n_agents": 200,
             "value": "LNS"
         },
         {
             "n_agents": 800,
-            "value": "LaCAM2"
+            "value": "DUMMY"
         }
     ],
     "map_weights_path": [
         {
             "n_agents": 200,
-            "value": "scripts/random_weight_003.w"
+            "value": ""
         },
         {
             "n_agents": 500,
-            "value": "scripts/random_weight_020.w"
+            "value": "scripts/random_weight_023.weight"
         },
         {
             "n_agents": 600,
@@ -24,7 +24,7 @@
         },
         {
             "n_agents": 1000000,
-            "value": ""
+            "value": "scripts/random_800_uncompressed_weights.w"
         }
     ],
     "max_execution_steps": [
@@ -93,13 +93,13 @@
         "sipp": true,
         "pibtWindow": 5,
         "winPibtSoftmode": true,
-        "window_size_for_CT": 10,
-        "window_size_for_CAT": 10,
-        "window_size_for_PATH": 10,
+        "window_size_for_CT": 15,
+        "window_size_for_CAT": 15,
+        "window_size_for_PATH": 15,
         "execution_window": 1,
         "LaCAM2": {
             "seed": 0,
-            "planning_window": 10,
+            "planning_window": 15,
             "execution_window": 1,
             "use_external_executor": false,
             "consider_rotation": false,
