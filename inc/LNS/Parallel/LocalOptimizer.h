@@ -15,7 +15,7 @@ public:
     // TODO(rivers): think about what data structure needs a separate copy for each local optimizer.
     Instance & instance;
     PathTable path_table; // maintain a copy
-    std::vector<Agent> & agents; // remove in the future, currently we can visit it for agent id but not do anything else.
+    std::vector<Agent> agents; // remove in the future, currently we can visit it for agent id but not do anything else.
     std::shared_ptr<HeuristicTable> HT;
     std::shared_ptr<vector<float> > map_weights;
     std::shared_ptr<TimeSpaceAStarPlanner> path_planner;

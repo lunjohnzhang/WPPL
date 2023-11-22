@@ -59,7 +59,7 @@ public:
     // we will just make this part sequentially now, namely each time we only select one neighborhood
     // if we want to parallelize the optimization of multiple ones. just call this fuction more.
     void generate_parallel(const TimeLimiter & time_limiter);
-    void generate(const TimeLimiter & time_limiter,int idx);
+    Neighbor generate(const TimeLimiter & time_limiter,int idx);
     void update(Neighbor & neighbor);
 
     void chooseDestroyHeuristicbyALNS();

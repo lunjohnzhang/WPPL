@@ -15,7 +15,7 @@ LocalOptimizer::LocalOptimizer(
     int screen,
     int random_seed
 ):
-    instance(instance), path_table(instance.map_size,window_size_for_CT), agents(agents), HT(HT), map_weights(map_weights), agent_infos(agent_infos),
+    instance(instance), path_table(instance.map_size,window_size_for_CT), HT(HT), map_weights(map_weights), agent_infos(agent_infos),
     replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
     has_disabled_agents(has_disabled_agents),
@@ -23,10 +23,18 @@ LocalOptimizer::LocalOptimizer(
 
     // TODO(rivers): for agent_id, we just use 0 to initialize the path planner. but we need to change it (also starts and goals) everytime before planning
     path_planner = std::make_shared<TimeSpaceAStarPlanner>(instance, HT, map_weights, execution_window);
+
+    for (int i=0;i<instance.num_of_agents;++i) {
+        this->agents.emplace_back(i,instance,HT,agent_infos);
+    }
+
 }
 
 void LocalOptimizer::reset() {
     path_table.reset();
+    // for (auto & agent: agents) {
+    //     agent.reset();
+    // }
 }
 
 void LocalOptimizer::update(Neighbor & neighbor) {
@@ -37,6 +45,7 @@ void LocalOptimizer::update(Neighbor & neighbor) {
 
         for (auto & aid: neighbor.agents) {
             path_table.insertPath(aid, neighbor.m_paths[aid]);
+            agents[aid].path = neighbor.m_paths[aid];
         }
     }
 }

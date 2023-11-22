@@ -8,6 +8,7 @@ namespace LNS {
 namespace Parallel {
 
 GlobalManager::GlobalManager(
+    bool async,
     Instance & instance, std::shared_ptr<HeuristicTable> HT, 
     std::shared_ptr<vector<float> > map_weights, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
     int neighbor_size, destroy_heuristic destroy_strategy,
@@ -17,6 +18,7 @@ GlobalManager::GlobalManager(
     bool has_disabled_agents,
     int screen
 ): 
+    async(async),
     instance(instance), path_table(instance.map_size,window_size_for_PATH), HT(HT), map_weights(map_weights),
     init_algo_name(init_algo_name), replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
@@ -48,13 +50,26 @@ GlobalManager::GlobalManager(
         );
         local_optimizers.push_back(local_optimizer);
     }
+    updating_queues.resize(num_threads);
 
-    neighbor_generator=std::make_shared<NeighborGenerator>(
-        instance, HT, path_table, agents, agent_infos,
-        neighbor_size, destroy_strategy, 
-        ALNS, decay_factor, reaction_factor, 
-        num_threads, screen, 0
-    );
+    // if (!async) {
+        neighbor_generator=std::make_shared<NeighborGenerator>(
+            instance, HT, path_table, agents, agent_infos,
+            neighbor_size, destroy_strategy, 
+            ALNS, decay_factor, reaction_factor, 
+            num_threads, screen, 0
+        );
+    // } else {
+    //     for (auto i=0;i<num_threads;++i) {
+    //         auto neighbor_generator=std::make_shared<NeighborGenerator>(
+    //             instance, HT, path_table, agents, agent_infos,
+    //             neighbor_size, destroy_strategy, 
+    //             ALNS, decay_factor, reaction_factor, 
+    //             num_threads, screen, i*2023+1314
+    //         );
+    //         neighbor_generators.push_back(neighbor_generator);
+    //     }
+    // }
 }
 
 void GlobalManager::reset() {
@@ -70,8 +85,22 @@ void GlobalManager::reset() {
         agent.reset();
     }
 
-    // call reset of neighbor_generator
-    neighbor_generator->reset();
+    // if (!async) {
+        // call reset of neighbor_generator
+        neighbor_generator->reset();
+    // } else {
+    //     for (auto & neighbor_generator: neighbor_generators) {
+    //         neighbor_generator->reset();
+    //     }
+    if (async) {
+        for (auto & queue: updating_queues) {
+            while (!queue.empty()) {
+                queue.pop();
+            }
+        }
+    }
+    // }
+
     // call reset of local_optimizers
     for (auto & local_optimizer: local_optimizers) {
         local_optimizer->reset();
@@ -102,7 +131,7 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
                     int to_time=i+1;
                     // TODO(rivers): we need to ignore the conflicts with agents in the neighbor.
                     if (path_table.constrained(from,to,to_time,neighbor.agents)) {
-                        ONLYDEV(std::cerr<<aid<<" "<<i<<" invalid"<<std::endl;)
+                        // ONLYDEV(std::cout<<aid<<" "<<i<<" invalid"<<std::endl;)
                         valid=false;
                         break;
                     }
@@ -112,7 +141,7 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
 
             if (!valid) {
                 neighbor.succ=false;
-                ONLYDEV(std::cerr<<"invalid"<<std::endl;)
+                // ONLYDEV(std::cout<<"invalid"<<std::endl;)
                 return;
             }
 
@@ -125,7 +154,7 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
             // TODO(rivers): use < or <= here?
             if (old_sum_of_costs<=neighbor.sum_of_costs) {
                 neighbor.succ=false;
-                ONLYDEV(std::cerr<<"incost"<<std::endl;)
+                // ONLYDEV(std::cout<<"incost"<<std::endl;)
                 return;
             } 
 
@@ -146,24 +175,6 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
         } else {
             g_timer.record_d("init_manager_update_s","init_manager_update");
         }
-
-
-        // synchonize to local optimizer
-        if (recheck) {
-            g_timer.record_p("loc_opt_update_s");
-        } else {
-            g_timer.record_p("init_loc_opt_update_s");
-        }
-        #pragma omp parallel for
-        for (int i=0;i<num_threads;++i) {
-            local_optimizers[i]->update(neighbor);
-        }
-        if (recheck) {
-            g_timer.record_d("loc_opt_update_s","loc_opt_update");
-        } else {
-            g_timer.record_d("init_loc_opt_update_s","init_loc_opt_update");
-        }
-
     }
 }
 
@@ -198,10 +209,15 @@ void GlobalManager::update(Neighbor & neighbor) {
     sum_of_costs += neighbor.sum_of_costs - neighbor.old_sum_of_costs;
 }
 
-
-
-// TODO(rivers): we will do single-thread code refactor first, then we will do the parallelization
 bool GlobalManager::run(TimeLimiter & time_limiter) {
+    if (async) {
+        return _run_async(time_limiter);
+    } else {
+        return _run(time_limiter);
+    }
+}
+
+bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
 
     initial_sum_of_costs=0;
     sum_of_costs=0;
@@ -227,6 +243,181 @@ bool GlobalManager::run(TimeLimiter & time_limiter) {
     getInitialSolution(init_neighbor);
 
     update(init_neighbor,false);
+
+    // synchonize to local optimizer
+    ONLYDEV(g_timer.record_p("init_loc_opt_update_s");)
+    #pragma omp parallel for
+    for (int i=0;i<num_threads;++i) {
+        local_optimizers[i]->update(init_neighbor);
+    }
+    ONLYDEV(g_timer.record_d("init_loc_opt_update_s","init_loc_opt_update");)
+
+    bool runtime=g_timer.record_d("lns_init_sol_s","lns_init_sol");
+
+    elapse=time_limiter.get_elapse();
+    iteration_stats.emplace_back(agents.size(), initial_sum_of_costs, runtime, init_algo_name);
+
+    if (screen >= 1)
+        cout << getSolverName() << " (only init executed): "
+        << "runtime = " << runtime << ", "
+        << "iterations = " << iteration_stats.size() << ", "
+        << "solution cost = " << sum_of_costs << ", "
+        << "initial solution cost = " << initial_sum_of_costs << ", "
+        << "failed iterations = " << num_of_failures << endl;
+
+    if (!init_neighbor.succ) {
+        cerr << "Failed to get initial solution." << endl;
+        exit(-1);
+        return false;
+    }
+
+    g_timer.record_p("lns_opt_s");
+
+    std::cout<<"num_threads: "<<num_threads<<" "<<neighbor_generators.size()<<std::endl;
+
+
+    #pragma omp parallel for
+    for (int i=0;i<num_threads;++i) {
+        int thread_id=omp_get_thread_num();
+        int ctr=0;
+        while (true) {
+            // if (ctr==1) {
+            //     break;
+            // }
+            ++ctr;
+            if (time_limiter.timeout())
+                break;
+
+            // 1. generate neighbor
+            Neighbor neighbor;
+            #pragma omp critical
+            {
+                // cout<<"thread id "<<thread_id<<" "<<ctr<<" generate"<<endl;
+                neighbor=neighbor_generator->generate(time_limiter,thread_id);
+                // for (auto aid:neighbor.agents) {
+                //     cout<<aid<<" ";
+                // }
+                // cout<<endl;
+            }
+            // if (time_limiter.timeout())
+            //     break;
+
+            // 2. optimize the neighbor
+            // auto & neighbor_ptr=neighbor_generators[i]->neighbors[i];
+            // auto & neighbor=*neighbor_ptr;
+            // #pragma omp critical
+            // {
+            //     for (auto aid: neighbor.agents) {
+            //         if (aid<0||aid>instance.num_of_agents) {
+            //             cout<<"thread id "<<thread_id<<" "<<i<<" invalid agent id "<<aid<<endl;
+            //         }
+            //     }
+            // }
+
+            local_optimizers[i]->optimize(neighbor, time_limiter);
+            // if (time_limiter.timeout())
+            //     break;
+
+            // cout<<"optimized"<<endl;
+
+            // 3. update path table, statistics & maybe adjust strategies
+            #pragma omp critical
+            {
+                // if (time_limiter.timeout())
+                //     break;
+
+                // update alns
+                // auto & neighbor_ptr=neighbor_generators[i]->neighbors[i];
+                // auto & neighbor=*neighbor_ptr;
+                neighbor_generator->update(neighbor);
+                // if (time_limiter.timeout())
+                //     break;
+
+                update(neighbor,true);
+                // if (time_limiter.timeout())
+                //     break;
+
+                if (!neighbor.succ) {
+                    ++num_of_failures;
+                } else {
+                    for (int j=0;j<num_threads;++j) {
+                        updating_queues[j].push(neighbor);
+                    }
+                }
+
+                // synchonize to local optimizer
+                while (!updating_queues[i].empty()) {
+                    // if (time_limiter.timeout())
+                    //     break;
+                    auto _neighbor=updating_queues[i].front();
+                    local_optimizers[i]->update(_neighbor);
+                    updating_queues[i].pop();
+                }
+
+                elapse=time_limiter.get_elapse();
+                if (screen >= 1)
+                    cout << "Iteration " << iteration_stats.size() << ", "
+                        << "group size = " << neighbor.agents.size() << ", "
+                        << "solution cost = " << sum_of_costs << ", "
+                        << "remaining time = " << time_limiter.time_limit-elapse << endl;
+                iteration_stats.emplace_back(neighbor.agents.size(), sum_of_costs, elapse, replan_algo_name);
+            } 
+        }
+    }
+    g_timer.record_d("lns_opt_s","lns_opt");
+
+    average_group_size = - iteration_stats.front().num_of_agents;
+    for (const auto& data : iteration_stats)
+        average_group_size += data.num_of_agents;
+    if (average_group_size > 0)
+        average_group_size /= (double)(iteration_stats.size() - 1);
+
+    elapse=time_limiter.get_elapse();
+    cout << getSolverName() << ": "
+        << "runtime = " << elapse << ", "
+        << "iterations = " << iteration_stats.size()-1 << ", "
+        << "solution cost = " << sum_of_costs << ", "
+        << "initial solution cost = " << initial_sum_of_costs << ", "
+        << "failed iterations = " << num_of_failures << endl;
+
+    return true;
+}
+
+// TODO(rivers): we will do single-thread code refactor first, then we will do the parallelization
+bool GlobalManager::_run(TimeLimiter & time_limiter) {
+
+    initial_sum_of_costs=0;
+    sum_of_costs=0;
+    num_of_failures=0;
+    average_group_size=0;
+    iteration_stats.clear();
+
+    double elapse=0;
+
+    g_timer.record_p("lns_init_sol_s");
+    sum_of_distances = 0;
+    for (const auto & agent : agents)
+    {
+        sum_of_distances += HT->get(instance.start_locations[agent.id],instance.goal_locations[agent.id]);
+    }
+
+    // 0. get initial solution
+    Neighbor init_neighbor;
+    init_neighbor.agents.resize(agents.size());
+    for (int i=0;i<agents.size();++i) {
+        init_neighbor.agents[i]=i;
+    }
+    getInitialSolution(init_neighbor);
+
+    update(init_neighbor,false);
+    // synchonize to local optimizer
+    ONLYDEV(g_timer.record_p("init_loc_opt_update_s");)
+    #pragma omp parallel for
+    for (int i=0;i<num_threads;++i) {
+        local_optimizers[i]->update(init_neighbor);
+    }
+    ONLYDEV(g_timer.record_d("init_loc_opt_update_s","init_loc_opt_update");)
+        
 
     bool runtime=g_timer.record_d("lns_init_sol_s","lns_init_sol");
 
@@ -305,6 +496,14 @@ bool GlobalManager::run(TimeLimiter & time_limiter) {
             } 
             auto & neighbor=*neighbor_ptr;
             update(neighbor,true);
+
+            // synchonize to local optimizer
+            ONLYDEV(g_timer.record_p("loc_opt_update_s");)
+            #pragma omp parallel for
+            for (int i=0;i<num_threads;++i) {
+                local_optimizers[i]->update(neighbor);
+            }
+            ONLYDEV(g_timer.record_d("loc_opt_update_s","loc_opt_update");)
 
             if (!neighbor.succ) {
                 ++num_of_failures;

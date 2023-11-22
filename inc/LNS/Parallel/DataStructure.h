@@ -49,6 +49,11 @@ struct Agent
 
     }
 
+    Agent(const Agent & agent):
+        id(agent.id), HT(agent.HT), instance(agent.instance), agent_infos(agent.agent_infos), path(agent.path) {
+
+    }
+
     inline int getStartLocation() {return instance.start_locations[id];}
     inline int getStartOrientation() {return instance.start_orientations[id];}
     inline int getGoalLocation() {return instance.goal_locations[id];}

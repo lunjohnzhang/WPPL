@@ -14,7 +14,8 @@ class GlobalManager
 {
 public:
     std::shared_ptr<NeighborGenerator> neighbor_generator;
-    std::vector<std::shared_ptr<LocalOptimizer>> local_optimizers;
+    std::vector<std::shared_ptr<NeighborGenerator> > neighbor_generators;
+    std::vector<std::shared_ptr<LocalOptimizer> > local_optimizers;
 
     float initial_sum_of_costs=MAX_COST;
     float sum_of_costs=MAX_COST;
@@ -37,9 +38,14 @@ public:
 
     std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos;
 
+    std::vector<std::queue<Neighbor>> updating_queues; // the generated neighbors for usage
+
     bool has_disabled_agents=false;
 
+    bool async=false;
+
     GlobalManager(
+        bool async,
         Instance & instance, std::shared_ptr<HeuristicTable> HT, 
         std::shared_ptr<vector<float> > map_weights, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
         int neighbor_size, destroy_heuristic destroy_strategy,
@@ -51,6 +57,8 @@ public:
     );
 
     void getInitialSolution(Neighbor & neighbor);
+    bool _run_async(TimeLimiter & time_limiter);
+    bool _run(TimeLimiter & time_limiter);
     bool run(TimeLimiter & time_limiter);
     void update(Neighbor & neighbor, bool recheck);
     void update(Neighbor & neighbor);

@@ -196,6 +196,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
         // build instace
         instance = std::make_shared<Instance>(env);
         lns = std::make_shared<Parallel::GlobalManager>(
+            true,
             *instance,
             HT,
             map_weights,

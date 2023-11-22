@@ -66,10 +66,11 @@ void NeighborGenerator::generate_parallel(const TimeLimiter & time_limiter) {
     }
 }
 
-void NeighborGenerator::generate(const TimeLimiter & time_limiter,int idx) {
+Neighbor NeighborGenerator::generate(const TimeLimiter & time_limiter,int idx) {
     std::shared_ptr<Neighbor> neighbor_ptr = std::make_shared<Neighbor>();
     Neighbor & neighbor = *neighbor_ptr;
-
+    //Neighbor neighbor;
+    // cout<<"start generate neighbor"<<endl;
     bool succ=false;
     while (!succ){
         if (time_limiter.timeout())
@@ -123,14 +124,33 @@ void NeighborGenerator::generate(const TimeLimiter & time_limiter,int idx) {
         }
         // ONLYDEV(g_timer.record_d("generate_neighbor_s","generate_neighbor_e","generate_neighbor");)
 
-        if (!succ) {        
+        if (!succ) {      
+            // cout<<"generate neighbors failed"<<endl;  
             // TODO: we need to count how many times we failed to generate a neighbor
             if (screen>=1)
                 DEV_DEBUG("generate neighbors failed");
         }
     }
 
+    // #pragma omp critical
+    // {
+    //     for (auto aid:neighbor.agents) {
+    //         if (aid<0 || aid>instance.num_of_agents) {
+    //             cout<<aid<<" "<<neighbor.selected_neighbor<<endl;
+    //             for (auto a:neighbor.agents) {
+    //                 cout<<a<<" ";
+    //             }
+    //             cout<<time_limiter.timeout()<<endl;
+    //             break;
+    //         }
+    //     }
+    // }
+
     neighbors[idx]=neighbor_ptr;
+
+    return neighbor;
+
+
 }
 
 void NeighborGenerator::chooseDestroyHeuristicbyALNS() {
@@ -204,6 +224,21 @@ bool NeighborGenerator::generateNeighborByRandomWalk(Neighbor & neighbor, int id
             i++;
         }
     }
+
+    // #pragma omp critical
+    // {
+    //     for (auto aid:neighbors_set) {
+    //         if (aid<0 || aid>=instance.num_of_agents) {
+    //             cout<<"err"<<aid<<endl;
+    //             for (auto a:neighbors_set) {
+    //                 cout<<a<<" ";
+    //             }
+    //             cout<<endl;
+    //             break;
+    //         }
+    //     }
+    // }
+
     if (neighbors_set.size() < 2)
         return false;
 
