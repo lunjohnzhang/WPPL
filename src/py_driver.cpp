@@ -94,7 +94,7 @@ std::shared_ptr<std::vector<float> > weight_format_conversion(Grid & grid, std::
 }
 
 
-std::shared_ptr<std::vector<float> > weight_format_conversion_with_wait_costs(Grid & grid, std::vector<float> & weights)
+std::shared_ptr<std::vector<float> > weight_format_conversion_with_wait_costs(Grid & grid, std::vector<float> & edge_weights, std::vector<float> & wait_costs)
 {
     const int max_weight=100000;
     std::shared_ptr<std::vector<float> > map_weights_ptr = std::make_shared<std::vector<float> >(grid.map.size()*5, max_weight);
@@ -109,11 +109,18 @@ std::shared_ptr<std::vector<float> > weight_format_conversion_with_wait_costs(Gr
         if (grid.map[i] == 1) {
             continue;
         }
-        map_weights[i*5+4] = weights[j];
+        map_weights[i*5+4] = wait_costs[j];
         ++j;
     }
 
+    if (j!=wait_costs.size()) {
+        std::cout<<"wait cost size mismatch: "<<j<<" vs "<<wait_costs.size()<<std::endl;
+        exit(1);
+    }
+
+
     // read edge cost
+    j=0;
     for (int i=0;i<grid.map.size();++i) {
         if (grid.map[i] == 1) {
             continue;
@@ -126,7 +133,7 @@ std::shared_ptr<std::vector<float> > weight_format_conversion_with_wait_costs(Gr
                 _get_Manhattan_distance(i, i+dir, grid.cols) <= 1 &&
                 grid.map[i+dir] != 1
             ) {
-                float weight = weights.at(j);
+                float weight = edge_weights.at(j);
                 if (weight==-1) {
                     weight=max_weight;
                 }
@@ -144,8 +151,8 @@ std::shared_ptr<std::vector<float> > weight_format_conversion_with_wait_costs(Gr
     // }
     // std::cout<<endl;
 
-    if (j!=weights.size()) {
-        std::cout<<"weight size mismatch: "<<j<<" vs "<<weights.size()<<std::endl;
+    if (j!=edge_weights.size()) {
+        std::cout<<"edge weight size mismatch: "<<j<<" vs "<<edge_weights.size()<<std::endl;
         exit(1);
     }
 
@@ -245,8 +252,16 @@ std::string run(const py::kwargs& kwargs)
             weights.push_back(w.get<float>());
         }
 
-        if (kwargs.contains("with_wait_costs") && kwargs["with_wait_costs"].cast<bool>()) {
-            planner->map_weights=weight_format_conversion_with_wait_costs(grid, weights);
+        if (kwargs.contains("wait_costs")) {
+            std::string wait_costs_str=kwargs["wait_costs"].cast<std::string>();
+            nlohmann::json wait_costs_json=nlohmann::json::parse(wait_costs_str);
+            std::vector<float> wait_costs;
+            for (auto & w:wait_costs_json) {
+                wait_costs.push_back(w.get<float>());
+            }
+
+
+            planner->map_weights=weight_format_conversion_with_wait_costs(grid, weights, wait_costs);
         } else {
             planner->map_weights=weight_format_conversion(grid, weights);
         }

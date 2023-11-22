@@ -14,18 +14,58 @@ import json
 with open(full_weight_path) as f:
     full_weights=json.load(f)
 
-def compress_weights(map,full_weights, with_wait_costs=False):
-    compressed_weights=[]
+# def compress_weights(map,full_weights):
+#     compressed_weights=[]
     
-    if with_wait_costs:
-        for y in range(map.height):
-            for x in range(map.width):
-                weight_idx=y*map.width+x
-                if map.graph[y,x]==1:
-                    continue
-                compressed_weights.append(full_weights[5*weight_idx+4])
-    else:
-        compressed_weights.append(full_weights[4]) # wait
+#     compressed_weights.append(full_weights[4]) # wait
+    
+#     for y in range(map.height):
+#         for x in range(map.width):
+#             weight_idx=y*map.width+x
+            
+#             if map.graph[y,x]==1:
+#                 continue
+            
+#             if (x+1)<map.width and map.graph[y,x+1]==0:
+#                 compressed_weights.append(full_weights[5*weight_idx+0])
+                
+#             if (y-1)>=0 and map.graph[y-1,x]==0:
+#                 compressed_weights.append(full_weights[5*weight_idx+3])
+                
+#             if (x-1)>=0 and map.graph[y,x-1]==0:
+#                 compressed_weights.append(full_weights[5*weight_idx+2])
+            
+#             if (y+1)<map.height and map.graph[y+1,x]==0:
+#                 compressed_weights.append(full_weights[5*weight_idx+1])
+                
+#             if (weight_idx==0):
+#                 print(compressed_weights)
+                
+#     print("size",compressed_weights.__len__())
+
+#     compressed_weights="["+",".join([str(w) for w in compressed_weights])+"]"
+#     return compressed_weights
+
+# compressed_weights_json_str=compress_weights(map,full_weights,with_wait_costs)
+
+
+def compress_weights_with_wait_costs(map,full_weights):
+    compressed_wait_costs=[]
+    for y in range(map.height):
+        for x in range(map.width):
+            weight_idx=y*map.width+x
+            
+            if map.graph[y,x]==1:
+                continue
+            
+            compressed_wait_costs.append(full_weights[5*weight_idx+4])
+            
+    print("wait costs size",compressed_wait_costs.__len__())
+
+    compressed_wait_costs="["+",".join([str(w) for w in compressed_wait_costs])+"]"
+    
+    
+    compressed_weights=[]
     
     for y in range(map.height):
         for x in range(map.width):
@@ -49,13 +89,15 @@ def compress_weights(map,full_weights, with_wait_costs=False):
             if (weight_idx==0):
                 print(compressed_weights)
                 
-    print("size",compressed_weights.__len__())
+    print("edge weights size",compressed_weights.__len__())
 
     compressed_weights="["+",".join([str(w) for w in compressed_weights])+"]"
-    return compressed_weights
+    return compressed_wait_costs, compressed_weights
 
-compressed_weights_json_str=compress_weights(map,full_weights,with_wait_costs)
 
+compressed_wait_costs_json_str, compressed_weights_json_str=compress_weights_with_wait_costs(map,full_weights)
+
+print(compressed_wait_costs_json_str)
 print(compressed_weights_json_str)
 
 
@@ -81,7 +123,7 @@ cmd=f"{EXECUTABLE} --inputFile {INPUT_FILE} -o {OUTPUT_FILE} --simulationTime {S
 # 1. throughput double
 # 2. vertexUsage 1-d double json array, N_v
 # 3. edgeUsage  2-d double json array, N_v*N_v
-ret=py_driver.run(cmd=cmd,weights=compressed_weights_json_str,with_wait_costs=with_wait_costs)
+ret=py_driver.run(cmd=cmd,weights=compressed_weights_json_str,wait_costs=compressed_wait_costs_json_str)
 
 import json
 import numpy as np
@@ -91,27 +133,32 @@ print(analysis.keys())
 print(np.array(analysis["tile_usage"]).shape)
 print(np.array(analysis["edge_pair_usage"]).shape)
 
-print(analysis["throughput"],analysis["edge_pair_usage_mean"],analysis["edge_pair_usage_std"],len(analysis["action_ctrs"]))
+print(analysis["throughput"],analysis["edge_pair_usage_mean"],analysis["edge_pair_usage_std"])
 
 
 ##### Only use the following for weight opt case #####
 # because the order of orientation is different in competition code and weight opt code.
 
-# h*w*6: 0: right, 1: up, 2: left, 3:down, 4: wait, 5: wait+rotation
-action_ctrs=analysis["action_ctrs"]
+# h*w*4: 0: right, 1: up, 2: left, 3:down
+edge_usage_matrix=analysis["edge_usage_matrix"]
+vertex_wait_matrix=analysis["vertex_wait_matrix"]
 
-def get_compressed_action_ctrs(map,action_ctrs):
-    assert map.width*map.height*6==len(action_ctrs)
-    
-    compressed_vertex_waits=[]    
+def compress_vertex_matrix(map,vertex_matrix):
+    assert map.width*map.height==len(vertex_matrix)
+    compressed_vertex_matrix=[]    
     for y in range(map.height):
         for x in range(map.width):
             pos=y*map.width+x
             if map.graph[y,x]==1:
                 continue
-            compressed_vertex_waits.append(action_ctrs[6*pos+4])
+            compressed_vertex_matrix.append(vertex_matrix[pos])
+    return compressed_vertex_matrix
+
+def compress_edge_matrix(map,edge_matrix):
+    # edge matrix: h*w*[right,up,left,down]
+    assert map.width*map.height*4==len(edge_matrix)
     
-    compressed_edge_usages=[]
+    compressed_edge_matrix=[]
     for y in range(map.height):
         for x in range(map.width):
             pos=y*map.width+x
@@ -119,24 +166,87 @@ def get_compressed_action_ctrs(map,action_ctrs):
                 continue
             
             if (x+1)<map.width and map.graph[y,x+1]==0: # right
-                compressed_edge_usages.append(action_ctrs[6*pos+0])
+                compressed_edge_matrix.append(edge_matrix[4*pos+0])
                 
             if (y-1)>=0 and map.graph[y-1,x]==0: # up
-                compressed_edge_usages.append(action_ctrs[6*pos+1])
+                compressed_edge_matrix.append(edge_matrix[4*pos+1])
                 
             if (x-1)>=0 and map.graph[y,x-1]==0: # left 
-                compressed_edge_usages.append(action_ctrs[6*pos+2])
+                compressed_edge_matrix.append(edge_matrix[4*pos+2])
             
             if (y+1)<map.height and map.graph[y+1,x]==0: # down
-                compressed_edge_usages.append(action_ctrs[6*pos+3])
+                compressed_edge_matrix.append(edge_matrix[4*pos+3])
+    return compressed_edge_matrix
+
+
+def uncompress_vertex_matrix(map,compressed_vertex_matrix,fill_value=0):
+    j=0
+    vertex_matrix=[]    
+    for y in range(map.height):
+        for x in range(map.width):
+            if map.graph[y,x]==1:
+                vertex_matrix.append(fill_value)
+            else:
+                vertex_matrix.append(compressed_vertex_matrix[j])
+                j+=1
+    return vertex_matrix
+
+
+def uncompress_edge_matrix(map,compressed_edge_matrix,fill_value=0):
+    # edge matrix: h*w*[right,up,left,down]
+    
+    j=0
+    edge_matrix=[]
+    for y in range(map.height):
+        for x in range(map.width):
+            if map.graph[y,x]==1:
+                for i in range(4):
+                    edge_matrix.append(fill_value)
+            else:
+                if (x+1)<map.width and map.graph[y,x+1]==0: # right
+                    edge_matrix.append(compressed_edge_matrix[j])
+                    j+=1
+                else:
+                    edge_matrix.append(fill_value)
+                    
+                if (y-1)>=0 and map.graph[y-1,x]==0: # up
+                    edge_matrix.append(compressed_edge_matrix[j])
+                    j+=1
+                else:
+                    edge_matrix.append(fill_value)
+                    
+                if (x-1)>=0 and map.graph[y,x-1]==0: # left 
+                    edge_matrix.append(compressed_edge_matrix[j])
+                    j+=1
+                else:
+                    edge_matrix.append(fill_value)
                 
-    return compressed_vertex_waits,compressed_edge_usages
+                if (y+1)<map.height and map.graph[y+1,x]==0: # down
+                    edge_matrix.append(compressed_edge_matrix[j])
+                    j+=1
+                else:
+                    edge_matrix.append(fill_value)
+    
+    return edge_matrix
 
-
-compressed_vertex_waits,compressed_edge_usages=get_compressed_action_ctrs(map,action_ctrs)
+compressed_vertex_waits=compress_vertex_matrix(map,vertex_wait_matrix)
+compressed_edge_usages=compress_edge_matrix(map,edge_usage_matrix)
 
 print(compressed_vertex_waits,compressed_edge_usages)
 
 print(len(compressed_vertex_waits),len(compressed_edge_usages))
+
+
+_vertex_waits=uncompress_vertex_matrix(map,compressed_vertex_waits)
+_edge_usages=uncompress_edge_matrix(map,compressed_edge_usages)
+
+assert len(_vertex_waits)==len(vertex_wait_matrix)
+assert len(_edge_usages)==len(edge_usage_matrix), "{} vs {}".format(len(_edge_usages),len(edge_usage_matrix))
+
+for a,b in zip(_vertex_waits,vertex_wait_matrix):
+    assert a==b
+    
+for a,b in zip(_edge_usages,edge_usage_matrix):
+    assert a==b
                 
             
