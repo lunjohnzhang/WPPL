@@ -116,6 +116,9 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
     std::vector<double> vertex_usage(map_size,0);
     std::vector<std::vector<double> > edge_usage(map_size, std::vector<double>(map_size,0));
 
+    // NOTE(rivers): this format is different from what we used in c++ code: right, up, left, down, wait, wait+rotation
+    std::vector<double> action_ctrs(map_size*6,0);
+
     int team_size=result["teamSize"].get<int>();
     // std::cout<<"team size: "<<team_size<<std::endl;
 
@@ -151,6 +154,28 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
 
             auto prev_pos=prev_y*w+prev_x;
             auto curr_pos=curr_y*w+curr_x;
+
+            if (action=='F') {
+                if (prev_orient==0) { // right
+                    action_ctrs[prev_pos*6+0]+=1;
+                } else if (prev_orient==1) { // down
+                    action_ctrs[prev_pos*6+3]+=1;
+                } else if (prev_orient==2) { // left
+                    action_ctrs[prev_pos*6+2]+=1;
+                } else if (prev_orient==3) { // up
+                    action_ctrs[prev_pos*6+1]+=1;
+                } else {
+                    std::cerr<<"unknown orientation: "<<prev_orient<<std::endl;
+                    exit(-1);
+                }
+            }
+            else if (action=='W') {
+                action_ctrs[prev_pos*6+4]+=1;
+            } 
+            else if (action=='R' || action=='C') {
+                action_ctrs[prev_pos*6+5]+=1;
+            }
+
             // update vertex usage
             vertex_usage[curr_pos]+=1;
             // update edge usage
@@ -172,7 +197,8 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
         {"tile_usage", vertex_usage},
         {"edge_pair_usage", edge_pair_usage},
         {"edge_pair_usage_mean", edge_pair_usage_mean},
-        {"edge_pair_usage_std", edge_pair_usage_std}
+        {"edge_pair_usage_std", edge_pair_usage_std},
+        {"action_ctrs", action_ctrs}
     };
     return analysis;
 }
