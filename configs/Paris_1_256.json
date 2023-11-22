@@ -8,7 +8,7 @@
     "map_weights_path": [
         {
             "n_agents": 100000,
-            "value": "scripts/paris_weight_004.w"
+            "value": "scripts/paris_weight_002.w"
         }
     ],
     "max_agents_in_use": [
@@ -62,7 +62,7 @@
                     "value": "short_dist"
                 }
             ],
-            "disable_agent_strategy": "uniform",
+            "disable_agent_strategy": "early_time",
             "tabu_locs_fp": ""
         }
     },
@@ -84,7 +84,7 @@
         "order_strategy": [
             {
                 "n_agents": 1000000,
-                "value": "short_dist"
+                "value": "early_time"
             }
         ],
         "disable_agent_strategy": "uniform",
