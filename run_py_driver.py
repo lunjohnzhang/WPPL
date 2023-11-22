@@ -92,3 +92,51 @@ print(np.array(analysis["tile_usage"]).shape)
 print(np.array(analysis["edge_pair_usage"]).shape)
 
 print(analysis["throughput"],analysis["edge_pair_usage_mean"],analysis["edge_pair_usage_std"],len(analysis["action_ctrs"]))
+
+
+##### Only use the following for weight opt case #####
+# because the order of orientation is different in competition code and weight opt code.
+
+# h*w*6: 0: right, 1: up, 2: left, 3:down, 4: wait, 5: wait+rotation
+action_ctrs=analysis["action_ctrs"]
+
+def get_compressed_action_ctrs(map,action_ctrs):
+    assert map.width*map.height*6==len(action_ctrs)
+    
+    compressed_vertex_waits=[]    
+    for y in range(map.height):
+        for x in range(map.width):
+            pos=y*map.width+x
+            if map.graph[y,x]==1:
+                continue
+            compressed_vertex_waits.append(action_ctrs[6*pos+4])
+    
+    compressed_edge_usages=[]
+    for y in range(map.height):
+        for x in range(map.width):
+            pos=y*map.width+x
+            if map.graph[y,x]==1:
+                continue
+            
+            if (x+1)<map.width and map.graph[y,x+1]==0: # right
+                compressed_edge_usages.append(action_ctrs[6*pos+0])
+                
+            if (y-1)>=0 and map.graph[y-1,x]==0: # up
+                compressed_edge_usages.append(action_ctrs[6*pos+1])
+                
+            if (x-1)>=0 and map.graph[y,x-1]==0: # left 
+                compressed_edge_usages.append(action_ctrs[6*pos+2])
+            
+            if (y+1)<map.height and map.graph[y+1,x]==0: # down
+                compressed_edge_usages.append(action_ctrs[6*pos+3])
+                
+    return compressed_vertex_waits,compressed_edge_usages
+
+
+compressed_vertex_waits,compressed_edge_usages=get_compressed_action_ctrs(map,action_ctrs)
+
+print(compressed_vertex_waits,compressed_edge_usages)
+
+print(len(compressed_vertex_waits),len(compressed_edge_usages))
+                
+            
