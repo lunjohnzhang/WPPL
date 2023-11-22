@@ -94,6 +94,65 @@ std::shared_ptr<std::vector<float> > weight_format_conversion(Grid & grid, std::
 }
 
 
+std::shared_ptr<std::vector<float> > weight_format_conversion_with_wait_costs(Grid & grid, std::vector<float> & weights)
+{
+    const int max_weight=100000;
+    std::shared_ptr<std::vector<float> > map_weights_ptr = std::make_shared<std::vector<float> >(grid.map.size()*5, max_weight);
+    auto & map_weights=*map_weights_ptr;
+
+    const int dirs[4]={1,-grid.cols, -1, grid.cols};
+    const int map_weights_idxs[4]={0,3,2,1};
+
+    // read wait cost
+    int j=0;
+    for (int i=0;i<grid.map.size();++i) {
+        if (grid.map[i] == 1) {
+            continue;
+        }
+        map_weights[i*5+4] = weights[j];
+        ++j;
+    }
+
+    // read edge cost
+    for (int i=0;i<grid.map.size();++i) {
+        if (grid.map[i] == 1) {
+            continue;
+        }
+
+        for (int d=0;d<4;++d) {
+            int dir=dirs[d];
+            if (
+                0<=i+dir && i+dir<grid.map.size() &&
+                _get_Manhattan_distance(i, i+dir, grid.cols) <= 1 &&
+                grid.map[i+dir] != 1
+            ) {
+                float weight = weights.at(j);
+                if (weight==-1) {
+                    weight=max_weight;
+                }
+
+                int map_weight_idx=map_weights_idxs[d];
+                map_weights[i*5+map_weight_idx]=weight;
+                ++j;
+            }
+        }
+    }
+
+    // std::cout<<"map weights: ";
+    // for (auto i=0;i<map_weights.size();++i) {
+    //     std::cout<<map_weights[i]<<" ";
+    // }
+    // std::cout<<endl;
+
+    if (j!=weights.size()) {
+        std::cout<<"weight size mismatch: "<<j<<" vs "<<weights.size()<<std::endl;
+        exit(1);
+    }
+
+    return map_weights_ptr;
+}
+
+
 std::string run(const py::kwargs& kwargs)
 {
     
@@ -185,7 +244,13 @@ std::string run(const py::kwargs& kwargs)
         for (auto & w:weight_json) {
             weights.push_back(w.get<float>());
         }
-        planner->map_weights=weight_format_conversion(grid, weights);
+
+        if (kwargs.contains("with_wait_costs") && kwargs["with_wait_costs"].cast<bool>()) {
+            planner->map_weights=weight_format_conversion_with_wait_costs(grid, weights);
+        } else {
+            planner->map_weights=weight_format_conversion(grid, weights);
+        }
+
     } 
 
     ActionModelWithRotate *model = new ActionModelWithRotate(grid);

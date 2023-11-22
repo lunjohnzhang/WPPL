@@ -5,6 +5,7 @@ from map import Map
 
 map_path="example_problems/random.domain/maps/random-32-32-20.map"
 full_weight_path="scripts/random_weight_001.w"
+with_wait_costs=True
 
 map=Map(map_path)
 map.print_graph(map.graph)
@@ -13,9 +14,18 @@ import json
 with open(full_weight_path) as f:
     full_weights=json.load(f)
 
-def compress_weights(map,full_weights):
+def compress_weights(map,full_weights, with_wait_costs=False):
     compressed_weights=[]
-    compressed_weights.append(full_weights[4]) # wait
+    
+    if with_wait_costs:
+        for y in range(map.height):
+            for x in range(map.width):
+                weight_idx=y*map.width+x
+                if map.graph[y,x]==1:
+                    continue
+                compressed_weights.append(full_weights[5*weight_idx+4])
+    else:
+        compressed_weights.append(full_weights[4]) # wait
     
     for y in range(map.height):
         for x in range(map.width):
@@ -44,7 +54,7 @@ def compress_weights(map,full_weights):
     compressed_weights="["+",".join([str(w) for w in compressed_weights])+"]"
     return compressed_weights
 
-compressed_weights_json_str=compress_weights(map,full_weights)
+compressed_weights_json_str=compress_weights(map,full_weights,with_wait_costs)
 
 print(compressed_weights_json_str)
 
@@ -71,7 +81,7 @@ cmd=f"{EXECUTABLE} --inputFile {INPUT_FILE} -o {OUTPUT_FILE} --simulationTime {S
 # 1. throughput double
 # 2. vertexUsage 1-d double json array, N_v
 # 3. edgeUsage  2-d double json array, N_v*N_v
-ret=py_driver.run(cmd=cmd,weights=compressed_weights_json_str)
+ret=py_driver.run(cmd=cmd,weights=compressed_weights_json_str,with_wait_costs=with_wait_costs)
 
 import json
 import numpy as np
@@ -81,4 +91,4 @@ print(analysis.keys())
 print(np.array(analysis["tile_usage"]).shape)
 print(np.array(analysis["edge_pair_usage"]).shape)
 
-print(analysis["throughput"],analysis["edge_pair_usage_mean"],analysis["edge_pair_usage_std"])
+print(analysis["throughput"],analysis["edge_pair_usage_mean"],analysis["edge_pair_usage_std"],len(analysis["action_ctrs"]))
