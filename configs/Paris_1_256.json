@@ -9,7 +9,7 @@
         {
             "n_agents": 100000,
             "value": "scripts/paris_weight_002.w"
-                }
+        }
     ],
     "max_agents_in_use": [
         {
@@ -62,7 +62,7 @@
                     "value": "short_dist"
                 }
             ],
-            "disable_agent_strategy": "uniform",
+            "disable_agent_strategy": "early_time",
             "tabu_locs_fp": ""
         }
     },

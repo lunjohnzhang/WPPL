@@ -65,22 +65,24 @@ void LaCAM2Solver::disable_agents(const SharedEnvironment & env) {
 
         std::vector<int> agents_ids;
         for (int i=0;i<env.num_of_agents;++i) {
-            // if (tabu_locs.find(env.curr_states[i].location)==tabu_locs.end()) {
-            //     agents_ids.push_back(i);
-            // }
-            int x=env.curr_states[i].location%env.cols;
-            int y=env.curr_states[i].location/env.cols;
-            if (y>15) {
+            if (tabu_locs.find(env.curr_states[i].location)==tabu_locs.end()) {
                 agents_ids.push_back(i);
             }
         }
         std::shuffle(agents_ids.begin(),agents_ids.end(),*MT);
 
+        std::vector<int> disabled_agents_ids;
         disabled_agents_num=env.num_of_agents-max_agents_in_use;
         disabled_agents_num=std::min(disabled_agents_num,(int)agents_ids.size());
         for (int i=0;i<disabled_agents_num;++i) {
             (*agent_infos)[agents_ids[i]].disabled=true;
+            disabled_agents_ids.push_back(agents_ids[i]);
         }
+
+        nlohmann::json disabled_agents_json(disabled_agents_ids);
+        std::ofstream f("disabled_agents.json");
+        f<<disabled_agents_json;
+        f.close();
     }
 
     std::cout<<"strategy: "<<strategy<<" #disabled agents: "<<disabled_agents_num<<std::endl;

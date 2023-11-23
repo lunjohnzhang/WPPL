@@ -1,16 +1,12 @@
 {
     "lifelong_solver_name": [
         {
-            "n_agents": 200,
-            "value": "DUMMY"
-        },
-        {
-            "n_agents": 400,
-            "value": "DUMMY"
+            "n_agents": 600,
+            "value": "LNS"
         },
         {
             "n_agents": 1000000,
-            "value": "DUMMY"
+            "value": "LaCAM2"
         }
     ],
     "map_weights_path": [
@@ -20,7 +16,7 @@
         },
         {
             "n_agents": 500,
-            "value": "scripts/random_weight_018.w"
+            "value": "scripts/random_weight_030.w"
         },
         {
             "n_agents": 600,
@@ -38,7 +34,7 @@
         },
         {
             "n_agents": 600,
-            "value": 1000000
+            "value": 600
         },
         {
             "n_agents": 1000000,
@@ -48,15 +44,15 @@
     "max_task_completed": [
         {
             "n_agents": 400,
-            "value": 7130
+            "value": 1000000
         },
         {
             "n_agents": 600,
-            "value": 10000000
+            "value": 4000
         },
         {
             "n_agents": 1000000,
-            "value": 10000000
+            "value": 4000
         }
     ],
     "max_agents_in_use": [
@@ -130,7 +126,7 @@
                     "value": "early_time"
                 }
             ],
-            "disable_agent_strategy": "uniform",
+            "disable_agent_strategy": "tabu_locs",
             "tabu_locs_fp": "scripts/random_600_tabu_locs.txt"
         }
     },

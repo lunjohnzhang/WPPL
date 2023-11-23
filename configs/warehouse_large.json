@@ -2,7 +2,7 @@
     "lifelong_solver_name": [
         {
             "n_agents": 1000000,
-            "value": "DUMMY"
+            "value": "LNS"
         }
     ],
     "map_weights_path": [
@@ -16,8 +16,7 @@
             "n_agents": 1000000,
             "value": -1
         }
-    ]
-    ,
+    ],
     "disable_corner_target_agents": [
         {
             "n_agents": 1000000,
@@ -41,7 +40,7 @@
         "window_size_for_CT": 10,
         "window_size_for_CAT": 10,
         "window_size_for_PATH": 10,
-        "execution_window": 2,
+        "execution_window": 3,
         "LaCAM2": {
             "seed": 0,
             "planning_window": 10,
