@@ -24,6 +24,8 @@ public:
 
     std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos;
 
+    std::vector<Neighbor> updating_queue;
+
     string replan_algo_name;
     int window_size_for_CT;
     int window_size_for_CAT;

@@ -50,26 +50,30 @@ GlobalManager::GlobalManager(
         );
         local_optimizers.push_back(local_optimizer);
     }
-    updating_queues.resize(num_threads);
 
-    // if (!async) {
+    if (!async) {
         neighbor_generator=std::make_shared<NeighborGenerator>(
             instance, HT, path_table, agents, agent_infos,
             neighbor_size, destroy_strategy, 
             ALNS, decay_factor, reaction_factor, 
             num_threads, screen, 0
         );
-    // } else {
-    //     for (auto i=0;i<num_threads;++i) {
-    //         auto neighbor_generator=std::make_shared<NeighborGenerator>(
-    //             instance, HT, path_table, agents, agent_infos,
-    //             neighbor_size, destroy_strategy, 
-    //             ALNS, decay_factor, reaction_factor, 
-    //             num_threads, screen, i*2023+1314
-    //         );
-    //         neighbor_generators.push_back(neighbor_generator);
-    //     }
-    // }
+    } else {
+        for (auto i=0;i<num_threads;++i) {
+            auto neighbor_generator=std::make_shared<NeighborGenerator>(
+                instance, HT, local_optimizers[i]->path_table, local_optimizers[i]->agents, agent_infos,
+                neighbor_size, destroy_strategy, 
+                ALNS, decay_factor, reaction_factor, 
+                num_threads, screen, i*2023+1314
+            );
+            neighbor_generators.push_back(neighbor_generator);
+        }
+        updating_queues.resize(num_threads);
+        updating_queue_locks.resize(num_threads);
+        for (auto & lock: updating_queue_locks) {
+            omp_init_lock(&lock);
+        }
+    }
 }
 
 void GlobalManager::reset() {
@@ -85,27 +89,33 @@ void GlobalManager::reset() {
         agent.reset();
     }
 
-    // if (!async) {
+    if (!async) {
         // call reset of neighbor_generator
         neighbor_generator->reset();
-    // } else {
-    //     for (auto & neighbor_generator: neighbor_generators) {
-    //         neighbor_generator->reset();
-    //     }
-    if (async) {
-        for (auto & queue: updating_queues) {
-            while (!queue.empty()) {
-                queue.pop();
-            }
+    } else {
+        for (auto & neighbor_generator: neighbor_generators) {
+            neighbor_generator->reset();
+        }
+        for (int i=0;i<num_threads;++i) {
+            omp_set_lock(&(updating_queue_locks[i]));
+            updating_queues[i].clear();
+            omp_unset_lock(&(updating_queue_locks[i]));
         }
     }
-    // }
 
     // call reset of local_optimizers
     for (auto & local_optimizer: local_optimizers) {
         local_optimizer->reset();
     }
 
+}
+
+GlobalManager::~GlobalManager() {
+    if (async) {
+        for (auto & lock: updating_queue_locks) {
+            omp_destroy_lock(&lock);
+        }
+    }
 }
 
 void GlobalManager::update(Neighbor & neighbor, bool recheck) {
@@ -280,6 +290,7 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
     for (int i=0;i<num_threads;++i) {
         int thread_id=omp_get_thread_num();
         int ctr=0;
+
         while (true) {
             // if (ctr==1) {
             //     break;
@@ -289,16 +300,11 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
                 break;
 
             // 1. generate neighbor
-            Neighbor neighbor;
-            #pragma omp critical
-            {
-                // cout<<"thread id "<<thread_id<<" "<<ctr<<" generate"<<endl;
-                neighbor=neighbor_generator->generate(time_limiter,thread_id);
+            Neighbor neighbor=neighbor_generators[i]->generate(time_limiter,i);
                 // for (auto aid:neighbor.agents) {
                 //     cout<<aid<<" ";
                 // }
                 // cout<<endl;
-            }
             // if (time_limiter.timeout())
             //     break;
 
@@ -329,7 +335,7 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
                 // update alns
                 // auto & neighbor_ptr=neighbor_generators[i]->neighbors[i];
                 // auto & neighbor=*neighbor_ptr;
-                neighbor_generator->update(neighbor);
+                neighbor_generators[i]->update(neighbor);
                 // if (time_limiter.timeout())
                 //     break;
 
@@ -341,18 +347,12 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
                     ++num_of_failures;
                 } else {
                     for (int j=0;j<num_threads;++j) {
-                        updating_queues[j].push(neighbor);
+                        updating_queues[j].push_back(neighbor);
                     }
                 }
 
-                // synchonize to local optimizer
-                while (!updating_queues[i].empty()) {
-                    // if (time_limiter.timeout())
-                    //     break;
-                    auto _neighbor=updating_queues[i].front();
-                    local_optimizers[i]->update(_neighbor);
-                    updating_queues[i].pop();
-                }
+                local_optimizers[i]->updating_queue=updating_queues[i];
+                updating_queues[i].clear();
 
                 elapse=time_limiter.get_elapse();
                 if (screen >= 1)
@@ -361,7 +361,15 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
                         << "solution cost = " << sum_of_costs << ", "
                         << "remaining time = " << time_limiter.time_limit-elapse << endl;
                 iteration_stats.emplace_back(neighbor.agents.size(), sum_of_costs, elapse, replan_algo_name);
-            } 
+            }
+
+            // synchonize to local optimizer
+            for (auto & _neighbor: local_optimizers[i]->updating_queue) {
+                // if (time_limiter.timeout())
+                //     break;
+                local_optimizers[i]->update(_neighbor);
+            }
+            local_optimizers[i]->updating_queue.clear();
         }
     }
     g_timer.record_d("lns_opt_s","lns_opt");

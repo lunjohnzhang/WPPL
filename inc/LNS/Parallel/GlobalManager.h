@@ -5,6 +5,7 @@
 #include "util/TimeLimiter.h"
 #include <memory>
 #include "LaCAM2/instance.hpp"
+#include <omp.h>
 
 namespace LNS {
 
@@ -38,7 +39,8 @@ public:
 
     std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos;
 
-    std::vector<std::queue<Neighbor>> updating_queues; // the generated neighbors for usage
+    std::vector<std::vector<Neighbor>> updating_queues; // the generated neighbors for usage
+    std::vector<omp_lock_t> updating_queue_locks;
 
     bool has_disabled_agents=false;
 
@@ -55,6 +57,8 @@ public:
         bool has_disabled_agents,
         int screen
     );
+
+    ~GlobalManager();
 
     void getInitialSolution(Neighbor & neighbor);
     bool _run_async(TimeLimiter & time_limiter);
