@@ -305,8 +305,8 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
                 //     cout<<aid<<" ";
                 // }
                 // cout<<endl;
-            // if (time_limiter.timeout())
-            //     break;
+            if (time_limiter.timeout())
+                break;
 
             // 2. optimize the neighbor
             // auto & neighbor_ptr=neighbor_generators[i]->neighbors[i];
@@ -321,52 +321,62 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
             // }
 
             local_optimizers[i]->optimize(neighbor, time_limiter);
-            // if (time_limiter.timeout())
-            //     break;
+            if (time_limiter.timeout())
+                break;
 
             // cout<<"optimized"<<endl;
 
             // 3. update path table, statistics & maybe adjust strategies
             #pragma omp critical
             {
-                // if (time_limiter.timeout())
-                //     break;
+                // for (int i=0;i<1;++i) {
+                    // if (time_limiter.timeout())
+                    //     break;
 
-                // update alns
-                // auto & neighbor_ptr=neighbor_generators[i]->neighbors[i];
-                // auto & neighbor=*neighbor_ptr;
-                neighbor_generators[i]->update(neighbor);
-                // if (time_limiter.timeout())
-                //     break;
-
-                update(neighbor,true);
-                // if (time_limiter.timeout())
-                //     break;
-
-                if (!neighbor.succ) {
-                    ++num_of_failures;
-                } else {
-                    for (int j=0;j<num_threads;++j) {
-                        updating_queues[j].push_back(neighbor);
+                    // update alns
+                    // auto & neighbor_ptr=neighbor_generators[i]->neighbors[i];
+                    // auto & neighbor=*neighbor_ptr;
+                    if (!time_limiter.timeout()){
+                        neighbor_generators[i]->update(neighbor);
                     }
-                }
+                    // if (time_limiter.timeout())
+                    //     break;
 
-                local_optimizers[i]->updating_queue=updating_queues[i];
-                updating_queues[i].clear();
+                    if (!time_limiter.timeout()){
+                        update(neighbor,true);
+                    }
+                    // if (time_limiter.timeout())
+                    //     break;
 
-                elapse=time_limiter.get_elapse();
-                if (screen >= 1)
-                    cout << "Iteration " << iteration_stats.size() << ", "
-                        << "group size = " << neighbor.agents.size() << ", "
-                        << "solution cost = " << sum_of_costs << ", "
-                        << "remaining time = " << time_limiter.time_limit-elapse << endl;
-                iteration_stats.emplace_back(neighbor.agents.size(), sum_of_costs, elapse, replan_algo_name);
+                    if (!time_limiter.timeout()){
+                        if (!neighbor.succ) {
+                            ++num_of_failures;
+                        } else {
+                            for (int j=0;j<num_threads;++j) {
+                                updating_queues[j].push_back(neighbor);
+                            }
+                        }
+
+                        local_optimizers[i]->updating_queue=updating_queues[i];
+                        updating_queues[i].clear();
+
+                        elapse=time_limiter.get_elapse();
+                        if (screen >= 1)
+                            cout << "Iteration " << iteration_stats.size() << ", "
+                                << "group size = " << neighbor.agents.size() << ", "
+                                << "solution cost = " << sum_of_costs << ", "
+                                << "remaining time = " << time_limiter.time_limit-elapse << endl;
+                        iteration_stats.emplace_back(neighbor.agents.size(), sum_of_costs, elapse, replan_algo_name);
+                    }
+                // }
             }
 
             // synchonize to local optimizer
+            if (time_limiter.timeout())
+                break;
             for (auto & _neighbor: local_optimizers[i]->updating_queue) {
-                // if (time_limiter.timeout())
-                //     break;
+                if (time_limiter.timeout())
+                    break;
                 local_optimizers[i]->update(_neighbor);
             }
             local_optimizers[i]->updating_queue.clear();
