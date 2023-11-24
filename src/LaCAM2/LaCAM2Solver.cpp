@@ -5,6 +5,7 @@
 #include "LaCAM2/SUO2/SpatialSUO.h"
 #include <omp.h>
 #include <thread>
+#include "Routing/GlobalController.h"
 // #include "util/StatsTree.h"
 
 namespace LaCAM2 {
@@ -39,6 +40,11 @@ void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     // action_costs.resize(env.num_of_agents);
     // total_actions.resize(env.num_of_agents);
     G = std::make_shared<Graph>(env);
+
+
+    global_controller = std::make_shared<Routing::GlobalController>(env, HT, map_weights);
+
+
 }
 
 void LaCAM2Solver::disable_agents(const SharedEnvironment & env) {
@@ -224,6 +230,8 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
     if (env.curr_timestep==0 && max_agents_in_use<env.num_of_agents) {
         disable_agents(env);
     }
+
+    global_controller->route();
 
 
     if (need_replan) {

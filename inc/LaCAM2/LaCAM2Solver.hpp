@@ -10,6 +10,7 @@
 #include "LaCAM2/executor.hpp"
 #include "LaCAM2/slow_executor.hpp"
 #include "nlohmann/json.hpp"
+#include "Routing/GlobalController.h"
 
 namespace LaCAM2 {
 
@@ -55,6 +56,8 @@ public:
 
     Executor executor;
     SlowExecutor slow_executor;
+
+    std::shared_ptr<Routing::GlobalController> global_controller;
 
     nlohmann::json config;
 
