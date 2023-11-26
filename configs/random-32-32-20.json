@@ -44,11 +44,11 @@
     "max_task_completed": [
         {
             "n_agents": 400,
-            "value": 1000000
+            "value": 7130
         },
         {
             "n_agents": 600,
-            "value": 1000000
+            "value": 5595
         },
         {
             "n_agents": 1000000,

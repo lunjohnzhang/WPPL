@@ -37,14 +37,14 @@
         "sipp": true,
         "pibtWindow": 5,
         "winPibtSoftmode": true,
-        "window_size_for_CT": 15,
-        "window_size_for_CAT": 15,
-        "window_size_for_PATH": 15,
+        "window_size_for_CT": 10,
+        "window_size_for_CAT": 10,
+        "window_size_for_PATH": 10,
         "execution_window": 3,
         "LaCAM2": {
             "seed": 0,
-            "planning_window": 15,
-            "execution_window": 2,
+            "planning_window": 10,
+            "execution_window": 1,
             "use_external_executor": false,
             "consider_rotation": false,
             "use_orient_in_heuristic": true,
@@ -59,7 +59,7 @@
             "order_strategy": [
                 {
                     "n_agents": 1000000,
-                    "value": "early_time"
+                    "value": "short_dist"
                 }
             ],
             "disable_agent_strategy": "uniform",
