@@ -24,7 +24,7 @@
         },
         {
             "n_agents": 600,
-            "value": "scripts/random_weight_036.w"
+            "value": "scripts/random_weight_033.w"
         },
         {
             "n_agents": 1000000,
@@ -66,7 +66,7 @@
         },
         {
             "n_agents": 600,
-            "value": 400
+            "value": -1
         },
         {
             "n_agents": 1000000,
@@ -131,7 +131,7 @@
                 }
             ],
             "disable_agent_strategy": "tabu_locs",
-            "disable_agent_goals": false,
+            "disable_agent_goals": true,
             "tabu_locs_fp": "scripts/random_600_tabu_locs.txt"
         }
     },
