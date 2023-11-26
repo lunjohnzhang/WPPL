@@ -6,7 +6,7 @@
         },
         {
             "n_agents": 1000000,
-            "value": "DUMMY"
+            "value": "LaCAM2"
         }
     ],
     "map_weights_path": [
@@ -159,7 +159,7 @@
             },
             {
                 "n_agents": 600,
-                "value": "short_dist"
+                "value": "early_time"
             },
             {
                 "n_agents": 1000000,
