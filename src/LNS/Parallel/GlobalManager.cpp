@@ -16,6 +16,7 @@ GlobalManager::GlobalManager(
     string init_algo_name, string replan_algo_name, bool sipp,
     int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH, int execution_window,
     bool has_disabled_agents,
+    bool fix_ng_bug,
     int screen
 ): 
     async(async),
@@ -56,7 +57,7 @@ GlobalManager::GlobalManager(
             instance, HT, path_table, agents, agent_infos,
             neighbor_size, destroy_strategy, 
             ALNS, decay_factor, reaction_factor, 
-            num_threads, screen, 0
+            num_threads, fix_ng_bug, screen, 0
         );
     } else {
         for (auto i=0;i<num_threads;++i) {
@@ -64,7 +65,7 @@ GlobalManager::GlobalManager(
                 instance, HT, local_optimizers[i]->path_table, local_optimizers[i]->agents, agent_infos,
                 neighbor_size, destroy_strategy, 
                 ALNS, decay_factor, reaction_factor, 
-                num_threads, screen, i*2023+1314
+                num_threads, fix_ng_bug, screen, i*2023+1314
             );
             neighbor_generators.push_back(neighbor_generator);
         }

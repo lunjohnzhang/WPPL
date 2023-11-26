@@ -2,7 +2,7 @@
     "lifelong_solver_name": [
         {
             "n_agents": 1000000,
-            "value": "DUMMY"
+            "value": "LNS"
         }
     ],
     "map_weights_path": [
@@ -20,7 +20,7 @@
     "max_execution_steps": [
         {
             "n_agents": 1000000,
-            "value": 3500
+            "value": 3000
         }
     ],
     "disable_corner_target_agents": [
@@ -53,6 +53,12 @@
         "window_size_for_CAT": 15,
         "window_size_for_PATH": 15,
         "execution_window": 1,
+        "fix_ng_bug": [
+            {
+                "n_agents": 1000000,
+                "value": true
+            }
+        ],
         "LaCAM2": {
             "seed": 0,
             "planning_window": 15,

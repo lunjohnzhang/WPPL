@@ -62,6 +62,8 @@ void MAPFPlanner::load_configs() {
         config["disable_corner_target_agents"]=read_conditional_value(config,"disable_corner_target_agents",env->num_of_agents);
         config["max_agents_in_use"]=read_conditional_value(config,"max_agents_in_use",env->num_of_agents);
 
+        config["LNS"]["fix_ng_bug"]=read_conditional_value(config["LNS"],"fix_ng_bug",env->num_of_agents);
+
         string s=config.dump();
         std::replace(s.begin(),s.end(),',','|');
         config["details"]=s;

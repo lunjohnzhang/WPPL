@@ -55,6 +55,7 @@ public:
         string init_algo_name, string replan_algo_name, bool sipp,
         int window_size_for_CT, int window_size_for_CAT, int window_size_for_PATH, int execution_window,
         bool has_disabled_agents,
+        bool fix_ng_bug,
         int screen
     );
 

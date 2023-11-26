@@ -104,11 +104,9 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Insta
   //   // }
   // }
 
-  if (disable_agent_goals) {
-    for (int aid=0;aid<N;++aid) {
-      if (ins->agent_infos[aid].disabled && ins->goals.locs[aid]->neighbor.size()>1) {
-        ins->goals.locs[aid]=C.locs[aid];
-      }
+  for (int aid=0;aid<N;++aid) {
+    if ((disable_agent_goals && ins->agent_infos[aid].disabled) || ins->goals.locs[aid]->neighbor.size()<=1) {
+      ins->goals.locs[aid]=C.locs[aid];
     }
   }
 

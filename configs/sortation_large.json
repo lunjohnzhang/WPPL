@@ -41,6 +41,12 @@
         "window_size_for_CAT": 10,
         "window_size_for_PATH": 10,
         "execution_window": 3,
+        "fix_ng_bug": [
+            {
+                "n_agents": 1000000,
+                "value": true
+            }
+        ],
         "LaCAM2": {
             "seed": 0,
             "planning_window": 10,
