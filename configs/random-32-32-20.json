@@ -133,7 +133,7 @@
                 }
             ],
             "disable_agent_strategy": "tabu_locs",
-            "disable_agent_goals": false,
+            "disable_agent_goals": true,
             "tabu_locs_fp": "scripts/random_600_tabu_locs.txt"
         }
     },
