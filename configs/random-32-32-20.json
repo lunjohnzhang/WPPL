@@ -16,11 +16,11 @@
         },
         {
             "n_agents": 500,
-            "value": "scripts/random_weight_033.w"
+            "value": "scripts/random_weight_040.w"
         },
         {
             "n_agents": 600,
-            "value": "scripts/random_weight_036.weight"
+            "value": "scripts/random_weight_036.w"
         },
         {
             "n_agents": 1000000,
@@ -127,6 +127,7 @@
                 }
             ],
             "disable_agent_strategy": "tabu_locs",
+            "disable_agent_goals": false,
             "tabu_locs_fp": "scripts/random_600_tabu_locs.txt"
         }
     },
@@ -160,6 +161,7 @@
             }
         ],
         "disable_agent_strategy": "uniform",
+        "disable_agent_goals": false,
         "tabu_locs_fp": "scripts/random_600_tabu_locs.txt"
     },
     "PIBT": {

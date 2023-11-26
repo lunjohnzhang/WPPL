@@ -108,7 +108,7 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
                 ++ctr;
             }
         }
-        if (agent_info.disabled) {
+        if (disable_agent_goals && agent_info.disabled) {
             goal_location=env.curr_states[i].location;
         }
         goals.emplace_back(goal_location, -1);
@@ -321,7 +321,8 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
             auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.0F,
                 use_swap,
                 use_orient_in_heuristic,
-                use_external_executor
+                use_external_executor,
+                disable_agent_goals
             );
             ONLYDEV(g_timer.record_d("lacam_build_planner_s","lacam_build_planner");)
             auto additional_info = std::string("");

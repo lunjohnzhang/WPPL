@@ -75,6 +75,7 @@
                 }
             ],
             "disable_agent_strategy": "tabu_locs",
+            "disable_agent_goals": true,
             "tabu_locs_fp": "scripts/brc202d_tabu_locs.txt"
         }
     },
@@ -100,6 +101,7 @@
             }
         ],
         "disable_agent_strategy": "uniform",
+        "disable_agent_goals": true,
         "tabu_locs_fp": ""
     },
     "PIBT": {

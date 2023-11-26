@@ -62,7 +62,8 @@
                     "value": "short_dist"
                 }
             ],
-            "disable_agent_strategy": "early_time",
+            "disable_agent_strategy": "uniform",
+            "disable_agent_goals": true,
             "tabu_locs_fp": ""
         }
     },
@@ -88,6 +89,7 @@
             }
         ],
         "disable_agent_strategy": "uniform",
+        "disable_agent_goals": true,
         "tabu_locs_fp": ""
     },
     "PIBT": {

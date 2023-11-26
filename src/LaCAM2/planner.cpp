@@ -46,7 +46,7 @@ uint HNode::HNODE_CNT = 0;
 
 // for high-level
 HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Instance * ins, HNode* _parent, float _g,
-             float _h, const uint _d, int _order_strategy)
+             float _h, const uint _d, int _order_strategy, bool disable_agent_goals)
     : C(_C),
       parent(_parent),
       neighbor(),
@@ -104,12 +104,13 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Insta
   //   // }
   // }
 
-  for (int aid=0;aid<N;++aid) {
-    if (ins->agent_infos[aid].disabled) {
-      ins->goals.locs[aid]=C.locs[aid];
+  if (disable_agent_goals) {
+    for (int aid=0;aid<N;++aid) {
+      if (ins->agent_infos[aid].disabled && ins->goals.locs[aid]->neighbor.size()>1) {
+        ins->goals.locs[aid]=C.locs[aid];
+      }
     }
   }
-
 
   // set order
   // TODO(rivers_: probably we should set a basic ordering at the begining, because it is time consuming to sort everytime with large-scale agents
@@ -185,7 +186,7 @@ HNode::~HNode()
 
 Planner::Planner(Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline,
                  std::mt19937* _MT, const int _verbose,
-                 const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic, bool use_external_executor)
+                 const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic, bool use_external_executor, bool disable_agent_goals)
     : ins(_ins),
       deadline(_deadline),
       MT(_MT),
@@ -205,7 +206,8 @@ Planner::Planner(Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, con
       use_swap(use_swap),
       use_orient_in_heuristic(use_orient_in_heuristic),
       executor(_ins->G.height,_ins->G.width),
-      use_external_executor(use_external_executor)
+      use_external_executor(use_external_executor),
+      disable_agent_goals(disable_agent_goals)
 {
 }
 
@@ -222,7 +224,7 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
   auto OPEN = std::stack<HNode*>();
   auto EXPLORED = std::unordered_map<Config, HNode*, ConfigHasher, Config::ConfigEqual>();
   // insert initial node, 'H': high-level node
-  auto H_init = new HNode(ins->starts, HT, ins, nullptr, 0, get_h_value(ins->starts), 0, order_strategy);
+  auto H_init = new HNode(ins->starts, HT, ins, nullptr, 0, get_h_value(ins->starts), 0, order_strategy, disable_agent_goals);
   OPEN.push(H_init);
   EXPLORED[H_init->C] = H_init;
 
@@ -391,7 +393,7 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
     } else {
       // insert new search node
       const auto H_new = new HNode(
-          C_new, HT, ins, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new), H->d + 1, order_strategy);
+          C_new, HT, ins, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new), H->d + 1, order_strategy, disable_agent_goals);
       EXPLORED[H_new->C] = H_new;
       if (H_goal == nullptr || H_new->f < H_goal->f) OPEN.push(H_new);
     }
