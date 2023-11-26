@@ -24,7 +24,7 @@
         },
         {
             "n_agents": 1000000,
-            "value": "scripts/random_800_uncompressed_weights.w"
+            "value": "scripts/random_800_uncompressed_weights_with_wait_2000_steps.w"
         }
     ],
     "max_execution_steps": [
