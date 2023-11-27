@@ -1,6 +1,6 @@
 #include "LNS/Parallel/GlobalManager.h"
 #include "util/Timer.h"
-#include "omp.h"
+// #include "omp.h"
 #include "util/TimeLimiter.h"
 
 namespace LNS {
@@ -72,10 +72,10 @@ GlobalManager::GlobalManager(
             neighbor_generators.push_back(neighbor_generator);
         }
         updating_queues.resize(num_threads);
-        updating_queue_locks.resize(num_threads);
-        for (auto & lock: updating_queue_locks) {
-            omp_init_lock(&lock);
-        }
+        // updating_queue_locks.resize(num_threads);
+        // for (auto & lock: updating_queue_locks) {
+        //     omp_init_lock(&lock);
+        // }
     }
 }
 
@@ -99,11 +99,11 @@ void GlobalManager::reset() {
         for (auto & neighbor_generator: neighbor_generators) {
             neighbor_generator->reset();
         }
-        for (int i=0;i<num_threads;++i) {
-            omp_set_lock(&(updating_queue_locks[i]));
-            updating_queues[i].clear();
-            omp_unset_lock(&(updating_queue_locks[i]));
-        }
+        // for (int i=0;i<num_threads;++i) {
+        //     omp_set_lock(&(updating_queue_locks[i]));
+        //     updating_queues[i].clear();
+        //     omp_unset_lock(&(updating_queue_locks[i]));
+        // }
     }
 
     // call reset of local_optimizers
@@ -114,11 +114,11 @@ void GlobalManager::reset() {
 }
 
 GlobalManager::~GlobalManager() {
-    if (async) {
-        for (auto & lock: updating_queue_locks) {
-            omp_destroy_lock(&lock);
-        }
-    }
+    // if (async) {
+    //     for (auto & lock: updating_queue_locks) {
+    //         omp_destroy_lock(&lock);
+    //     }
+    // }
 }
 
 void GlobalManager::update(Neighbor & neighbor, bool recheck) {
@@ -259,7 +259,7 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
 
     // synchonize to local optimizer
     ONLYDEV(g_timer.record_p("init_loc_opt_update_s");)
-    #pragma omp parallel for
+    // #pragma omp parallel for
     for (int i=0;i<num_threads;++i) {
         local_optimizers[i]->update(init_neighbor);
     }
@@ -289,9 +289,9 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
     std::cout<<"num_threads: "<<num_threads<<" "<<neighbor_generators.size()<<std::endl;
 
 
-    #pragma omp parallel for
+    // #pragma omp parallel for
     for (int i=0;i<num_threads;++i) {
-        int thread_id=omp_get_thread_num();
+        int thread_id=i;//omp_get_thread_num();
         int ctr=0;
 
         while (true) {
@@ -330,7 +330,7 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
             // cout<<"optimized"<<endl;
 
             // 3. update path table, statistics & maybe adjust strategies
-            #pragma omp critical
+            // #pragma omp critical
             {
                 // for (int i=0;i<1;++i) {
                     // if (time_limiter.timeout())
@@ -433,7 +433,7 @@ bool GlobalManager::_run(TimeLimiter & time_limiter) {
     update(init_neighbor,false);
     // synchonize to local optimizer
     ONLYDEV(g_timer.record_p("init_loc_opt_update_s");)
-    #pragma omp parallel for
+    // #pragma omp parallel for
     for (int i=0;i<num_threads;++i) {
         local_optimizers[i]->update(init_neighbor);
     }
@@ -520,7 +520,7 @@ bool GlobalManager::_run(TimeLimiter & time_limiter) {
 
             // synchonize to local optimizer
             ONLYDEV(g_timer.record_p("loc_opt_update_s");)
-            #pragma omp parallel for
+            // #pragma omp parallel for
             for (int i=0;i<num_threads;++i) {
                 local_optimizers[i]->update(neighbor);
             }

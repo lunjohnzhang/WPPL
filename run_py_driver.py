@@ -4,7 +4,7 @@ sys.path.append('scripts')
 from map import Map
 
 map_path="example_problems/random.domain/maps/random-32-32-20.map"
-full_weight_path="scripts/random_weight_001.w"
+full_weight_path="scripts/random_weight_050.w"
 with_wait_costs=True
 
 map=Map(map_path)
@@ -109,7 +109,7 @@ import os
 os.environ["OMP_NUM_THREADS"] = "1"
 
 EXECUTABLE="./build/lifelong_comp"
-INPUT_FILE="example_problems/random.domain/random_400.json" # random_xxx means random map with xxx agents. we care about 100,200,400,600,800.
+INPUT_FILE="example_problems/random.domain/random_600.json" # random_xxx means random map with xxx agents. we care about 100,200,400,600,800.
 OUTPUT_FILE="test_py_driver.json" # 
 SIMULATION_TIME=1000 # simulate how many steps # for random_100,200,400,600,800, we use 500,500,1000,1000,1000 steps accordingly.
 PLAN_TIME_LIMIT=1 # how many seconds to plan for each step, no need to change

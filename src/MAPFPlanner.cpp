@@ -75,11 +75,7 @@ void MAPFPlanner::load_configs() {
     }
     catch (nlohmann::json::parse_error error)
     {
-<<<<<<< HEAD
         std::cout << "Failed to load configs" << config_path << std::endl;
-=======
-        std::cout << "Failed to load " << config_path << std::endl;
->>>>>>> async_lns
         std::cout << "Message: " << error.what() << std::endl;
         exit(1);
     }
@@ -203,11 +199,7 @@ std::string MAPFPlanner::load_map_weights(string weights_path) {
         }
         catch (nlohmann::json::parse_error error)
         {
-<<<<<<< HEAD
             std::cout << "Failed to load weights: " << weights_path << std::endl;
-=======
-            std::cout << "Failed to load " << weights_path << std::endl;
->>>>>>> async_lns
             std::cout << "Message: " << error.what() << std::endl;
             exit(1);
         }
