@@ -11,8 +11,8 @@ std::ostream & operator << (std::ostream &out, const Path &path)
 {
     for (auto state : path)
     {
-        // if(state.location < 0)
-        //     continue;
+        if(state.location < 0)
+            continue;
         out << "(" << state.location << "," << state.orientation << "," << state.timestep << ")->";
     }
     out << std::endl;

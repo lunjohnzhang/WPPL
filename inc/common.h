@@ -12,7 +12,6 @@
 #include <boost/unordered_map.hpp>
 #include <boost/tokenizer.hpp>
 #include "nlohmann/json.hpp"
-#include <boost/format.hpp>
 
 using boost::heap::fibonacci_heap;
 using boost::heap::compare;
