@@ -4,14 +4,11 @@ mkdir build
 
 # build exec for cpp
 
-cd build
-cmake ../
-make -j
+cmake -B build ./ -DCMAKE_BUILD_TYPE=Release
+make -C build -j
 
 
 # build exec for python
 
-# cd build
-# cmake ../ -DPYTHON=true
-# make -j
-# cp ./*.so ../  #make sue the library is in the working directory
+# cmake -B build ./ -DPYTHON=true -DCMAKE_BUILD_TYPE=Release
+# make -C build -j
