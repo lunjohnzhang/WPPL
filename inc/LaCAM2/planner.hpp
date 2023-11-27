@@ -60,7 +60,7 @@ struct HNode {
   int order_strategy;
 
   HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Instance * ins, HNode* _parent, float _g,
-        float _h, const uint _d, int order_strategy);
+        float _h, const uint _d, int order_strategy, bool disable_agent_goals);
   ~HNode();
 };
 using HNodes = std::vector<HNode*>;
@@ -93,6 +93,8 @@ struct Planner {
   Agents occupied_now;                          // for quick collision checking
   Agents occupied_next;                         // for quick collision checking
 
+  bool disable_agent_goals;
+
   float get_cost_move(int pst,int ped);
 
   Planner(Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline, std::mt19937* _MT,
@@ -102,7 +104,8 @@ struct Planner {
           const float _restart_rate = 0.001f,
           bool use_swap=false,
           bool use_orient_in_heuristic=false,
-          bool use_external_executor=false);
+          bool use_external_executor=false,
+          bool disable_agent_goals=true);
   ~Planner();
 
   Executor executor;

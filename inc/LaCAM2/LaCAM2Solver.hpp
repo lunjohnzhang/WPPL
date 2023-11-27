@@ -39,6 +39,7 @@ public:
 
     int max_agents_in_use;
     bool disable_corner_target_agents;
+    bool disable_agent_goals;
 
     int execution_window;
     int planning_window;
@@ -83,6 +84,8 @@ public:
         use_external_executor=read_param_json<bool>(config,"use_external_executor");
         planning_window=read_param_json<int>(config,"planning_window");
         execution_window=read_param_json<int>(config,"execution_window");
+
+        disable_agent_goals=read_param_json<bool>(config,"disable_agent_goals");
             
     };
 
@@ -117,6 +120,8 @@ public:
 
         // initialize(env);
     }
+
+    void disable_agents(const SharedEnvironment & env);
 
     Action get_action_from_states(const State & state, const State & next_state){
 #ifndef NO_ROT

@@ -58,6 +58,8 @@ public:
 
     RHCR::MAPFSolver* rhcr_build_mapf_solver(nlohmann::json & config, RHCR::CompetitionGraph & graph);
     void rhcr_config_solver(std::shared_ptr<RHCR::RHCRSolver> & solver,nlohmann::json & config);
+
+    int max_execution_steps;
 };
 
 #else

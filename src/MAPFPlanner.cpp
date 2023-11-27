@@ -58,13 +58,28 @@ void MAPFPlanner::load_configs() {
             config["max_task_completed"]=read_conditional_value(config,"max_task_completed",env->num_of_agents);
         }
 
+        if (config.contains("max_execution_steps")) {
+            config["max_execution_steps"]=read_conditional_value(config,"max_execution_steps",env->num_of_agents);
+        }
+
+        config["LaCAM2"]["order_strategy"]=read_conditional_value(config["LaCAM2"],"order_strategy",env->num_of_agents);
+        config["LNS"]["LaCAM2"]["order_strategy"]=read_conditional_value(config["LNS"]["LaCAM2"],"order_strategy",env->num_of_agents);
+        config["disable_corner_target_agents"]=read_conditional_value(config,"disable_corner_target_agents",env->num_of_agents);
+        config["max_agents_in_use"]=read_conditional_value(config,"max_agents_in_use",env->num_of_agents);
+
+        config["LNS"]["fix_ng_bug"]=read_conditional_value(config["LNS"],"fix_ng_bug",env->num_of_agents);
+
         string s=config.dump();
         std::replace(s.begin(),s.end(),',','|');
         config["details"]=s;
     }
     catch (nlohmann::json::parse_error error)
     {
+<<<<<<< HEAD
         std::cout << "Failed to load configs" << config_path << std::endl;
+=======
+        std::cout << "Failed to load " << config_path << std::endl;
+>>>>>>> async_lns
         std::cout << "Message: " << error.what() << std::endl;
         exit(1);
     }
@@ -188,7 +203,11 @@ std::string MAPFPlanner::load_map_weights(string weights_path) {
         }
         catch (nlohmann::json::parse_error error)
         {
+<<<<<<< HEAD
             std::cout << "Failed to load weights: " << weights_path << std::endl;
+=======
+            std::cout << "Failed to load " << weights_path << std::endl;
+>>>>>>> async_lns
             std::cout << "Message: " << error.what() << std::endl;
             exit(1);
         }
@@ -216,6 +235,10 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         weights_path=read_param_json<std::string>(config,"map_weights_path");
         suffix=load_map_weights(weights_path);
     }
+
+    max_execution_steps = read_param_json<int>(config,"max_execution_steps",1000000);
+
+    std::cout<<"max execution steps: "<<max_execution_steps<<std::endl;
 
     lifelong_solver_name=config["lifelong_solver_name"];
 
@@ -290,6 +313,13 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     ONLYDEV(
         g_timer.record_p("_step_s");
     )
+
+    if (env->curr_timestep>=max_execution_steps-1) {
+        for (int i=0;i<env->num_of_agents;++i) {
+            actions.push_back(Action::W);
+        }
+        return;
+    }
 
     if (lifelong_solver_name=="RHCR") {
         cout<<"using RHCR"<<endl;

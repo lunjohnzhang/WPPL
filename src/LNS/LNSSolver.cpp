@@ -36,9 +36,9 @@ void LNSSolver::initialize(const SharedEnvironment & env){
     //         obstacle_stats_tree->update(pos,1);
     //     }
     // }
-
-    // agent_stats_tree = std::make_shared<StatsTree>(env.cols,env.rows);
-    lacam2_solver->initialize(env);
+    
+    // agent_stats_tree = std::make_shared<StatsTree>(env.cols,env.rows); 
+    // lacam2_solver->initialize(env); // it is initialized already outside.
     execution_paths.resize(env.num_of_agents);
     planning_paths.resize(env.num_of_agents);
 
@@ -104,14 +104,25 @@ void LNSSolver::plan(const SharedEnvironment & env){
     std::vector<::State> starts;
     std::vector<::State> goals;
 
+    int disabled_agent_count=0;
     for (int i=0;i<env.num_of_agents;++i) {
+        if ((*agent_infos)[i].disabled) {
+            ++disabled_agent_count;
+        }
         starts.emplace_back(execution_paths[i].back().location,-1,execution_paths[i].back().orientation);
-        goals.emplace_back(env.goal_locations[i][0].first,-1,-1);
+        // if ((*agent_infos)[i].disabled) {
+        //     goals.emplace_back(env.curr_states[i].location,-1,-1);
+        // } else {
+            goals.emplace_back(env.goal_locations[i][0].first,-1,-1);
+        // }
     }
+
+    ONLYDEV(std::cout<<"disabled_agents:"<<disabled_agent_count<<std::endl;)
 
     // TODO(rivers): we need to replan for all agents that has no plan
     // later we may think of padding all agents to the same length
     if (planning_paths[0].size()<planning_window+1) {
+        std::cout<<"call lacam2: "<<planning_paths[0].size()<<std::endl;
         // TODO(rivers): maybe we should directly build lacam2 planner in this class.
         if (read_param_json<string>(config,"initAlgo")=="LaCAM2"){
             ONLYDEV(g_timer.record_p("lacam2_plan_s");)
@@ -144,6 +155,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
             // TODO: lacam2_solver should plan with starts differnt from env.curr_states but goals the same as env.goals because they are up-to-date. 
             lacam2_solver->plan(env, &precomputed_paths, &starts, &goals);
+            cout<<"lacam succeed"<<endl;
 
             // we need to copy the new planned paths into paths
             // std::cerr<<"lacam2 paths:"<<endl;
@@ -184,6 +196,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
         // build instace
         instance = std::make_shared<Instance>(env);
         lns = std::make_shared<Parallel::GlobalManager>(
+            true,
             *instance,
             HT,
             map_weights,
@@ -199,7 +212,9 @@ void LNSSolver::plan(const SharedEnvironment & env){
             read_param_json<int>(config,"window_size_for_CT"),
             read_param_json<int>(config,"window_size_for_CAT"),
             read_param_json<int>(config,"window_size_for_PATH"),
+            execution_window,
             lacam2_solver->max_agents_in_use!=env.num_of_agents, // TODO: has disabled agents
+            read_param_json<bool>(config,"fix_ng_bug"),
             0 // TODO: screen
         );
     }
@@ -278,11 +293,14 @@ void LNSSolver::plan(const SharedEnvironment & env){
         exit(-1);
     }
 
+    // we cannot do this because it would make result invalid
     // deal with a special case when the goal and the start are the same.
-    for (int i=0;i<lns->agents.size();++i) {
-        if (lns->agents[i].path.size()<planning_window+1) {
-            // in this case, actually the goal is the same as the start
-            lns->agents[i].path.nodes.resize(planning_window+1,lns->agents[i].path.back());
+    if (execution_window==1) {
+        for (int i=0;i<lns->agents.size();++i) {
+            if (lns->agents[i].path.size()<planning_window+1) {
+                // in this case, actually the goal is the same as the start
+                lns->agents[i].path.nodes.resize(planning_window+1,lns->agents[i].path.back());
+            }
         }
     }
     ONLYDEV(g_timer.record_d("run_LNS_s","run_LNS_e","run_LNS");)

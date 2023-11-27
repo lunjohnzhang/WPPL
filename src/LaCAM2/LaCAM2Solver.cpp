@@ -9,6 +9,27 @@
 
 namespace LaCAM2 {
 
+std::set<int> load_tabu_locs(string fp) {
+    std::ifstream f(fp);
+    try
+    {
+        auto tabu_locs = nlohmann::json::parse(f);
+        std::set<int> tabu_locs_set;
+        for (int i=0;i<tabu_locs.size();++i) {
+            int loc=tabu_locs[i].get<int>();
+            tabu_locs_set.insert(loc);
+        }
+
+        return tabu_locs_set;
+    }
+    catch (nlohmann::json::parse_error error)
+    {
+        std::cout << "Failed to load " << fp << std::endl;
+        std::cout << "Message: " << error.what() << std::endl;
+        exit(1);
+    }
+}
+
 void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     paths.resize(env.num_of_agents);
     agent_infos=std::make_shared<std::vector<AgentInfo> >(env.num_of_agents);
@@ -18,20 +39,54 @@ void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     // action_costs.resize(env.num_of_agents);
     // total_actions.resize(env.num_of_agents);
     G = std::make_shared<Graph>(env);
+}
 
-    // random select some agents to be disabled
-    std::vector<int> agents_ids;
-    for (int i=0;i<env.num_of_agents;++i) {
-        agents_ids.push_back(i);
+void LaCAM2Solver::disable_agents(const SharedEnvironment & env) {
+
+    string strategy=read_param_json<string>(config,"disable_agent_strategy");
+
+    int disabled_agents_num;
+    if (strategy=="uniform") {
+        // random select some agents to be disabled
+        std::vector<int> agents_ids;
+        for (int i=0;i<env.num_of_agents;++i) {
+            agents_ids.push_back(i);
+        }
+        std::shuffle(agents_ids.begin(),agents_ids.end(),*MT);
+
+        disabled_agents_num=env.num_of_agents-max_agents_in_use;
+        for (int i=0;i<disabled_agents_num;++i) {
+            (*agent_infos)[agents_ids[i]].disabled=true;
+        }
+    } else if (strategy=="tabu_locs") {
+        // disable agents not in the tabu locs set
+        string tabu_locs_fp=read_param_json<string>(config,"tabu_locs_fp");
+        auto tabu_locs = load_tabu_locs(tabu_locs_fp);
+
+        std::vector<int> agents_ids;
+        for (int i=0;i<env.num_of_agents;++i) {
+            if (tabu_locs.find(env.curr_states[i].location)==tabu_locs.end()) {
+                agents_ids.push_back(i);
+            }
+        }
+        std::shuffle(agents_ids.begin(),agents_ids.end(),*MT);
+
+        std::vector<int> disabled_agents_ids;
+        disabled_agents_num=env.num_of_agents-max_agents_in_use;
+        disabled_agents_num=std::min(disabled_agents_num,(int)agents_ids.size());
+        for (int i=0;i<disabled_agents_num;++i) {
+            (*agent_infos)[agents_ids[i]].disabled=true;
+            disabled_agents_ids.push_back(agents_ids[i]);
+        }
+
+        nlohmann::json disabled_agents_json(disabled_agents_ids);
+        std::ofstream f("disabled_agents.json");
+        f<<disabled_agents_json;
+        f.close();
     }
-    std::random_shuffle(agents_ids.begin(),agents_ids.end());
 
-    int disabled_agents_num=env.num_of_agents-max_agents_in_use;
-    for (int i=0;i<disabled_agents_num;++i) {
-        (*agent_infos)[agents_ids[i]].disabled=true;
-    }
-
-    std::cout<<"#disabled agents: "<<disabled_agents_num<<std::endl;
+    std::cout<<"strategy: "<<strategy<<" #disabled agents: "<<disabled_agents_num<<std::endl;
+    
 }
 
 Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths) {
@@ -53,7 +108,7 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
                 ++ctr;
             }
         }
-        if (agent_info.disabled) {
+        if (disable_agent_goals && agent_info.disabled) {
             goal_location=env.curr_states[i].location;
         }
         goals.emplace_back(goal_location, -1);
@@ -166,6 +221,11 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
     //     }
     // }
 
+    if (env.curr_timestep==0 && max_agents_in_use<env.num_of_agents) {
+        disable_agents(env);
+    }
+
+
     if (need_replan) {
         const int verbose = 10;
         const int time_limit_sec = 2;
@@ -244,17 +304,30 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         ONLYDEV(g_timer.record_d("lacam2_plan_pre_s","lacam2_plan_pre");)
 
         // #pragma omp parallel for
-        // for (int i=0;i<1;++i) {
+        // for (int i=1;i<2;++i) {
+            
+            int order_strategy=1;
+            string _order_strategy=read_param_json<string>(config,"order_strategy");
+            if (_order_strategy=="early_time") {
+                order_strategy=1;
+            } else if (_order_strategy=="short_dist") {
+                order_strategy=0;
+            } else {
+                cout<<"unknown order strategy: "<<_order_strategy<<endl;
+                exit(-1);
+            }
+
             ONLYDEV(g_timer.record_p("lacam_build_planner_s");)
             auto planner = Planner(&instance,HT,map_weights,&deadline,MT,0,LaCAM2::OBJ_SUM_OF_LOSS,0.0F,
                 use_swap,
                 use_orient_in_heuristic,
-                use_external_executor
+                use_external_executor,
+                disable_agent_goals
             );
             ONLYDEV(g_timer.record_d("lacam_build_planner_s","lacam_build_planner");)
             auto additional_info = std::string("");
             ONLYDEV(g_timer.record_p("lacam_solve_s");)
-            auto solution=planner.solve(additional_info,0);
+            auto solution=planner.solve(additional_info,order_strategy);
             ONLYDEV(g_timer.record_d("lacam_solve_s","lacam_solve");)
             auto cost=eval_solution(instance,solution);
             // #pragma omp critical

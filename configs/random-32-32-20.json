@@ -1,40 +1,84 @@
 {
     "lifelong_solver_name": [
         {
-            "n_agents": 800,
+            "n_agents": 600,
+            "value": "LNS"
+        },
+        {
+            "n_agents": 1000000,
             "value": "LaCAM2"
         }
     ],
     "map_weights_path": [
         {
             "n_agents": 200,
-            "value": "../scripts/random_weight_003.w"
+            "value": ""
         },
         {
             "n_agents": 500,
-            "value": "../scripts/random_weight_011.w"
+            "value": "scripts/random_weight_040.w"
         },
         {
             "n_agents": 600,
-            "value": "../scripts/random_weight_012.w"
+            "value": "scripts/random_weight_050.w"
         },
         {
             "n_agents": 1000000,
-            "value": "../scripts/random_weight_011.w"
+            "value": "scripts/random_800_uncompressed_weights_with_wait_2000_steps.w"
+        }
+    ],
+    "max_execution_steps": [
+        {
+            "n_agents": 400,
+            "value": 1000000
+        },
+        {
+            "n_agents": 600,
+            "value": 1000000
+        },
+        {
+            "n_agents": 1000000,
+            "value": 10000000
         }
     ],
     "max_task_completed": [
         {
+            "n_agents": 400,
+            "value": 1000000
+        },
+        {
             "n_agents": 600,
-            "value": 10000000
+            "value": 1000000
         },
         {
             "n_agents": 1000000,
-            "value": 10000000
+            "value": 1000000
         }
     ],
-    "max_agents_in_use": -1,
-    "disable_corner_target_agents": true,
+    "max_agents_in_use": [
+        {
+            "n_agents": 400,
+            "value": -1
+        },
+        {
+            "n_agents": 600,
+            "value": -1
+        },
+        {
+            "n_agents": 1000000,
+            "value": -1
+        }
+    ],
+    "disable_corner_target_agents": [
+        {
+            "n_agents": 400,
+            "value": false
+        },
+        {
+            "n_agents": 1000000,
+            "value": true
+        }
+    ],
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.95,
@@ -49,13 +93,19 @@
         "sipp": true,
         "pibtWindow": 5,
         "winPibtSoftmode": true,
-        "window_size_for_CT": 10,
-        "window_size_for_CAT": 10,
-        "window_size_for_PATH": 10,
+        "window_size_for_CT": 15,
+        "window_size_for_CAT": 15,
+        "window_size_for_PATH": 15,
         "execution_window": 1,
+        "fix_ng_bug": [
+            {
+                "n_agents": 1000000,
+                "value": true
+            }
+        ],
         "LaCAM2": {
             "seed": 0,
-            "planning_window": 10,
+            "planning_window": 15,
             "execution_window": 1,
             "use_external_executor": false,
             "consider_rotation": false,
@@ -67,7 +117,24 @@
                 "max_expanded": -1,
                 "window": 30,
                 "h_weight": 1.0
-            }
+            },
+            "order_strategy": [
+                {
+                    "n_agents": 400,
+                    "value": "early_time"
+                },
+                {
+                    "n_agents": 600,
+                    "value": "early_time"
+                },
+                {
+                    "n_agents": 1000000,
+                    "value": "early_time"
+                }
+            ],
+            "disable_agent_strategy": "tabu_locs",
+            "disable_agent_goals": true,
+            "tabu_locs_fp": "scripts/random_600_tabu_locs.txt"
         }
     },
     "LaCAM2": {
@@ -84,7 +151,24 @@
             "max_expanded": -1,
             "window": 30,
             "h_weight": 1.0
-        }
+        },
+        "order_strategy": [
+            {
+                "n_agents": 400,
+                "value": "early_time"
+            },
+            {
+                "n_agents": 600,
+                "value": "early_time"
+            },
+            {
+                "n_agents": 1000000,
+                "value": "early_time"
+            }
+        ],
+        "disable_agent_strategy": "uniform",
+        "disable_agent_goals": true,
+        "tabu_locs_fp": "scripts/random_600_tabu_locs.txt"
     },
     "PIBT": {
         "prior_type": "early_time"

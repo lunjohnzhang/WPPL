@@ -11,7 +11,30 @@
             "value": "scripts/brc202d_weight_002.w"
         }
     ],
-    "max_agents_in_use": -1,
+    "max_agents_in_use": [
+        {
+            "n_agents": 1000000,
+            "value": 2500
+        }
+    ],
+    "max_execution_steps": [
+        {
+            "n_agents": 1000000,
+            "value": 10000000
+        }
+    ],
+    "disable_corner_target_agents": [
+        {
+            "n_agents": 1000000,
+            "value": false
+        }
+    ],
+    "max_task_completed": [
+        {
+            "n_agents": 1000000,
+            "value": 17250
+        }
+    ],
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.95,
@@ -26,12 +49,21 @@
         "sipp": true,
         "pibtWindow": 5,
         "winPibtSoftmode": true,
-        "window_size_for_CT": 10,
-        "window_size_for_CAT": 10,
-        "window_size_for_PATH": 10,
+        "window_size_for_CT": 15,
+        "window_size_for_CAT": 15,
+        "window_size_for_PATH": 15,
+        "execution_window": 1,
+        "fix_ng_bug": [
+            {
+                "n_agents": 1000000,
+                "value": true
+            }
+        ],
         "LaCAM2": {
             "seed": 0,
-            "planning_window": 10,
+            "planning_window": 15,
+            "execution_window": 1,
+            "use_external_executor": false,
             "consider_rotation": false,
             "use_orient_in_heuristic": true,
             "use_slow_executor": false,
@@ -41,12 +73,23 @@
                 "max_expanded": -1,
                 "window": 30,
                 "h_weight": 1.0
-            }
+            },
+            "order_strategy": [
+                {
+                    "n_agents": 1000000,
+                    "value": "early_time"
+                }
+            ],
+            "disable_agent_strategy": "tabu_locs",
+            "disable_agent_goals": true,
+            "tabu_locs_fp": "scripts/brc202d_tabu_locs.txt"
         }
     },
     "LaCAM2": {
-        "seed": 0,
+        "seed": 100,
         "planning_window": 1,
+        "execution_window": 1,
+        "use_external_executor": false,
         "consider_rotation": true,
         "use_orient_in_heuristic": true,
         "use_slow_executor": false,
@@ -56,7 +99,16 @@
             "max_expanded": -1,
             "window": 30,
             "h_weight": 1.0
-        }
+        },
+        "order_strategy": [
+            {
+                "n_agents": 1000000,
+                "value": "early_time"
+            }
+        ],
+        "disable_agent_strategy": "uniform",
+        "disable_agent_goals": true,
+        "tabu_locs_fp": ""
     },
     "PIBT": {
         "prior_type": "early_time"
