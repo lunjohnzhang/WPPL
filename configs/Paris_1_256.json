@@ -65,7 +65,7 @@
             "order_strategy": [
                 {
                     "n_agents": 1000000,
-                    "value": "short_dist"
+                    "value": "early_time"
                 }
             ],
             "disable_agent_strategy": "uniform",
