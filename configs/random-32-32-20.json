@@ -2,11 +2,11 @@
     "lifelong_solver_name": [
         {
             "n_agents": 600,
-            "value": "DUMMY"
+            "value": "LNS"
         },
         {
             "n_agents": 1000000,
-            "value": "DUMMY"
+            "value": "LaCAM2"
         }
     ],
     "map_weights_path": [
@@ -52,7 +52,7 @@
         },
         {
             "n_agents": 1000000,
-            "value": 1000000
+            "value": 4000
         }
     ],
     "max_agents_in_use": [
