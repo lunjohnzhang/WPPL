@@ -20,7 +20,7 @@
     "max_execution_steps": [
         {
             "n_agents": 1000000,
-            "value": 3000
+            "value": 10000000
         }
     ],
     "disable_corner_target_agents": [
@@ -32,7 +32,7 @@
     "max_task_completed": [
         {
             "n_agents": 1000000,
-            "value": 19200
+            "value": 17250
         }
     ],
     "LNS": {
