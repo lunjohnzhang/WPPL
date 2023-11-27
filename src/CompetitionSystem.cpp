@@ -129,7 +129,7 @@ vector<Action> BaseSystem::plan()
 bool BaseSystem::planner_initialize()
 {
     using namespace std::placeholders;
-    std::packaged_task<void(int)> init_task(std::bind(&MAPFPlanner::initialize, planner, _1));
+    std::packaged_task<void(int)> init_task(std::bind(&MAPFPlanner::initialize, planner, std::placeholders::_1));
     auto init_future = init_task.get_future();
     
     auto init_td = std::thread(std::move(init_task), preprocess_time_limit);
