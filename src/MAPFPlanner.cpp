@@ -194,8 +194,8 @@ std::string MAPFPlanner::load_map_weights(string weights_path) {
         }
         catch (nlohmann::json::parse_error error)
         {
-            std::cout << "Failed to load " << weights_path << std::endl;
-            std::cout << "Message: " << error.what() << std::endl;
+            std::cerr << "Failed to load " << weights_path << std::endl;
+            std::cerr << "Message: " << error.what() << std::endl;
             exit(1);
         }
 
