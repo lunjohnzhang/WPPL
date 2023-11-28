@@ -2,7 +2,7 @@
     "lifelong_solver_name": [
         {
             "n_agents": 1000000,
-            "value": "LNS"
+            "value": "DUMMY"
         }
     ],
     "map_weights_path": [
@@ -32,7 +32,7 @@
     "max_task_completed": [
         {
             "n_agents": 1000000,
-            "value": 17500
+            "value": 17500000
         }
     ],
     "LNS": {
