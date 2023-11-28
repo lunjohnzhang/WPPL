@@ -94,6 +94,7 @@ void GlobalManager::reset() {
         // call reset of neighbor_generator
         neighbor_generator->reset();
     } else {
+        #pragma omp parallel for
         for (auto & neighbor_generator: neighbor_generators) {
             neighbor_generator->reset();
         }
@@ -105,6 +106,7 @@ void GlobalManager::reset() {
     }
 
     // call reset of local_optimizers
+    #pragma omp parallel for
     for (auto & local_optimizer: local_optimizers) {
         local_optimizer->reset();
     }
