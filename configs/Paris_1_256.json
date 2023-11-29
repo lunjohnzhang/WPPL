@@ -8,7 +8,7 @@
     "map_weights_path": [
         {
             "n_agents": 100000,
-            "value": "scripts/paris_weight_013.w"
+            "value": "scripts/paris_weight_014.w"
         }
     ],
     "max_agents_in_use": [
@@ -24,7 +24,7 @@
         }
     ],
     "LNS": {
-        "seed": 100,
+        "seed": 0,
         "cutoffTime": 0.95,
         "screen": 0,
         "initAlgo": "LaCAM2",
@@ -48,7 +48,7 @@
             }
         ],
         "LaCAM2": {
-            "seed": 100,
+            "seed": 0,
             "planning_window": 20,
             "execution_window": 1,
             "use_external_executor": false,
