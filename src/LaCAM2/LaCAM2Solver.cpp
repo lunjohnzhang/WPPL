@@ -79,10 +79,10 @@ void LaCAM2Solver::disable_agents(const SharedEnvironment & env) {
             disabled_agents_ids.push_back(agents_ids[i]);
         }
 
-        nlohmann::json disabled_agents_json(disabled_agents_ids);
-        std::ofstream f("disabled_agents.json");
-        f<<disabled_agents_json;
-        f.close();
+        // nlohmann::json disabled_agents_json(disabled_agents_ids);
+        // std::ofstream f("disabled_agents.json");
+        // f<<disabled_agents_json;
+        // f.close();
     }
 
     std::cout<<"strategy: "<<strategy<<" #disabled agents: "<<disabled_agents_num<<std::endl;
@@ -122,7 +122,7 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
             agent_info.elapsed+=1;
         }
     }
-    std::cout<<"ctr: "<<ctr<<std::endl;
+    // std::cout<<"ctr: "<<ctr<<std::endl;
     return Instance(*G, starts, goals, *agent_infos, read_param_json<int>(config,"planning_window",-1), precomputed_paths);
 }
 
@@ -369,7 +369,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
 
         }
 
-        std::cout<<"replan:"<<paths[0].size()<<std::endl;
+        //std::cout<<"replan:"<<paths[0].size()<<std::endl;
 
 
         // for (int i=0;i<env.num_of_agents;++i) {
