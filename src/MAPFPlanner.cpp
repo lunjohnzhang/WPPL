@@ -63,6 +63,11 @@ void MAPFPlanner::load_configs() {
         config["max_agents_in_use"]=read_conditional_value(config,"max_agents_in_use",env->num_of_agents);
 
         config["LNS"]["fix_ng_bug"]=read_conditional_value(config["LNS"],"fix_ng_bug",env->num_of_agents);
+        config["LNS"]["window_size_for_CT"]=read_conditional_value(config["LNS"],"window_size_for_CT",env->num_of_agents);
+        config["LNS"]["window_size_for_CAT"]=read_conditional_value(config["LNS"],"window_size_for_CAT",env->num_of_agents);
+        config["LNS"]["window_size_for_PATH"]=read_conditional_value(config["LNS"],"window_size_for_PATH",env->num_of_agents);
+        config["LNS"]["LaCAM2"]["planning_window"]=read_conditional_value(config["LNS"]["LaCAM2"],"planning_window",env->num_of_agents);
+
 
         string s=config.dump();
         std::replace(s.begin(),s.end(),',','|');

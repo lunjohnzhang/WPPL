@@ -50,7 +50,7 @@ void NeighborGenerator::update(Neighbor & neighbor){
     {
         if (neighbor.old_sum_of_costs > neighbor.sum_of_costs )
             destroy_weights[neighbor.selected_neighbor] =
-                    reaction_factor * (neighbor.old_sum_of_costs - neighbor.sum_of_costs) / neighbor.agents.size()
+                    reaction_factor * (neighbor.old_sum_of_costs - neighbor.sum_of_costs)/neighbor.agents.size()
                     + (1 - reaction_factor) * destroy_weights[neighbor.selected_neighbor];
         else
             destroy_weights[neighbor.selected_neighbor] =
