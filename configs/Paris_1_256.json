@@ -2,7 +2,7 @@
     "lifelong_solver_name": [
         {
             "n_agents": 100000,
-            "value": "DUMMY"
+            "value": "LNS"
         }
     ],
     "map_weights_path": [
@@ -37,9 +37,24 @@
         "sipp": true,
         "pibtWindow": 5,
         "winPibtSoftmode": true,
-        "window_size_for_CT": 20,
-        "window_size_for_CAT": 20,
-        "window_size_for_PATH": 20,
+        "window_size_for_CT": [
+            {
+                "n_agents": 100000,
+                "value": 20
+            }
+        ],
+        "window_size_for_CAT": [
+            {
+                "n_agents": 100000,
+                "value": 20
+            }
+        ],
+        "window_size_for_PATH": [
+            {
+                "n_agents": 100000,
+                "value": 20
+            }
+        ],
         "execution_window": 1,
         "fix_ng_bug": [
             {
@@ -49,7 +64,12 @@
         ],
         "LaCAM2": {
             "seed": 0,
-            "planning_window": 20,
+            "planning_window": [
+                {
+                    "n_agents": 100000,
+                    "value": 20
+                }
+            ],
             "execution_window": 1,
             "use_external_executor": false,
             "consider_rotation": false,

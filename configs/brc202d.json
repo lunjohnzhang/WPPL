@@ -32,7 +32,7 @@
     "max_task_completed": [
         {
             "n_agents": 1000000,
-            "value": 17500000
+            "value": 175000
         }
     ],
     "LNS": {
@@ -49,9 +49,24 @@
         "sipp": true,
         "pibtWindow": 5,
         "winPibtSoftmode": true,
-        "window_size_for_CT": 15,
-        "window_size_for_CAT": 15,
-        "window_size_for_PATH": 15,
+        "window_size_for_CT": [
+            {
+                "n_agents": 100000,
+                "value": 15
+            }
+        ],
+        "window_size_for_CAT":  [
+            {
+                "n_agents": 100000,
+                "value": 15
+            }
+        ],
+        "window_size_for_PATH":  [
+            {
+                "n_agents": 100000,
+                "value": 15
+            }
+        ],
         "execution_window": 3,
         "fix_ng_bug": [
             {
@@ -61,7 +76,12 @@
         ],
         "LaCAM2": {
             "seed": 0,
-            "planning_window": 15,
+            "planning_window":  [
+                {
+                    "n_agents": 100000,
+                    "value": 15
+                }
+            ],
             "execution_window": 1,
             "use_external_executor": false,
             "consider_rotation": false,
