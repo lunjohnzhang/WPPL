@@ -1,6 +1,10 @@
 {
     "lifelong_solver_name": [
         {
+            "n_agents": 200,
+            "value": "LNS"
+        },
+        {
             "n_agents": 400,
             "value": "DUMMY"
         },
@@ -133,6 +137,10 @@
         ],
         "execution_window": 1,
         "fix_ng_bug": [
+            {
+                "n_agents": 200,
+                "value": false
+            },
             {
                 "n_agents": 1000000,
                 "value": true
