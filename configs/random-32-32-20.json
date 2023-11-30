@@ -1,6 +1,10 @@
 {
     "lifelong_solver_name": [
         {
+            "n_agents": 200,
+            "value": "LNS"
+        },
+        {
             "n_agents": 600,
             "value": "DUMMY"
         },
