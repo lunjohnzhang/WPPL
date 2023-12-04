@@ -1,8 +1,8 @@
 {
     "lifelong_solver_name": [
         {
-            "n_agents": 600,
-            "value": "LNS"
+            "n_agents": 400,
+            "value": "LaCAM2"
         },
         {
             "n_agents": 1000000,
@@ -71,7 +71,7 @@
     ],
     "disable_corner_target_agents": [
         {
-            "n_agents": 400,
+            "n_agents": 200,
             "value": false
         },
         {
