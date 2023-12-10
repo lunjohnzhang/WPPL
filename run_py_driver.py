@@ -105,18 +105,18 @@ print(compressed_weights_json_str)
 import py_driver
 print(py_driver.playground())
 
-import os
+# import os
 # how do we specify OMP_NUM_THREADS=1, may be directly set in environ?
-os.environ["OMP_NUM_THREADS"] = "1"
+# os.environ["OMP_NUM_THREADS"] = "1"
 
-EXECUTABLE="./build/lifelong_comp"
-INPUT_FILE="example_problems/random.domain/random_600.json" # random_xxx means random map with xxx agents. we care about 100,200,400,600,800.
-OUTPUT_FILE="test_py_driver.json" # 
-SIMULATION_TIME=1000 # simulate how many steps # for random_100,200,400,600,800, we use 500,500,1000,1000,1000 steps accordingly.
-PLAN_TIME_LIMIT=1 # how many seconds to plan for each step, no need to change
-FILE_STORAGE_PATH="large_files/" # where to store the precomputed large files, no need (to change) in the weight opt case.
+# EXECUTABLE="./build/lifelong_comp"
+# INPUT_FILE="example_problems/random.domain/random_600.json" # random_xxx means random map with xxx agents. we care about 100,200,400,600,800.
+# OUTPUT_FILE="test_py_driver.json" # 
+# SIMULATION_TIME=1000 # simulate how many steps # for random_100,200,400,600,800, we use 500,500,1000,1000,1000 steps accordingly.
+# PLAN_TIME_LIMIT=1 # how many seconds to plan for each step, no need to change
+# FILE_STORAGE_PATH="large_files/" # where to store the precomputed large files, no need (to change) in the weight opt case.
 
-cmd=f"{EXECUTABLE} --inputFile {INPUT_FILE} -o {OUTPUT_FILE} --simulationTime {SIMULATION_TIME} --planTimeLimit {PLAN_TIME_LIMIT} --fileStoragePath {FILE_STORAGE_PATH}"
+# cmd=f"{EXECUTABLE} --inputFile {INPUT_FILE} -o {OUTPUT_FILE} --simulationTime {SIMULATION_TIME} --planTimeLimit {PLAN_TIME_LIMIT} --fileStoragePath {FILE_STORAGE_PATH}"
 
 # the cmd is the string command above, which is the same command to run ./build/lifelong in the terminal.
 # the compress_weights_json_str is a weight represented as [w0,w1,w2,....] as required by weight opt program.
@@ -129,7 +129,31 @@ with open(config_path) as f:
     config=json.load(f)
     config_str=json.dumps(config)
 
-ret=py_driver.run(cmd=cmd,weights=compressed_weights_json_str,wait_costs=compressed_wait_costs_json_str,gen_random=True,num_agents=600,num_tasks=100000,seed=7,config=config_str)
+ret=py_driver.run(
+    map_path="example_problems/random.domain/maps/random-32-32-20.map",
+    simulation_steps=1000,
+    # for the problem instance we use:
+    # if random then we need specify the number of agents and total tasks, also random seed,
+    gen_random=True,
+    num_agents=600,
+    num_tasks=100000,
+    seed=0,
+    # else we need specify agents and tasks path to load data.
+    agents_path="example_problems/random.domain/agents/random_600.agents",
+    tasks_path="example_problems/random.domain/tasks/random-32-32-20-600.tasks",
+    # weights are the edge weights, wait_costs are the vertex wait costs
+    # if not specified here, then the program will use the one specified in the config file.
+    weights=compressed_weights_json_str,
+    wait_costs=compressed_wait_costs_json_str,    
+    # if we don't load config here, the program will load the default config file.
+    config=config_str,    
+    # the following are some things we don't need to change in the weight optimization case.
+    plan_time_limit=1, # in seconds, time limit for planning at each step, no need to change
+    preprocess_time_limit=1800, # in seconds, time limit for preprocessing, no need to change
+    file_storage_path="large_files/", # where to store the precomputed large files, no need to change
+    task_assignment_strategy="roundrobin", # how to assign tasks to agents, no need to change
+    num_tasks_reveal=1, # how many new tasks are revealed, no need to change
+)
 
 import json
 import numpy as np
