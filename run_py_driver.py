@@ -5,6 +5,7 @@ from map import Map
 
 map_path="example_problems/random.domain/maps/random-32-32-20.map"
 full_weight_path="scripts/random_weight_050.w"
+config_path="py_configs/random-32-32-20_600.json"
 with_wait_costs=True
 
 map=Map(map_path)
@@ -123,7 +124,12 @@ cmd=f"{EXECUTABLE} --inputFile {INPUT_FILE} -o {OUTPUT_FILE} --simulationTime {S
 # 1. throughput double
 # 2. vertexUsage 1-d double json array, N_v
 # 3. edgeUsage  2-d double json array, N_v*N_v
-ret=py_driver.run(cmd=cmd,weights=compressed_weights_json_str,wait_costs=compressed_wait_costs_json_str)
+import json
+with open(config_path) as f:
+    config=json.load(f)
+    config_str=json.dumps(config)
+
+ret=py_driver.run(cmd=cmd,weights=compressed_weights_json_str,wait_costs=compressed_wait_costs_json_str,gen_random=True,num_agents=600,num_tasks=100000,seed=7,config=config_str)
 
 import json
 import numpy as np
@@ -232,9 +238,9 @@ def uncompress_edge_matrix(map,compressed_edge_matrix,fill_value=0):
 compressed_vertex_waits=compress_vertex_matrix(map,vertex_wait_matrix)
 compressed_edge_usages=compress_edge_matrix(map,edge_usage_matrix)
 
-print(compressed_vertex_waits,compressed_edge_usages)
+# print(compressed_vertex_waits,compressed_edge_usages)
 
-print(len(compressed_vertex_waits),len(compressed_edge_usages))
+# print(len(compressed_vertex_waits),len(compressed_edge_usages))
 
 
 _vertex_waits=uncompress_vertex_matrix(map,compressed_vertex_waits)

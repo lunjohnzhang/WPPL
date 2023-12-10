@@ -68,10 +68,6 @@ void MAPFPlanner::load_configs() {
         config["max_agents_in_use"]=read_conditional_value(config,"max_agents_in_use",env->num_of_agents);
 
         config["LNS"]["fix_ng_bug"]=read_conditional_value(config["LNS"],"fix_ng_bug",env->num_of_agents);
-
-        string s=config.dump();
-        std::replace(s.begin(),s.end(),',','|');
-        config["details"]=s;
     }
     catch (nlohmann::json::parse_error error)
     {
@@ -212,7 +208,17 @@ std::string MAPFPlanner::load_map_weights(string weights_path) {
 
 void MAPFPlanner::initialize(int preprocess_time_limit) {
     cout << "planner initialization begins" << endl;
-    load_configs();
+
+    if (this->config.empty()) {
+        load_configs();
+        cout<<"load config from file"<<endl;
+    } else {
+        cout<<"config is alreadly loaded"<<endl;
+    }
+
+    string s=config.dump();
+    std::replace(s.begin(),s.end(),',','|');
+    config["details"]=s;
 
     ONLYDEV(
         analyzer.timestamp();

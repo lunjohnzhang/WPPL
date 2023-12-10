@@ -160,9 +160,30 @@ std::shared_ptr<std::vector<float> > weight_format_conversion_with_wait_costs(Gr
 }
 
 
+void gen_random_instance(Grid & grid, std::vector<int> & agents, std::vector<int> & tasks, int num_agents, int num_tasks, uint seed) {
+    std::mt19937 MT(seed);
+
+    std::vector<int> empty_locs;
+    for (int i=0;i<grid.map.size();++i) {
+        if (grid.map[i] == 0) {
+            empty_locs.push_back(i);
+        }
+    }
+
+    std::shuffle(empty_locs.begin(), empty_locs.end(), MT);
+
+    for (int i=0;i<num_agents;++i) {
+        agents.push_back(empty_locs[i]);
+    }
+
+    for (int i=0;i<num_tasks;++i) {
+        int rnd_idx=MT()%empty_locs.size();
+        tasks.push_back(empty_locs[rnd_idx]);
+    }
+}
+
 std::string run(const py::kwargs& kwargs)
-{
-    
+{    
     // should be a command line string running the code
     std::string cmd=kwargs["cmd"].cast<std::string>();
     std::cout<<"cmd from python is: "<<cmd<<std::endl;
@@ -244,6 +265,12 @@ std::string run(const py::kwargs& kwargs)
     planner->env->map_name = map_path.substr(map_path.find_last_of("/") + 1);
     planner->env->file_storage_path = vm["fileStoragePath"].as<std::string>();
 
+    if (kwargs.contains("config")){
+        std::string config_str=kwargs["config"].cast<std::string>();
+        nlohmann::json config=nlohmann::json::parse(config_str);
+        planner->config=config;
+    }
+
     if (kwargs.contains("weights")) {
         std::string weight_str=kwargs["weights"].cast<std::string>();
         nlohmann::json weight_json=nlohmann::json::parse(weight_str);
@@ -271,10 +298,20 @@ std::string run(const py::kwargs& kwargs)
     ActionModelWithRotate *model = new ActionModelWithRotate(grid);
     model->set_logger(logger);
 
-    int team_size = read_param_json<int>(data, "teamSize");
+    std::vector<int> agents;
+    std::vector<int> tasks;
 
-    std::vector<int> agents = read_int_vec(base_folder + read_param_json<std::string>(data, "agentFile"), team_size);
-    std::vector<int> tasks = read_int_vec(base_folder + read_param_json<std::string>(data, "taskFile"));
+    if (!kwargs.contains("gen_random") || !kwargs["gen_random"].cast<bool>()){
+        int team_size = read_param_json<int>(data, "teamSize");
+        agents = read_int_vec(base_folder + read_param_json<std::string>(data, "agentFile"), team_size);
+        tasks = read_int_vec(base_folder + read_param_json<std::string>(data, "taskFile"));
+    } else {
+        int num_agents=kwargs["num_agents"].cast<int>();
+        int num_tasks=kwargs["num_tasks"].cast<int>();
+        uint seed=kwargs["seed"].cast<uint>();
+        gen_random_instance(grid, agents, tasks, num_agents, num_tasks, seed);
+    }
+
     std::cout << agents.size() << " agents and " << tasks.size() << " tasks"<< std::endl;
     if (agents.size() > tasks.size())
         logger->log_warning("Not enough tasks for robots (number of tasks < team size)");
@@ -310,7 +347,7 @@ std::string run(const py::kwargs& kwargs)
 
     system_ptr->set_num_tasks_reveal(read_param_json<int>(data, "numTasksReveal", 1));
 
-    signal(SIGINT, sigint_handler);
+    // signal(SIGINT, sigint_handler);
 
     system_ptr->simulate(vm["simulationTime"].as<int>());
 
