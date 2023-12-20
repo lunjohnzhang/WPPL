@@ -220,11 +220,11 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
 
   // setup search
   auto OPEN = std::stack<HNode*>();
-  auto EXPLORED = std::unordered_map<Config, HNode*, ConfigHasher, Config::ConfigEqual>();
+  // auto EXPLORED = std::unordered_map<Config, HNode*, ConfigHasher, Config::ConfigEqual>();
   // insert initial node, 'H': high-level node
   auto H_init = new HNode(ins->starts, HT, ins, nullptr, 0, get_h_value(ins->starts), 0, order_strategy, disable_agent_goals);
   OPEN.push(H_init);
-  EXPLORED[H_init->C] = H_init;
+  // EXPLORED[H_init->C] = H_init;
 
   std::vector<Config> solution;
   auto C_new = Config(N);  // for new configuration
@@ -272,19 +272,19 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
       continue;
     }
 
-    // check lower bounds
-    if (H_goal != nullptr && H->f >= H_goal->f) {
-      OPEN.pop();
-      continue;
-    }
+    // // check lower bounds
+    // if (H_goal != nullptr && H->f >= H_goal->f) {
+    //   OPEN.pop();
+    //   continue;
+    // }
 
-    // check goal condition
-    if (H_goal == nullptr && H->C.all_arrived()) {
-      H_goal = H;
-      solver_info(1, "found solution, cost: ", H->g);
-      if (objective == OBJ_NONE) break;
-      continue;
-    }
+    // // check goal condition
+    // if (H_goal == nullptr && H->C.all_arrived()) {
+    //   H_goal = H;
+    //   solver_info(1, "found solution, cost: ", H->g);
+    //   if (objective == OBJ_NONE) break;
+    //   continue;
+    // }
 
     // create successors at the low-level search
     auto L = H->search_tree.front();
@@ -294,7 +294,8 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
     // create successors at the high-level search
     const auto res = get_new_config(H, L);
     delete L;  // free
-    if (!res) continue;
+    // if (!res) continue;
+    if (!res) break;
 
     // create successors at the high-level search
     // const int num_trials=1;
@@ -378,23 +379,29 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
     }
 
     // check explored list
-    const auto iter = EXPLORED.find(C_new);
-    if (iter != EXPLORED.end()) {
-      cout<<"found"<<endl;
-      // case found
-      rewrite(H, iter->second, H_goal, OPEN);
-      // re-insert or random-restart
-      auto H_insert = (MT != nullptr && get_random_float(MT) >= RESTART_RATE)
-                          ? iter->second
-                          : H_init;
-      if (H_goal == nullptr || H_insert->f < H_goal->f) OPEN.push(H_insert);
-    } else {
+    // const auto iter = EXPLORED.find(C_new);
+    // if (iter != EXPLORED.end()) {
+    //   cout<<"found"<<endl;
+    //   // case found
+    //   rewrite(H, iter->second, H_goal, OPEN);
+    //   // re-insert or random-restart
+    //   auto H_insert = (MT != nullptr && get_random_float(MT) >= RESTART_RATE)
+    //                       ? iter->second
+    //                       : H_init;
+    //   if (H_goal == nullptr || H_insert->f < H_goal->f) OPEN.push(H_insert);
+    // } else {
       // insert new search node
       const auto H_new = new HNode(
           C_new, HT, ins, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new), H->d + 1, order_strategy, disable_agent_goals);
-      EXPLORED[H_new->C] = H_new;
-      if (H_goal == nullptr || H_new->f < H_goal->f) OPEN.push(H_new);
-    }
+      // EXPLORED[H_new->C] = H_new;
+      // if (H_goal == nullptr || H_new->f < H_goal->f) 
+      OPEN.push(H_new);
+    // }
+  }
+
+  // safeguard
+  if (H_goal == nullptr) {
+    H_goal = H_init;
   }
 
   // backtrack
@@ -405,6 +412,11 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
       H = H->parent;
     }
     std::reverse(solution.begin(), solution.end());
+
+    // safeguard
+    if (solution.size()<d_max+1) {
+      solution.resize(d_max+1,solution.back());
+    }
   }
 
   // print result
@@ -423,11 +435,11 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
       "optimal=" + std::to_string(H_goal != nullptr && OPEN.empty()) + "\n";
   additional_info += "objective=" + std::to_string(objective) + "\n";
   additional_info += "loop_cnt=" + std::to_string(loop_cnt) + "\n";
-  additional_info += "num_node_gen=" + std::to_string(EXPLORED.size()) + "\n";
+  // additional_info += "num_node_gen=" + std::to_string(EXPLORED.size()) + "\n";
 
   // memory management
   for (auto a : A) delete a;
-  for (auto itr : EXPLORED) delete itr.second;
+  // for (auto itr : EXPLORED) delete itr.second;
 
   return solution;
 }
@@ -634,6 +646,7 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
   // perform PIBT
   for (auto k : H->order) {
+    if (is_expired(deadline)) return false;
     auto a = A[k];
     if (a->v_next == nullptr && !funcPIBT(a,H)){
       // cerr<<"planning failture"<<endl;
@@ -677,6 +690,8 @@ float Planner::get_cost_move(int pst, int ped) {
 
 bool Planner::funcPIBT(Agent* ai, HNode * H)
 {
+  if (is_expired(deadline)) return false;
+
   const auto i = ai->id;
   const auto K = ai->v_now->neighbor.size();
 

@@ -228,7 +228,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
 
     if (need_replan) {
         const int verbose = 10;
-        const int time_limit_sec = 2;
+        const float time_limit_sec = 0.5;
         ONLYDEV(g_timer.record_p("lacam_build_instance_s");)
         auto instance = build_instance(env, precomputed_paths);
         if (starts!=nullptr) {
