@@ -72,7 +72,7 @@
     "disable_corner_target_agents": [
         {
             "n_agents": 200,
-            "value": false
+            "value": true
         },
         {
             "n_agents": 1000000,
