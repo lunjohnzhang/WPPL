@@ -4,7 +4,7 @@ sys.path.append('scripts')
 from map import Map
 
 map_path="example_problems/random.domain/maps/random-32-32-20.map"
-full_weight_path="scripts/random_weight_050.w"
+full_weight_path="scripts/random_weight_001.w"
 with_wait_costs=True
 
 map=Map(map_path)
@@ -86,7 +86,7 @@ ret=py_driver.run(
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
     gen_random=True,
-    num_agents=600,
+    num_agents=800,
     num_tasks=100000,
     seed=0,
     # else we need specify agents and tasks path to load data.
@@ -94,10 +94,10 @@ ret=py_driver.run(
     # tasks_path="example_problems/random.domain/tasks/random-32-32-20-600.tasks",
     # weights are the edge weights, wait_costs are the vertex wait costs
     # if not specified here, then the program will use the one specified in the config file.
-    weights=compressed_weights_json_str,
-    wait_costs=compressed_wait_costs_json_str,    
+    # weights=compressed_weights_json_str,
+    # wait_costs=compressed_wait_costs_json_str,    
     # if we don't load config here, the program will load the default config file.
-    config=config_str,    
+    # config=config_str,    
     # the following are some things we don't need to change in the weight optimization case.
     plan_time_limit=1, # in seconds, time limit for planning at each step, no need to change
     preprocess_time_limit=1800, # in seconds, time limit for preprocessing, no need to change

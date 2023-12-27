@@ -16,7 +16,7 @@
         },
         {
             "n_agents": 600,
-            "value": "scripts/random_weight_010.w"
+            "value": ""
         },
         {
             "n_agents": 1000000,
@@ -68,7 +68,7 @@
     "disable_corner_target_agents": [
         {
             "n_agents": 200,
-            "value": false
+            "value": true
         },
         {
             "n_agents": 1000000,

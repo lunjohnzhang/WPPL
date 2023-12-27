@@ -645,7 +645,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
 
 
    if (lifelong_solver_name=="LaCAM2") {
-        cout<<"using LaCAM2"<<endl;
+        ONLYDEV(cout<<"using LaCAM2"<<endl;)
         lacam2_solver->plan(*env);
         lacam2_solver->get_step_actions(*env,actions);
     } else {

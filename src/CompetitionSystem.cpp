@@ -970,9 +970,9 @@ void BaseSystem::sync_shared_env() {
 
 vector<Action> BaseSystem::plan_wrapper()
 {
-    std::cout<<"wrapper called"<<std::endl;
+    ONLYDEV(std::cout<<"wrapper called"<<std::endl;)
     vector<Action> actions;
-    std::cout<<"planning"<<std::endl;
+    ONLYDEV(std::cout<<"planning"<<std::endl;)
     planner->plan(plan_time_limit, actions);
 
     return actions;
@@ -1054,13 +1054,13 @@ void BaseSystem::log_preprocessing(bool succ)
 
 void BaseSystem::log_event_assigned(int agent_id, int task_id, int timestep)
 {
-    logger->log_info("Task " + std::to_string(task_id) + " is assigned to agent " + std::to_string(agent_id), timestep);
+    ONLYDEV(logger->log_info("Task " + std::to_string(task_id) + " is assigned to agent " + std::to_string(agent_id), timestep);)
 }
 
 
 void BaseSystem::log_event_finished(int agent_id, int task_id, int timestep) 
 {
-    logger->log_info("Agent " + std::to_string(agent_id) + " finishes task " + std::to_string(task_id), timestep);
+    ONLYDEV(logger->log_info("Agent " + std::to_string(agent_id) + " finishes task " + std::to_string(task_id), timestep);)
 }
 
 
@@ -1078,8 +1078,10 @@ void BaseSystem::simulate(int simulation_time)
 
     for (; timestep < simulation_time; )
     {
-        cout << "----------------------------" << std::endl;
-        cout << "Timestep " << timestep << std::endl;
+        ONLYDEV(
+            cout << "----------------------------" << std::endl;
+            cout << "Timestep " << timestep << std::endl;
+        )
 
         // find a plan
         sync_shared_env();
@@ -1126,7 +1128,7 @@ void BaseSystem::simulate(int simulation_time)
             auto diff = end-start;
             planner_times.push_back(std::chrono::duration<double>(diff).count());
         }
-        cout << new_finished_tasks.size() << " tasks has been finished in this timestep" << std::endl;
+        ONLYDEV(cout << new_finished_tasks.size() << " tasks has been finished in this timestep" << std::endl;)
 
         // update tasks
         for (auto task : new_finished_tasks)
@@ -1137,7 +1139,7 @@ void BaseSystem::simulate(int simulation_time)
             num_of_tasks++;
             num_of_task_finish++;
         }
-        cout << num_of_tasks << " tasks has been finished by far in total" << std::endl;
+        ONLYDEV(cout << num_of_tasks << " tasks has been finished by far in total" << std::endl;)
 
         ONLYDEV(analyzer.data["finished_tasks"]=num_of_tasks;)
 
