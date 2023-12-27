@@ -177,6 +177,9 @@ float LaCAM2Solver::get_action_cost(int pst, int ost, int ped, int oed) {
 }
 
 float LaCAM2Solver::eval_solution(const Instance & instance, const Solution & solution) {
+
+
+
     float cost=0;
     for (int aid=0;aid<instance.N;++aid) {
         // TODO(rivers): should we consider the case of arrival here?
@@ -195,7 +198,12 @@ float LaCAM2Solver::eval_solution(const Instance & instance, const Solution & so
         if (!arrived){
             int loc=solution.back().locs[aid]->index;
             int orient=solution.back().orients[aid];
+#ifndef NO_ROT
             cost += HT->get(loc,orient,instance.goals.locs[aid]->index);
+#else
+            cost += HT->get(loc,instance.goals.locs[aid]->index);
+#endif
+
         }
     }
 
@@ -345,6 +353,8 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         //     std::cout<<i<<" "<<paths[i]<<std::endl;
         // }
 
+#ifndef NO_ROT
+
         if (use_external_executor) {
 
             solution_convert(env,best_solution,paths);
@@ -368,6 +378,30 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
             ONLYDEV(g_timer.record_d("lacam2_plan_copy_path_s","lacam2_plan_copy_path");)
 
         }
+
+#else 
+        if (!use_external_executor) {
+            cout<<"must use external executor when NO_ROT is defined"<<endl;
+            exit(-1);
+        }
+
+        ONLYDEV(g_timer.record_p("lacam2_plan_copy_path_s");)
+        for (int i=0;i<env.num_of_agents;++i) {
+            // cout<<"xagent "<<i<<": ";
+            // for (int j=1;j<solution.size();++j) {
+            //     cout<<best_solution[j].locs[i]->index<<" ";
+            // }
+            // cout<<endl;
+            for (int j=0;j<best_solution.size();++j) {
+                paths[i].emplace_back(best_solution[j].locs[i]->index,j,-1);
+            }
+            if (paths[i].size()==1) {
+                paths[i].emplace_back(paths[i].back().location,paths[i].size(),-1);
+            }
+        }
+        ONLYDEV(g_timer.record_d("lacam2_plan_copy_path_s","lacam2_plan_copy_path");)
+
+#endif
 
         //std::cout<<"replan:"<<paths[0].size()<<std::endl;
 
@@ -398,97 +432,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
 
         ONLYDEV(g_timer.record_d("lacam2_plan_post_s","lacam2_plan_post");)
 
-        // if (!read_param_json<bool>(config,"consider_rotation")) {
-        //     for (int i=0;i<env.num_of_agents;++i) {
-        //         // cerr<<"xagent "<<i<<": ";
-        //         // for (int j=1;j<solution.size();++j) {
-        //         //     cerr<<solution[j][i]->index<<" ";
-        //         // }
-        //         // cerr<<endl;
-        //         for (int j=1;j<solution.size();++j) {
-        //             paths[i].emplace_back(solution[j][i]->index,env.curr_states[i].timestep+j,-1);
-        //         }
-        //     }
-        // }
     }
-
-    // if (read_param_json<bool>(config,"consider_rotation")) {
-    //     vector<State> planned_next_states;
-    //     vector<State> next_states;
-    //     for (int i=0;i<env.num_of_agents;++i) {
-    //         planned_next_states.emplace_back(next_config[i]->index,-1,-1);
-    //         next_states.emplace_back(-1,-1,-1);
-    //     }
-
-    //     if (!read_param_json<bool>(config,"use_slow_executor")) {
-    //         executor.execute(&(env.curr_states),&planned_next_states,&next_states);
-    //     } else {
-    //         slow_executor.execute(&(env.curr_states),&planned_next_states,&next_states);
-    //     }
-
-    //     for (int i=0;i<env.num_of_agents;++i) {
-    //         if (next_states[i].timestep!=env.curr_states[i].timestep+1) {
-    //             std::cerr<<i<<" "<<next_states[i].timestep<<" "<<env.curr_states[i].timestep<<endl;
-    //             exit(-1);
-    //         }
-
-    //         paths[i].emplace_back(next_states[i]);
-    //         // std::cerr<<i<<" "<<env.curr_states[i]<<" "<<next_states[i]<<endl;
-    //     }
-    // }
-
-    // bool ready_to_forward = true;
-    // for (int i=0;i<env.num_of_agents;++i) {
-    //     auto & curr_state = paths[i][timestep];
-    //     if (curr_state.location!=next_config[i]->index) {
-    //         int expected_orient = get_neighbor_orientation(curr_state.location,next_config[i]->index);
-    //         int curr_orient = curr_state.orientation;
-    //         if (expected_orient!=curr_orient){
-    //             ready_to_forward = false;
-    //             break;
-    //         }
-    //     }
-        
-    // }
-
-    // cout<<"ready to forward: "<<ready_to_forward<<endl;
-
-    // if (!ready_to_forward) {
-    //     for (int i=0;i<env.num_of_agents;++i) {
-    //         auto & curr_state = paths[i][timestep];
-    //         if (curr_state.location==next_config[i]->index) {
-    //             paths[i].emplace_back(curr_state.location,curr_state.timestep+1,curr_state.orientation);
-    //         } else {
-    //             int expected_orient = get_neighbor_orientation(curr_state.location,next_config[i]->index);
-    //             int curr_orient = curr_state.orientation;
-    //             if (expected_orient==curr_orient){
-    //                 paths[i].emplace_back(curr_state.location,curr_state.timestep+1,expected_orient);
-    //             } else {
-    //                 int d1=(curr_orient+4-expected_orient)%4;
-    //                 int d2=(expected_orient+4-curr_orient)%4;
-
-    //                 int next_orient=-1;
-    //                 if (d1<d2) {
-    //                     next_orient=(curr_orient-1+4)%4;
-    //                 } else {
-    //                     next_orient=(curr_orient+1+4)%4;
-    //                 }
-    //                 paths[i].emplace_back(curr_state.location,curr_state.timestep+1,next_orient);
-    //             }
-    //         }
-    //     }
-    // } else {
-    //     for (int i=0;i<env.num_of_agents;++i) {
-    //         auto & curr_state = paths[i][timestep];
-    //         if (curr_state.location==next_config[i]->index) {
-    //             paths[i].emplace_back(curr_state.location,curr_state.timestep+1,curr_state.orientation);
-    //         } else {
-    //             paths[i].emplace_back(next_config[i]->index,curr_state.timestep+1,curr_state.orientation);
-    //         }
-    //     }
-    // }
-
-    // total_feasible_timestep+=1;
 
 }
 
@@ -582,51 +526,6 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
         }
     }
 
-    // for (int i=0;i<env.num_of_agents;++i) {
-    //     int action_cost=get_action_cost(paths[i][timestep].location,paths[i][timestep].orientation,paths[i][timestep+1].location,paths[i][timestep+1].orientation);
-    //     action_costs[i].push_back(action_cost);
-    //     int a=get_action_from_states(paths[i][timestep],paths[i][timestep+1]);
-    //     total_actions[i].push_back(a);
-    // }
-
-    // if (env.curr_timestep==3) {
-    //     for (int i=0;i<env.num_of_agents;++i) {
-    //         int curr_loc=env.curr_states[i].location;
-    //         int y=curr_loc/env.cols;
-    //         if (y==7){
-    //             cout<<"agent "<<i<<": ";
-    //             cout<<paths[i]<<endl;
-    //             cout<<endl;
-    //             for (int j=0;j<action_costs[i].size();++j) {
-    //                 cout<<action_costs[i][j]<<" ";
-    //             }
-    //             cout<<endl;
-    //         }
-    //     }
-    // }
-
-
-    // int waiting_ctr=0;
-    // for (auto action:actions) {
-    //     if (action==Action::W) {
-    //         ++waiting_ctr;
-    //     }
-    // }
-    // double waiting_ratio=(double)waiting_ctr/actions.size();
-
-
-    // if (waiting_ratio>0.8 && !this->flag) {
-    //     std::cerr<<"dead lock!"<<endl;
-    //     exit(-1);
-    //     std::this_thread::sleep_for(std::chrono::seconds(2));
-    //     this->flag=true;
-    // }
-
-    // for (int i=0;i<env.num_of_agents;++i) {
-    //     cout<<actions[i]<<" ";
-    // }
-    // cout<<endl;
-
     // TODO(hj) we probably still want to check the validness. so we need construct model or implement is_valid by ourselves.
     // check if not valid, this should not happen in general if the algorithm is correct? but maybe there exist deadlocks.
     // TODO(hj) detect deadlock?
@@ -651,42 +550,6 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
     } else {
         need_replan=false;
     }
-
-    // std::cout<<"need_replan"<<need_replan<<std::endl;
-
-    // need_replan=true;
-   
-    // need_replan=false;
-
-    // bool all_arrived=true;
-    // for (int i=0;i<env.num_of_agents;++i) {
-    //     if (paths[i][timestep].location!=next_config.locs[i]->index) {
-    //         // arrive goal locations
-    //         all_arrived=false;
-    //         break;
-    //     }
-    // }    
-    // if (all_arrived) {
-    //     need_replan=true;
-    // }
-
-    // // 1. exceed simulation window
-    // // if (timestep==total_feasible_timestep){
-    // //     need_replan=true;
-    // // }
-    
-    // // 2. goal changes: there different ways to check this. let's just keep the old goal and compare.
-    // for (int i=0;i<env.num_of_agents;++i) {
-    //     if (paths[i][timestep].location==env.goal_locations[i][0].first) {
-    //         // arrive goal locations
-    //         need_replan=true;
-    //         break;
-    //     }
-    // }
-    
-    // if (!read_param_json<bool>(config,"use_slow_executor")) {
-    //     need_replan=true;
-    // }
 
     if (need_replan) {
         for (int i=0;i<env.num_of_agents;++i) {

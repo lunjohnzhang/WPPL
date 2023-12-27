@@ -495,43 +495,48 @@ list<pair<int,int>> MAPFPlanner::getNeighbors(int location,int direction) {
 #include "boost/format.hpp"
 #include "util/MyCommon.h"
 
-struct AstarNode {
-    int location;
-    int direction;
-    int f,g,h;
-    AstarNode* parent;
-    int t = 0;
-    bool closed = false;
-    AstarNode(int _location,int _direction, int _g, int _h, AstarNode* _parent):
-        location(_location), direction(_direction),f(_g+_h),g(_g),h(_h),parent(_parent) {}
-    AstarNode(int _location,int _direction, int _g, int _h, int _t, AstarNode* _parent):
-        location(_location), direction(_direction),f(_g+_h),g(_g),h(_h),t(_t),parent(_parent) {}
-};
-
-
-struct cmp {
-    bool operator()(AstarNode* a, AstarNode* b) {
-        if(a->f == b->f) return a->g <= b->g;
-        else return a->f > b->f;
-    }
-};
-
 void MAPFPlanner::load_configs() {
     // load configs
-	string config_path="configs/"+env->map_name.substr(0,env->map_name.find_last_of("."))+"_rot.json";
+    char * config_root_path=getenv("CONFIG_ROOT_PATH");
+    if (config_root_path==NULL) {
+        config_root_path="configs/";
+    }
+
+	string config_path=config_root_path+env->map_name.substr(0,env->map_name.find_last_of("."))+"_no_rot.json";
     std::ifstream f(config_path);
     try
     {
         config = nlohmann::json::parse(f);
-        string s=config.dump();
-        std::replace(s.begin(),s.end(),',','|');
-        config["details"]=s;
+
+        char * env_weight_path=getenv("MAP_WEIGHT_PATH");
+        if (env_weight_path!=NULL) {
+            config["map_weights_path"]=env_weight_path;
+            std::cout<<"load weight from "<<env_weight_path<<std::endl;
+        }
+
+        // std::cerr<<config<<std::endl;
         config["lifelong_solver_name"]=read_conditional_value(config,"lifelong_solver_name",env->num_of_agents);
+        config["map_weights_path"]=read_conditional_value(config,"map_weights_path",env->num_of_agents);
+
+        if (config.contains("max_task_completed")) {
+            config["max_task_completed"]=read_conditional_value(config,"max_task_completed",env->num_of_agents);
+        }
+
+        if (config.contains("max_execution_steps")) {
+            config["max_execution_steps"]=read_conditional_value(config,"max_execution_steps",env->num_of_agents);
+        }
+
+        config["LaCAM2"]["order_strategy"]=read_conditional_value(config["LaCAM2"],"order_strategy",env->num_of_agents);
+        config["LNS"]["LaCAM2"]["order_strategy"]=read_conditional_value(config["LNS"]["LaCAM2"],"order_strategy",env->num_of_agents);
+        config["disable_corner_target_agents"]=read_conditional_value(config,"disable_corner_target_agents",env->num_of_agents);
+        config["max_agents_in_use"]=read_conditional_value(config,"max_agents_in_use",env->num_of_agents);
+
+        config["LNS"]["fix_ng_bug"]=read_conditional_value(config["LNS"],"fix_ng_bug",env->num_of_agents);
     }
     catch (nlohmann::json::parse_error error)
     {
-        std::cerr << "Failed to load " << config_path << std::endl;
-        std::cerr << "Message: " << error.what() << std::endl;
+        std::cout << "Failed to load configs" << config_path << std::endl;
+        std::cout << "Message: " << error.what() << std::endl;
         exit(1);
     }
 }
@@ -539,7 +544,7 @@ void MAPFPlanner::load_configs() {
 std::string MAPFPlanner::load_map_weights(string weights_path) {
     // TODO(rivers): make weights float
     // we have at least 5 weights for a location: right,down,left,up,stay
-    map_weights=std::make_shared<std::vector<int> >(env->rows*env->cols*5,1);
+    map_weights=std::make_shared<std::vector<float> >(env->rows*env->cols*5,1);
     std::string suffix = "all_one";
 
     if (weights_path!=""){
@@ -553,14 +558,14 @@ std::string MAPFPlanner::load_map_weights(string weights_path) {
             }
 
             for (int i=0;i<map_weights->size();++i){
-                (*map_weights)[i]=_weights[i].get<int>();
+                (*map_weights)[i]=_weights[i].get<float>();
             }
             
         }
         catch (nlohmann::json::parse_error error)
         {
-            std::cerr << "Failed to load " << weights_path << std::endl;
-            std::cerr << "Message: " << error.what() << std::endl;
+            std::cout << "Failed to load weights: " << weights_path << std::endl;
+            std::cout << "Message: " << error.what() << std::endl;
             exit(1);
         }
 
@@ -585,49 +590,38 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         g_logger.init("logs/run");
     )
 
-    std::string weights_path=read_param_json<std::string>(config,"map_weights_path");
-    std::string suffix=load_map_weights(weights_path);
+    std::string weights_path="";
+    std::string suffix="";
+    if (!map_weights) {
+        weights_path=read_param_json<std::string>(config,"map_weights_path");
+        suffix=load_map_weights(weights_path);
+    }
+
+    max_execution_steps = read_param_json<int>(config,"max_execution_steps",1000000);
+    std::cout<<"max execution steps: "<<max_execution_steps<<std::endl;
 
     lifelong_solver_name=config["lifelong_solver_name"];
 
     // TODO(hj): memory management is a disaster here...
     if (lifelong_solver_name=="LaCAM2") {
-        if (read_param_json<bool>(config["LaCAM2"],"use_orient_in_heuristic")
-        || read_param_json<bool>(config["LaCAM2"],"consider_rotation")
-        || read_param_json<bool>(config["LaCAM2"],"use_slow_executor")
-        ) {
-            std::cerr<<"no allowed to use orient when compiled with NO_ROT"<<std::endl;
-            exit(-1);
+        int max_agents_in_use=read_param_json<int>(config,"max_agents_in_use",-1);
+        if (max_agents_in_use==-1) {
+            max_agents_in_use=env->num_of_agents;
         }
-        auto heuristics =std::make_shared<HeuristicTable>(env,read_param_json<bool>(config["LNS"]["LaCAM2"],"use_orient_in_heuristic"));
-        heuristics->preprocess(*map_weights, suffix);
-        lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,config["LaCAM2"]);
+        bool disable_corner_target_agents=read_param_json<bool>(config,"disable_corner_target_agents",false);
+        int max_task_completed=read_param_json<int>(config,"max_task_completed",1000000);
+        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
+        heuristics->preprocess(suffix);
+        lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(
+            heuristics,
+            env,
+            map_weights,
+            max_agents_in_use,
+            disable_corner_target_agents,
+            max_task_completed,
+            config["LaCAM2"]);
         lacam2_solver->initialize(*env);
         cout<<"LaCAMSolver2 initialized"<<endl;
-    } else if (lifelong_solver_name=="LNS") {
-        if (read_param_json<bool>(config["LNS"]["LaCAM2"],"use_orient_in_heuristic")
-        || read_param_json<bool>(config["LNS"]["LaCAM2"],"consider_rotation")
-        || read_param_json<bool>(config["LNS"]["LaCAM2"],"use_slow_executor")
-        ) {
-            std::cerr<<"no allowed to use orient when compiled with NO_ROT"<<std::endl;
-            exit(-1);
-        }
-
-        auto heuristics =std::make_shared<HeuristicTable>(env,read_param_json<bool>(config["LNS"]["LaCAM2"],"use_orient_in_heuristic"));
-        heuristics->preprocess(*map_weights, suffix);
-        //heuristics->preprocess();
-        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,config["LNS"]["LaCAM2"]);
-
-        std::shared_ptr<HeuristicTable> heuristics_no_rot=heuristics;
-        if (read_param_json<bool>(config["LNS"]["LaCAM2"],"use_orient_in_heuristic")) {
-            heuristics_no_rot = std::make_shared<HeuristicTable>(env,false);
-            heuristics_no_rot->preprocess(*map_weights, suffix);
-            //heuristics_no_rot->preprocess();
-        }
-
-        lns_solver = std::make_shared<LNS::LNSSolver>(heuristics_no_rot,env,config["LNS"],lacam2_solver);
-        lns_solver->initialize(*env);
-        cout<<"LNSSolver initialized"<<endl;
     }
     else {
         cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
@@ -654,145 +648,12 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         cout<<"using LaCAM2"<<endl;
         lacam2_solver->plan(*env);
         lacam2_solver->get_step_actions(*env,actions);
-    } else if (lifelong_solver_name=="LNS") {
-        cout<<"using LNS"<<endl;
-        lns_solver->observe(*env);
-        lns_solver->plan(*env); 
-        lns_solver->get_step_actions(*env,actions);
     } else {
         cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
         exit(-1);
     }
 
-    // for (int i = 0; i < env->num_of_agents; i++) 
-    // {
-    //     list<pair<int,int>> path;
-    //     if (env->goal_locations[i].empty()) 
-    //     {
-    //         path.push_back({env->curr_states[i].location, env->curr_states[i].orientation});
-    //     } 
-    //     else 
-    //     {
-    //         path = single_agent_plan(env->curr_states[i].location,
-    //                                 env->curr_states[i].orientation,
-    //                                 env->goal_locations[i].front().first);
-    //     }
-    //     if (path.front().first != env->curr_states[i].location)
-    //     {
-    //         actions[i] = Action::FW; //forward action
-    //     } 
-    //     else if (path.front().second!= env->curr_states[i].orientation)
-    //     {
-    //         int incr = path.front().second - env->curr_states[i].orientation;
-    //         if (incr == 1 || incr == -3)
-    //         {
-    //             actions[i] = Action::CR; //C--counter clockwise rotate
-    //         } 
-    //         else if (incr == -1 || incr == 3)
-    //         {
-    //             actions[i] = Action::CCR; //CCR--clockwise rotate
-    //         } 
-    //     }
-
-    // }
-
-
   return;
-}
-
-list<pair<int,int>> MAPFPlanner::single_agent_plan(int start,int start_direct,int end) {
-    list<pair<int,int>> path;
-    priority_queue<AstarNode*,vector<AstarNode*>,cmp> open_list;
-    unordered_map<int,AstarNode*> all_nodes;
-    unordered_set<int> close_list;
-    AstarNode* s = new AstarNode(start, start_direct, 0, getManhattanDistance(start,end), nullptr);
-    open_list.push(s);
-    all_nodes[start*4 + start_direct] = s;
-
-    while (!open_list.empty()) {
-        AstarNode* curr = open_list.top();
-        open_list.pop();
-        close_list.emplace(curr->location*4 + curr->direction);
-        if (curr->location == end) {
-            while(curr->parent!=NULL) {
-                path.emplace_front(make_pair(curr->location, curr->direction));
-                curr = curr->parent;
-            }
-            break;
-        }
-        list<pair<int,int>> neighbors = getNeighbors(curr->location, curr->direction);
-        for (const pair<int,int>& neighbor: neighbors) {
-            if (close_list.find(neighbor.first*4 + neighbor.second) != close_list.end())
-                continue;
-            if (all_nodes.find(neighbor.first*4 + neighbor.second) != all_nodes.end()) {
-                AstarNode* old = all_nodes[neighbor.first*4 + neighbor.second];
-                if (curr->g + 1 < old->g) {
-                    old->g = curr->g+1;
-                    old->f = old->h+old->g;
-                    old->parent = curr;
-                }
-            } else {
-                AstarNode* next_node = new AstarNode(neighbor.first, neighbor.second,
-                    curr->g+1,getManhattanDistance(neighbor.first,end), curr);
-                open_list.push(next_node);
-                all_nodes[neighbor.first*4+neighbor.second] = next_node;
-            }
-        }
-    }
-    for (auto n: all_nodes)
-    {
-        delete n.second;
-    }
-    all_nodes.clear();
-    return path;
-}
-
-
-int MAPFPlanner::getManhattanDistance(int loc1, int loc2) {
-    int loc1_x = loc1/env->cols;
-    int loc1_y = loc1%env->cols;
-    int loc2_x = loc2/env->cols;
-    int loc2_y = loc2%env->cols;
-    return abs(loc1_x - loc2_x) + abs(loc1_y - loc2_y);
-}
-
-bool MAPFPlanner::validateMove(int loc, int loc2)
-{
-    int loc_x = loc/env->cols;
-    int loc_y = loc%env->cols;
-
-    if (loc_x >= env->rows || loc_y >= env->cols || env->map[loc] == 1)
-        return false;
-
-    int loc2_x = loc2/env->cols;
-    int loc2_y = loc2%env->cols;
-    if (abs(loc_x-loc2_x) + abs(loc_y-loc2_y) > 1)
-        return false;
-    return true;
-
-}
-
-
-list<pair<int,int>> MAPFPlanner::getNeighbors(int location,int direction) {
-    list<pair<int,int>> neighbors;
-    //forward
-    int candidates[4] = { location + 1,location + env->cols, location - 1, location - env->cols};
-    int forward = candidates[direction];
-    int new_direction = direction;
-    if (forward>=0 && forward < env->map.size() && validateMove(forward,location))
-        neighbors.emplace_back(make_pair(forward,new_direction));
-    //turn left
-    new_direction = direction-1;
-    if (new_direction == -1)
-        new_direction = 3;
-    neighbors.emplace_back(make_pair(location,new_direction));
-    //turn right
-    new_direction = direction+1;
-    if (new_direction == 4)
-        new_direction = 0;
-    neighbors.emplace_back(make_pair(location,new_direction));
-    neighbors.emplace_back(make_pair(location,direction)); //wait
-    return neighbors;
 }
 
 #endif

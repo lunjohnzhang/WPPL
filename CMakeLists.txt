@@ -10,7 +10,7 @@ set(MAP_OPT ON)
 # if set, use dev mode, which has a lot of logging and timing.
 # set(DEV ON)
 # if set, use action model with no rotation.
-# set(NO_ROT ON)
+set(NO_ROT ON)
 
 # Set the default value of PYTHON to false
 option(PYTHON "Enable Python" OFF)
@@ -87,9 +87,16 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion")
 #     file(GLOB_RECURSE MY_SOURCES "src/LNS/**.cpp" "src/LaCAM2/**.cpp" "src/util/**.cpp")
 #     set(SOURCES ${OFFICIAL_SOURCES} ${MY_SOURCES})
 # ELSE()
-message(STATUS "Use action model with rotation")
+
+IF(NO_ROT)
+    message(STATUS "Use action model with no rotation")
+    add_definitions(-DNO_ROT)
+ELSE()
+    message(STATUS "Use action model with rotation")
+ENDIF()
+
 file(GLOB OFFICIAL_SOURCES "src/**.cpp")
-file(GLOB_RECURSE MY_SOURCES "src/LNS/**.cpp" "src/LaCAM2/**.cpp" "src/RHCR/**.cpp" "src/util/**.cpp")
+file(GLOB_RECURSE MY_SOURCES "src/LaCAM2/**.cpp" "src/util/**.cpp")
 list(FILTER OFFICIAL_SOURCES EXCLUDE REGEX ".*analyze_results\.cpp")
 list(FILTER OFFICIAL_SOURCES EXCLUDE REGEX ".*py_driver\.cpp")
 set(SOURCES ${OFFICIAL_SOURCES} ${MY_SOURCES})

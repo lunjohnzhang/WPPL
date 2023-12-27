@@ -277,6 +277,9 @@ public:
     //void saveSimulationIssues(const string &fileName) const;
     void saveResults(const string &fileName) const;
 
+#ifdef MAP_OPT
+    nlohmann::json analyzeResults();
+#endif
 
 protected:
     Grid map;
@@ -361,7 +364,7 @@ public:
         task_queue.resize(num_of_agents);
         for (size_t i = 0; i < start_locs.size(); i++)
         {
-            starts[i] = State(start_locs[i], 0, 0);
+            starts[i] = State(start_locs[i], 0, -1);
             for (auto& task_location: tasks[i])
             {
                 all_tasks.emplace_back(task_id++, task_location, 0, (int)i);
@@ -401,7 +404,7 @@ public:
         starts.resize(num_of_agents);
         for (size_t i = 0; i < start_locs.size(); i++)
         {
-            starts[i] = State(start_locs[i], 0, 0);
+            starts[i] = State(start_locs[i], 0, -1);
         }
     };
 
@@ -433,8 +436,16 @@ public:
                 cout<<"error: agent "<<i<<"'s start location is an obstacle("<<start_locs[i]<<")"<<endl;
                 exit(0);
             }
-            starts[i] = State(start_locs[i], 0, 0);
+            starts[i] = State(start_locs[i], 0, -1);
         }
+
+        char * LOAD_FP=std::getenv("LOAD_FP");
+        std::cerr<<"LOAD_FP: "<<LOAD_FP<<std::endl;
+        if (LOAD_FP!=NULL && strlen(LOAD_FP)!=0) {
+            resume_from_file(LOAD_FP, grid.cols);
+        }
+
+
     };
 
 	~InfAssignSystem(){};
@@ -447,6 +458,9 @@ private:
     int task_id = 0;
 
 	void update_tasks();
+
+    void resume_from_file(string fname, int w);
+
 };
 
 #endif

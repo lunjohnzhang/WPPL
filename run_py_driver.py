@@ -71,7 +71,7 @@ print(py_driver.playground())
 
 import json
 # py_configs contains the best configs used for random-32-32-20 map with 100,200,400,600,800 agents.
-config_path="py_configs/random-32-32-20_600.json"
+config_path="py_configs/random-32-32-20_800.json"
 with open(config_path) as f:
     config=json.load(f)
     config_str=json.dumps(config)

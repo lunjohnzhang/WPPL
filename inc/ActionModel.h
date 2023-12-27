@@ -139,7 +139,7 @@ protected:
         // NOTE(rivers): we don't care about orientation, just keep it intact for now.
 
         int new_location = prev.location;
-        int new_orientation = prev.orientation;
+        int new_orientation = -1;
 
         if (action == Action::NA) {
             // std::cerr<<"have action NA in result state"<<std::endl;
@@ -147,7 +147,7 @@ protected:
             new_location = new_location + moves[action];
         }
 
-        return State(new_location, prev.timestep + 1, new_orientation);
+        return State(new_location, prev.timestep + 1, -1);
     }
 };
 

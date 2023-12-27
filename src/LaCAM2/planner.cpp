@@ -132,9 +132,18 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Insta
         // float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
         // float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
 
+
+#ifndef NO_ROT
+
         float h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
         float h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
 
+#else 
+
+        float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
+        float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
+
+#endif
 
         if (order_strategy==0) {
           if (h1!=h2) return h1<h2;
@@ -289,7 +298,7 @@ Solution Planner::solve(std::string& additional_info, int order_strategy)
     // create successors at the low-level search
     auto L = H->search_tree.front();
     H->search_tree.pop();
-    expand_lowlevel_tree(H, L);
+    // expand_lowlevel_tree(H, L);
 
     // create successors at the high-level search
     const auto res = get_new_config(H, L);
@@ -495,11 +504,21 @@ float Planner::get_edge_cost(HNode* H_from, HNode* H_to)
 float Planner::get_h_value(const Config& C)
 {
   float cost = 0;
+
+#ifndef NO_ROT
   if (objective == OBJ_MAKESPAN) {
     for (auto i = 0; i < N; ++i) cost = std::max(cost, HT->get(C.locs[i]->index, C.orients[i], ins->goals.locs[i]->index)*(float)(1-C.arrivals[i]));
   } else if (objective == OBJ_SUM_OF_LOSS) {
     for (auto i = 0; i < N; ++i) cost += HT->get(C.locs[i]->index, C.orients[i], ins->goals.locs[i]->index)*(float)(1-C.arrivals[i]);
   }
+#else
+  if (objective == OBJ_MAKESPAN) {
+    for (auto i = 0; i < N; ++i) cost = std::max(cost, HT->get(C.locs[i]->index, ins->goals.locs[i]->index)*(float)(1-C.arrivals[i]));
+  } else if (objective == OBJ_SUM_OF_LOSS) {
+    for (auto i = 0; i < N; ++i) cost += HT->get(C.locs[i]->index, ins->goals.locs[i]->index)*(float)(1-C.arrivals[i]);
+  }
+#endif
+
   return cost;
 }
 
@@ -744,6 +763,8 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
             [&](Vertex* const v, Vertex* const u) {
 
+#ifndef NO_ROT
+
     // TODO(rivers): we should move these computation outside to speed up...
     
     // TODO(rivers): deal with arrivals: maybe just select randomly
@@ -905,6 +926,18 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
     // } else {
     //   return o2<o1;
     // }
+
+#else
+
+  float d1,d2;
+  d1=HT->get(v->index,ins->goals.locs[i]->index);
+  d2=HT->get(u->index,ins->goals.locs[i]->index);
+
+  return d1<d2;
+
+#endif
+
+
   });
 
   Agent* swap_agent=nullptr;
