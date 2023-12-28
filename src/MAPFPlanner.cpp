@@ -579,7 +579,13 @@ std::string MAPFPlanner::load_map_weights(string weights_path) {
 
 void MAPFPlanner::initialize(int preprocess_time_limit) {
     cout << "planner initialization begins" << endl;
-    load_configs();
+    
+    if (this->config.empty()) {
+        load_configs();
+        cout<<"load config from file"<<endl;
+    } else {
+        cout<<"config is alreadly loaded"<<endl;
+    }
 
     ONLYDEV(
         analyzer.timestamp();

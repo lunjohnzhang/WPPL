@@ -71,7 +71,7 @@ print(py_driver.playground())
 
 import json
 # py_configs contains the best configs used for random-32-32-20 map with 100,200,400,600,800 agents.
-config_path="py_configs/random-32-32-20_800.json"
+config_path="py_configs/random-32-32-20_600.json"
 with open(config_path) as f:
     config=json.load(f)
     config_str=json.dumps(config)
@@ -86,7 +86,7 @@ ret=py_driver.run(
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
     gen_random=True,
-    num_agents=800,
+    num_agents=600,
     num_tasks=100000,
     seed=0,
     # else we need specify agents and tasks path to load data.
@@ -94,8 +94,8 @@ ret=py_driver.run(
     # tasks_path="example_problems/random.domain/tasks/random-32-32-20-600.tasks",
     # weights are the edge weights, wait_costs are the vertex wait costs
     # if not specified here, then the program will use the one specified in the config file.
-    # weights=compressed_weights_json_str,
-    # wait_costs=compressed_wait_costs_json_str,    
+    weights=compressed_weights_json_str,
+    wait_costs=compressed_wait_costs_json_str,    
     # if we don't load config here, the program will load the default config file.
     # config=config_str,    
     # the following are some things we don't need to change in the weight optimization case.

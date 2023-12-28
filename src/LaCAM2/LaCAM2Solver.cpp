@@ -108,9 +108,6 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
                 ++ctr;
             }
         }
-        if (disable_agent_goals && agent_info.disabled) {
-            goal_location=env.curr_states[i].location;
-        }
         goals.emplace_back(goal_location, -1);
         // cerr<<"0\trandom-32-32-20.map\t32\t32\t"<<starts[i]%32<<"\t"<<starts[i]/32<<"\t"<<goals[i]%32<<"\t"<<goals[i]/32<<"\t0"<<endl;
         if (goal_location!=agent_info.goal_location){
@@ -122,7 +119,6 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
             agent_info.elapsed+=1;
         }
     }
-    // std::cout<<"ctr: "<<ctr<<std::endl;
     return Instance(*G, starts, goals, *agent_infos, read_param_json<int>(config,"planning_window",-1), precomputed_paths);
 }
 

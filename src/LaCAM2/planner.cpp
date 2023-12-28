@@ -105,7 +105,7 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Insta
   // }
 
   for (int aid=0;aid<N;++aid) {
-    if ((disable_agent_goals && ins->agent_infos[aid].disabled) || ins->goals.locs[aid]->neighbor.size()<=1) {
+    if (ins->agent_infos[aid].disabled) {
       ins->goals.locs[aid]=C.locs[aid];
     }
   }
@@ -932,6 +932,12 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   float d1,d2;
   d1=HT->get(v->index,ins->goals.locs[i]->index);
   d2=HT->get(u->index,ins->goals.locs[i]->index);
+
+  
+  // if (i==40) {
+  //   std::cout<<v->index<<" "<<ins->goals.locs[i]->index<<" "<<d1<<endl;
+  //   std::cout<<u->index<<" "<<ins->goals.locs[i]->index<<" "<<d2<<endl;
+  // }
 
   return d1<d2;
 

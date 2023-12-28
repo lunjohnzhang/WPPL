@@ -7,18 +7,6 @@
     ],
     "map_weights_path": [
         {
-            "n_agents": 200,
-            "value": ""
-        },
-        {
-            "n_agents": 500,
-            "value": ""
-        },
-        {
-            "n_agents": 600,
-            "value": ""
-        },
-        {
             "n_agents": 1000000,
             "value": ""
         }

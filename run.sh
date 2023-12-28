@@ -15,10 +15,10 @@ ARGS="--planTimeLimit 1 --fileStoragePath large_files/"
 #./build/lifelong_comp --inputFile example_problems/random.domain/random_20.json $ARGS --simulationTime 500 
 # ./build/lifelong_comp --inputFile example_problems/random.domain/random_50.json $ARGS --simulationTime 500 
 # LOAD_FP="random_100_lns_step_500.snapshot" 
-# ./build/lifelong_comp --inputFile example_problems/random.domain/random_100.json $ARGS -o test_random_100.json --simulationTime 1000 
-# ./build/lifelong_comp --inputFile example_problems/random.domain/random_200.json $ARGS -o test_random_200.json --simulationTime 1000
-# ./build/lifelong_comp --inputFile example_problems/random.domain/random_400.json $ARGS -o test_random_400.json --simulationTime 1000 
-# ./build/lifelong_comp --inputFile example_problems/random.domain/random_600.json $ARGS -o test_random_600.json --simulationTime 1000 
+#./build/lifelong_comp --inputFile example_problems/random.domain/random_100.json $ARGS -o test_random_100.json --simulationTime 1000
+#./build/lifelong_comp --inputFile example_problems/random.domain/random_200.json $ARGS -o test_random_200.json --simulationTime 1000
+#./build/lifelong_comp --inputFile example_problems/random.domain/random_400.json $ARGS -o test_random_400.json --simulationTime 1000 
+#./build/lifelong_comp --inputFile example_problems/random.domain/random_600.json $ARGS -o test_random_600.json --simulationTime 1000 
 ./build/lifelong_comp --inputFile example_problems/random.domain/random_800.json $ARGS -o test_random_800.json --simulationTime 1000 
 
 # # warehouse:warehouse_small
