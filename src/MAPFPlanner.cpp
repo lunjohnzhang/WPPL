@@ -587,8 +587,13 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         cout<<"config is alreadly loaded"<<endl;
     }
 
+    string s=config.dump();
+    std::replace(s.begin(),s.end(),',','|');
+    config["details"]=s;
+
     ONLYDEV(
         analyzer.timestamp();
+        cout<<config<<endl;
         analyzer.init_from_config(config);
         analyzer.set_dump_path(config["analysis_output"].get<string>());
         analyzer.data["height"]=env->rows;
@@ -628,9 +633,24 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
             config["LaCAM2"]);
         lacam2_solver->initialize(*env);
         cout<<"LaCAMSolver2 initialized"<<endl;
+    } else if (lifelong_solver_name=="LNS") {
+        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
+        heuristics->preprocess(suffix);
+        //heuristics->preprocess();
+        int max_agents_in_use=read_param_json<int>(config,"max_agents_in_use",-1);
+        if (max_agents_in_use==-1) {
+            max_agents_in_use=env->num_of_agents;
+        }
+        bool disable_corner_target_agents=read_param_json<bool>(config,"disable_corner_target_agents",false);
+        int max_task_completed=read_param_json<int>(config,"max_task_completed",1000000);
+        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,disable_corner_target_agents,max_task_completed,config["LNS"]["LaCAM2"]);
+        lacam2_solver->initialize(*env);
+        lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver,max_task_completed);
+        lns_solver->initialize(*env);
+        cout<<"LNSSolver initialized"<<endl;
     }
     else {
-        cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
+        cout<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
         exit(-1);
     }
 
@@ -649,13 +669,25 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
 
     // TODO if time_limit approachs, just return a valid move, e.g. all actions are wait.
 
+    if (env->curr_timestep>=max_execution_steps-1) {
+        for (int i=0;i<env->num_of_agents;++i) {
+            actions.push_back(Action::W);
+        }
+        return;
+    }
+
 
    if (lifelong_solver_name=="LaCAM2") {
         ONLYDEV(cout<<"using LaCAM2"<<endl;)
         lacam2_solver->plan(*env);
         lacam2_solver->get_step_actions(*env,actions);
+    } else if (lifelong_solver_name=="LNS") {
+        ONLYDEV(cout<<"using LNS"<<endl;)
+        lns_solver->observe(*env);
+        lns_solver->plan(*env); 
+        lns_solver->get_step_actions(*env,actions);
     } else {
-        cerr<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
+        cout<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
         exit(-1);
     }
 

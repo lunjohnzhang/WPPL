@@ -415,7 +415,6 @@ void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> &
 
     assert(actions.empty());
 
-#ifndef NO_ROT
     // get current state and current timestep
     // vector<State> planned_next_states;
     // vector<State> next_states;
@@ -492,18 +491,6 @@ void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> &
             }
         }
     }
-#else
-
-    for (int i=0;i<env.num_of_agents;++i) {
-        // we will get action indexed at executed_plan_step+1
-        if (paths[i].size()<=executed_plan_step+1){
-            cerr<<"wierd error for agent "<<i<<". path length: "<<paths[i].size()<<", "<<"executed_plan_step+1: "<<executed_plan_step+1<<endl;
-            assert(false);
-        }
-        actions.push_back(get_action_from_states(paths[i][executed_plan_step],paths[i][executed_plan_step+1]));
-    }
-
-#endif
 
     ONLYDEV(
         if (!action_model.is_valid(env.curr_states,actions)){

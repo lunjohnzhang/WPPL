@@ -96,7 +96,7 @@ ELSE()
 ENDIF()
 
 file(GLOB OFFICIAL_SOURCES "src/**.cpp")
-file(GLOB_RECURSE MY_SOURCES "src/LaCAM2/**.cpp" "src/util/**.cpp")
+file(GLOB_RECURSE MY_SOURCES "src/LaCAM2/**.cpp" "src/LNS/**.cpp" "src/util/**.cpp")
 list(FILTER OFFICIAL_SOURCES EXCLUDE REGEX ".*analyze_results\.cpp")
 list(FILTER OFFICIAL_SOURCES EXCLUDE REGEX ".*py_driver\.cpp")
 set(SOURCES ${OFFICIAL_SOURCES} ${MY_SOURCES})

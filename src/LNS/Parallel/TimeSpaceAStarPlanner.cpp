@@ -12,7 +12,15 @@ void TimeSpaceAStarPlanner::findPath(int start_pos, int start_orient, int goal_p
     clear();
 
     // at the beginning, we alway assume the agent havn't arrived its goal, even its start location are the same as the goal location. because we need at least length 2 path.
+#ifndef NO_ROT
     State * start_state = new State(start_pos, start_orient, 0, 0, HT->get(start_pos, start_orient, goal_pos), 0, false, nullptr);
+#else
+    if (start_orient!=-1) {
+        cout<<"start_orient should be -1 when no rot"<<endl;
+        exit(-1);
+    }
+    State * start_state = new State(start_pos, -1, 0, 0, HT->get(start_pos, -1, goal_pos), 0, false, nullptr);
+#endif
     start_state->closed=false;
     start_state->open_list_handle=open_list.push(start_state);
     all_states.insert(start_state);
@@ -113,7 +121,6 @@ void TimeSpaceAStarPlanner::getSuccessors(State * curr, int goal_pos, Constraint
     int y=pos/(cols);
     int orient=curr->orient;
 
-    // FW
     int next_pos;
     int weight_idx;
     int next_timestep=curr->t+1;
@@ -122,6 +129,9 @@ void TimeSpaceAStarPlanner::getSuccessors(State * curr, int goal_pos, Constraint
     float next_h;
     int next_num_of_conflicts;
     bool next_arrived;
+
+#ifndef NO_ROT
+    // FW
     if (orient==0) {
         // east
         if (x+1<cols){
@@ -204,6 +214,75 @@ void TimeSpaceAStarPlanner::getSuccessors(State * curr, int goal_pos, Constraint
         next_h=curr->arrived?0:HT->get(next_pos, next_orient, goal_pos);
         successors.push_back(new State(next_pos, next_orient, next_timestep, next_g, next_h, next_num_of_conflicts, next_arrived, curr));
     }
+#else
+    if (next_orient!=-1) {
+        cout<<"next_orient should be -1 when no rot"<<endl;
+        exit(-1);
+    }
+
+    // R
+    if (x+1<cols){
+        next_pos=pos+1;
+        weight_idx=pos*n_dirs;
+        if (map[next_pos]==0 && !constraint_table.path_table_for_CT->constrained(pos,next_pos,next_timestep)) {
+            next_g=curr->g+weights[weight_idx];
+            next_h=curr->arrived?0:HT->get(next_pos, goal_pos);
+            next_num_of_conflicts=curr->num_of_conflicts+constraint_table.getNumOfConflictsForStep(curr->pos, next_pos, next_timestep);
+            next_arrived=curr->arrived | (next_pos==goal_pos);
+            successors.push_back(new State(next_pos, next_orient, next_timestep, next_g, next_h, next_num_of_conflicts, next_arrived, curr));
+        }
+    }
+
+    // D
+    if (y+1<rows) {
+        next_pos=pos+cols;
+        weight_idx=pos*n_dirs+1;
+        if (map[next_pos]==0 && !constraint_table.path_table_for_CT->constrained(pos,next_pos,next_timestep)) {
+            next_g=curr->g+weights[weight_idx];
+            next_h=curr->arrived?0:HT->get(next_pos, goal_pos);
+            next_num_of_conflicts=curr->num_of_conflicts+constraint_table.getNumOfConflictsForStep(curr->pos, next_pos, next_timestep);
+            next_arrived=curr->arrived | (next_pos==goal_pos);
+            successors.push_back(new State(next_pos, next_orient, next_timestep, next_g, next_h, next_num_of_conflicts, next_arrived, curr));
+        }
+    }
+
+    // L
+    if (x-1>=0) {
+        next_pos=pos-1;
+        weight_idx=pos*n_dirs+2;
+        if (map[next_pos]==0 && !constraint_table.path_table_for_CT->constrained(pos,next_pos,next_timestep)) {
+            next_g=curr->g+weights[weight_idx];
+            next_h=curr->arrived?0:HT->get(next_pos, goal_pos);
+            next_num_of_conflicts=curr->num_of_conflicts+constraint_table.getNumOfConflictsForStep(curr->pos, next_pos, next_timestep);
+            next_arrived=curr->arrived | (next_pos==goal_pos);
+            successors.push_back(new State(next_pos, next_orient, next_timestep, next_g, next_h, next_num_of_conflicts, next_arrived, curr));
+        }
+    }
+
+    // U
+    if (y-1>=0) {
+        next_pos=pos-cols;
+        weight_idx=pos*n_dirs+3;
+        if (map[next_pos]==0 && !constraint_table.path_table_for_CT->constrained(pos,next_pos,next_timestep)) {
+            next_g=curr->g+weights[weight_idx];
+            next_h=curr->arrived?0:HT->get(next_pos, goal_pos);
+            next_num_of_conflicts=curr->num_of_conflicts+constraint_table.getNumOfConflictsForStep(curr->pos, next_pos, next_timestep);
+            next_arrived=curr->arrived | (next_pos==goal_pos);
+            successors.push_back(new State(next_pos, next_orient, next_timestep, next_g, next_h, next_num_of_conflicts, next_arrived, curr));
+        }
+    }
+
+    // W
+    next_pos=pos;
+    if (!constraint_table.path_table_for_CT->constrained(pos,next_pos,next_timestep)) {
+        weight_idx=pos*n_dirs+4;
+        next_g=curr->g+weights[weight_idx];
+        next_num_of_conflicts=curr->num_of_conflicts+constraint_table.getNumOfConflictsForStep(pos, next_pos, next_timestep);
+        next_arrived=curr->arrived | (next_pos==goal_pos);
+        next_h=curr->arrived?0:HT->get(next_pos, goal_pos);
+        successors.push_back(new State(next_pos, next_orient, next_timestep, next_g, next_h, next_num_of_conflicts, next_arrived, curr));
+    }
+#endif
       
 }
 

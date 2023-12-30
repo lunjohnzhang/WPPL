@@ -71,7 +71,7 @@ public:
 #include "common.h"
 #include <memory>
 #include "LaCAM2/LaCAM2Solver.hpp"
-
+#include "LNS/LNSSolver.h"
 class MAPFPlanner
 {
 public:
@@ -90,6 +90,7 @@ public:
 
     string lifelong_solver_name;
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;
+    std::shared_ptr<LNS::LNSSolver> lns_solver;
 
     std::shared_ptr<std::vector<float> > map_weights;
     nlohmann::json config;

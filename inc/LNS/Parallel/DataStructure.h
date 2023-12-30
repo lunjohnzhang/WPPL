@@ -110,13 +110,21 @@ struct Agent
         if (arrived || T!=-1) {
             return cost;
         } else {
+#ifndef NO_ROT
             return cost+HT->get(path.back().location, path.back().orientation, goal_location);
+#else
+            return cost+HT->get(path.back().location, goal_location);
+#endif
         }
     }
 
     inline float getNumOfDelays() {
+#ifndef NO_ROT
         // TODO(rivers): we may need two heuristic table: one for cost, one for path length estimation.
         return getEstimatedPathLength(path,instance.goal_locations[id],HT) - HT->get(instance.start_locations[id],instance.start_orientations[id],instance.goal_locations[id]);
+#else 
+        return getEstimatedPathLength(path,instance.goal_locations[id],HT) - HT->get(instance.start_locations[id],instance.goal_locations[id]);
+#endif
     }
 
     void reset() {

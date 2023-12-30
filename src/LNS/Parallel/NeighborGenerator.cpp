@@ -244,8 +244,12 @@ bool NeighborGenerator::generateNeighborByRandomWalk(Neighbor & neighbor, int id
     neighbor.agents.assign(neighbors_set.begin(), neighbors_set.end());
     if (screen >= 2)
         cout << "Generate " << neighbor.agents.size() << " neighbors by random walks of agent " << a
-             << "(" << HT->get(agents[a].getStartLocation(),agents[a].getStartOrientation(),agents[a].getGoalLocation())
-             << "->" << agents[a].path.size() - 1 << ")" << endl;
+#ifndef NO_ROT
+            << "(" << HT->get(agents[a].getStartLocation(),agents[a].getStartOrientation(),agents[a].getGoalLocation())
+#else
+            << "(" << HT->get(agents[a].getStartLocation(),agents[a].getGoalLocation())
+#endif
+            << "->" << agents[a].path.size() - 1 << ")" << endl;
 
     return true;
 }
@@ -335,6 +339,7 @@ std::list<std::pair<int,int> > NeighborGenerator::getSuccessors(int pos, int ori
     int x=pos%(cols);
     int y=pos/(cols);
 
+#ifndef NO_ROT
     // FW
     int next_pos;
     int next_orient=orient;
@@ -390,6 +395,47 @@ std::list<std::pair<int,int> > NeighborGenerator::getSuccessors(int pos, int ori
     // W
     next_orient=orient;
     successors.emplace_back(next_pos, next_orient);
+#else
+    int next_pos;
+    const int next_orient=-1;
+    
+    // R
+    if (x+1<cols) {
+        next_pos=pos+1;
+        if (map[next_pos]==0) {
+            successors.emplace_back(next_pos,next_orient);
+        }
+    }
+
+
+    // D
+    if (y+1<rows) {
+        next_pos=pos+cols;
+        if (map[next_pos]==0) {
+            successors.emplace_back(next_pos,next_orient);
+        }
+    }
+
+    // L
+    if (x-1>=0) {
+        next_pos=pos-1;
+        if (map[next_pos]==0) {
+            successors.emplace_back(next_pos,next_orient);
+        }
+    }
+
+    // U
+    if (y-1>=0) {
+        next_pos=pos-cols;
+        if (map[next_pos]==0) {
+            successors.emplace_back(next_pos,next_orient);
+        }
+    }
+
+    // W
+    successors.emplace_back(pos,next_orient);
+
+#endif
     
     return successors;
 }
@@ -418,7 +464,11 @@ void NeighborGenerator::randomWalk(int agent_id, int start_timestep, set<int>& c
                 int next_orient = iter->second;
                 
                 float action_cost = agent.get_action_cost(loc, orient, next_loc, next_orient, HT);
-                float next_h_val = HT->get(next_loc, next_orient,instance.goal_locations[agent_id]);
+#ifndef NO_ROT
+                float next_h_val = HT->get(next_loc, next_orient, instance.goal_locations[agent_id]);
+#else
+                float next_h_val = HT->get(next_loc, instance.goal_locations[agent_id]);
+#endif
                 // if we can find a path with a smaller distance, we try to see who becomes the obstacle.
                 // TODO(rivers): this is not correct if we have weighted distance map
                 if (partial_path_cost + action_cost + next_h_val < path.path_cost) // move to this location
@@ -450,7 +500,11 @@ void NeighborGenerator::randomWalk(int agent_id, int start_timestep, set<int>& c
                 int next_orient = iter->second;
                 
                 // float action_cost = agent.get_action_cost(loc, orient, next_loc, next_orient, HT);
-                float next_h_val = HT->get(next_loc, next_orient,instance.goal_locations[agent_id]);
+#ifndef NO_ROT
+                float next_h_val = HT->get(next_loc, next_orient, instance.goal_locations[agent_id]);
+#else
+                float next_h_val = HT->get(next_loc, instance.goal_locations[agent_id]);
+#endif
                 // if we can find a path with a smaller distance, we try to see who becomes the obstacle.
                 // TODO(rivers): this is not correct if we have weighted distance map
                 if (t + next_h_val < path.path_cost) // move to this location

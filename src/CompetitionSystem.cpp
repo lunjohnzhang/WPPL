@@ -1078,10 +1078,10 @@ void BaseSystem::simulate(int simulation_time)
 
     for (; timestep < simulation_time; )
     {
-        ONLYDEV(
+        // ONLYDEV(
             cout << "----------------------------" << std::endl;
             cout << "Timestep " << timestep << std::endl;
-        )
+        // )
 
         // find a plan
         sync_shared_env();
