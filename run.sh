@@ -11,6 +11,13 @@ cd build && make -j16 lifelong_comp && cd ..
 # export OMP_NUM_THREADS=1
 ARGS="--planTimeLimit 1 --fileStoragePath large_files/"
 
+./build/lifelong_comp --inputFile example_problems/warehouse.domain/kiva_200.json $ARGS -o test_kiva_200_lacam2.json --simulationTime 1000
+./build/lifelong_comp --inputFile example_problems/warehouse.domain/kiva_400.json $ARGS -o test_kiva_400_lacam2.json --simulationTime 1000
+./build/lifelong_comp --inputFile example_problems/warehouse.domain/kiva_600.json $ARGS -o test_kiva_600_lacam2.json --simulationTime 1000
+./build/lifelong_comp --inputFile example_problems/warehouse.domain/kiva_800.json $ARGS -o test_kiva_800_lacam2.json --simulationTime 1000
+./build/lifelong_comp --inputFile example_problems/warehouse.domain/kiva_1000.json $ARGS -o test_kiva_1000_lacam2.json --simulationTime 1000
+./build/lifelong_comp --inputFile example_problems/warehouse.domain/kiva_1200.json $ARGS -o test_kiva_1200_lacam2.json --simulationTime 1000
+
 # random:random
 #./build/lifelong_comp --inputFile example_problems/random.domain/random_20.json $ARGS --simulationTime 500 
 # ./build/lifelong_comp --inputFile example_problems/random.domain/random_50.json $ARGS --simulationTime 500 
@@ -18,7 +25,7 @@ ARGS="--planTimeLimit 1 --fileStoragePath large_files/"
 #./build/lifelong_comp --inputFile example_problems/random.domain/random_100.json $ARGS -o test_random_100.json --simulationTime 1000
 #./build/lifelong_comp --inputFile example_problems/random.domain/random_200.json $ARGS -o test_random_200.json --simulationTime 1000
 # ./build/lifelong_comp --inputFile example_problems/random.domain/random_400.json $ARGS -o test_random_400.json --simulationTime 1000 
-./build/lifelong_comp --inputFile example_problems/random.domain/random_600.json $ARGS -o test_random_600.json --simulationTime 1000 
+# ./build/lifelong_comp --inputFile example_problems/random.domain/random_600.json $ARGS -o test_random_600.json --simulationTime 1000 
 #./build/lifelong_comp --inputFile example_problems/random.domain/random_800.json $ARGS -o test_random_800.json --simulationTime 1000 
 
 # # warehouse:warehouse_small

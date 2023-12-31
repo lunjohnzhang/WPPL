@@ -1,0 +1,8 @@
+{
+    "mapFile": "maps/kiva.map",
+    "agentFile": "agents/kiva_1000.agents",
+    "teamSize": 1000,
+    "taskFile": "tasks/kiva.tasks",
+    "numTasksReveal": 1,
+    "taskAssignmentStrategy": "roundrobin"
+}
