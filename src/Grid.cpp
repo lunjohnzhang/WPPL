@@ -51,6 +51,7 @@ Grid::Grid(string fname)
     //DeliverGoal.resize(row*col, false);
     // read map
     //int ep = 0, ag = 0;
+    int empty_locs=0;
     for (int i = 0; i < rows; i++)
     {
         getline(myfile, line);
@@ -59,13 +60,19 @@ Grid::Grid(string fname)
             int id = cols * i + j;
             if (line[j] == '@' || line[j] == 'T') // obstacle
                 map[id] = 1;
-            else   // free space
+            else {   // free space
                 map[id] = 0;
+                ++empty_locs;
+            }
+
+            if (line[j]=='e') {
+                end_points.push_back(id);
+            }
         }
     }
 
     myfile.close();
     double runtime = (std::clock() - t) / CLOCKS_PER_SEC;
-    cout << "Map size: " << rows << "x" << cols;
+    cout << "Map size: " << rows << "x" << cols<<", empty locs: "<<empty_locs<<", end_points: "<<end_points.size();
     cout << "\tDone! (load time: " << runtime << " s)" << std::endl;
 }

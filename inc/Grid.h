@@ -12,4 +12,6 @@ public:
     std::vector<int> map;
     string map_name;
 
+    std::vector<int> end_points;
+
 };

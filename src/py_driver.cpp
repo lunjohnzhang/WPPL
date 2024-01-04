@@ -176,9 +176,19 @@ void gen_random_instance(Grid & grid, std::vector<int> & agents, std::vector<int
         agents.push_back(empty_locs[i]);
     }
 
-    for (int i=0;i<num_tasks;++i) {
-        int rnd_idx=MT()%empty_locs.size();
-        tasks.push_back(empty_locs[rnd_idx]);
+    if (grid.end_points.size()>0) {
+        // only sample goal locations from end_points
+        std::cout<<"sample goal locations from end points"<<std::endl;
+        for (int i=0;i<num_tasks;++i) {
+            int rnd_idx=MT()%grid.end_points.size();
+            tasks.push_back(grid.end_points[rnd_idx]);
+        }        
+    } else {
+        std::cout<<"sample goal locations from empty locations"<<std::endl;
+        for (int i=0;i<num_tasks;++i) {
+            int rnd_idx=MT()%empty_locs.size();
+            tasks.push_back(empty_locs[rnd_idx]);
+        }
     }
 }
 
