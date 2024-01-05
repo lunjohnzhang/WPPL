@@ -19,7 +19,7 @@ class Map:
             f.readline()
             self.height=int(f.readline().split()[-1])
             self.width=int(f.readline().split()[-1])
-            self.graph=np.zeros((self.height,self.width),dtype=np.int)
+            self.graph=np.zeros((self.height,self.width),dtype=int)
             # skip the map line
             f.readline()
             for row in range(self.height):
@@ -34,7 +34,7 @@ class Map:
         self.only_keep_the_main_connected_component()
     
     def only_keep_the_main_connected_component(self):
-        component_idx_map=np.zeros((self.height,self.width),dtype=np.int)
+        component_idx_map=np.zeros((self.height,self.width),dtype=int)
         
         max_component_size=0
         max_component_idx=0
@@ -80,7 +80,7 @@ class Map:
     
             
     def bfs_count(self,start:tuple,component_idx:int,component_idx_map:np.ndarray):
-        visited=np.zeros((self.height,self.width),dtype=np.bool)
+        visited=np.zeros((self.height,self.width),dtype=bool)
         
         ctr=0
         

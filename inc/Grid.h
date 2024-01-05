@@ -13,5 +13,9 @@ public:
     string map_name;
 
     std::vector<int> end_points;
+    std::vector<int> agent_home_locations;
+    std::vector<int> empty_locations;
+
+    std::vector<char> grid_types;
 
 };

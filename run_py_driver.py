@@ -3,7 +3,7 @@ sys.path.append('build')
 sys.path.append('scripts')
 from map import Map
 
-map_path="example_problems/warehouse.domain/maps/kiva.map"
+map_path="example_problems/warehouse.domain/maps/kiva_large_w_mode.map"
 # full_weight_path="scripts/random_weight_001.w"
 with_wait_costs=True
 
@@ -81,7 +81,7 @@ import json
 # 2. vertexUsage 1-d double json array, N_v
 # 3. edgeUsage  2-d double json array, N_v*N_v
 ret=py_driver.run(
-    map_path="example_problems/warehouse.domain/maps/kiva.map",
+    map_path="example_problems/warehouse.domain/maps/kiva_large_w_mode.map",
     simulation_steps=1000,
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,

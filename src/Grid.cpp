@@ -51,28 +51,32 @@ Grid::Grid(string fname)
     //DeliverGoal.resize(row*col, false);
     // read map
     //int ep = 0, ag = 0;
-    int empty_locs=0;
     for (int i = 0; i < rows; i++)
     {
         getline(myfile, line);
         for (int j = 0; j < cols; j++)
         {
             int id = cols * i + j;
+            grid_types.push_back(line[j]);
             if (line[j] == '@' || line[j] == 'T') // obstacle
                 map[id] = 1;
             else {   // free space
                 map[id] = 0;
-                ++empty_locs;
+                empty_locations.push_back(id);
             }
 
             if (line[j]=='e') {
                 end_points.push_back(id);
+            }
+
+            if (line[j]=='w') {
+                agent_home_locations.push_back(id);
             }
         }
     }
 
     myfile.close();
     double runtime = (std::clock() - t) / CLOCKS_PER_SEC;
-    cout << "Map size: " << rows << "x" << cols<<", empty locs: "<<empty_locs<<", end_points: "<<end_points.size();
-    cout << "\tDone! (load time: " << runtime << " s)" << std::endl;
+    cout << "Map size: " << rows << "x" << cols<<", empty locs: "<<empty_locations.size()<<", end_points: "<<end_points.size()<<", agent_homes:"<<agent_home_locations.size();
+    cout << "Done! (load time: " << runtime << " s)" << std::endl;
 }

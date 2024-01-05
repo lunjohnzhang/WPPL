@@ -463,4 +463,34 @@ private:
 
 };
 
+
+class KivaSystem: public BaseSystem 
+{
+public:
+    KivaSystem(Grid &grid, MAPFPlanner* planner, ActionModelWithRotate* model, int num_agents, uint seed):
+        BaseSystem(grid, planner, model), MT(seed), task_id(0)
+    {
+        num_of_agents = num_agents;
+        starts.resize(num_of_agents);
+
+        std::shuffle(grid.empty_locations.begin(),grid.empty_locations.end(), MT);
+
+        for (size_t i = 0; i < num_of_agents; i++)
+        {
+            starts[i] = State(grid.empty_locations[i], 0, -1);
+            prev_task_locs.push_back(grid.empty_locations[i]);
+        }
+
+    };
+
+private:
+    std::mt19937 MT;
+    int task_id=0;
+
+    void update_tasks();
+
+    std::vector<int> prev_task_locs;
+
+};
+
 #endif

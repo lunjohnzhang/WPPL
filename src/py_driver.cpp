@@ -319,52 +319,65 @@ std::string run(const py::kwargs& kwargs)
     ActionModelWithRotate *model = new ActionModelWithRotate(grid);
     model->set_logger(logger);
 
-    std::vector<int> agents;
-    std::vector<int> tasks;
+    if (grid.agent_home_locations.size()==0 || grid.end_points.size()==0) {
+        std::vector<int> agents;
+        std::vector<int> tasks;
 
-    if (!kwargs.contains("gen_random") || !kwargs["gen_random"].cast<bool>()){
-        if (!kwargs.contains("agents_path") || !kwargs.contains("tasks_path")){
-            logger->log_fatal("agents_path and tasks_path must be provided if not generate instance randomly");
+        if (!kwargs.contains("gen_random") || !kwargs["gen_random"].cast<bool>()){
+            if (!kwargs.contains("agents_path") || !kwargs.contains("tasks_path")){
+                logger->log_fatal("agents_path and tasks_path must be provided if not generate instance randomly");
+                exit(1);
+            }
+            auto agents_path = kwargs["agents_path"].cast<std::string>();
+            auto tasks_path = kwargs["tasks_path"].cast<std::string>();
+            agents = read_int_vec(agents_path);
+            tasks = read_int_vec(tasks_path);
+        } else {
+            int num_agents=kwargs["num_agents"].cast<int>();
+            int num_tasks=kwargs["num_tasks"].cast<int>();
+            uint seed=kwargs["seed"].cast<uint>();
+            gen_random_instance(grid, agents, tasks, num_agents, num_tasks, seed);
+        }
+
+        std::cout << agents.size() << " agents and " << tasks.size() << " tasks"<< std::endl;
+        if (agents.size() > tasks.size())
+            logger->log_warning("Not enough tasks for robots (number of tasks < team size)");
+
+        // std::string task_assignment_strategy = data["taskAssignmentStrategy"].get<std::string>();
+        if (task_assignment_strategy == "greedy")
+        {
+            system_ptr = std::make_unique<TaskAssignSystem>(grid, planner, agents, tasks, model);
+        }
+        else if (task_assignment_strategy == "roundrobin")
+        {
+            system_ptr = std::make_unique<InfAssignSystem>(grid, planner, agents, tasks, model);
+        }
+        else if (task_assignment_strategy == "roundrobin_fixed")
+        {
+            std::vector<vector<int>> assigned_tasks(agents.size());
+            for (int i = 0; i < tasks.size(); i++)
+            {
+                assigned_tasks[i % agents.size()].push_back(tasks[i]);
+            }
+            system_ptr = std::make_unique<FixedAssignSystem>(grid, planner, agents, assigned_tasks, model);
+        }
+        else
+        {
+            std::cerr << "unkown task assignment strategy " << task_assignment_strategy << std::endl;
+            logger->log_fatal("unkown task assignment strategy " + task_assignment_strategy);
             exit(1);
         }
-        auto agents_path = kwargs["agents_path"].cast<std::string>();
-        auto tasks_path = kwargs["tasks_path"].cast<std::string>();
-        agents = read_int_vec(agents_path);
-        tasks = read_int_vec(tasks_path);
     } else {
-        int num_agents=kwargs["num_agents"].cast<int>();
-        int num_tasks=kwargs["num_tasks"].cast<int>();
-        uint seed=kwargs["seed"].cast<uint>();
-        gen_random_instance(grid, agents, tasks, num_agents, num_tasks, seed);
-    }
-
-    std::cout << agents.size() << " agents and " << tasks.size() << " tasks"<< std::endl;
-    if (agents.size() > tasks.size())
-        logger->log_warning("Not enough tasks for robots (number of tasks < team size)");
-
-    // std::string task_assignment_strategy = data["taskAssignmentStrategy"].get<std::string>();
-    if (task_assignment_strategy == "greedy")
-    {
-        system_ptr = std::make_unique<TaskAssignSystem>(grid, planner, agents, tasks, model);
-    }
-    else if (task_assignment_strategy == "roundrobin")
-    {
-        system_ptr = std::make_unique<InfAssignSystem>(grid, planner, agents, tasks, model);
-    }
-    else if (task_assignment_strategy == "roundrobin_fixed")
-    {
-        std::vector<vector<int>> assigned_tasks(agents.size());
-        for (int i = 0; i < tasks.size(); i++)
-        {
-            assigned_tasks[i % agents.size()].push_back(tasks[i]);
+        if (!kwargs.contains("gen_random") || !kwargs["gen_random"].cast<bool>()){
+            logger->log_fatal("must generate instance randomly");
+            exit(1);
         }
-        system_ptr = std::make_unique<FixedAssignSystem>(grid, planner, agents, assigned_tasks, model);
-    }
-    else
-    {
-        std::cerr << "unkown task assignment strategy " << task_assignment_strategy << std::endl;
-        logger->log_fatal("unkown task assignment strategy " + task_assignment_strategy);
-        exit(1);
+
+        int num_agents=kwargs["num_agents"].cast<int>();
+        std::cout << "using kiva system (random task generation) with "<<num_agents<<" agents"<<std::endl;
+        
+        uint seed=kwargs["seed"].cast<uint>();
+        system_ptr = std::make_unique<KivaSystem>(grid,planner,model,num_agents,seed);
     }
 
     system_ptr->set_logger(logger);
@@ -378,6 +391,8 @@ std::string run(const py::kwargs& kwargs)
     system_ptr->simulate(simulation_steps);
 
     nlohmann::json analysis=system_ptr->analyzeResults();
+
+    // system_ptr->saveResults("debug.json");
     return analysis.dump(4);
 
     // if (!vm["evaluationMode"].as<bool>())
