@@ -1,5 +1,5 @@
 {
-    "mapFile": "maps/random-48-48-20.map",
+    "mapFile": "maps/room-64-64-8.map",
     "agentFile": "agents/random_50.agents",
     "teamSize": 50,
     "taskFile": "tasks/random-32-32-20-50.tasks",
