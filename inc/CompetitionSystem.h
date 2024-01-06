@@ -229,7 +229,7 @@ public:
 
 
 private:
-    std::vector<int>& tasks;
+    std::vector<int> tasks;
     std::vector<int> task_counter;
     int tasks_size;
     int task_id = 0;
@@ -452,7 +452,7 @@ public:
 
 
 private:
-    std::vector<int>& tasks;
+    std::vector<int> tasks;
     std::vector<int> task_counter;
     int tasks_size;
     int task_id = 0;
