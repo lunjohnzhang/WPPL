@@ -71,22 +71,22 @@ print(py_driver.playground())
 
 import json
 # py_configs contains the best configs used for random-32-32-20 map with 100,200,400,600,800 agents.
-# config_path="py_configs/random-32-32-20_600.json"
-# with open(config_path) as f:
-#     config=json.load(f)
-#     config_str=json.dumps(config)
+config_path="configs/pibt_default_no_rot.json"
+with open(config_path) as f:
+    config=json.load(f)
+    config_str=json.dumps(config)
 
 # the return values now include:
 # 1. throughput double
 # 2. vertexUsage 1-d double json array, N_v
 # 3. edgeUsage  2-d double json array, N_v*N_v
 ret=py_driver.run(
-    map_path="example_problems/warehouse.domain/maps/kiva_large_w_mode.map",
+    map_path="example_problems/warehouse.domain/maps/kiva_69x69.map",
     simulation_steps=1000,
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
     gen_random=True,
-    num_agents=400,
+    num_agents=500,
     num_tasks=100000,
     seed=0,
     # else we need specify agents and tasks path to load data.
@@ -97,7 +97,7 @@ ret=py_driver.run(
     # weights=compressed_weights_json_str,
     # wait_costs=compressed_wait_costs_json_str,    
     # if we don't load config here, the program will load the default config file.
-    # config=config_str,    
+    config=config_str,    
     # the following are some things we don't need to change in the weight optimization case.
     plan_time_limit=1, # in seconds, time limit for planning at each step, no need to change
     preprocess_time_limit=1800, # in seconds, time limit for preprocessing, no need to change
