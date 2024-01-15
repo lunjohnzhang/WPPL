@@ -5,6 +5,7 @@
 #include <boost/tokenizer.hpp>
 #include "nlohmann/json.hpp"
 #include <signal.h>
+#include <ctime>
 #include <climits>
 #include <memory>
 #include <util/Analyzer.h>
@@ -388,9 +389,12 @@ std::string run(const py::kwargs& kwargs)
 
     // signal(SIGINT, sigint_handler);
 
+    clock_t start_time = clock();
     system_ptr->simulate(simulation_steps);
+    double runtime = (double)(clock() - start_time)/ CLOCKS_PER_SEC;
 
     nlohmann::json analysis=system_ptr->analyzeResults();
+    analysis["cpu_runtime"] = runtime;
 
     // system_ptr->saveResults("debug.json");
     return analysis.dump(4);
