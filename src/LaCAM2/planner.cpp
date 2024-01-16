@@ -929,9 +929,12 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
 
 #else
 
+  float cost1=get_cost_move(ai->v_now->index,v->index);
+  float cost2=get_cost_move(ai->v_now->index,u->index);
+
   float d1,d2;
-  d1=HT->get(v->index,ins->goals.locs[i]->index);
-  d2=HT->get(u->index,ins->goals.locs[i]->index);
+  d1=HT->get(v->index,ins->goals.locs[i]->index)+cost1;
+  d2=HT->get(u->index,ins->goals.locs[i]->index)+cost2;
 
   
   // if (i==40) {
