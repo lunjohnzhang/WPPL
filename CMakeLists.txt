@@ -130,13 +130,6 @@ ENDIF()
 
 # ENDIF()
 
-# add_executable(test_log "test/my_logger.cpp" "src/util/MyLogger.cpp")
-# target_link_libraries(test_log spdlog::spdlog)
-
-# add_executable(test_openlist "test/my_openlist.cpp")
-# add_executable(test_thread_pool "test/thread_pool.cpp")
-# target_link_libraries(test_thread_pool PRIVATE Threads::Threads)
-
 add_custom_target(clean_all
     COMMAND ${CMAKE_BUILD_TOOL} clean
     COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/CMakeCache.txt
