@@ -23,7 +23,7 @@
         "order_strategy": "early_time",
         "disable_agent_strategy": "uniform",
         "disable_agent_goals": true,
-        "tabu_locs_fp": "scripts/random_600_tabu_locs.txt"
+        "tabu_locs_fp": ""
     },
     "analysis_output": "analysis/test.csv"
 }
