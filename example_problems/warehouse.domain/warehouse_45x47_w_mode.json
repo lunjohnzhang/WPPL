@@ -1,8 +1,0 @@
-{
-    "mapFile": "maps/kiva_45x47.map",
-    "agentFile": "agents/warehouse_small_800.agents",
-    "teamSize": 800,
-    "taskFile": "tasks/warehouse_small.tasks",
-    "numTasksReveal": 1,
-    "taskAssignmentStrategy": "roundrobin"
-}
