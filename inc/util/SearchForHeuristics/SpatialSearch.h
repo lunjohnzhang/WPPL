@@ -4,7 +4,7 @@
 #include "SharedEnv.h"
 #include "util/MyLogger.h"
 
-namespace RIVERS {
+namespace UTIL {
 
 namespace SPATIAL {
 

@@ -3,7 +3,7 @@
 #include <utility>
 #include "boost/heap/pairing_heap.hpp"
 
-namespace RIVERS {
+namespace UTIL {
 
 namespace SPATIAL {
 

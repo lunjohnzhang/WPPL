@@ -64,9 +64,9 @@ void HeuristicTable::compute_weighted_heuristics(){
     // int n_threads=pool.get_thread_count();
     cout<<"number of threads used for heuristic computation: "<<n_threads<<endl;
     float * values = new float[n_threads*n_orientations*state_size];
-    RIVERS::SPATIAL::SpatialAStar ** planners= new RIVERS::SPATIAL::SpatialAStar* [n_threads];
+    UTIL::SPATIAL::SpatialAStar ** planners= new UTIL::SPATIAL::SpatialAStar* [n_threads];
     for (int i=0;i<n_threads;++i) {
-        planners[i]=new RIVERS::SPATIAL::SpatialAStar(env,n_orientations,*map_weights);
+        planners[i]=new UTIL::SPATIAL::SpatialAStar(env,n_orientations,*map_weights);
     }
 
     // cerr<<"created"<<endl;
@@ -118,7 +118,7 @@ void HeuristicTable::compute_weighted_heuristics(){
 void HeuristicTable::_compute_weighted_heuristics(
     int start_loc_idx,
     float * values,
-    RIVERS::SPATIAL::SpatialAStar * planner
+    UTIL::SPATIAL::SpatialAStar * planner
 ) {
     int start_loc=empty_locs[start_loc_idx];
     if (!consider_rotation){
@@ -127,7 +127,7 @@ void HeuristicTable::_compute_weighted_heuristics(
         
         for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
             int loc=empty_locs[loc_idx];
-            RIVERS::SPATIAL::State * state=planner->all_states+loc;
+            UTIL::SPATIAL::State * state=planner->all_states+loc;
             if (loc!=state->pos) {
                 std::cerr<<"loc: "<<loc<<" state->pos: "<<state->pos<<endl;
                 exit(-1);
@@ -147,7 +147,7 @@ void HeuristicTable::_compute_weighted_heuristics(
             for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
                 for (int orient=0;orient<n_orientations;++orient) {
                     int loc=empty_locs[loc_idx];
-                    RIVERS::SPATIAL::State * state=planner->all_states+loc*n_orientations+orient;
+                    UTIL::SPATIAL::State * state=planner->all_states+loc*n_orientations+orient;
                     // if (loc!=state->pos || orient!=state->orient) {
                     //     std::cerr<<"start_loc: "<<start_loc<<" loc: "<<loc<<" state->pos: "<<state->pos<<" orient: "<<orient<<" state->orient: "<<state->orient<<endl;
                     //     exit(-1);

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <random>
 
-namespace RIVERS {
+namespace UTIL {
 namespace SPATIAL {
 
 class OpenList {
