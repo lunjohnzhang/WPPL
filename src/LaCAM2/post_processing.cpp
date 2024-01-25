@@ -120,7 +120,7 @@ void print_stats(const int verbose, const Instance& ins, const std::shared_ptr<H
   const auto sum_of_costs_lb = get_sum_of_costs_lower_bound(ins, HT);
   const auto sum_of_loss = get_sum_of_loss(ins,HT,solution);
   g_timer.record_p("info_s");
-  // TODO(rivers): not sure why it is so slow...
+  // TODO: not sure why it is so slow...
   // ONLYDEV(
   //   g_logger.info("solved: {} ms makespan: {} (lb={}, ratio={}) sum_of_loss: {} (lb={}, ratio={})",
   //   comp_time_ms, makespan, makespan_lb, ceil((float)makespan / makespan_lb),

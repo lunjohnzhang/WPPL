@@ -263,8 +263,8 @@ bool CompetitionGraph::load_heuristics_table(std::ifstream& myfile)
     std::cout << "init heuristics table (" << runtime << " s)" << std::endl;
 
     // load dists from one non-obstacle location to another
-    // NOTE(hj): currently, the heuristic table in the memory is still N*M size double-type.
-    // TODO(hj): the same wierd bug in save_heuristics_table function also happens here! it seems that we are not allowed to create a too large array at a time, but who restrict this?
+    // NOTE: currently, the heuristic table in the memory is still N*M size double-type.
+    // TODO: the same wierd bug in save_heuristics_table function also happens here! it seems that we are not allowed to create a too large array at a time, but who restrict this?
     // but heuristics table is also large, why it is allowed?
     int n_threads=0;//omp_get_max_threads();              
     auto buff=new unsigned short[N*n_threads];
@@ -376,7 +376,7 @@ void CompetitionGraph::save_heuristics_table(std::string fname)
 	double runtime = std::chrono::duration<double>(end-start).count();
     std::cerr << "write out locs (" << runtime << " s)" << std::endl;
 
-    // TODO(hj): a wired bug encountered: if I create a N*N buff, the following lines in this function will be skipped.
+    // TODO: a wired bug encountered: if I create a N*N buff, the following lines in this function will be skipped.
     // However, it doesn't report an memory error, such as out-of-memery. 
     // auto buff=new unsinged short[N*N];
     auto buff=new unsigned short[N];
@@ -393,9 +393,9 @@ void CompetitionGraph::save_heuristics_table(std::string fname)
             }
             else if (h>USHRT_MAX && h<DBL_MAX){
                 auto & G=*this;
-                // TODO(hj): this is a protection. if not true, we probably need to consider other data type.
+                // TODO: this is a protection. if not true, we probably need to consider other data type.
                 cerr<<"h value("<<h<<") from loc1("<<G.get_row(loc1)<<","<<G.get_col(loc1)<<") to loc2("<<G.get_row(loc2)<<","<<G.get_col(loc2)<<") exceeds the unsigned short limit("<<USHRT_MAX<<")!"<<endl;
-                // NOTE(hj): assert only works when DBEUG is set! probably need better assertion and logging tools.
+                // NOTE: assert only works when DBEUG is set! probably need better assertion and logging tools.
                 assert(!"failed");
                 v=USHRT_MAX;
             } else{

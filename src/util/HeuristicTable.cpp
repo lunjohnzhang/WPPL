@@ -225,7 +225,7 @@ void HeuristicTable::dump_main_heuristics(int start_loc, string file_path_prefix
     }
 }
 
-// TODO(hj) add check
+// TODO add check
 float HeuristicTable::get(int loc1, int loc2) {
     int loc_idx1=loc_idxs[loc1];
     int loc_idx2=loc_idxs[loc2];

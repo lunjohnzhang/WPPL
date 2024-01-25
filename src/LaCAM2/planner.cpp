@@ -111,7 +111,7 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Insta
   }
 
   // set order
-  // TODO(rivers_: probably we should set a basic ordering at the begining, because it is time consuming to sort everytime with large-scale agents
+  // TODO: probably we should set a basic ordering at the begining, because it is time consuming to sort everytime with large-scale agents
   std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int i, int j) { 
         const AgentInfo & a=ins->agent_infos[i];
@@ -765,15 +765,15 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
 
 #ifndef NO_ROT
 
-    // TODO(rivers): we should move these computation outside to speed up...
+    // TODO: we should move these computation outside to speed up...
     
-    // TODO(rivers): deal with arrivals: maybe just select randomly
+    // TODO: deal with arrivals: maybe just select randomly
     int o0=H->C.orients[i];
 
     int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index,o0);
     int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index,o0);
 
-    // TODO(rivers): we should maintain the const somewhere else
+    // TODO: we should maintain the const somewhere else
     // perhaps: we should wrap a class for map weights...
     float cost_rot=(*map_weights)[ai->v_now->index*5+4];
     int o_dist1=get_o_dist(o0,o1);
@@ -798,7 +798,7 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
 
     // std::cout<<d1<<" "<<d2<<std::endl;
 
-    // TODO(rivers): we should still think about the following codes. 
+    // TODO: we should still think about the following codes. 
     // the former one seems to fit LNS but doesn't work with SUO
     // the latter one ssems to fit SUO but doesn't work with LNS
     // the latter one is problematic with wait action?
@@ -906,7 +906,7 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
 
     // cerr<<d1<<" "<<d2<<endl;
 
-    // TODO(rivers): The PIBT thing is just too sensitive to the hyper-parameters and the implementation...
+    // TODO: The PIBT thing is just too sensitive to the hyper-parameters and the implementation...
 
     if (d1!=d2) return d1<d2;
 
@@ -915,7 +915,7 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
     // } else {
     //   return tie_breakers[v->id] < tie_breakers[u->id];
     // }
-    // TODO(rivers): check this. may be bad.
+    // TODO: check this. may be bad.
     // return tie_breakers[v->id] < tie_breakers[u->id];
 
     // if (o_dist1!=o_dist2) 

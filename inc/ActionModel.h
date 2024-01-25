@@ -136,7 +136,7 @@ protected:
 
     State result_state(const State & prev, Action action)
     {
-        // NOTE(rivers): we don't care about orientation, just keep it intact for now.
+        // NOTE: we don't care about orientation, just keep it intact for now.
 
         int new_location = prev.location;
         int new_orientation = -1;

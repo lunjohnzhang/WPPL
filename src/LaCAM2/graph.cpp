@@ -157,7 +157,7 @@ bool is_same_config(const Config& C1, const Config& C2)
 
 uint ConfigHasher::operator()(const Config& C) const
 {
-  // TODO: rivers: has is not very necessary in our case, because we don't use LaCAM to expand a large search tree.
+  // TODO: has is not very necessary in our case, because we don't use LaCAM to expand a large search tree.
   // we will just do it simple here and revisit it later.
   uint hash = C.size();
   for (auto i=0;i<C.size();++i) {

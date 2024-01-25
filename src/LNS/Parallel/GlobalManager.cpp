@@ -142,7 +142,7 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
                     int from=path[i].location;
                     int to=path[i+1].location;
                     int to_time=i+1;
-                    // TODO(rivers): we need to ignore the conflicts with agents in the neighbor.
+                    // TODO: we need to ignore the conflicts with agents in the neighbor.
                     if (path_table.constrained(from,to,to_time,neighbor.agents)) {
                         // ONLYDEV(std::cout<<aid<<" "<<i<<" invalid"<<std::endl;)
                         valid=false;
@@ -164,7 +164,7 @@ void GlobalManager::update(Neighbor & neighbor, bool recheck) {
                 old_sum_of_costs+=agents[aid].path.path_cost;
             }
 
-            // TODO(rivers): use < or <= here?
+            // TODO: use < or <= here?
             if (old_sum_of_costs<=neighbor.sum_of_costs) {
                 neighbor.succ=false;
                 // ONLYDEV(std::cout<<"incost"<<std::endl;)
@@ -404,7 +404,7 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
     return true;
 }
 
-// TODO(rivers): we will do single-thread code refactor first, then we will do the parallelization
+// TODO: we will do single-thread code refactor first, then we will do the parallelization
 bool GlobalManager::_run(TimeLimiter & time_limiter) {
 
     initial_sum_of_costs=0;
@@ -492,11 +492,11 @@ bool GlobalManager::_run(TimeLimiter & time_limiter) {
         if (time_limiter.timeout())
             break;
 
-        // TODO(rivers): validate solution
+        // TODO: validate solution
 
         // 3. update path_table, statistics & maybe adjust strategies
         g_timer.record_p("neighbor_update_s");
-        // TODO(rivers): it seems we should not modify neighbor in the previous update
+        // TODO: it seems we should not modify neighbor in the previous update
         for (auto & neighbor_ptr: neighbor_generator->neighbors){
             if (time_limiter.timeout()) {
                 break;
@@ -541,7 +541,7 @@ bool GlobalManager::_run(TimeLimiter & time_limiter) {
     }
     g_timer.record_d("lns_opt_s","lns_opt");
 
-    // TODO(rivers): validate solution
+    // TODO: validate solution
 
     average_group_size = - iteration_stats.front().num_of_agents;
     for (const auto& data : iteration_stats)

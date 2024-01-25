@@ -118,7 +118,7 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
     std::vector<double> vertex_usage(map_size,0);
     std::vector<std::vector<double> > edge_usage(map_size, std::vector<double>(map_size,0));
 
-    // NOTE(rivers): this format is different from what we used in c++ code: right, up, left, down
+    // NOTE: this format is different from what we used in c++ code: right, up, left, down
     std::vector<double> edge_usage_matrix(map_size*4,0);
     std::vector<double> vertex_wait_matrix(map_size,0);
 
@@ -246,7 +246,7 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
     std::vector<double> vertex_usage(map_size,0);
     std::vector<std::vector<double> > edge_usage(map_size, std::vector<double>(map_size,0));
 
-    // NOTE(rivers): this format is different from what we used in c++ code: right, up, left, down
+    // NOTE: this format is different from what we used in c++ code: right, up, left, down
     std::vector<double> edge_usage_matrix(map_size*4,0);
     std::vector<double> vertex_wait_matrix(map_size,0);
 

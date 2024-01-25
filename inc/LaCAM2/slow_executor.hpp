@@ -41,7 +41,7 @@ public:
 
         for (int i=0;i<n_agents;++i) {
             if ((*curr_states)[i].location==(*planned_next_states)[i].location) {
-                //TODO(rivers): we could include next step in the plan to rotate earlier
+                //TODO: we could include next step in the plan to rotate earlier
                 // currently, we just wait
                 (*next_states)[i].location=(*curr_states)[i].location;
                 (*next_states)[i].orientation=(*curr_states)[i].orientation;

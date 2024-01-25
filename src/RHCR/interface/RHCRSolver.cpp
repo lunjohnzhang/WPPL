@@ -157,9 +157,9 @@ void RHCRSolver::get_step_actions(const SharedEnvironment & env, vector<Action> 
         actions.push_back(get_action_from_states(paths[i][timestep],paths[i][timestep+1],consider_rotation));
     }
 
-    // TODO(hj) we probably still want to check the validness. so we need construct model or implement is_valid by ourselves.
+    // TODO we probably still want to check the validness. so we need construct model or implement is_valid by ourselves.
     // check if not valid, this should not happen in general if the algorithm is correct? but maybe there exist deadlocks.
-    // TODO(hj) detect deadlock?
+    // TODO detect deadlock?
     if (!model.is_valid(env.curr_states,actions)){
         cerr<<"planed actions are not valid in timestep "<<timestep+1<<"!"<<endl;
 #ifdef DEV
@@ -168,12 +168,12 @@ void RHCRSolver::get_step_actions(const SharedEnvironment & env, vector<Action> 
         actions.resize(num_of_drives, Action::W);
 #endif
     } else {
-        // NOTE(hj): only successfully executing a planned step will increase this internal timestep, which is different from the real timestep used in the simulation system.
+        // NOTE: only successfully executing a planned step will increase this internal timestep, which is different from the real timestep used in the simulation system.
         timestep+=1;
     }
 
 
-    // TODO(hj): when we need to replan?
+    // TODO: when we need to replan?
     need_replan=false;
 
     // 1. exceed simulation window

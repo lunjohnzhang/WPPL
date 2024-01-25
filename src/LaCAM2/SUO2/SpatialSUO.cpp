@@ -34,7 +34,7 @@ void SUO::plan() {
         return distance[i]<distance[j];
     });
 
-    // TODO(rivers): how to update cost map asynchronously? maybe everyone needs to hold its own copy of cost map
+    // TODO: how to update cost map asynchronously? maybe everyone needs to hold its own copy of cost map
     // and before planning, it checks whether should update the cost map first. we could keep delta cost in a vector,
     // and each thread has a pointer to where it has been updated to.
 
@@ -43,14 +43,14 @@ void SUO::plan() {
     // then for each agent, we plan with Spatial A* search
     DEV_DEBUG("SUO: plan with {} iterations, {} threads for {} agents", iterations, n_threads, env.num_of_agents);
     for (int j=0;j<iterations;++j){
-        // TODO(rivers): currently we use a batch mode
+        // TODO: currently we use a batch mode
         int num_batches=(env.num_of_agents+n_threads-1)/n_threads;
         for (int bid=0;bid<num_batches;++bid){
             int start_idx=bid*n_threads;
             int end_idx=min((bid+1)*n_threads, env.num_of_agents);
 
             std::vector<std::pair<int,State *>> goal_states;
-            // TODO(rivers): we need to make sure omp actually uses the number of threads we want
+            // TODO: we need to make sure omp actually uses the number of threads we want
             // #pragma omp parallel for schedule(static,1)
             for (int i=start_idx;i<end_idx;++i) {
                 int tid=0;//omp_get_thread_num();
@@ -100,7 +100,7 @@ void SUO::plan() {
 }
 
 void SUO::update_path(int agent_idx, State * goal_state) {
-    // NOTE(rivers) we cannot compare f to decided whether to replace the old path.
+    // NOTE we cannot compare f to decided whether to replace the old path.
     // float old_f = path_costs[agent_idx];
     // // TODO(rives): we should prefer less conflicts as well
     // if (goal_state->f>old_f) {

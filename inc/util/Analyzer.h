@@ -46,7 +46,7 @@ public:
         data["single_agent_solver"]=rhcr_config.at("single_agent_solver");
         data["planning_window"]=rhcr_config.at("planning_window");
         data["simulation_window"]=rhcr_config.at("simulation_window");
-        // TODO(hj): why not work?
+        // TODO: why not work?
         // std::replace(s.begin(),s.end(),'\\',' ');
         data["details"]=config.at("details");
         // TODO

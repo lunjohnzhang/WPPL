@@ -18,7 +18,7 @@ using std::chrono::duration;
 // Timer uses second as the default unit.
 // p means time point
 // d means time duration
-// TODO(rivers): it may be modified to be thread-safe.
+// TODO: it may be modified to be thread-safe.
 class Timer
 {
 public:

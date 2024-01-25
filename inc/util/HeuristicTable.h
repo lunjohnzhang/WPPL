@@ -63,7 +63,7 @@ public:
     //     State * queue
     // );
     
-    // TODO(hj) add check
+    // TODO add check
     float get(int loc1, int loc2);
     float get(int loc1, int orient1, int loc2);
     // int get(int loc1, int orient1, int loc2, int orient2);
