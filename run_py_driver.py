@@ -99,13 +99,13 @@ ret=py_driver.run(
     simulation_steps=simulation_steps,
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
-    gen_random=False,
-    # num_agents=400,
-    # num_tasks=100000,
+    gen_random=True,
+    num_agents=n_agents,
+    num_tasks=100000,
     seed=0,
     # else we need specify agents and tasks path to load data.
-    agents_path="example_problems/random.domain/agents/random_{}.agents".format(n_agents),
-    tasks_path="example_problems/random.domain/tasks/random-32-32-20-{}.tasks".format(n_agents),
+    # agents_path="example_problems/random.domain/agents/random_{}.agents".format(n_agents),
+    # tasks_path="example_problems/random.domain/tasks/random-32-32-20-{}.tasks".format(n_agents),
     # weights are the edge weights, wait_costs are the vertex wait costs
     # if not specified here, then the program will use the one specified in the config file.
     # weights=compressed_weights_json_str,
