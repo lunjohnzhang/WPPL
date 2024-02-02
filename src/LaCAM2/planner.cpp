@@ -66,22 +66,41 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Insta
   // update neighbor
   if (parent != nullptr) parent->neighbor.insert(this);
 
-  // std::vector<std::tuple<bool,bool,bool,float,float,float,int> > scores;
-  // for (int i=0;i<N;++i) {
-  //   const AgentInfo & a=ins->agent_infos[i];
-  //   bool disabled=a.disabled;
-  //   bool arrived=C.arrivals[i];
-  //   bool not_precomputed = ins->precomputed_paths!=nullptr && (*(ins->precomputed_paths))[i].size()<(d+1); // not not precomputed first
-  //   float h=HT->get(ins->starts.locs[i]->index,ins->goals.locs[i]->index); // smaller h first
-  //   float elapse=0; // larger elapse first
-  //   float tie_breaker=0; 
-  //   scores.emplace_back(not_precomputed,disabled,arrived,h,elapse,tie_breaker,i);
-  // }
+  for (int aid=0;aid<N;++aid) {
+    if ((disable_agent_goals && ins->agent_infos[aid].disabled)) {
+      ins->goals.locs[aid]=C.locs[aid];
+    }
+  }
 
-  // std::sort(scores.begin(),scores.end());
-  // for (int i=0;i<N;++i) {
-  //   order[i]=std::get<6>(scores[i]);
-  // }
+  std::vector<std::tuple<bool,bool,bool,float,float,float,int> > scores;
+  for (int i=0;i<N;++i) {
+    const AgentInfo & a=ins->agent_infos[i];
+    bool disabled=a.disabled;
+    bool arrived=C.arrivals[i];
+    bool precomputed = ins->precomputed_paths!=nullptr && (*(ins->precomputed_paths))[i].size()>(d+1); // not not precomputed first
+    float h=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index); // smaller h first
+    float elapse=a.elapsed; // larger elapse first
+    float tie_breaker=a.tie_breaker; 
+    scores.emplace_back(disabled,arrived,precomputed,elapse,h,tie_breaker,i);
+  }
+
+  std::sort(scores.begin(),scores.end(),[&](std::tuple<bool,bool,bool,float,float,float,int> &score1, std::tuple<bool,bool,bool,float,float,float,int> &score2) {
+    if (std::get<0>(score1)!=std::get<0>(score2)) return std::get<0>(score1)<std::get<0>(score2);
+    if (std::get<1>(score1)!=std::get<1>(score2)) return std::get<1>(score1)<std::get<1>(score2);
+    if (std::get<2>(score1)!=std::get<2>(score2)) return std::get<2>(score1)>std::get<2>(score2);
+    if (order_strategy==0) {
+      if (std::get<4>(score1)!=std::get<4>(score2)) return std::get<4>(score1)<std::get<4>(score2);
+      if (std::get<3>(score1)!=std::get<3>(score2)) return std::get<3>(score1)>std::get<3>(score2);
+    } else if (order_strategy==1) {
+      if (std::get<3>(score1)!=std::get<3>(score2)) return std::get<3>(score1)>std::get<3>(score2);
+      if (std::get<4>(score1)!=std::get<4>(score2)) return std::get<4>(score1)<std::get<4>(score2);
+    }
+    return std::get<5>(score1)>std::get<5>(score2);
+  });
+
+  for (int i=0;i<N;++i) {
+    order[i]=std::get<6>(scores[i]);
+  }
 
 
   // std::vector<bool> disabled(N,false);
@@ -104,61 +123,46 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Insta
   //   // }
   // }
 
-  for (int aid=0;aid<N;++aid) {
-    if (ins->agent_infos[aid].disabled) {
-      ins->goals.locs[aid]=C.locs[aid];
-    }
-  }
-
   // set order
   // TODO(rivers_: probably we should set a basic ordering at the begining, because it is time consuming to sort everytime with large-scale agents
-  std::iota(order.begin(), order.end(), 0);
-  std::sort(order.begin(), order.end(), [&](int i, int j) { 
-        const AgentInfo & a=ins->agent_infos[i];
-        const AgentInfo & b=ins->agent_infos[j];
+  // std::iota(order.begin(), order.end(), 0);
+  // std::sort(order.begin(), order.end(), [&](int i, int j) { 
+  //       const AgentInfo & a=ins->agent_infos[i];
+  //       const AgentInfo & b=ins->agent_infos[j];
 
-        if (a.disabled!=b.disabled) return a.disabled<b.disabled; // not disabled first.
+  //       if (a.disabled!=b.disabled) return a.disabled<b.disabled; // not disabled first.
 
-        // if (disabled[i]!=disabled[j]) return disabled[i]<disabled[j];
+  //       // if (disabled[i]!=disabled[j]) return disabled[i]<disabled[j];
 
-        if (C.arrivals[i]!=C.arrivals[j]) return C.arrivals[i]<C.arrivals[j];
+  //       if (C.arrivals[i]!=C.arrivals[j]) return C.arrivals[i]<C.arrivals[j];
 
-        if (ins->precomputed_paths!=nullptr){
-          bool precomputed_a = (*(ins->precomputed_paths))[i].size()>(d+1);
-          bool precomputed_b = (*(ins->precomputed_paths))[j].size()>(d+1);
-          if (precomputed_a != precomputed_b) return (int)precomputed_a>(int)precomputed_b;
-        }
+  //       if (ins->precomputed_paths!=nullptr){
+  //         bool precomputed_a = (*(ins->precomputed_paths))[i].size()>(d+1);
+  //         bool precomputed_b = (*(ins->precomputed_paths))[j].size()>(d+1);
+  //         if (precomputed_a != precomputed_b) return (int)precomputed_a>(int)precomputed_b;
+  //       }
 
-        // float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
-        // float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
+  //       // float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
+  //       // float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
+
+  //       float h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
+  //       float h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
 
 
-#ifndef NO_ROT
+  //       if (order_strategy==0) {
+  //         if (h1!=h2) return h1<h2;
+  //         if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
+  //         return a.tie_breaker>b.tie_breaker;
+  //       } else if (order_strategy==1) {
+  //         if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
+  //         if (h1!=h2) return h1<h2;
+  //         return a.tie_breaker>b.tie_breaker;
+  //       } else {
+  //         std::cerr<<"unknown strategy"<<std::endl;
+  //         exit(-1);
+  //       }
 
-        float h1=HT->get(C.locs[i]->index,C.orients[i],ins->goals.locs[i]->index);
-        float h2=HT->get(C.locs[j]->index,C.orients[j],ins->goals.locs[j]->index);
-
-#else 
-
-        float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
-        float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
-
-#endif
-
-        if (order_strategy==0) {
-          if (h1!=h2) return h1<h2;
-          if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
-          return a.tie_breaker>b.tie_breaker;
-        } else if (order_strategy==1) {
-          if (a.elapsed!=b.elapsed) return a.elapsed>b.elapsed;
-          if (h1!=h2) return h1<h2;
-          return a.tie_breaker>b.tie_breaker;
-        } else {
-          std::cerr<<"unknown strategy"<<std::endl;
-          exit(-1);
-        }
-
-  });
+  // });
 
   search_tree.push(new LNode());
 
@@ -729,225 +733,209 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   //     std::cerr<<C_next[i][j]<<endl;
   // }
 
-  // std::vector<std::tuple<int, float, float, Vertex *> > scores;
+  std::vector<std::tuple<int, float, float, Vertex *> > scores;
 
-  // int o0=H->C.orients[i];
-  // float cost_rot=(*map_weights)[ai->v_now->index*5+4];
-  // for (int k=0;k<=K;++k) {
-  //   auto & v=C_next[i][k];
-  //   int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index,o0);
-  //   int o_dist1=get_o_dist(o0,o1);
-  //   float cost1=(float)o_dist1*cost_rot+get_cost_move(ai->v_now->index,v->index);
-  //   float d1=d1=HT->get(v->index,o1,ins->goals.locs[i]->index)+cost1;
-  //   int pre_d1=1;
-  //   if (ins->precomputed_paths!=nullptr){
-  //     auto & path=(*ins->precomputed_paths)[i];
-  //     int j=H->d;
-  //     if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
-  //         if (path[j+1].orientation==o1) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
-  //           pre_d1=0;
-  //           // break;
-  //         }
-  //       }
-  //   }
-  //   scores.emplace_back(pre_d1, d1, o_dist1, v);
-  // }
-
-  // std::sort(scores.begin(),scores.end()); // do we need stable sort?
-
-  // for (int k=0;k<=K;++k) {
-  //   C_next[i][k]=std::get<3>(scores[k]);
-  // }
-
-  // sort
-  std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
-            [&](Vertex* const v, Vertex* const u) {
-
-#ifndef NO_ROT
-
-    // TODO(rivers): we should move these computation outside to speed up...
-    
-    // TODO(rivers): deal with arrivals: maybe just select randomly
-    int o0=H->C.orients[i];
-
+  int o0=H->C.orients[i];
+  float cost_rot=(*map_weights)[ai->v_now->index*5+4];
+  for (int k=0;k<=K;++k) {
+    auto & v=C_next[i][k];
     int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index,o0);
-    int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index,o0);
-
-    // TODO(rivers): we should maintain the const somewhere else
-    // perhaps: we should wrap a class for map weights...
-    float cost_rot=(*map_weights)[ai->v_now->index*5+4];
     int o_dist1=get_o_dist(o0,o1);
-    int o_dist2=get_o_dist(o0,o2);
-
     float cost1=(float)o_dist1*cost_rot+get_cost_move(ai->v_now->index,v->index);
-    float cost2=(float)o_dist2*cost_rot+get_cost_move(ai->v_now->index,u->index);
-
-    // double cost_next_move_1=ai->v_now->index==v->index?cost_rot:get_cost_move(ai->v_now->index,v->index);
-    // double cost_next_move_2=ai->v_now->index==u->index?cost_rot:get_cost_move(ai->v_now->index,u->index);
-
-    // cerr<<o1<<" "<<o2<<" "<<o0<<" "<<o_dist1<<" "<<o_dist2<<endl;
-
-    float d1,d2;
-    if (use_orient_in_heuristic){
-      d1=HT->get(v->index,o1,ins->goals.locs[i]->index)+cost1;
-      d2=HT->get(u->index,o2,ins->goals.locs[i]->index)+cost2;      
-    } else {
-      d1=HT->get(v->index,ins->goals.locs[i]->index);
-      d2=HT->get(u->index,ins->goals.locs[i]->index);
-    }
-
-    // std::cout<<d1<<" "<<d2<<std::endl;
-
-    // TODO(rivers): we should still think about the following codes. 
-    // the former one seems to fit LNS but doesn't work with SUO
-    // the latter one ssems to fit SUO but doesn't work with LNS
-    // the latter one is problematic with wait action?
-
-
-    // if (ins->precomputed_paths!=nullptr){
-      // int pre_d1=1;
-      // int pre_d2=1;
-      // auto path=(*ins->precomputed_paths)[i];
-      // // for (int j=path.size()-1;j>=0;--j){
-      //   int j=H->d;
-      //   if (path[j].location==ai->v_now->index) {
-      //     auto loc_next=ai->v_now->index;
-      //     for (int m=j;m<path.size();++m) {
-      //       if (path[m].location!=loc_next) {
-      //         loc_next=path[m].location;
-      //         break;
-      //       }
-      //     }
-          
-      //     if (loc_next==v->index) {
-      //       pre_d1=0;
-      //     }
-
-      //     if (loc_next==u->index) {
-      //       pre_d2=0;
-      //     }
-      //     if (pre_d1!=pre_d2) return pre_d1<pre_d2;
-      //   }
-
-
-    //     if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
-    //       if (path[j+1].orientation==o1) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
-    //         pre_d1=0;
-    //         // break;
-    //       }
-    //       if (path[j+1].orientation==o2) { // && ((o2==o0 && path[j+1].location==u->index) || (o2!=o0))) {
-    //         pre_d2=0;
-    //         // break;
-    //       }
-    //     }
-    //   // }
-    //   if (pre_d1!=pre_d2) return pre_d1<pre_d2;
-    // }
-
-
-
-
+    float d1=d1=HT->get(v->index,o1,ins->goals.locs[i]->index)+cost1;
+    int pre_d1=1;
     if (ins->precomputed_paths!=nullptr){
-      int pre_d1=1;
-      int pre_d2=1;
-      auto path=(*ins->precomputed_paths)[i];
-      // for (int j=path.size()-1;j>=0;--j){
-        int j=H->d;
-        // int next_loc=path[j].location;
-        // for (int k=j+1;k<path.size();++k) {
-        //   if (path[k].location!=next_loc) {
-        //     next_loc=path[k].location;
-        //     break;
-        //   }
-        // }
-
-        // if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
-        //   if (v->index==next_loc) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
-        //     pre_d1=0;
-        //     // break;
-        //   }
-        //   if (u->index==next_loc) { // && ((o2==o0 && path[j+1].location==u->index) || (o2!=o0))) {
-        //     pre_d2=0;
-        //     // break;
-        //   }
-        // }        
-
-
-        if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
+      auto & path=(*ins->precomputed_paths)[i];
+      int j=H->d;
+      if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
           if (path[j+1].orientation==o1) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
             pre_d1=0;
             // break;
           }
-          if (path[j+1].orientation==o2) { // && ((o2==o0 && path[j+1].location==u->index) || (o2!=o0))) {
-            pre_d2=0;
-            // break;
-          }
         }
-      // }
-      if (pre_d1!=pre_d2) return pre_d1<pre_d2;
     }
-
-    // if (ins->precomputed_paths!=nullptr){
-    //   auto path=(*ins->precomputed_paths)[i];
-    //   for (int j=path.size()-1;j>=0;--j){
-    //     // int j=H->d;
-    //     if (j<path.size()-1 && path[j].location==ai->v_now->index) {
-    //       if (path[j+1].location==v->index) {
-    //         d1=0.1;
-    //         // break;
-    //       }
-    //       if (path[j+1].location==u->index) {
-    //         d2=0.1;
-    //         // break;
-    //       }
-    //     }
-    //   }
-    // }
-
-    // cerr<<d1<<" "<<d2<<endl;
-
-    // TODO(rivers): The PIBT thing is just too sensitive to the hyper-parameters and the implementation...
-
-    if (d1!=d2) return d1<d2;
-
-    // if (MC_idx==0){
-    //   return o_dist1<o_dist2;
-    // } else {
-    //   return tie_breakers[v->id] < tie_breakers[u->id];
-    // }
-    // TODO(rivers): check this. may be bad.
-    // return tie_breakers[v->id] < tie_breakers[u->id];
-
-    // if (o_dist1!=o_dist2) 
-    return o_dist1<o_dist2;
-    // return tie_breakers[v->id] < tie_breakers[u->id];
-    // if (i%2==0){
-    //   return o1<o2;
-    // } else {
-    //   return o2<o1;
-    // }
-
-#else
-
-  float cost1=get_cost_move(ai->v_now->index,v->index);
-  float cost2=get_cost_move(ai->v_now->index,u->index);
-
-  float d1,d2;
-  d1=HT->get(v->index,ins->goals.locs[i]->index)+cost1;
-  d2=HT->get(u->index,ins->goals.locs[i]->index)+cost2;
-
-  
-  // if (i==40) {
-  //   std::cout<<v->index<<" "<<ins->goals.locs[i]->index<<" "<<d1<<endl;
-  //   std::cout<<u->index<<" "<<ins->goals.locs[i]->index<<" "<<d2<<endl;
-  // }
-
-  return d1<d2;
-
-#endif
+    scores.emplace_back(pre_d1, d1, o_dist1, v);
+  }
 
 
+  std::sort(scores.begin(),scores.end(),[&](const std::tuple<int, float, float, Vertex *> & a, const std::tuple<int, float, float, Vertex *> & b) {
+    if (std::get<0>(a)!=std::get<0>(b)) return std::get<0>(a)<std::get<0>(b);
+    if (std::get<1>(a)!=std::get<1>(b)) return std::get<1>(a)<std::get<1>(b);
+    return std::get<2>(a)<std::get<2>(b);
   });
+
+  // std::sort(scores.begin(),scores.end()); // do we need stable sort?
+
+  for (int k=0;k<=K;++k) {
+    C_next[i][k]=std::get<3>(scores[k]);
+  }
+
+  // sort
+  // std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
+  //           [&](Vertex* const v, Vertex* const u) {
+
+  //   // TODO(rivers): we should move these computation outside to speed up...
+    
+  //   // TODO(rivers): deal with arrivals: maybe just select randomly
+  //   int o0=H->C.orients[i];
+
+  //   int o1=get_neighbor_orientation(ins->G,ai->v_now->index,v->index,o0);
+  //   int o2=get_neighbor_orientation(ins->G,ai->v_now->index,u->index,o0);
+
+  //   // TODO(rivers): we should maintain the const somewhere else
+  //   // perhaps: we should wrap a class for map weights...
+  //   float cost_rot=(*map_weights)[ai->v_now->index*5+4];
+  //   int o_dist1=get_o_dist(o0,o1);
+  //   int o_dist2=get_o_dist(o0,o2);
+
+  //   float cost1=(float)o_dist1*cost_rot+get_cost_move(ai->v_now->index,v->index);
+  //   float cost2=(float)o_dist2*cost_rot+get_cost_move(ai->v_now->index,u->index);
+
+  //   // double cost_next_move_1=ai->v_now->index==v->index?cost_rot:get_cost_move(ai->v_now->index,v->index);
+  //   // double cost_next_move_2=ai->v_now->index==u->index?cost_rot:get_cost_move(ai->v_now->index,u->index);
+
+  //   // cerr<<o1<<" "<<o2<<" "<<o0<<" "<<o_dist1<<" "<<o_dist2<<endl;
+
+  //   float d1,d2;
+  //   if (use_orient_in_heuristic){
+  //     d1=HT->get(v->index,o1,ins->goals.locs[i]->index)+cost1;
+  //     d2=HT->get(u->index,o2,ins->goals.locs[i]->index)+cost2;      
+  //   } else {
+  //     d1=HT->get(v->index,ins->goals.locs[i]->index);
+  //     d2=HT->get(u->index,ins->goals.locs[i]->index);
+  //   }
+
+  //   // std::cout<<d1<<" "<<d2<<std::endl;
+
+  //   // TODO(rivers): we should still think about the following codes. 
+  //   // the former one seems to fit LNS but doesn't work with SUO
+  //   // the latter one ssems to fit SUO but doesn't work with LNS
+  //   // the latter one is problematic with wait action?
+
+
+  //   // if (ins->precomputed_paths!=nullptr){
+  //     // int pre_d1=1;
+  //     // int pre_d2=1;
+  //     // auto path=(*ins->precomputed_paths)[i];
+  //     // // for (int j=path.size()-1;j>=0;--j){
+  //     //   int j=H->d;
+  //     //   if (path[j].location==ai->v_now->index) {
+  //     //     auto loc_next=ai->v_now->index;
+  //     //     for (int m=j;m<path.size();++m) {
+  //     //       if (path[m].location!=loc_next) {
+  //     //         loc_next=path[m].location;
+  //     //         break;
+  //     //       }
+  //     //     }
+          
+  //     //     if (loc_next==v->index) {
+  //     //       pre_d1=0;
+  //     //     }
+
+  //     //     if (loc_next==u->index) {
+  //     //       pre_d2=0;
+  //     //     }
+  //     //     if (pre_d1!=pre_d2) return pre_d1<pre_d2;
+  //     //   }
+
+
+  //   //     if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
+  //   //       if (path[j+1].orientation==o1) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
+  //   //         pre_d1=0;
+  //   //         // break;
+  //   //       }
+  //   //       if (path[j+1].orientation==o2) { // && ((o2==o0 && path[j+1].location==u->index) || (o2!=o0))) {
+  //   //         pre_d2=0;
+  //   //         // break;
+  //   //       }
+  //   //     }
+  //   //   // }
+  //   //   if (pre_d1!=pre_d2) return pre_d1<pre_d2;
+  //   // }
+
+
+
+
+  //   if (ins->precomputed_paths!=nullptr){
+  //     int pre_d1=1;
+  //     int pre_d2=1;
+  //     auto path=(*ins->precomputed_paths)[i];
+  //     // for (int j=path.size()-1;j>=0;--j){
+  //       int j=H->d;
+  //       // int next_loc=path[j].location;
+  //       // for (int k=j+1;k<path.size();++k) {
+  //       //   if (path[k].location!=next_loc) {
+  //       //     next_loc=path[k].location;
+  //       //     break;
+  //       //   }
+  //       // }
+
+  //       // if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
+  //       //   if (v->index==next_loc) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
+  //       //     pre_d1=0;
+  //       //     // break;
+  //       //   }
+  //       //   if (u->index==next_loc) { // && ((o2==o0 && path[j+1].location==u->index) || (o2!=o0))) {
+  //       //     pre_d2=0;
+  //       //     // break;
+  //       //   }
+  //       // }        
+
+
+  //       if (j<path.size()-1 && path[j].location==ai->v_now->index && path[j].orientation==o0) {
+  //         if (path[j+1].orientation==o1) { // && ((o1==o0 && path[j+1].location==v->index) || (o1!=o0))) {
+  //           pre_d1=0;
+  //           // break;
+  //         }
+  //         if (path[j+1].orientation==o2) { // && ((o2==o0 && path[j+1].location==u->index) || (o2!=o0))) {
+  //           pre_d2=0;
+  //           // break;
+  //         }
+  //       }
+  //     // }
+  //     if (pre_d1!=pre_d2) return pre_d1<pre_d2;
+  //   }
+
+  //   // if (ins->precomputed_paths!=nullptr){
+  //   //   auto path=(*ins->precomputed_paths)[i];
+  //   //   for (int j=path.size()-1;j>=0;--j){
+  //   //     // int j=H->d;
+  //   //     if (j<path.size()-1 && path[j].location==ai->v_now->index) {
+  //   //       if (path[j+1].location==v->index) {
+  //   //         d1=0.1;
+  //   //         // break;
+  //   //       }
+  //   //       if (path[j+1].location==u->index) {
+  //   //         d2=0.1;
+  //   //         // break;
+  //   //       }
+  //   //     }
+  //   //   }
+  //   // }
+
+  //   // cerr<<d1<<" "<<d2<<endl;
+
+  //   // TODO(rivers): The PIBT thing is just too sensitive to the hyper-parameters and the implementation...
+
+  //   if (d1!=d2) return d1<d2;
+
+  //   // if (MC_idx==0){
+  //   //   return o_dist1<o_dist2;
+  //   // } else {
+  //   //   return tie_breakers[v->id] < tie_breakers[u->id];
+  //   // }
+  //   // TODO(rivers): check this. may be bad.
+  //   // return tie_breakers[v->id] < tie_breakers[u->id];
+
+  //   // if (o_dist1!=o_dist2) 
+  //   return o_dist1<o_dist2;
+  //   // return tie_breakers[v->id] < tie_breakers[u->id];
+  //   // if (i%2==0){
+  //   //   return o1<o2;
+  //   // } else {
+  //   //   return o2<o1;
+  //   // }
+  // });
 
   Agent* swap_agent=nullptr;
   if (use_swap) {

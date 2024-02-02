@@ -3,12 +3,12 @@ sys.path.append('build')
 sys.path.append('scripts')
 from map import Map
 
-map_path="example_problems/warehouse.domain/maps/kiva_large_w_mode.map"
-# full_weight_path="scripts/random_weight_001.w"
-with_wait_costs=True
+# map_path="example_problems/random.domain/maps/random-32-32-20.map"
+# # full_weight_path="scripts/random_weight_001.w"
+# with_wait_costs=True
 
-map=Map(map_path)
-map.print_graph(map.graph)
+# map=Map(map_path)
+# map.print_graph(map.graph)
 
 # import json
 # with open(full_weight_path) as f:
@@ -70,8 +70,22 @@ import py_driver
 print(py_driver.playground())
 
 import json
+
+n_agents=800
+algo=["pibt","lns"][0]
+
+simulation_steps={
+    100: 500,
+    200: 500,
+    400: 1000,
+    600: 1000,
+    800: 2000
+}[n_agents]
+
+map_path="example_problems/random.domain/maps/random-32-32-20.map"
+
 # py_configs contains the best configs used for random-32-32-20 map with 100,200,400,600,800 agents.
-config_path="configs/pibt_default_no_rot.json"
+config_path="py_configs/random-32-32-20_{}_{}.json".format(n_agents,algo)
 with open(config_path) as f:
     config=json.load(f)
     config_str=json.dumps(config)
@@ -81,17 +95,17 @@ with open(config_path) as f:
 # 2. vertexUsage 1-d double json array, N_v
 # 3. edgeUsage  2-d double json array, N_v*N_v
 ret=py_driver.run(
-    map_path="example_problems/warehouse.domain/maps/kiva_69x69.map",
-    simulation_steps=1000,
+    map_path=map_path,
+    simulation_steps=simulation_steps,
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
-    gen_random=True,
-    num_agents=500,
-    num_tasks=100000,
+    gen_random=False,
+    # num_agents=400,
+    # num_tasks=100000,
     seed=0,
     # else we need specify agents and tasks path to load data.
-    # agents_path="example_problems/random.domain/agents/random_600.agents",
-    # tasks_path="example_problems/random.domain/tasks/random-32-32-20-600.tasks",
+    agents_path="example_problems/random.domain/agents/random_{}.agents".format(n_agents),
+    tasks_path="example_problems/random.domain/tasks/random-32-32-20-{}.tasks".format(n_agents),
     # weights are the edge weights, wait_costs are the vertex wait costs
     # if not specified here, then the program will use the one specified in the config file.
     # weights=compressed_weights_json_str,
@@ -109,6 +123,7 @@ ret=py_driver.run(
 import json
 import numpy as np
 
+map=Map(map_path)
 analysis=json.loads(ret)
 print(analysis.keys())
 print(np.array(analysis["tile_usage"]).shape)

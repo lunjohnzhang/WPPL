@@ -48,10 +48,17 @@ void NeighborGenerator::reset() {
 void NeighborGenerator::update(Neighbor & neighbor){
     if (ALNS) // update destroy heuristics
     {
-        if (neighbor.old_sum_of_costs > neighbor.sum_of_costs )
-            destroy_weights[neighbor.selected_neighbor] =
-                    reaction_factor * (neighbor.old_sum_of_costs - neighbor.sum_of_costs) / neighbor.agents.size()
-                    + (1 - reaction_factor) * destroy_weights[neighbor.selected_neighbor];
+        if (neighbor.old_sum_of_costs > neighbor.sum_of_costs ) {
+            if (fix_ng_bug) {
+                destroy_weights[neighbor.selected_neighbor] =
+                        reaction_factor * (neighbor.old_sum_of_costs - neighbor.sum_of_costs)/neighbor.agents.size()
+                        + (1 - reaction_factor) * destroy_weights[neighbor.selected_neighbor];
+            } else {
+                destroy_weights[neighbor.selected_neighbor] =
+                        reaction_factor * std::max((neighbor.old_sum_of_costs - neighbor.sum_of_costs)/neighbor.agents.size(),1.0f)
+                        + (1 - reaction_factor) * destroy_weights[neighbor.selected_neighbor];
+            }
+        }
         else
             destroy_weights[neighbor.selected_neighbor] =
                     (1 - decay_factor) * destroy_weights[neighbor.selected_neighbor];
@@ -448,7 +455,7 @@ void NeighborGenerator::randomWalk(int agent_id, int start_timestep, set<int>& c
     int orient = path[start_timestep].orientation;
     auto & agent = agents[agent_id];
 
-    if (fix_ng_bug) {
+    // if (fix_ng_bug) {
         float partial_path_cost=agent.getEstimatedPathLength(path,agent.getGoalLocation(),HT, false, start_timestep);
         // int slack=1;
         for (int t = start_timestep; t < path.size(); ++t)
@@ -484,43 +491,39 @@ void NeighborGenerator::randomWalk(int agent_id, int start_timestep, set<int>& c
             if (successors.empty() || conflicting_agents.size() >= neighbor_size)
                 break;
         }
-    } else {
-        // float partial_path_cost=agent.getEstimatedPathLength(path,agent.getGoalLocation(),HT, false, start_timestep);
-        // int slack=1;
-        for (int t = start_timestep; t < path.size(); ++t)
-        {
-            auto successors=getSuccessors(loc,orient);
-            while (!successors.empty())
-            {
-                int step = rand() % successors.size();
-                auto iter = successors.begin();
-                advance(iter, step);
+    // } else {
+    //     // float partial_path_cost=agent.getEstimatedPathLength(path,agent.getGoalLocation(),HT, false, start_timestep);
+    //     // int slack=1;
+    //     for (int t = start_timestep; t < path.size(); ++t)
+    //     {
+    //         auto successors=getSuccessors(loc,orient);
+    //         while (!successors.empty())
+    //         {
+    //             int step = rand() % successors.size();
+    //             auto iter = successors.begin();
+    //             advance(iter, step);
 
-                int next_loc = iter->first;
-                int next_orient = iter->second;
+    //             int next_loc = iter->first;
+    //             int next_orient = iter->second;
                 
-                // float action_cost = agent.get_action_cost(loc, orient, next_loc, next_orient, HT);
-#ifndef NO_ROT
-                float next_h_val = HT->get(next_loc, next_orient, instance.goal_locations[agent_id]);
-#else
-                float next_h_val = HT->get(next_loc, instance.goal_locations[agent_id]);
-#endif
-                // if we can find a path with a smaller distance, we try to see who becomes the obstacle.
-                // TODO(rivers): this is not correct if we have weighted distance map
-                if (t + next_h_val < path.path_cost) // move to this location
-                {
-                    path_table.getConflictingAgents(agent_id, conflicting_agents, loc, next_loc, t + 1);
-                    loc = next_loc;
-                    orient = next_orient;
-                    // partial_path_cost += action_cost;
-                    break;
-                }
-                successors.erase(iter);
-            }
-            if (successors.empty() || conflicting_agents.size() >= neighbor_size)
-                break;
-        }
-    }
+    //             // float action_cost = agent.get_action_cost(loc, orient, next_loc, next_orient, HT);
+    //             float next_h_val = HT->get(next_loc, next_orient,instance.goal_locations[agent_id]);
+    //             // if we can find a path with a smaller distance, we try to see who becomes the obstacle.
+    //             // TODO(rivers): this is not correct if we have weighted distance map
+    //             if (t + next_h_val < path.path_cost) // move to this location
+    //             {
+    //                 path_table.getConflictingAgents(agent_id, conflicting_agents, loc, next_loc, t + 1);
+    //                 loc = next_loc;
+    //                 orient = next_orient;
+    //                 // partial_path_cost += action_cost;
+    //                 break;
+    //             }
+    //             successors.erase(iter);
+    //         }
+    //         if (successors.empty() || conflicting_agents.size() >= neighbor_size)
+    //             break;
+    //     }
+    // }
 }
 
 }

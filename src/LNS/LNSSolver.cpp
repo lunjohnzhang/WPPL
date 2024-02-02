@@ -122,7 +122,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
     // TODO(rivers): we need to replan for all agents that has no plan
     // later we may think of padding all agents to the same length
     if (planning_paths[0].size()<planning_window+1) {
-        std::cout<<"call lacam2: "<<planning_paths[0].size()<<std::endl;
+        // std::cout<<"call lacam2: "<<planning_paths[0].size()<<std::endl;
         // TODO(rivers): maybe we should directly build lacam2 planner in this class.
         if (read_param_json<string>(config,"initAlgo")=="LaCAM2"){
             ONLYDEV(g_timer.record_p("lacam2_plan_s");)
@@ -155,7 +155,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
             // TODO: lacam2_solver should plan with starts differnt from env.curr_states but goals the same as env.goals because they are up-to-date. 
             lacam2_solver->plan(env, &precomputed_paths, &starts, &goals);
-            cout<<"lacam succeed"<<endl;
+            // cout<<"lacam succeed"<<endl;
 
             // we need to copy the new planned paths into paths
             // std::cerr<<"lacam2 paths:"<<endl;
@@ -285,13 +285,13 @@ void LNSSolver::plan(const SharedEnvironment & env){
     ONLYDEV(g_timer.record_p("run_LNS_s");)
     // continue optimizing paths
     bool succ=lns->run(time_limiter);
-    if (succ)
-    {
-        //cout<<"lns succeed"<<endl;
-    } else {
-        //cout<<"lns failed"<<endl;
-        exit(-1);
-    }
+    // if (succ)
+    // {
+    //     cout<<"lns succeed"<<endl;
+    // } else {
+    //     cout<<"lns failed"<<endl;
+    //     exit(-1);
+    // }
 
     // we cannot do this because it would make result invalid
     // deal with a special case when the goal and the start are the same.
@@ -401,7 +401,7 @@ void LNSSolver::observe(const SharedEnvironment & env){
 
     // if run out of execution instructions, we need to copy new ones into execution_paths
     if (executed_step==execution_paths[0].size()-1){
-        std::cerr<<"need new execution paths"<<std::endl;
+        // std::cerr<<"need new execution paths"<<std::endl;
         need_new_execution_paths=true;
     } else {
         need_new_execution_paths=false;

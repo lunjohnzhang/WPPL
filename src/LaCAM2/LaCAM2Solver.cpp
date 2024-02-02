@@ -79,10 +79,10 @@ void LaCAM2Solver::disable_agents(const SharedEnvironment & env) {
             disabled_agents_ids.push_back(agents_ids[i]);
         }
 
-        nlohmann::json disabled_agents_json(disabled_agents_ids);
-        std::ofstream f("disabled_agents.json");
-        f<<disabled_agents_json;
-        f.close();
+        // nlohmann::json disabled_agents_json(disabled_agents_ids);
+        // std::ofstream f("disabled_agents.json");
+        // f<<disabled_agents_json;
+        // f.close();
     }
 
     std::cout<<"strategy: "<<strategy<<" #disabled agents: "<<disabled_agents_num<<std::endl;
@@ -108,6 +108,9 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
                 ++ctr;
             }
         }
+        if (disable_agent_goals && agent_info.disabled) {
+            goal_location=env.curr_states[i].location;
+        }
         goals.emplace_back(goal_location, -1);
         // cerr<<"0\trandom-32-32-20.map\t32\t32\t"<<starts[i]%32<<"\t"<<starts[i]/32<<"\t"<<goals[i]%32<<"\t"<<goals[i]/32<<"\t0"<<endl;
         if (goal_location!=agent_info.goal_location){
@@ -119,6 +122,7 @@ Instance LaCAM2Solver::build_instance(const SharedEnvironment & env, std::vector
             agent_info.elapsed+=1;
         }
     }
+    // std::cout<<"ctr: "<<ctr<<std::endl;
     return Instance(*G, starts, goals, *agent_infos, read_param_json<int>(config,"planning_window",-1), precomputed_paths);
 }
 
@@ -173,9 +177,6 @@ float LaCAM2Solver::get_action_cost(int pst, int ost, int ped, int oed) {
 }
 
 float LaCAM2Solver::eval_solution(const Instance & instance, const Solution & solution) {
-
-
-
     float cost=0;
     for (int aid=0;aid<instance.N;++aid) {
         // TODO(rivers): should we consider the case of arrival here?
@@ -232,7 +233,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
 
     if (need_replan) {
         const int verbose = 10;
-        const float time_limit_sec = 0.5;
+        const int time_limit_sec = 2;
         ONLYDEV(g_timer.record_p("lacam_build_instance_s");)
         auto instance = build_instance(env, precomputed_paths);
         if (starts!=nullptr) {

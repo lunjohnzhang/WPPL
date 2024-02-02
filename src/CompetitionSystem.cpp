@@ -883,6 +883,40 @@ void InfAssignSystem::update_tasks(){
     }
 }
 
+void KivaSystem::update_tasks(){
+    for (int k = 0; k < num_of_agents; k++)
+    {
+        while (assigned_tasks[k].size() < num_tasks_reveal) 
+        {
+            int prev_task_loc=prev_task_locs[k];
+
+            int loc;
+            if (map.grid_types[prev_task_loc]=='.' || map.grid_types[prev_task_loc]=='e') 
+            {
+                // next task would be w
+                int idx=MT()%map.agent_home_locations.size();
+                loc=map.agent_home_locations[idx];
+            } else if (map.grid_types[prev_task_loc]=='w')
+            {
+                // next task would e
+                int idx=MT()%map.end_points.size();
+                loc=map.end_points[idx];
+            } else {
+                std::cout<<"unkonw grid type"<<std::endl;
+                exit(-1);
+            }
+            
+            Task task(task_id,loc,timestep,k);
+            assigned_tasks[k].push_back(task);
+            events[k].push_back(make_tuple(task.task_id,timestep,"assigned"));
+            log_event_assigned(k, task.task_id, timestep);
+            all_tasks.push_back(task);
+            prev_task_locs[k]=loc;
+            task_id++;
+        }
+    }
+}
+
 void InfAssignSystem::resume_from_file(string snapshot_fp, int w){
     std::ifstream fin(snapshot_fp);
     int n;

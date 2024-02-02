@@ -1,6 +1,6 @@
 {
-    "lifelong_solver_name": "LaCAM2",
-    "map_weights_path": "scripts/random_weight_040.w",
+    "lifelong_solver_name": "LNS",
+    "map_weights_path": "scripts/random_800_uncompressed_weights_with_wait_5000_steps.w",
     "max_execution_steps": 100000,
     "max_task_completed": 100000,
     "max_agents_in_use": -1,
@@ -41,14 +41,14 @@
             },
             "order_strategy": "early_time",
             "disable_agent_strategy": "tabu_locs",
-            "disable_agent_goals": false,
+            "disable_agent_goals": true,
             "tabu_locs_fp": "scripts/random_600_tabu_locs.txt"
         }
     },
     "LaCAM2": {
         "seed": 0,
-        "planning_window": 1,
-        "execution_window": 1,
+        "planning_window": 3,
+        "execution_window": 3,
         "use_external_executor": true,
         "consider_rotation": true,
         "use_orient_in_heuristic": true,

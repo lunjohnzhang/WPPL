@@ -40,7 +40,7 @@ GlobalManager::GlobalManager(
         agents.emplace_back(i,instance,HT,agent_infos);
     }
 
-    cout<<"num_threads:"<<num_threads<<endl;
+    // cout<<"num_threads:"<<num_threads<<endl;
     // exit(-1);
 
     for (auto i=0;i<num_threads;++i) {
@@ -286,7 +286,7 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
 
     g_timer.record_p("lns_opt_s");
 
-    std::cout<<"num_threads: "<<num_threads<<" "<<neighbor_generators.size()<<std::endl;
+    // std::cout<<"num_threads: "<<num_threads<<" "<<neighbor_generators.size()<<std::endl;
 
 
     // #pragma omp parallel for
@@ -393,13 +393,13 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
     if (average_group_size > 0)
         average_group_size /= (double)(iteration_stats.size() - 1);
 
-    elapse=time_limiter.get_elapse();
-    cout << getSolverName() << ": "
-        << "runtime = " << elapse << ", "
-        << "iterations = " << iteration_stats.size()-1 << ", "
-        << "solution cost = " << sum_of_costs << ", "
-        << "initial solution cost = " << initial_sum_of_costs << ", "
-        << "failed iterations = " << num_of_failures << endl;
+    // elapse=time_limiter.get_elapse();
+    // cout << getSolverName() << ": "
+    //     << "runtime = " << elapse << ", "
+    //     << "iterations = " << iteration_stats.size()-1 << ", "
+    //     << "solution cost = " << sum_of_costs << ", "
+    //     << "initial solution cost = " << initial_sum_of_costs << ", "
+    //     << "failed iterations = " << num_of_failures << endl;
 
     return true;
 }

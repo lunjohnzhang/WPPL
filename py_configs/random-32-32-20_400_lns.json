@@ -1,10 +1,10 @@
 {
-    "lifelong_solver_name": "LaCAM2",
-    "map_weights_path": "",
+    "lifelong_solver_name": "LNS",
+    "map_weights_path": "scripts/random_weight_040.w",
     "max_execution_steps": 100000,
     "max_task_completed": 100000,
     "max_agents_in_use": -1,
-    "disable_corner_target_agents": true,
+    "disable_corner_target_agents": false,
     "LNS": {
         "seed": 0,
         "cutoffTime": 0.95,

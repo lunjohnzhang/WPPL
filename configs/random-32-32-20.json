@@ -2,7 +2,7 @@
     "lifelong_solver_name": [
         {
             "n_agents": 600,
-            "value": "LaCAM2"
+            "value": "LNS"
         },
         {
             "n_agents": 1000000,
@@ -71,7 +71,7 @@
     ],
     "disable_corner_target_agents": [
         {
-            "n_agents": 200,
+            "n_agents": 400,
             "value": false
         },
         {
@@ -139,8 +139,8 @@
     },
     "LaCAM2": {
         "seed": 0,
-        "planning_window": 3,
-        "execution_window": 3,
+        "planning_window": 1,
+        "execution_window": 1,
         "use_external_executor": true,
         "consider_rotation": true,
         "use_orient_in_heuristic": true,
