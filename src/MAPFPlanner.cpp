@@ -34,6 +34,11 @@ struct cmp {
 void MAPFPlanner::load_configs() {
     // load configs
 	string config_path="configs/"+env->map_name.substr(0,env->map_name.find_last_of("."))+".json";
+    char * _config_path=getenv("CONFIG_PATH");
+    if (_config_path!=NULL) {
+        config_path=std::string(_config_path);
+        std::cout<<"load config from "<<config_path<<std::endl;
+    }
     std::ifstream f(config_path);
     try
     {
