@@ -2,6 +2,7 @@
 #include "util/Timer.h"
 #include "omp.h"
 #include "util/TimeLimiter.h"
+#include <cstdlib>
 
 namespace LNS {
 
@@ -25,7 +26,16 @@ GlobalManager::GlobalManager(
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
     screen(screen), agent_infos(agent_infos), has_disabled_agents(has_disabled_agents) {
 
-    num_threads=omp_get_max_threads();
+    char * num_threads_env = std::getenv("LNS_NUM_THREADS");
+    if (num_threads_env!=nullptr) {
+        num_threads=std::atoi(num_threads_env);
+    } else {
+        num_threads=omp_get_max_threads();
+    }
+
+    omp_set_num_threads(num_threads);
+
+    cout<<"LNS use "<<num_threads<<" threads"<<endl;
 
     // for (auto w: *map_weights){
     //     if (w!=1){
