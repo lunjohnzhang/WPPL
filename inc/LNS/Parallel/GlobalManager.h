@@ -20,7 +20,6 @@ public:
 
     float initial_sum_of_costs=MAX_COST;
     float sum_of_costs=MAX_COST;
-    int num_of_failures=0;
     double average_group_size=0;
     float sum_of_distances = 0;
     int window_size_for_CT;
@@ -33,6 +32,7 @@ public:
     PathTable path_table;
     std::vector<Agent> agents;
     std::shared_ptr<HeuristicTable> HT;
+    std::shared_ptr<HeuristicTable> HT_timestep;
     std::shared_ptr<vector<float> > map_weights;
     int screen;
     int num_threads;
@@ -46,9 +46,21 @@ public:
 
     bool async=false;
 
+    float initial_total_timesteps=0;
+    float total_timesteps=0;
+
+    // statistics
+    int num_iterations=0;
+    int num_of_failures=0;
+    float success_rate=0;
+    float reduced_cost=0;
+    float relative_reduced_cost=0;
+    float reduced_timesteps=0;
+    float relative_reduced_timesteps=0;
+
     GlobalManager(
         bool async,
-        Instance & instance, std::shared_ptr<HeuristicTable> HT, 
+        Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<HeuristicTable> HT_timestep,
         std::shared_ptr<vector<float> > map_weights, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
         int neighbor_size, destroy_heuristic destroy_strategy,
         bool ALNS, double decay_factor, double reaction_factor,

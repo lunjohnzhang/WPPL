@@ -4,11 +4,13 @@
 #include "util/Analyzer.h"
 #include "LNS/Parallel/GlobalManager.h"
 #include "LNS/Parallel/DataStructure.h"
+#include "util/Analyzer.h"
 
 namespace LNS {
 
 LNSSolver::LNSSolver(
     const std::shared_ptr<HeuristicTable> & HT,
+    const std::shared_ptr<HeuristicTable> & HT_timestep,
     SharedEnvironment * env,
     std::shared_ptr<std::vector<float> > & map_weights,
     nlohmann::json & config,
@@ -16,6 +18,7 @@ LNSSolver::LNSSolver(
     int max_task_completed
 ):
     HT(HT),
+    HT_timestep(HT_timestep),
     map_weights(map_weights),
     action_model(env),
     executor(env),
@@ -126,6 +129,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
         // TODO(rivers): maybe we should directly build lacam2 planner in this class.
         if (read_param_json<string>(config,"initAlgo")=="LaCAM2"){
             ONLYDEV(g_timer.record_p("lacam2_plan_s");)
+            g_timer.record_p("pibt_time_s");
             // use lacam2 to get a initial solution
             // TODO(rivers): the following line may need to be optimized. There is no need to rebuild the graph G again.
             lacam2_solver->clear(env);
@@ -180,6 +184,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
             }
             ONLYDEV(std::cerr<<"num_inconsistent/total: "<<num_inconsistent<<"/"<<env.num_of_agents<<"="<<num_inconsistent/(float)env.num_of_agents<<std::endl;)
             ONLYDEV(g_timer.record_d("lacam2_plan_s","lacam2_plan_e","lacam2_plan");)
+            g_timer.record_d("pibt_time_s","pibt_time_e","pibt_time");
         }
 
         // ONLYDEV(analyzer.snapshot(
@@ -199,6 +204,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
             true,
             *instance,
             HT,
+            HT_timestep,
             map_weights,
             agent_infos,
             read_param_json<int>(config,"neighborSize"),
@@ -285,6 +291,17 @@ void LNSSolver::plan(const SharedEnvironment & env){
     ONLYDEV(g_timer.record_p("run_LNS_s");)
     // continue optimizing paths
     bool succ=lns->run(time_limiter);
+
+    global_vars.lns_num_iterations.push_back(lns->num_iterations);
+    global_vars.lns_num_of_failures.push_back(lns->num_of_failures);
+    global_vars.lns_success_rate.push_back(lns->success_rate);
+    global_vars.lns_reduced_cost.push_back(lns->reduced_cost);
+    global_vars.lns_relative_reduced_cost.push_back(lns->relative_reduced_cost);
+    global_vars.lns_reduced_timesteps.push_back(lns->reduced_timesteps);
+    global_vars.lns_relative_reduced_timesteps.push_back(lns->relative_reduced_timesteps);
+
+    global_vars.lns_pibt_time.push_back(g_timer.get_d("pibt_time", 2));
+
     // if (succ)
     // {
     //     cout<<"lns succeed"<<endl;

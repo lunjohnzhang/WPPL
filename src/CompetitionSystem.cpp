@@ -4,6 +4,7 @@
 #include "nlohmann/json.hpp"
 #include <functional>
 #include <Logger.h>
+#include "util/Analyzer.h"
 
 using json = nlohmann::ordered_json;
 
@@ -526,6 +527,15 @@ void BaseSystem::saveResults(const string &fileName, int screen) const
         }
         js["tasks"] = tasks;
     }
+
+    js["lns_num_iterations"]=global_vars.lns_num_iterations;
+    js["lns_num_of_failures"]=global_vars.lns_num_of_failures;
+    js["lns_success_rate"]=global_vars.lns_success_rate;
+    js["lns_reduced_cost"]=global_vars.lns_reduced_cost;
+    js["lns_relative_reduced_cost"]=global_vars.lns_relative_reduced_cost;
+    js["lns_reduced_timesteps"]=global_vars.lns_reduced_timesteps;
+    js["lns_relative_reduced_timesteps"]=global_vars.lns_relative_reduced_timesteps;
+    js["lns_pibt_time"]=global_vars.lns_pibt_time;
 
     std::ofstream f(fileName,std::ios_base::trunc |std::ios_base::out);
     f << std::setw(4) << js;

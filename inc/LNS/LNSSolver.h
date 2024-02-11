@@ -39,6 +39,8 @@ public:
     std::shared_ptr<HeuristicTable> HT; // instance
     std::shared_ptr<std::vector<float> > map_weights; // map weights
 
+    std::shared_ptr<HeuristicTable> HT_timestep;
+
     std::shared_ptr<vector<LaCAM2::AgentInfo> > agent_infos;
 
     LaCAM2::Executor executor;
@@ -65,6 +67,7 @@ public:
 
     LNSSolver(
         const std::shared_ptr<HeuristicTable> & HT,
+        const std::shared_ptr<HeuristicTable> & HT_timestep,
         SharedEnvironment * env,
         std::shared_ptr<std::vector<float> > & map_weights, // map weights
         nlohmann::json & config,

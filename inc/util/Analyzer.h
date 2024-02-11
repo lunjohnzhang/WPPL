@@ -130,3 +130,18 @@ public:
 };
 
 extern Analyzer analyzer;
+
+struct GlobalVars {
+
+    std::vector<float> lns_num_iterations;
+    std::vector<float> lns_num_of_failures;
+    std::vector<float> lns_success_rate;
+    std::vector<float> lns_reduced_cost;
+    std::vector<float> lns_relative_reduced_cost;
+    std::vector<float> lns_reduced_timesteps;
+    std::vector<float> lns_relative_reduced_timesteps;
+    std::vector<float> lns_pibt_time;
+
+};
+
+extern GlobalVars global_vars;

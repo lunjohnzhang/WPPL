@@ -266,9 +266,13 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
             std::cerr<<"In LNS, must not consider rotation when compiled with NO_ROT unset"<<std::endl;
             exit(-1);
         }
-        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,true);
+        auto heuristics = std::make_shared<HeuristicTable>(env,map_weights,true);
         heuristics->preprocess(suffix);
-        //heuristics->preprocess();
+
+        auto map_weights_timestep = std::make_shared<std::vector<float> >(map_weights->size(),1);
+        auto heuristics_timestep = std::make_shared<HeuristicTable>(env,map_weights,true);
+        heuristics_timestep->preprocess("timestep");
+
         int max_agents_in_use=read_param_json<int>(config,"max_agents_in_use",-1);
         if (max_agents_in_use==-1) {
             max_agents_in_use=env->num_of_agents;
@@ -277,7 +281,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         int max_task_completed=read_param_json<int>(config,"max_task_completed",1000000);
         auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,disable_corner_target_agents,max_task_completed,config["LNS"]["LaCAM2"]);
         lacam2_solver->initialize(*env);
-        lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver,max_task_completed);
+        lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,heuristics_timestep,env,map_weights,config["LNS"],lacam2_solver,max_task_completed);
         lns_solver->initialize(*env);
         cout<<"LNSSolver initialized"<<endl;
     } else if (lifelong_solver_name=="DUMMY") {

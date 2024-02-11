@@ -10,7 +10,7 @@ namespace Parallel {
 
 GlobalManager::GlobalManager(
     bool async,
-    Instance & instance, std::shared_ptr<HeuristicTable> HT, 
+    Instance & instance, std::shared_ptr<HeuristicTable> HT, std::shared_ptr<HeuristicTable> HT_timestep,
     std::shared_ptr<vector<float> > map_weights, std::shared_ptr<std::vector<LaCAM2::AgentInfo> > agent_infos,
     int neighbor_size, destroy_heuristic destroy_strategy,
     bool ALNS, double decay_factor, double reaction_factor,
@@ -21,7 +21,7 @@ GlobalManager::GlobalManager(
     int screen
 ): 
     async(async),
-    instance(instance), path_table(instance.map_size,window_size_for_PATH), HT(HT), map_weights(map_weights),
+    instance(instance), path_table(instance.map_size,window_size_for_PATH), HT(HT), HT_timestep(HT_timestep), map_weights(map_weights),
     init_algo_name(init_algo_name), replan_algo_name(replan_algo_name),
     window_size_for_CT(window_size_for_CT), window_size_for_CAT(window_size_for_CAT), window_size_for_PATH(window_size_for_PATH),
     screen(screen), agent_infos(agent_infos), has_disabled_agents(has_disabled_agents) {
@@ -411,6 +411,21 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
     //     << "initial solution cost = " << initial_sum_of_costs << ", "
     //     << "failed iterations = " << num_of_failures << endl;
 
+    // statistics to return
+    total_timesteps=0;
+    for (auto agent: agents) {
+        total_timesteps+=agent.getEstimatedPathLength(agent.path,agent.getGoalLocation(),HT_timestep,true);
+    }
+
+    // num_of_failures
+    num_iterations = iteration_stats.size()-1;
+    success_rate = (num_iterations-num_of_failures)/(float)(num_iterations);
+    reduced_cost = (initial_sum_of_costs-sum_of_costs)/agents.size();
+    relative_reduced_cost = reduced_cost/initial_sum_of_costs;
+
+    reduced_timesteps = (total_timesteps-initial_total_timesteps)/agents.size();
+    relative_reduced_timesteps = reduced_timesteps/initial_total_timesteps;
+
     return true;
 }
 
@@ -421,6 +436,9 @@ bool GlobalManager::_run(TimeLimiter & time_limiter) {
     sum_of_costs=0;
     num_of_failures=0;
     average_group_size=0;
+    total_timesteps=0;
+    initial_total_timesteps=0;
+
     iteration_stats.clear();
 
     double elapse=0;
@@ -599,6 +617,11 @@ void GlobalManager::getInitialSolution(Neighbor & neighbor) {
     neighbor.succ=true;
 
     initial_sum_of_costs = neighbor.sum_of_costs;
+
+    initial_total_timesteps=0;
+    for (auto agent: agents) {
+        initial_total_timesteps+=agent.getEstimatedPathLength(agent.path,agent.getGoalLocation(),HT_timestep,true);
+    }
 }
 
 }

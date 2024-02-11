@@ -38,3 +38,5 @@ void Analyzer::snapshot(
 }
 
 Analyzer analyzer;
+
+GlobalVars global_vars;
