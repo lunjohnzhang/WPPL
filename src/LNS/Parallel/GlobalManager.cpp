@@ -404,12 +404,12 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
         average_group_size /= (double)(iteration_stats.size() - 1);
 
     elapse=time_limiter.get_elapse();
-    // cout << getSolverName() << ": "
-    //     << "runtime = " << elapse << ", "
-    //     << "iterations = " << iteration_stats.size()-1 << ", "
-    //     << "solution cost = " << sum_of_costs << ", "
-    //     << "initial solution cost = " << initial_sum_of_costs << ", "
-    //     << "failed iterations = " << num_of_failures << endl;
+    cout << getSolverName() << ": "
+        << "runtime = " << elapse << ", "
+        << "iterations = " << iteration_stats.size()-1 << ", "
+        << "solution cost = " << sum_of_costs << ", "
+        << "initial solution cost = " << initial_sum_of_costs << ", "
+        << "failed iterations = " << num_of_failures << endl;
 
     // statistics to return
     total_timesteps=0;
