@@ -72,7 +72,7 @@ print(py_driver.playground())
 import json
 
 n_agents=800
-algo=["pibt","lns"][0]
+algo=["pibt","lns"][1]
 
 simulation_steps={
     100: 500,
@@ -82,12 +82,29 @@ simulation_steps={
     800: 2000
 }[n_agents]
 
+lns_max_iterations={
+    100: 3777,
+    200: 3446,
+    400: 2136,
+    600: 1978,
+    800: 2414
+}[n_agents]
+
+import os
+# comment to disable lns max iterations
+os.environ["LNS_MAX_ITERATIONS"]=str(lns_max_iterations)
+lns_cutoff_time=1.0
+
+if "LNS_MAX_ITERATIONS" in os.environ:
+    lns_cutoff_time=180.0
+
 map_path="example_problems/random.domain/maps/random-32-32-20.map"
 
 # py_configs contains the best configs used for random-32-32-20 map with 100,200,400,600,800 agents.
 config_path="py_configs/random-32-32-20_{}_{}.json".format(n_agents,algo)
 with open(config_path) as f:
     config=json.load(f)
+    config["LNS"]["cutoffTime"]=lns_cutoff_time
     config_str=json.dumps(config)
 
 # the return values now include:
@@ -113,7 +130,7 @@ ret=py_driver.run(
     # if we don't load config here, the program will load the default config file.
     config=config_str,    
     # the following are some things we don't need to change in the weight optimization case.
-    plan_time_limit=1, # in seconds, time limit for planning at each step, no need to change
+    plan_time_limit=180, # in seconds, time limit for planning at each step, no need to change
     preprocess_time_limit=1800, # in seconds, time limit for preprocessing, no need to change
     file_storage_path="large_files/", # where to store the precomputed large files, no need to change
     task_assignment_strategy="roundrobin", # how to assign tasks to agents, no need to change

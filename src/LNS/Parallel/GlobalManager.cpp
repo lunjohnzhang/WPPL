@@ -240,6 +240,12 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
 
     double elapse=0;
 
+    char * lns_max_iterations_str=std::getenv("LNS_MAX_ITERATIONS");
+    int lns_max_iterations=-1;
+    if (lns_max_iterations_str!=nullptr) {
+        lns_max_iterations=std::atoi(lns_max_iterations_str);
+    }
+
     g_timer.record_p("lns_init_sol_s");
     sum_of_distances = 0;
     for (const auto & agent : agents)
@@ -295,6 +301,8 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
         int ctr=0;
 
         while (true) {
+            if (iteration_stats.size()>lns_max_iterations) break;
+
             // if (ctr==1) {
             //     break;
             // }
@@ -394,12 +402,12 @@ bool GlobalManager::_run_async(TimeLimiter & time_limiter) {
         average_group_size /= (double)(iteration_stats.size() - 1);
 
     // elapse=time_limiter.get_elapse();
-    // cout << getSolverName() << ": "
-    //     << "runtime = " << elapse << ", "
-    //     << "iterations = " << iteration_stats.size()-1 << ", "
-    //     << "solution cost = " << sum_of_costs << ", "
-    //     << "initial solution cost = " << initial_sum_of_costs << ", "
-    //     << "failed iterations = " << num_of_failures << endl;
+    cout << getSolverName() << ": "
+        << "runtime = " << elapse << ", "
+        << "iterations = " << iteration_stats.size()-1 << ", "
+        << "solution cost = " << sum_of_costs << ", "
+        << "initial solution cost = " << initial_sum_of_costs << ", "
+        << "failed iterations = " << num_of_failures << endl;
 
     return true;
 }
