@@ -14,49 +14,49 @@ mkdir -p offline_eval/0211
 
 ARGS="--planTimeLimit 10 --fileStoragePath large_files/"
 
-CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_100.json $ARGS -o offline_eval/0211/test_1t_045s_random_100.json --simulationTime 500
-CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_200.json $ARGS -o offline_eval/0211/test_1t_045s_random_200.json --simulationTime 500 
-CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_400.json $ARGS -o offline_eval/0211/test_1t_045s_random_400.json --simulationTime 1000 
-CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS -o offline_eval/0211/test_1t_045s_random_600.json --simulationTime 1000 
-CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_800.json $ARGS -o offline_eval/0211/test_1t_045s_random_800.json --simulationTime 2000 
-CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_1000.json $ARGS -o offline_eval/0211/test_1t_045s_paris_1000.json --simulationTime 2000 
-CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_3000.json $ARGS -o offline_eval/0211/test_1t_045s_paris_3000.json --simulationTime 4000 
-CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/game.domain/brc202d_4000.json $ARGS  -o offline_eval/0211/test_1t_045s_brc202d.json --simulationTime 5000 
-CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_8000.json $ARGS -o offline_eval/0211/test_1t_045s_warehouse.json --simulationTime 5000 
-CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_10000.json $ARGS -o offline_eval/0211/test_1t_045s_sortation.json --simulationTime 5000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_100.json $ARGS -o offline_eval/0211/test_1t_045s_random_100.json --simulationTime 500
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_200.json $ARGS -o offline_eval/0211/test_1t_045s_random_200.json --simulationTime 500 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_400.json $ARGS -o offline_eval/0211/test_1t_045s_random_400.json --simulationTime 1000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS -o offline_eval/0211/test_1t_045s_random_600.json --simulationTime 1000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_800.json $ARGS -o offline_eval/0211/test_1t_045s_random_800.json --simulationTime 2000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_1000.json $ARGS -o offline_eval/0211/test_1t_045s_paris_1000.json --simulationTime 2000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_3000.json $ARGS -o offline_eval/0211/test_1t_045s_paris_3000.json --simulationTime 4000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/game.domain/brc202d_4000.json $ARGS  -o offline_eval/0211/test_1t_045s_brc202d.json --simulationTime 5000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_8000.json $ARGS -o offline_eval/0211/test_1t_045s_warehouse.json --simulationTime 5000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_045s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_10000.json $ARGS -o offline_eval/0211/test_1t_045s_sortation.json --simulationTime 5000 
 
-CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_100.json $ARGS -o offline_eval/0211/test_1t_095s_random_100.json --simulationTime 500
-CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_200.json $ARGS -o offline_eval/0211/test_1t_095s_random_200.json --simulationTime 500 
-CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_400.json $ARGS -o offline_eval/0211/test_1t_095s_random_400.json --simulationTime 1000 
-CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS -o offline_eval/0211/test_1t_095s_random_600.json --simulationTime 1000 
-CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_800.json $ARGS -o offline_eval/0211/test_1t_095s_random_800.json --simulationTime 2000 
-CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_1000.json $ARGS -o offline_eval/0211/test_1t_095s_paris_1000.json --simulationTime 2000 
-CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_3000.json $ARGS -o offline_eval/0211/test_1t_095s_paris_3000.json --simulationTime 4000 
-CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/game.domain/brc202d_4000.json $ARGS  -o offline_eval/0211/test_1t_095s_brc202d.json --simulationTime 5000 
-CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_8000.json $ARGS -o offline_eval/0211/test_1t_095s_warehouse.json --simulationTime 5000 
-CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_10000.json $ARGS -o offline_eval/0211/test_1t_095s_sortation.json --simulationTime 5000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_100.json $ARGS -o offline_eval/0211/test_1t_095s_random_100.json --simulationTime 500
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_200.json $ARGS -o offline_eval/0211/test_1t_095s_random_200.json --simulationTime 500 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_400.json $ARGS -o offline_eval/0211/test_1t_095s_random_400.json --simulationTime 1000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS -o offline_eval/0211/test_1t_095s_random_600.json --simulationTime 1000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_800.json $ARGS -o offline_eval/0211/test_1t_095s_random_800.json --simulationTime 2000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_1000.json $ARGS -o offline_eval/0211/test_1t_095s_paris_1000.json --simulationTime 2000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_3000.json $ARGS -o offline_eval/0211/test_1t_095s_paris_3000.json --simulationTime 4000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/game.domain/brc202d_4000.json $ARGS  -o offline_eval/0211/test_1t_095s_brc202d.json --simulationTime 5000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_8000.json $ARGS -o offline_eval/0211/test_1t_095s_warehouse.json --simulationTime 5000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_095s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_10000.json $ARGS -o offline_eval/0211/test_1t_095s_sortation.json --simulationTime 5000 
 
-CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_100.json $ARGS -o offline_eval/0211/test_1t_145s_random_100.json --simulationTime 500
-CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_200.json $ARGS -o offline_eval/0211/test_1t_145s_random_200.json --simulationTime 500 
-CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_400.json $ARGS -o offline_eval/0211/test_1t_145s_random_400.json --simulationTime 1000 
-CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS -o offline_eval/0211/test_1t_145s_random_600.json --simulationTime 1000 
-CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_800.json $ARGS -o offline_eval/0211/test_1t_145s_random_800.json --simulationTime 2000 
-CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_1000.json $ARGS -o offline_eval/0211/test_1t_145s_paris_1000.json --simulationTime 2000 
-CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_3000.json $ARGS -o offline_eval/0211/test_1t_145s_paris_3000.json --simulationTime 4000 
-CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/game.domain/brc202d_4000.json $ARGS  -o offline_eval/0211/test_1t_145s_brc202d.json --simulationTime 5000 
-CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_8000.json $ARGS -o offline_eval/0211/test_1t_145s_warehouse.json --simulationTime 5000 
-CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_10000.json $ARGS -o offline_eval/0211/test_1t_145s_sortation.json --simulationTime 5000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_100.json $ARGS -o offline_eval/0211/test_1t_145s_random_100.json --simulationTime 500
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_200.json $ARGS -o offline_eval/0211/test_1t_145s_random_200.json --simulationTime 500 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_400.json $ARGS -o offline_eval/0211/test_1t_145s_random_400.json --simulationTime 1000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS -o offline_eval/0211/test_1t_145s_random_600.json --simulationTime 1000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_800.json $ARGS -o offline_eval/0211/test_1t_145s_random_800.json --simulationTime 2000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_1000.json $ARGS -o offline_eval/0211/test_1t_145s_paris_1000.json --simulationTime 2000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_3000.json $ARGS -o offline_eval/0211/test_1t_145s_paris_3000.json --simulationTime 4000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/game.domain/brc202d_4000.json $ARGS  -o offline_eval/0211/test_1t_145s_brc202d.json --simulationTime 5000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_8000.json $ARGS -o offline_eval/0211/test_1t_145s_warehouse.json --simulationTime 5000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_145s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_10000.json $ARGS -o offline_eval/0211/test_1t_145s_sortation.json --simulationTime 5000 
 
-CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_100.json $ARGS -o offline_eval/0211/test_1t_195s_random_100.json --simulationTime 500
-CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_200.json $ARGS -o offline_eval/0211/test_1t_195s_random_200.json --simulationTime 500 
-CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_400.json $ARGS -o offline_eval/0211/test_1t_195s_random_400.json --simulationTime 1000 
-CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS -o offline_eval/0211/test_1t_195s_random_600.json --simulationTime 1000 
-CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_800.json $ARGS -o offline_eval/0211/test_1t_195s_random_800.json --simulationTime 2000 
-CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_1000.json $ARGS -o offline_eval/0211/test_1t_195s_paris_1000.json --simulationTime 2000 
-CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_3000.json $ARGS -o offline_eval/0211/test_1t_195s_paris_3000.json --simulationTime 4000 
-CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/game.domain/brc202d_4000.json $ARGS  -o offline_eval/0211/test_1t_195s_brc202d.json --simulationTime 5000 
-CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_8000.json $ARGS -o offline_eval/0211/test_1t_195s_warehouse.json --simulationTime 5000 
-CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_10000.json $ARGS -o offline_eval/0211/test_1t_195s_sortation.json --simulationTime 5000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_100.json $ARGS -o offline_eval/0211/test_1t_195s_random_100.json --simulationTime 500
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_200.json $ARGS -o offline_eval/0211/test_1t_195s_random_200.json --simulationTime 500 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_400.json $ARGS -o offline_eval/0211/test_1t_195s_random_400.json --simulationTime 1000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_600.json $ARGS -o offline_eval/0211/test_1t_195s_random_600.json --simulationTime 1000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/random.domain/random_800.json $ARGS -o offline_eval/0211/test_1t_195s_random_800.json --simulationTime 2000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_1000.json $ARGS -o offline_eval/0211/test_1t_195s_paris_1000.json --simulationTime 2000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/city.domain/paris_3000.json $ARGS -o offline_eval/0211/test_1t_195s_paris_3000.json --simulationTime 4000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/game.domain/brc202d_4000.json $ARGS  -o offline_eval/0211/test_1t_195s_brc202d.json --simulationTime 5000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/warehouse_large_8000.json $ARGS -o offline_eval/0211/test_1t_195s_warehouse.json --simulationTime 5000 
+LNS_NUM_THREADS=1 CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_10000.json $ARGS -o offline_eval/0211/test_1t_195s_sortation.json --simulationTime 5000 
 
 
 # # random:random
@@ -103,7 +103,7 @@ CONFIG_PATH="configs/exp_1t_195s/random-32-32-20.json" ./build/lifelong --inputF
 # # ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_3000.json $ARGS
 # # ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_5000.json $ARGS
 # # ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_8000.json $ARGS
-# ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_10000.json $ARGS -o offline_eval/1124/test_sortation.json --simulationTime 5000 
+# ./build/lifelong --inputFile example_problems/warehouse.domain/sortation_large_10000.json $ARGS -o test_sortation.json --simulationTime 5000 
 
 # # game:brc202_d
 # # ./build/lifelong --inputFile example_problems/game.domain/brc202d_200.json $ARGS
