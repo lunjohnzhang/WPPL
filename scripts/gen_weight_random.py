@@ -7,10 +7,10 @@ def gen_weights_paris_001():
 
     c=1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -56,10 +56,10 @@ def gen_weights_paris_002():
 
     c=1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -106,10 +106,10 @@ def gen_weights_paris_010():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -155,10 +155,10 @@ def gen_weights_paris_011():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -213,10 +213,10 @@ def gen_weights_paris_012():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -266,10 +266,10 @@ def gen_weights_paris_013():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -338,10 +338,10 @@ def gen_weights_paris_020():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -392,10 +392,10 @@ def gen_weights_paris_022():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -455,10 +455,10 @@ def gen_weights_paris_030():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -514,10 +514,10 @@ def gen_weights_paris_031():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -588,10 +588,10 @@ def gen_weights_paris_032():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -662,10 +662,10 @@ def gen_weights_paris_033():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -752,10 +752,10 @@ def gen_weights_paris_034():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -862,10 +862,10 @@ def gen_weights_paris_035():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -951,10 +951,10 @@ def gen_weights_paris_036():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -1048,10 +1048,10 @@ def gen_weights_paris_037():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -1153,10 +1153,10 @@ def gen_weights_paris_040():
 
     c=-1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####

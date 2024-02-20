@@ -161,7 +161,7 @@ bool BasicGraph::load_heuristics_table(std::ifstream& myfile)
         for (int j = 0; j < this->size(); j++)
         {
             h_table[j] = atof((*beg).c_str());
-            // jh: why this line? I'll remove it.
+            //  why this line? I'll remove it.
             // if (h_table[j] >= INT_MAX && types[j] != "Obstacle")
             //     types[j] = "Obstacle";
             beg++;

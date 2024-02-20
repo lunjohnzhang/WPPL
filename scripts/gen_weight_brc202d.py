@@ -11,10 +11,10 @@ def gen_weights_brc202d_001():
 
     c=0
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -63,10 +63,10 @@ def gen_weights_brc202d_002():
 
     c=1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -137,10 +137,10 @@ def gen_weights_brc202d_003():
 
     c=1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####

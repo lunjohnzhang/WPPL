@@ -61,7 +61,7 @@ void PathTable::deletePath(int agent_id, const Path& _path,bool verbose)
     }
     goals[path.back().location] = MAX_TIMESTEP;
 
-    // TODO(rivers): when we use window size, we ignore this for now, maybe we can use a better data structure such as ordered_set/heap to maintain the makespan. 
+    // : when we use window size, we ignore this for now, maybe we can use a better data structure such as ordered_set/heap to maintain the makespan. 
     // if (makespan == (int) path.size() - 1) // re-compute makespan
     // {
     //     makespan = 0;
@@ -108,7 +108,7 @@ void PathTable::insertPath(int agent_id, const Parallel::Path& _path, bool verbo
     }
     // cerr<<endl;
 
-    // TODO(rivers): check whether we need maintain goals and makespan in the life-long setting
+    // : check whether we need maintain goals and makespan in the life-long setting
     // assert(goals[path.back().location] == MAX_TIMESTEP);
     // goals[path.back().location] = T-1;
     // makespan = max(makespan, T-1);
@@ -139,10 +139,10 @@ void PathTable::deletePath(int agent_id, const Parallel::Path& _path,bool verbos
         assert(table[path[t].location].size() > t && table[path[t].location][t] == agent_id);
         table[path[t].location][t] = NO_AGENT;
     }
-    // TODO(rivers): check whether we need maintain goals and makespan  in the life-long setting
+    // : check whether we need maintain goals and makespan  in the life-long setting
     // goals[path.back().location] = MAX_TIMESTEP;
 
-    // TODO(rivers): when we use window size, we ignore this for now, maybe we can use a better data structure such as ordered_set/heap to maintain the makespan. 
+    // : when we use window size, we ignore this for now, maybe we can use a better data structure such as ordered_set/heap to maintain the makespan. 
     // if (makespan == (int) path.size() - 1) // re-compute makespan
     // {
     //     makespan = 0;
@@ -209,7 +209,7 @@ bool PathTable::constrained(int from, int to, int to_time, std::vector<int> & ig
         }
     }
 
-    // TODO(rivers): we just ignore this for now in our lifelong setting with a planning window.
+    // : we just ignore this for now in our lifelong setting with a planning window.
     // if (!goals.empty())
     // {
     //     if (goals[to] <= to_time)

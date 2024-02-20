@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <random>
 
-using RIVERS::SPATIAL::OpenList;
-using RIVERS::SPATIAL::State;
+using UTIL::SPATIAL::OpenList;
+using UTIL::SPATIAL::State;
 
 int main() {
 

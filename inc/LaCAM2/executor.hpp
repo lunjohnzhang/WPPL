@@ -21,7 +21,7 @@ public:
     Executor(int _rows, int _cols): rows(_rows), cols(_cols) {};   
 
     /*
-     * NOTE(hj): currently we only consider one step
+     * NOTE: currently we only consider one step
      * planned_next_states has no orientation    
      */ 
     void execute(const vector<State> * _curr_states, const vector<State> * _planned_next_states, vector<State> * _next_states) {

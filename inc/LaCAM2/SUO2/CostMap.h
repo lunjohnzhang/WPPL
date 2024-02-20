@@ -32,7 +32,7 @@ public:
     }
 
     void copy(const CostMap & other) {
-        // TODO(rivers): this is a large array, should not be copied often
+        // : this is a large array, should not be copied often
         if (max_x!=other.max_x || max_y!=other.max_y) {
             std::cerr<<"Error: copying cost map with different shape"<<std::endl;
             exit(-1);

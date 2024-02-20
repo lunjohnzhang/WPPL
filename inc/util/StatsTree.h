@@ -1,7 +1,7 @@
 #pragma once
 #include <cstring>
 
-// TODO(rivers): if building takes too much time, consider using 2D semengtaion tree
+// : if building takes too much time, consider using 2D semengtaion tree
 // https://usaco.guide/plat/2DRQ?lang=cpp
 struct StatsTree {
     int * row_cum_sum;

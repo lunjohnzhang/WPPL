@@ -179,7 +179,7 @@ float LaCAM2Solver::get_action_cost(int pst, int ost, int ped, int oed) {
 float LaCAM2Solver::eval_solution(const Instance & instance, const Solution & solution) {
     float cost=0;
     for (int aid=0;aid<instance.N;++aid) {
-        // TODO(rivers): should we consider the case of arrival here?
+        // : should we consider the case of arrival here?
         bool arrived=false;
         for (int i=0;i<solution.size()-1;++i) {
             if (solution[i].arrivals[aid]) {
@@ -627,9 +627,9 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
     // }
     // cout<<endl;
 
-    // TODO(hj) we probably still want to check the validness. so we need construct model or implement is_valid by ourselves.
+    // TODO we probably still want to check the validness. so we need construct model or implement is_valid by ourselves.
     // check if not valid, this should not happen in general if the algorithm is correct? but maybe there exist deadlocks.
-    // TODO(hj) detect deadlock?
+    // TODO detect deadlock?
     if (!action_model.is_valid(env.curr_states,actions)){
         cerr<<"planed actions are not valid in timestep "<<timestep+1<<"!"<<endl;
 #ifdef DEV
@@ -639,13 +639,13 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
 #endif
     } 
     else {
-        // NOTE(hj): only successfully executing a planned step will increase this internal timestep, which is different from the real timestep used in the simulation system.
+        // NOTE: only successfully executing a planned step will increase this internal timestep, which is different from the real timestep used in the simulation system.
         timestep+=1;
     }
 
     std::cout<<"timestep: "<<timestep<<" "<<paths[0].size()<<std::endl;
 
-    // TODO(hj): when we need to replan?
+    // TODO: when we need to replan?
     if (timestep+planning_window-execution_window==paths[0].size()-1) {
         need_replan=true;
     } else {

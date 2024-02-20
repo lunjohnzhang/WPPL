@@ -66,7 +66,7 @@ void NeighborGenerator::update(Neighbor & neighbor){
 }
 
 void NeighborGenerator::generate_parallel(const TimeLimiter & time_limiter) {
-    // TODO(rivers): since here we use parallel, we need a random seed generator that support parallelization, that is why we only could use rand() but not rand(), but we can fix this later.
+    // : since here we use parallel, we need a random seed generator that support parallelization, that is why we only could use rand() but not rand(), but we can fix this later.
     #pragma omp parallel for
     for (int i = 0; i < num_threads; i++) {
         generate(time_limiter,i);
@@ -102,7 +102,7 @@ Neighbor NeighborGenerator::generate(const TimeLimiter & time_limiter,int idx) {
                     break;
                 }
             case RANDOMAGENTS:
-                // TODO(rivers): this implementation is too bad
+                // : this implementation is too bad
                 // neighbor.agents.resize(agents.size());
                 // for (int i = 0; i < (int)agents.size(); i++)
                 //     neighbor.agents[i] = i;
@@ -211,7 +211,7 @@ bool NeighborGenerator::generateNeighborByRandomWalk(Neighbor & neighbor, int id
     neighbors_set.insert(a);
     randomWalk(a, 0, neighbors_set, neighbor_size);
 
-    // TODO(rivers): we iterate for at most 10 iterations (not shown in the pseudo-code) to 
+    // : we iterate for at most 10 iterations (not shown in the pseudo-code) to 
     // address the situation where the agent density is too low for us to collect N agents
     int count = 0;
     while (neighbors_set.size() < neighbor_size && count < 10) {
@@ -306,7 +306,7 @@ int NeighborGenerator::findMostDelayedAgent(int idx){
     auto & tabu_list=tabu_list_list[idx];
     for (int i = 0; i < agents.size(); i++)
     {
-        // TODO(rivers): currently we just use index to split threads
+        // : currently we just use index to split threads
         if (i%num_threads!=idx) continue;
         if (tabu_list.find(i) != tabu_list.end())
             continue;
@@ -327,7 +327,7 @@ int NeighborGenerator::findMostDelayedAgent(int idx){
         return -1;
     }
     tabu_list.insert(a);
-    // TODO(rivers): this is a bug
+    // : this is a bug
     if (tabu_list.size() == (agents.size()/num_threads))
         tabu_list.clear();
     return a;
@@ -428,7 +428,7 @@ void NeighborGenerator::randomWalk(int agent_id, int start_timestep, set<int>& c
                 float action_cost = agent.get_action_cost(loc, orient, next_loc, next_orient, HT);
                 float next_h_val = HT->get(next_loc, next_orient,instance.goal_locations[agent_id]);
                 // if we can find a path with a smaller distance, we try to see who becomes the obstacle.
-                // TODO(rivers): this is not correct if we have weighted distance map
+                // : this is not correct if we have weighted distance map
                 if (partial_path_cost + action_cost + next_h_val < path.path_cost) // move to this location
                 {
                     path_table.getConflictingAgents(agent_id, conflicting_agents, loc, next_loc, t + 1);
@@ -460,7 +460,7 @@ void NeighborGenerator::randomWalk(int agent_id, int start_timestep, set<int>& c
     //             // float action_cost = agent.get_action_cost(loc, orient, next_loc, next_orient, HT);
     //             float next_h_val = HT->get(next_loc, next_orient,instance.goal_locations[agent_id]);
     //             // if we can find a path with a smaller distance, we try to see who becomes the obstacle.
-    //             // TODO(rivers): this is not correct if we have weighted distance map
+    //             // : this is not correct if we have weighted distance map
     //             if (t + next_h_val < path.path_cost) // move to this location
     //             {
     //                 path_table.getConflictingAgents(agent_id, conflicting_agents, loc, next_loc, t + 1);

@@ -8,7 +8,7 @@
 
 #ifndef NO_ROT
 
-// TODO(hj): move it outside the RHCR
+// TODO: move it outside the RHCR
 class CompetitionActionModelWithRotate
 {
 public:
@@ -200,7 +200,7 @@ public:
     
     State result_state(const State & prev, Action action)
     {
-        // NOTE(rivers): we don't care about orientation, just keep it intact for now.
+        // NOTE: we don't care about orientation, just keep it intact for now.
 
         int new_location = prev.location;
         int new_orientation = prev.orientation;

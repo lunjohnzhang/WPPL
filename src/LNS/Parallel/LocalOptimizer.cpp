@@ -21,7 +21,7 @@ LocalOptimizer::LocalOptimizer(
     has_disabled_agents(has_disabled_agents),
     screen(screen), MT(random_seed) {
 
-    // TODO(rivers): for agent_id, we just use 0 to initialize the path planner. but we need to change it (also starts and goals) everytime before planning
+    // : for agent_id, we just use 0 to initialize the path planner. but we need to change it (also starts and goals) everytime before planning
     path_planner = std::make_shared<TimeSpaceAStarPlanner>(instance, HT, map_weights, execution_window);
 
     for (int i=0;i<instance.num_of_agents;++i) {
@@ -119,8 +119,8 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter
     bool use_soft_constraint=true;
     ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table, nullptr, window_size_for_CT, window_size_for_CAT, window_size_for_PATH);
 
-    // TODO(rivers): we require the path to be at least window_size_for_PATH
-    // TODO(rivers): we use hold goal location assumption here, which is not necessary.
+    // : we require the path to be at least window_size_for_PATH
+    // : we use hold goal location assumption here, which is not necessary.
     // if (window_size_for_PATH!=MAX_TIMESTEP) {
     //     constraint_table.length_min=window_size_for_PATH;
     // }
@@ -153,7 +153,7 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter
         if (neighbor.m_paths[id].empty()) break;
         
         // always makes a fixed length.
-        // TODO(rivers): this might not be a smart choice, but it keeps everything consistent.
+        // : this might not be a smart choice, but it keeps everything consistent.
         // if (neighbor.m_paths[id].size()>constraint_table.window_size_for_PATH+1) {
         //     neighbor.m_paths[id].nodes.resize(constraint_table.window_size_for_PATH+1);
         // }

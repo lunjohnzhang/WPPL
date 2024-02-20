@@ -7,10 +7,10 @@ def gen_weights_paris_001():
 
     c=0
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -56,10 +56,10 @@ def gen_weights_paris_002():
 
     c=0
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -106,10 +106,10 @@ def gen_weights_paris_010():
 
     c=1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -155,10 +155,10 @@ def gen_weights_paris_011():
 
     c=1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -224,10 +224,10 @@ def gen_weights_paris_012():
 
     c=1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -298,10 +298,10 @@ def gen_weights_paris_013():
 
     c=1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -392,10 +392,10 @@ def gen_weights_paris_014():
 
     c=1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####
@@ -485,10 +485,10 @@ def gen_weights_paris_015():
 
     c=1
     
-    #TODO(rivers): we need to add some consistent checking for weight assignment...
-    #TODO(rivers): we need a tool to visualize weight map...
+    #: we need to add some consistent checking for weight assignment...
+    #: we need a tool to visualize weight map...
     
-    # TODO(rivers): probably need better, make boarder and cental consistent
+    # : probably need better, make boarder and cental consistent
     ### boarder ###
     
     #### top ####

@@ -174,7 +174,7 @@ void ReservationTable::insertSoftConstraint2SIT(int location, int t_min, int t_m
 
 
 // update SIT at the given location
-// TODO(rivers): deal with window size for all cases.
+// : deal with window size for all cases.
 void ReservationTable::updateSIT(int location)
 {
     assert(sit[location].empty());
@@ -198,7 +198,7 @@ void ReservationTable::updateSIT(int location)
         sit[location].emplace_back(0, min(constraint_table.length_max, MAX_TIMESTEP - 1) + 1, false);
     }
 
-    // TODO(rivers): currently, we only deal with the window size in this case.
+    // : currently, we only deal with the window size in this case.
     // path table
     if (constraint_table.path_table_for_CT != nullptr and !constraint_table.path_table_for_CT->table.empty())
     {

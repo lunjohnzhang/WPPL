@@ -45,7 +45,7 @@ public:
     void _compute_weighted_heuristics(
         int start_loc_idx,
         float * values,
-        RIVERS::SPATIAL::SpatialAStar * planner
+        UTIL::SPATIAL::SpatialAStar * planner
     );
 
     void dump_main_heuristics(int start_loc, string file_path_prefix);
@@ -63,7 +63,7 @@ public:
     //     State * queue
     // );
     
-    // TODO(hj) add check
+    // TODO add check
     float get(int loc1, int loc2);
     float get(int loc1, int orient1, int loc2);
     // int get(int loc1, int orient1, int loc2, int orient2);

@@ -94,7 +94,7 @@ struct Agent
             max_steps=T;
         }
 
-        // TODO(rivers): this is actually path cost, not path length
+        // : this is actually path cost, not path length
         float cost=0;
         bool arrived=false;
         for (int i=0;i<max_steps;++i) {
@@ -115,7 +115,7 @@ struct Agent
     }
 
     inline float getNumOfDelays() {
-        // TODO(rivers): we may need two heuristic table: one for cost, one for path length estimation.
+        // : we may need two heuristic table: one for cost, one for path length estimation.
         return getEstimatedPathLength(path,instance.goal_locations[id],HT) - HT->get(instance.start_locations[id],instance.start_orientations[id],instance.goal_locations[id]);
     }
 

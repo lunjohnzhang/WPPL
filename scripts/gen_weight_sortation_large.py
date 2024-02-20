@@ -7,7 +7,7 @@ def gen_weights_sortation_large_003():
     
     c=0
     
-    # TODO(rivers): we need to test if row 0,139 and col 0,499 should be restrict.
+    # : we need to test if row 0,139 and col 0,499 should be restrict.
     # that is we don't want the robot to go across potential task points, which may lead to more congestion.
     
     ##### boarder region #####
@@ -112,7 +112,7 @@ def gen_weights_sortation_large_004():
     
     c=0
     
-    # TODO(rivers): we need to test if row 0,139 and col 0,499 should be restrict.
+    # : we need to test if row 0,139 and col 0,499 should be restrict.
     # that is we don't want the robot to go across potential task points, which may lead to more congestion.
     
     ##### boarder region #####
@@ -264,7 +264,7 @@ def gen_weights_sortation_large_005():
     
     inc=0.01
     
-    # TODO(rivers): we need to test if row 0,139 and col 0,499 should be restrict.
+    # : we need to test if row 0,139 and col 0,499 should be restrict.
     # that is we don't want the robot to go across potential task points, which may lead to more congestion.
     
     ##### boarder region #####
@@ -419,7 +419,7 @@ def gen_weights_sortation_large_006():
     
     inc=0.01
     
-    # TODO(rivers): we need to test if row 0,139 and col 0,499 should be restrict.
+    # : we need to test if row 0,139 and col 0,499 should be restrict.
     # that is we don't want the robot to go across potential task points, which may lead to more congestion.
     
     ##### boarder region #####
@@ -571,7 +571,7 @@ def gen_weights_sortation_large_007():
     
     inc=0.01
     
-    # TODO(rivers): we need to test if row 0,139 and col 0,499 should be restrict.
+    # : we need to test if row 0,139 and col 0,499 should be restrict.
     # that is we don't want the robot to go across potential task points, which may lead to more congestion.
     
     ##### boarder region #####
@@ -725,7 +725,7 @@ def gen_weights_sortation_large_008():
     
     inc=0.01
     
-    # TODO(rivers): we need to test if row 0,139 and col 0,499 should be restrict.
+    # : we need to test if row 0,139 and col 0,499 should be restrict.
     # that is we don't want the robot to go across potential task points, which may lead to more congestion.
     
     ##### boarder region #####

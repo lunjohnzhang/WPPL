@@ -182,7 +182,7 @@ void MAPFPlanner::rhcr_config_solver(std::shared_ptr<RHCR::RHCRSolver> & solver,
 }
 
 std::string MAPFPlanner::load_map_weights(string weights_path) {
-    // TODO(rivers): make weights float
+    // : make weights float
     // we have at least 5 weights for a location: right,down,left,up,stay
     map_weights=std::make_shared<std::vector<float> >(env->rows*env->cols*5,1);
     std::string suffix = "all_one";
@@ -235,7 +235,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
 
     lifelong_solver_name=config["lifelong_solver_name"];
 
-    // TODO(hj): memory management is a disaster here...
+    // TODO: memory management is a disaster here...
     if (lifelong_solver_name=="RHCR") {
         auto graph = new RHCR::CompetitionGraph(*env);
         graph->preprocessing(consider_rotation,env->file_storage_path);
@@ -532,7 +532,7 @@ void MAPFPlanner::load_configs() {
 }
 
 std::string MAPFPlanner::load_map_weights(string weights_path) {
-    // TODO(rivers): make weights float
+    // : make weights float
     // we have at least 5 weights for a location: right,down,left,up,stay
     map_weights=std::make_shared<std::vector<int> >(env->rows*env->cols*5,1);
     std::string suffix = "all_one";
@@ -585,7 +585,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
 
     lifelong_solver_name=config["lifelong_solver_name"];
 
-    // TODO(hj): memory management is a disaster here...
+    // TODO: memory management is a disaster here...
     if (lifelong_solver_name=="LaCAM2") {
         if (read_param_json<bool>(config["LaCAM2"],"use_orient_in_heuristic")
         || read_param_json<bool>(config["LaCAM2"],"consider_rotation")

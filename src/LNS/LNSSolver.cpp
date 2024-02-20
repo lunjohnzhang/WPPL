@@ -42,7 +42,7 @@ void LNSSolver::initialize(const SharedEnvironment & env){
     execution_paths.resize(env.num_of_agents);
     planning_paths.resize(env.num_of_agents);
 
-    // TODO(rivers): make it attribute of the class.
+    // : make it attribute of the class.
     int window_size_for_CT=read_param_json<int>(config,"window_size_for_CT");
     int window_size_for_PATH=read_param_json<int>(config,"window_size_for_PATH");
     int LaCAM2_planning_window=read_param_json<int>(config["LaCAM2"],"planning_window");
@@ -51,8 +51,8 @@ void LNSSolver::initialize(const SharedEnvironment & env){
         exit(-1);
     }
 
-    planning_window=window_size_for_CT; // TODO(rivers): read from config & initialized in constructor
-    execution_window=read_param_json<int>(config,"execution_window"); // TODO(rivers): read from config & initialized in constructor
+    planning_window=window_size_for_CT; // : read from config & initialized in constructor
+    execution_window=read_param_json<int>(config,"execution_window"); // : read from config & initialized in constructor
 
 }
 
@@ -93,7 +93,7 @@ std::vector<State> subvector(std::vector<State> & v, int start, int end) {
 }
 
 void LNSSolver::plan(const SharedEnvironment & env){
-    // TODO(rivers): make it configurable.
+    // : make it configurable.
     double time_limit=read_param_json<double>(config,"cutoffTime");
     TimeLimiter time_limiter(time_limit);
 
@@ -119,18 +119,18 @@ void LNSSolver::plan(const SharedEnvironment & env){
 
     ONLYDEV(std::cout<<"disabled_agents:"<<disabled_agent_count<<std::endl;)
 
-    // TODO(rivers): we need to replan for all agents that has no plan
+    // : we need to replan for all agents that has no plan
     // later we may think of padding all agents to the same length
     if (planning_paths[0].size()<planning_window+1) {
         // std::cout<<"call lacam2: "<<planning_paths[0].size()<<std::endl;
-        // TODO(rivers): maybe we should directly build lacam2 planner in this class.
+        // : maybe we should directly build lacam2 planner in this class.
         if (read_param_json<string>(config,"initAlgo")=="LaCAM2"){
             ONLYDEV(g_timer.record_p("lacam2_plan_s");)
             // use lacam2 to get a initial solution
-            // TODO(rivers): the following line may need to be optimized. There is no need to rebuild the graph G again.
+            // : the following line may need to be optimized. There is no need to rebuild the graph G again.
             lacam2_solver->clear(env);
             
-            // TODO(rivers): we should avoid copy here. we may use deque for paths.
+            // : we should avoid copy here. we may use deque for paths.
             ONLYDEV(g_timer.record_p("copy_paths_1_s");)
             vector<::Path> precomputed_paths;
             precomputed_paths.resize(env.num_of_agents);
@@ -190,7 +190,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
     }
 
 
-    // TODO(rivers): not sure what's bug making it cannot be placed in initialize()    
+    // : not sure what's bug making it cannot be placed in initialize()    
     ONLYDEV(g_timer.record_p("prepare_LNS_s");)
     if (env.curr_timestep==0){
         // build instace
@@ -251,7 +251,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
     // ONLYDEV(g_timer.record_d("prepare_LNS_s","prepare_LNS_e","prepare_LNS");)
 
     // ONLYDEV(g_timer.record_p("modify_goals_s");)
-    // TODO(rivers): this might not be necessary
+    // : this might not be necessary
     // modify_goals(instance.goal_locations, env);
     // ONLYDEV(g_timer.record_d("modify_goals_s","modify_goals_e","modify_goals");)
 
@@ -272,7 +272,7 @@ void LNSSolver::plan(const SharedEnvironment & env){
                 // break;
             }
         }
-        // TODO(rivers): it is not correct on weighted maps
+        // : it is not correct on weighted maps
         lns->agents[i].path.path_cost=lns->agents[i].getEstimatedPathLength(lns->agents[i].path,env.goal_locations[i][0].first,HT);
         // cerr<<"agent "<<i<<": ";
         // for (int j=0;j<lns->agents[i].path.size();++j){
