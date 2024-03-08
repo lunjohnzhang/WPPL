@@ -4,7 +4,7 @@
     "max_execution_steps": 1000000,
     "max_task_completed": 1000000,
     "max_agents_in_use": -1,
-    "disable_corner_target_agents": true,
+    "disable_corner_target_agents": false,
     "LaCAM2": {
         "seed": 0,
         "planning_window": 1,
