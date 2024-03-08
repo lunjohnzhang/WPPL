@@ -8,13 +8,21 @@
 class Grid
 {
 public:
-    Grid(string fname);
-    Grid(nlohmann::json map_json);
+    Grid(string fname,
+         double left_w_weight = 1,
+         double right_w_weight = 1);
+    Grid(nlohmann::json map_json,
+         double left_w_weight = 1,
+         double right_w_weight = 1);
 
-    Grid() { }
+    Grid() {}
 
-    void load_map_from_path(string fname);
-    void load_map_from_json(nlohmann::json map_json);
+    void load_map_from_path(string fname,
+                            double left_w_weight = 1,
+                            double right_w_weight = 1);
+    void load_map_from_json(nlohmann::json map_json,
+                            double left_w_weight = 1,
+                            double right_w_weight = 1);
 
     int rows = 0;
     int cols = 0;
@@ -27,6 +35,5 @@ public:
 
     std::vector<char> grid_types;
 
-
-
+    std::vector<double> agent_home_loc_weights;
 };

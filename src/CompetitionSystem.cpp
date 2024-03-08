@@ -1801,7 +1801,9 @@ void KivaSystem::update_tasks(){
             if (map.grid_types[prev_task_loc]=='.' || map.grid_types[prev_task_loc]=='e') 
             {
                 // next task would be w
-                int idx=MT()%map.agent_home_locations.size();
+                // Sample a workstation based on given distribution
+                int idx = this->agent_home_loc_dist(this->MT);
+                // int idx=MT()%map.agent_home_locations.size();
                 loc=map.agent_home_locations[idx];
             } else if (map.grid_types[prev_task_loc]=='w')
             {

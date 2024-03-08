@@ -37,6 +37,9 @@ ret=py_driver.run(
     num_agents=500,
     num_tasks=100000,
     seed=0,
+    # weight of the left/right workstation, only applicable for maps with workstations
+    left_w_weight=1,
+    right_w_weight=1,
     # else we need specify agents and tasks path to load data.
     # agents_path="example_problems/random.domain/agents/random_600.agents",
     # tasks_path="example_problems/random.domain/tasks/random-32-32-20-600.tasks",

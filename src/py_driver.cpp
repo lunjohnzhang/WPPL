@@ -209,13 +209,19 @@ std::string run(const py::kwargs& kwargs)
     if (kwargs.contains("map_path"))
     {
         std::string map_path = kwargs["map_path"].cast<std::string>();
-        grid.load_map_from_path(map_path);
+        grid.load_map_from_path(
+            map_path,
+            kwargs["left_w_weight"].cast<double>(),
+            kwargs["right_w_weight"].cast<double>());
     }
     else if (kwargs.contains("map_json"))
     {
         std::string map_json_str = kwargs["map_json"].cast<std::string>();
         json map_json = json::parse(map_json_str);
-        grid.load_map_from_json(map_json);
+        grid.load_map_from_json(
+            map_json,
+            kwargs["left_w_weight"].cast<double>(),
+            kwargs["right_w_weight"].cast<double>());
     }
 
     // // should be a command line string running the code

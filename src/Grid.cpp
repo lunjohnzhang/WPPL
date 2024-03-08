@@ -1,17 +1,23 @@
 #include "Grid.h"
 #include <boost/tokenizer.hpp>
 
-Grid::Grid(string fname)
+Grid::Grid(string fname,
+           double left_w_weight,
+           double right_w_weight)
 {
-    load_map_from_path(fname);
+    load_map_from_path(fname, left_w_weight, right_w_weight);
 }
 
-Grid::Grid(nlohmann::json map_json)
+Grid::Grid(nlohmann::json map_json,
+           double left_w_weight,
+           double right_w_weight)
 {
-    load_map_from_json(map_json);
+    load_map_from_json(map_json, left_w_weight, right_w_weight);
 }
 
-void Grid::load_map_from_path(string fname)
+void Grid::load_map_from_path(string fname,
+                              double left_w_weight,
+                              double right_w_weight)
 {
     std::string line;
     std::ifstream myfile((fname).c_str());
@@ -82,6 +88,17 @@ void Grid::load_map_from_path(string fname)
             if (line[j] == 'w')
             {
                 agent_home_locations.push_back(id);
+
+                // Add weights to workstations s.t. one side of the
+                // workstations are more "popular" than the other
+                if (j == 0)
+                {
+                    this->agent_home_loc_weights.push_back(left_w_weight);
+                }
+                else
+                {
+                    this->agent_home_loc_weights.push_back(right_w_weight);
+                }
             }
         }
     }
@@ -95,7 +112,9 @@ void Grid::load_map_from_path(string fname)
     cout << "Done! (load time: " << runtime << " s)" << std::endl;
 }
 
-void Grid::load_map_from_json(nlohmann::json map_json)
+void Grid::load_map_from_json(nlohmann::json map_json,
+                              double left_w_weight,
+                              double right_w_weight)
 {
     std::cout << "*** Loading map ***" << std::endl;
     clock_t t = std::clock();
@@ -133,6 +152,17 @@ void Grid::load_map_from_json(nlohmann::json map_json)
             if (line[j] == 'w')
             {
                 agent_home_locations.push_back(id);
+
+                // Add weights to workstations s.t. one side of the
+                // workstations are more "popular" than the other
+                if (j == 0)
+                {
+                    this->agent_home_loc_weights.push_back(left_w_weight);
+                }
+                else
+                {
+                    this->agent_home_loc_weights.push_back(right_w_weight);
+                }
             }
         }
     }

@@ -481,6 +481,18 @@ public:
             prev_task_locs.push_back(grid.empty_locations[i]);
         }
 
+        // Initialize agent home location (workstation) distribution
+
+        this->agent_home_loc_dist = std::discrete_distribution<int>(
+            grid.agent_home_loc_weights.begin(),
+            grid.agent_home_loc_weights.end());
+        cout << "agent_home_loc distribution: ";
+        for (auto w: grid.agent_home_loc_weights)
+        {
+            cout << w << ", ";
+        }
+        cout << endl;
+
     };
 
 private:
@@ -488,6 +500,7 @@ private:
     int task_id=0;
 
     void update_tasks();
+    std::discrete_distribution<int> agent_home_loc_dist;
 
     std::vector<int> prev_task_locs;
 
