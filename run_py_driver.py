@@ -2,13 +2,19 @@ import sys
 sys.path.append('build')
 sys.path.append('scripts')
 from map import Map
+import json
 
-map_path="example_problems/warehouse.domain/maps/kiva_69x69.map"
+map_path="example_problems/warehouse.domain/maps/kiva_large_w_mode.map"
 # full_weight_path="scripts/random_weight_001.w"
 with_wait_costs=True
 
 map=Map(map_path)
 map.print_graph(map.graph)
+
+map_json_path = "../maps/warehouse/human/kiva_large_w_mode.json"
+with open(map_json_path, "r") as f:
+    map_json = json.load(f)
+    map_json_str = json.dumps(map_json)
 
 import py_driver
 print(py_driver.playground())
@@ -20,7 +26,10 @@ with open(config_path) as f:
     config_str=json.dumps(config)
 
 ret=py_driver.run(
-    map_path=map_path,
+    # For map, it uses map_path by default. If not provided, it'll use map_json
+    # which contains json string of the map
+    # map_path=map_path,
+    map_json = map_json_str,
     simulation_steps=1000,
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,

@@ -1,11 +1,20 @@
 #pragma once
 
 #include "common.h"
+#include "nlohmann/json.hpp"
+
+// using json = nlohmann::json;
 
 class Grid
 {
 public:
     Grid(string fname);
+    Grid(nlohmann::json map_json);
+
+    Grid() { }
+
+    void load_map_from_path(string fname);
+    void load_map_from_json(nlohmann::json map_json);
 
     int rows = 0;
     int cols = 0;
@@ -17,5 +26,7 @@ public:
     std::vector<int> empty_locations;
 
     std::vector<char> grid_types;
+
+
 
 };

@@ -198,11 +198,25 @@ std::string run(const py::kwargs& kwargs)
     int simulation_steps=kwargs["simulation_steps"].cast<int>();
     double plan_time_limit=kwargs["plan_time_limit"].cast<double>();
     double preprocess_time_limit=kwargs["preprocess_time_limit"].cast<double>();
-    std::string map_path=kwargs["map_path"].cast<std::string>();
+    // std::string map_path=kwargs["map_path"].cast<std::string>();
     std::string file_storage_path=kwargs["file_storage_path"].cast<std::string>();
     std::string task_assignment_strategy=kwargs["task_assignment_strategy"].cast<std::string>();
     int num_tasks_reveal=kwargs["num_tasks_reveal"].cast<int>();
 
+
+    // Read in map. Use map_path by default. If not provided, use map_json
+    Grid grid;
+    if (kwargs.contains("map_path"))
+    {
+        std::string map_path = kwargs["map_path"].cast<std::string>();
+        grid.load_map_from_path(map_path);
+    }
+    else if (kwargs.contains("map_json"))
+    {
+        std::string map_json_str = kwargs["map_json"].cast<std::string>();
+        json map_json = json::parse(map_json_str);
+        grid.load_map_from_json(map_json);
+    }
 
     // // should be a command line string running the code
     // std::string cmd=kwargs["cmd"].cast<std::string>();
@@ -281,9 +295,10 @@ std::string run(const py::kwargs& kwargs)
 
     // auto map_path = read_param_json<std::string>(data, "mapFile");
     // Grid grid(base_folder + map_path);
-    Grid grid(map_path);
+    // Grid grid(map_path);
 
-    planner->env->map_name = map_path.substr(map_path.find_last_of("/") + 1);
+    // planner->env->map_name = map_path.substr(map_path.find_last_of("/") + 1);
+    planner->env->map_name = grid.map_name;
     // planner->env->file_storage_path = vm["fileStoragePath"].as<std::string>();
     planner->env->file_storage_path = file_storage_path;
 
