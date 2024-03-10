@@ -417,6 +417,15 @@ std::string run(const py::kwargs& kwargs)
     nlohmann::json analysis=system_ptr->analyzeResults();
     analysis["cpu_runtime"] = runtime;
 
+    // Save path if applicable
+    if (kwargs.contains("save_paths") && kwargs["save_paths"].cast<bool>())
+    {
+        boost::filesystem::path output_dir(kwargs["file_storage_path"].cast<std::string>());
+        boost::filesystem::create_directories(output_dir);
+        boost::filesystem::path path_file = output_dir / "results.json";
+        system_ptr->saveResults(path_file.string());
+    }
+
     // system_ptr->saveResults("debug.json");
     return analysis.dump(4);
 

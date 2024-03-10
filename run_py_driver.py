@@ -37,6 +37,7 @@ ret=py_driver.run(
     num_agents=500,
     num_tasks=100000,
     seed=0,
+    save_paths=True,
     # weight of the left/right workstation, only applicable for maps with workstations
     left_w_weight=1,
     right_w_weight=1,
