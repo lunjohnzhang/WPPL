@@ -214,10 +214,21 @@ std::string run(const py::kwargs& kwargs)
             kwargs["left_w_weight"].cast<double>(),
             kwargs["right_w_weight"].cast<double>());
     }
-    else if (kwargs.contains("map_json"))
+    else if (kwargs.contains("map_json_str") ||
+             kwargs.contains("map_json_path"))
     {
-        std::string map_json_str = kwargs["map_json"].cast<std::string>();
-        json map_json = json::parse(map_json_str);
+        json map_json;
+        if (kwargs.contains("map_json_str"))
+        {
+            std::string map_json_str = kwargs["map_json_str"].cast<std::string>();
+            map_json = json::parse(map_json_str);
+        }
+        else
+        {
+            std::string map_json_path = kwargs["map_json_path"].cast<std::string>();
+            std::ifstream f(map_json_path);
+            map_json = json::parse(f);
+        }
         grid.load_map_from_json(
             map_json,
             kwargs["left_w_weight"].cast<double>(),

@@ -29,7 +29,8 @@ ret=py_driver.run(
     # For map, it uses map_path by default. If not provided, it'll use map_json
     # which contains json string of the map
     # map_path=map_path,
-    map_json = map_json_str,
+    # map_json_str = map_json_str,
+    map_json_path = map_json_path,
     simulation_steps=1000,
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
