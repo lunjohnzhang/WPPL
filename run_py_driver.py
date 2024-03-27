@@ -16,7 +16,7 @@ with open(map_json_path, "r") as f:
     map_json = json.load(f)
     map_json_str = json.dumps(map_json)
 
-import py_driver
+import py_driver # type: ignore # ignore pylance warning
 print(py_driver.playground())
 
 import json
