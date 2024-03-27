@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <climits>
 #include <memory>
+#include <util/Analyzer.h>
 
 
 #ifdef PYTHON
@@ -67,6 +68,12 @@ int main(int argc, char **argv)
 
     // std::string base_folder = vm["inputFolder"].as<std::string>();
     boost::filesystem::path p(vm["inputFile"].as<std::string>());
+
+    ONLYDEV(
+        const auto & filename=p.filename();
+        analyzer.data["instance"]=filename.c_str();
+    )
+
     boost::filesystem::path dir = p.parent_path();
     std::string base_folder = dir.string();
     std::cout << base_folder << std::endl;
