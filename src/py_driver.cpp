@@ -203,16 +203,24 @@ std::string run(const py::kwargs& kwargs)
     std::string task_assignment_strategy=kwargs["task_assignment_strategy"].cast<std::string>();
     int num_tasks_reveal=kwargs["num_tasks_reveal"].cast<int>();
 
+    // Read in left and right weights
+    double left_w_weight = 1;
+    double right_w_weight = 1;
+    if (kwargs.contains("left_w_weight"))
+    {
+        left_w_weight = kwargs["left_w_weight"].cast<double>();
+    }
+    if (kwargs.contains("right_w_weight"))
+    {
+        right_w_weight = kwargs["right_w_weight"].cast<double>();
+    }
 
     // Read in map. Use map_path by default. If not provided, use map_json
     Grid grid;
     if (kwargs.contains("map_path"))
     {
         std::string map_path = kwargs["map_path"].cast<std::string>();
-        grid.load_map_from_path(
-            map_path,
-            kwargs["left_w_weight"].cast<double>(),
-            kwargs["right_w_weight"].cast<double>());
+        grid.load_map_from_path(map_path, left_w_weight, right_w_weight);
     }
     else if (kwargs.contains("map_json_str") ||
              kwargs.contains("map_json_path"))
@@ -229,10 +237,7 @@ std::string run(const py::kwargs& kwargs)
             std::ifstream f(map_json_path);
             map_json = json::parse(f);
         }
-        grid.load_map_from_json(
-            map_json,
-            kwargs["left_w_weight"].cast<double>(),
-            kwargs["right_w_weight"].cast<double>());
+        grid.load_map_from_json(map_json, left_w_weight, right_w_weight);
     }
 
     // // should be a command line string running the code
