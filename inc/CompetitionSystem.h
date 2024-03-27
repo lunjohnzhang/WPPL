@@ -216,12 +216,12 @@ public:
             }
             starts[i] = State(start_locs[i], 0, 0);
         }
- 
-        char * LOAD_FP=std::getenv("LOAD_FP");
-        std::cerr<<"LOAD_FP: "<<LOAD_FP<<std::endl;
-        if (LOAD_FP!=NULL && strlen(LOAD_FP)!=0) {
-            resume_from_file(LOAD_FP, grid.cols);
-        }
+
+        // char * LOAD_FP=std::getenv("LOAD_FP");
+        // std::cerr<<"LOAD_FP: "<<LOAD_FP<<std::endl;
+        // if (LOAD_FP!=NULL && strlen(LOAD_FP)!=0) {
+        //     resume_from_file(LOAD_FP, grid.cols);
+        // }
 
     };
 
@@ -439,11 +439,11 @@ public:
             starts[i] = State(start_locs[i], 0, -1);
         }
 
-        char * LOAD_FP=std::getenv("LOAD_FP");
-        std::cerr<<"LOAD_FP: "<<LOAD_FP<<std::endl;
-        if (LOAD_FP!=NULL && strlen(LOAD_FP)!=0) {
-            resume_from_file(LOAD_FP, grid.cols);
-        }
+        // char * LOAD_FP=std::getenv("LOAD_FP");
+        // std::cerr<<"LOAD_FP: "<<LOAD_FP<<std::endl;
+        // if (LOAD_FP!=NULL && strlen(LOAD_FP)!=0) {
+        //     resume_from_file(LOAD_FP, grid.cols);
+        // }
 
 
     };
