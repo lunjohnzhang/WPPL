@@ -91,59 +91,64 @@ vector<Action> BaseSystem::plan_wrapper()
 
 vector<Action> BaseSystem::plan()
 {
-    using namespace std::placeholders;
-    if (started && future.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
-    {
-        std::cout << started << "     " << (future.wait_for(std::chrono::seconds(0)) != std::future_status::ready) << std::endl;
-        if(logger)
-        {
-            logger->log_info("planner cannot run because the previous run is still running", timestep);
-        }
+    return plan_wrapper();
 
-        if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready)
-        {
-            task_td.join();
-            started = false;
-            return future.get();
-        }
-        logger->log_info("planner timeout", timestep);
-        return {};
-    }
+    // using namespace std::placeholders;
+    // if (started && future.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+    // {
+    //     std::cout << started << "     " << (future.wait_for(std::chrono::seconds(0)) != std::future_status::ready) << std::endl;
+    //     if(logger)
+    //     {
+    //         logger->log_info("planner cannot run because the previous run is still running", timestep);
+    //     }
 
-    std::packaged_task<std::vector<Action>()> task(std::bind(&BaseSystem::plan_wrapper, this));
-    future = task.get_future();
-    if (task_td.joinable())
-    {
-        task_td.join();
-    }
-    task_td = std::thread(std::move(task));
-    started = true;
-    if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready)
-    {
-        task_td.join();
-        started = false;
-        return future.get();
-    }
-    logger->log_info("planner timeout", timestep);
-    return {};
+    //     if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready)
+    //     {
+    //         task_td.join();
+    //         started = false;
+    //         return future.get();
+    //     }
+    //     logger->log_info("planner timeout", timestep);
+    //     return {};
+    // }
+
+    // std::packaged_task<std::vector<Action>()> task(std::bind(&BaseSystem::plan_wrapper, this));
+    // future = task.get_future();
+    // if (task_td.joinable())
+    // {
+    //     task_td.join();
+    // }
+    // task_td = std::thread(std::move(task));
+    // started = true;
+    // if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready)
+    // {
+    //     task_td.join();
+    //     started = false;
+    //     return future.get();
+    // }
+    // logger->log_info("planner timeout", timestep);
+    // return {};
 }
 
 
 bool BaseSystem::planner_initialize()
 {
-    using namespace std::placeholders;
-    std::packaged_task<void(int)> init_task(std::bind(&MAPFPlanner::initialize, planner, std::placeholders::_1));
-    auto init_future = init_task.get_future();
-    
-    auto init_td = std::thread(std::move(init_task), preprocess_time_limit);
-    if (init_future.wait_for(std::chrono::seconds(preprocess_time_limit)) == std::future_status::ready)
-    {
-        init_td.join();
-        return true;
-    }
+    planner->initialize(preprocess_time_limit);
+    return true;
 
-    init_td.detach();
-    return false;
+    // using namespace std::placeholders;
+    // std::packaged_task<void(int)> init_task(std::bind(&MAPFPlanner::initialize, planner, std::placeholders::_1));
+    // auto init_future = init_task.get_future();
+
+    // auto init_td = std::thread(std::move(init_task), preprocess_time_limit);
+    // if (init_future.wait_for(std::chrono::seconds(preprocess_time_limit)) == std::future_status::ready)
+    // {
+    //     init_td.join();
+    //     return true;
+    // }
+
+    // init_td.detach();
+    // return false;
 }
 
 
@@ -981,59 +986,64 @@ vector<Action> BaseSystem::plan_wrapper()
 
 vector<Action> BaseSystem::plan()
 {
-    using namespace std::placeholders;
-    if (started && future.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
-    {
-        std::cout << started << "     " << (future.wait_for(std::chrono::seconds(0)) != std::future_status::ready) << std::endl;
-        if(logger)
-        {
-            logger->log_info("planner cannot run because the previous run is still running", timestep);
-        }
+    return plan_wrapper();
 
-        if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready)
-        {
-            task_td.join();
-            started = false;
-            return future.get();
-        }
-        logger->log_info("planner timeout", timestep);
-        return {};
-    }
+    // using namespace std::placeholders;
+    // if (started && future.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+    // {
+    //     std::cout << started << "     " << (future.wait_for(std::chrono::seconds(0)) != std::future_status::ready) << std::endl;
+    //     if(logger)
+    //     {
+    //         logger->log_info("planner cannot run because the previous run is still running", timestep);
+    //     }
 
-    std::packaged_task<std::vector<Action>()> task(std::bind(&BaseSystem::plan_wrapper, this));
-    future = task.get_future();
-    if (task_td.joinable())
-    {
-        task_td.join();
-    }
-    task_td = std::thread(std::move(task));
-    started = true;
-    if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready)
-    {
-        task_td.join();
-        started = false;
-        return future.get();
-    }
-    logger->log_info("planner timeout", timestep);
-    return {};
+    //     if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready)
+    //     {
+    //         task_td.join();
+    //         started = false;
+    //         return future.get();
+    //     }
+    //     logger->log_info("planner timeout", timestep);
+    //     return {};
+    // }
+
+    // std::packaged_task<std::vector<Action>()> task(std::bind(&BaseSystem::plan_wrapper, this));
+    // future = task.get_future();
+    // if (task_td.joinable())
+    // {
+    //     task_td.join();
+    // }
+    // task_td = std::thread(std::move(task));
+    // started = true;
+    // if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready)
+    // {
+    //     task_td.join();
+    //     started = false;
+    //     return future.get();
+    // }
+    // logger->log_info("planner timeout", timestep);
+    // return {};
 }
 
 
 bool BaseSystem::planner_initialize()
 {
-    using namespace std::placeholders;
-    std::packaged_task<void(int)> init_task(std::bind(&MAPFPlanner::initialize, planner, std::placeholders::_1));
-    auto init_future = init_task.get_future();
-    
-    auto init_td = std::thread(std::move(init_task), preprocess_time_limit);
-    if (init_future.wait_for(std::chrono::seconds(preprocess_time_limit)) == std::future_status::ready)
-    {
-        init_td.join();
-        return true;
-    }
+    planner->initialize(preprocess_time_limit);
+    return true;
 
-    init_td.detach();
-    return false;
+    // using namespace std::placeholders;
+    // std::packaged_task<void(int)> init_task(std::bind(&MAPFPlanner::initialize, planner, std::placeholders::_1));
+    // auto init_future = init_task.get_future();
+
+    // auto init_td = std::thread(std::move(init_task), preprocess_time_limit);
+    // if (init_future.wait_for(std::chrono::seconds(preprocess_time_limit)) == std::future_status::ready)
+    // {
+    //     init_td.join();
+    //     return true;
+    // }
+
+    // init_td.detach();
+    // return false;
 }
 
 
