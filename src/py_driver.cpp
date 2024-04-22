@@ -215,12 +215,21 @@ std::string run(const py::kwargs& kwargs)
         right_w_weight = kwargs["right_w_weight"].cast<double>();
     }
 
+    std::vector<float> ratios;
+    if (kwargs.contains("ratio_weights")){
+        std::string ratios_str=kwargs["ratio_weights"].cast<std::string>();
+        nlohmann::json ratios_json=nlohmann::json::parse(ratios_str);
+        for (auto & r:ratios_json) {
+            ratios.push_back(r.get<float>());
+        }
+    }
+
     // Read in map. Use map_path by default. If not provided, use map_json
     Grid grid;
     if (kwargs.contains("map_path"))
     {
         std::string map_path = kwargs["map_path"].cast<std::string>();
-        grid.load_map_from_path(map_path, left_w_weight, right_w_weight);
+        grid.load_map_from_path(map_path, left_w_weight, right_w_weight, ratios);
     }
     else if (kwargs.contains("map_json_str") ||
              kwargs.contains("map_json_path"))
@@ -237,7 +246,7 @@ std::string run(const py::kwargs& kwargs)
             std::ifstream f(map_json_path);
             map_json = json::parse(f);
         }
-        grid.load_map_from_json(map_json, left_w_weight, right_w_weight);
+        grid.load_map_from_json(map_json, left_w_weight, right_w_weight, ratios);
     }
 
     // // should be a command line string running the code

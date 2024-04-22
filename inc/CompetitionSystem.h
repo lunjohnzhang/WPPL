@@ -283,6 +283,7 @@ public:
 
 protected:
     Grid map;
+    int update_task_dist_steps = -1;
 
     std::future<std::vector<Action>> future;
     std::thread task_td;

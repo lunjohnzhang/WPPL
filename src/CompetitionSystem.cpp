@@ -183,13 +183,18 @@ void BaseSystem::simulate(int simulation_time)
 {
     //init logger
     //Logger* log = new Logger();
-
+    
     ONLYDEV(g_timer.record_p("simulate_start");)
 
     initialize();
 
     ONLYDEV(g_timer.record_d("simulate_start","initialize_end","initialization");)
     int num_of_tasks = 0;
+
+    int num_periods = this->map.ratios.size();
+    if (num_periods > 0){
+        this->update_task_dist_steps = simulation_time / num_periods;
+    }
 
     for (; timestep < simulation_time; )
     {
@@ -1078,13 +1083,19 @@ void BaseSystem::simulate(int simulation_time)
 {
     //init logger
     //Logger* log = new Logger();
-
+    
+    //python use this 
     ONLYDEV(g_timer.record_p("simulate_start");)
 
     initialize();
 
     ONLYDEV(g_timer.record_d("simulate_start","initialize_end","initialization");)
     int num_of_tasks = 0;
+
+    int num_periods = this->map.ratios.size();
+    if (num_periods > 0){
+        this->update_task_dist_steps = simulation_time / num_periods;
+    }
 
     for (; timestep < simulation_time; )
     {
@@ -1801,6 +1812,31 @@ void InfAssignSystem::update_tasks(){
 }
 
 void KivaSystem::update_tasks(){
+    // cout << "in update_tasks, timesteps" << this->timestep << endl;
+    if ((this->update_task_dist_steps > 0) && (this->timestep % this->update_task_dist_steps == 0)){
+        cout << "update_task_dist_steps =" << this->update_task_dist_steps<<endl;
+        int num_home_loc = this->map.agent_home_locations.size();
+        float left_weight = this->map.ratios[this->map.ratio_id % this->map.ratios.size()];
+        float right_weight = 1.0;
+        this->map.agent_home_loc_weights.clear();
+        cout << "update agent_home_loc_weights: ";
+        for (int i=0; i<num_home_loc; i+=2){
+            this->map.agent_home_loc_weights.push_back(left_weight);
+            this->map.agent_home_loc_weights.push_back(right_weight);
+            cout << left_weight << ", " << right_weight<< ", ";
+        }
+        cout << endl;
+        this->agent_home_loc_dist = std::discrete_distribution<int>(this->map.agent_home_loc_weights.begin(), this->map.agent_home_loc_weights.end());
+        this->map.ratio_id += 1;
+    }
+    // if (timestep % 100 == 0){
+    //     // change_distribution
+    //     std::mt19937 gen(0); // 0 as random seed
+    //     std::uniform_real_distribution<float> distribution(0.0f, 1.0f); // Uniform distribution between 0 and 1
+    //     float p = distribution(gen); 
+    //     std::vector<float> prob = {p, 1-p};
+    //     agent_home_loc_dist = std::discrete_distribution<int>(prob.begin(), prob.end());
+    // }
     for (int k = 0; k < num_of_agents; k++)
     {
         while (assigned_tasks[k].size() < num_tasks_reveal) 

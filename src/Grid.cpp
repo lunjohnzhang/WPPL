@@ -3,22 +3,26 @@
 
 Grid::Grid(string fname,
            double left_w_weight,
-           double right_w_weight)
+           double right_w_weight, 
+           std::vector<float> ratios)
 {
     load_map_from_path(fname, left_w_weight, right_w_weight);
 }
 
 Grid::Grid(nlohmann::json map_json,
            double left_w_weight,
-           double right_w_weight)
+           double right_w_weight, 
+           std::vector<float> ratios)
 {
     load_map_from_json(map_json, left_w_weight, right_w_weight);
 }
 
 void Grid::load_map_from_path(string fname,
                               double left_w_weight,
-                              double right_w_weight)
+                              double right_w_weight, 
+                              std::vector<float> ratios)
 {
+    this->ratios=ratios;
     std::string line;
     std::ifstream myfile((fname).c_str());
     if (!myfile.is_open())
@@ -114,8 +118,10 @@ void Grid::load_map_from_path(string fname,
 
 void Grid::load_map_from_json(nlohmann::json map_json,
                               double left_w_weight,
-                              double right_w_weight)
+                              double right_w_weight, 
+                              std::vector<float> ratios)
 {
+    this->ratios = ratios;
     std::cout << "*** Loading map ***" << std::endl;
     clock_t t = std::clock();
 
