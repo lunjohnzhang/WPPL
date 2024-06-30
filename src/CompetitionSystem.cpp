@@ -568,6 +568,18 @@ nlohmann::json BaseSystem::analyzeResults()
     }
     js["tasks"] = tasks;
 
+    json final_states = json::array();
+    for (auto s: this->curr_states){
+        final_states.push_back(s);
+    }
+    js["final_pos"] = final_states;
+
+    json final_tasks = json::array();
+    for (auto assigned_task_per_agent: this->assigned_tasks){
+        final_tasks.push_back(assigned_task_per_agent.back());
+    }
+    js["final_tasks"] = final_tasks;
+
     return analyze_result_json(js, map);
 }
 
@@ -875,8 +887,14 @@ void InfAssignSystem::update_tasks(){
     {
         while (assigned_tasks[k].size() < num_tasks_reveal) 
         {
-            int i = task_counter[k] * num_of_agents + k;
-            int loc = tasks[i%tasks_size];
+            int loc;
+            if(this->init_task && this->init_task_ids[k]!=-1){
+                loc = this->init_task_ids[k];
+                this->init_task_ids[k] = -1;
+            } else{
+                int i = task_counter[k] * num_of_agents + k;
+                loc = tasks[i%tasks_size];
+            }
             Task task(task_id,loc,timestep,k);
             assigned_tasks[k].push_back(task);
             events[k].push_back(make_tuple(task.task_id,timestep,"assigned"));
@@ -1472,6 +1490,18 @@ nlohmann::json BaseSystem::analyzeResults()
     }
     js["tasks"] = tasks;
 
+    json final_states = json::array();
+    for (auto s: this->curr_states){
+        final_states.push_back(s.location);
+    }
+    js["final_pos"] = final_states;
+
+    json final_tasks = json::array();
+    for (auto assigned_task_per_agent: this->assigned_tasks){
+        final_tasks.push_back(assigned_task_per_agent.back().location);
+    }
+    js["final_tasks"] = final_tasks;
+
     return analyze_result_json(js, map);
 }
 
@@ -1787,8 +1817,15 @@ void InfAssignSystem::update_tasks(){
     {
         while (assigned_tasks[k].size() < num_tasks_reveal) 
         {
-            int i = task_counter[k] * num_of_agents + k;
-            int loc = tasks[i%tasks_size];
+            int loc;
+            if(this->init_task && this->init_task_ids[k]!=-1){
+                loc = this->init_task_ids[k];
+                this->init_task_ids[k] = -1;
+            } else{
+                int i = task_counter[k] * num_of_agents + k;
+                loc = tasks[i%tasks_size];
+            }
+
             Task task(task_id,loc,timestep,k);
             assigned_tasks[k].push_back(task);
             events[k].push_back(make_tuple(task.task_id,timestep,"assigned"));
@@ -1808,21 +1845,26 @@ void KivaSystem::update_tasks(){
             int prev_task_loc=prev_task_locs[k];
 
             int loc;
-            if (map.grid_types[prev_task_loc]=='.' || map.grid_types[prev_task_loc]=='e') 
-            {
-                // next task would be w
-                // Sample a workstation based on given distribution
-                int idx = this->agent_home_loc_dist(this->MT);
-                // int idx=MT()%map.agent_home_locations.size();
-                loc=map.agent_home_locations[idx];
-            } else if (map.grid_types[prev_task_loc]=='w')
-            {
-                // next task would e
-                int idx=MT()%map.end_points.size();
-                loc=map.end_points[idx];
-            } else {
-                std::cout<<"unkonw grid type"<<std::endl;
-                exit(-1);
+            if(this->init_task && this->init_task_ids[k]!=-1){
+                loc = this->init_task_ids[k];
+                this->init_task_ids[k] = -1;
+            } else{
+                if (map.grid_types[prev_task_loc]=='.' || map.grid_types[prev_task_loc]=='e') 
+                {
+                    // next task would be w
+                    // Sample a workstation based on given distribution
+                    int idx = this->agent_home_loc_dist(this->MT);
+                    // int idx=MT()%map.agent_home_locations.size();
+                    loc=map.agent_home_locations[idx];
+                } else if (map.grid_types[prev_task_loc]=='w')
+                {
+                    // next task would e
+                    int idx=MT()%map.end_points.size();
+                    loc=map.end_points[idx];
+                } else {
+                    std::cout<<"unknown grid type"<<std::endl;
+                    exit(-1);
+                }
             }
             
             Task task(task_id,loc,timestep,k);

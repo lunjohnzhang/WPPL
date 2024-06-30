@@ -376,6 +376,24 @@ std::string run(const py::kwargs& kwargs)
             uint seed=kwargs["seed"].cast<uint>();
             gen_random_instance(grid, agents, tasks, num_agents, num_tasks, seed);
         }
+        if (kwargs.contains("init_agent") && kwargs["init_agent"].cast<bool>()){
+            if(!kwargs.contains("init_agent_pos")){
+                std::cout<<"if init_agent, must contain init_agent_pos!" <<std::endl;
+                exit(-1);
+            }
+            std::string init_agent_pos_str = kwargs["init_agent_pos"].cast<std::string>();
+            nlohmann::json init_agent_pos_json = nlohmann::json::parse(init_agent_pos_str);
+            std::vector<int> new_agents;
+            for (auto & a_pos: init_agent_pos_json){
+                new_agents.push_back(a_pos.get<int>());
+            }
+            if (new_agents.size()!= agents.size()){
+                std::cout << "must have bug in init agent pos" <<std::endl;
+                exit(-1);
+            }
+            agents.clear();
+            agents = new_agents;
+        }
 
         std::cout << agents.size() << " agents and " << tasks.size() << " tasks"<< std::endl;
         if (agents.size() > tasks.size())
@@ -414,8 +432,47 @@ std::string run(const py::kwargs& kwargs)
         int num_agents=kwargs["num_agents"].cast<int>();
         std::cout << "using kiva system (random task generation) with "<<num_agents<<" agents"<<std::endl;
         
+        
         uint seed=kwargs["seed"].cast<uint>();
-        system_ptr = std::make_unique<KivaSystem>(grid,planner,model,num_agents,seed);
+
+        std::vector<int> agents;
+        std::vector<int> tasks;
+        gen_random_instance(grid, agents, tasks, num_agents, 0, seed);
+
+        if (kwargs.contains("init_agent") && kwargs["init_agent"].cast<bool>()){
+            if(!kwargs.contains("init_agent_pos")){
+                std::cout<<"if init_agent, must contain init_agent_pos!" <<std::endl;
+                exit(-1);
+            }
+            std::string init_agent_pos_str = kwargs["init_agent_pos"].cast<std::string>();
+            nlohmann::json init_agent_pos_json = nlohmann::json::parse(init_agent_pos_str);
+            std::vector<int> new_agents;
+            for (auto & a_pos: init_agent_pos_json){
+                new_agents.push_back(a_pos.get<int>());
+            }
+            if (new_agents.size()!= agents.size()){
+                std::cout << "must have bug in init agent pos" <<std::endl;
+                exit(-1);
+            }
+            agents.clear();
+            agents = new_agents;
+        }
+        
+        system_ptr = std::make_unique<KivaSystem>(grid,planner,model,agents,seed);
+    }
+
+    if (kwargs.contains("init_task") && kwargs["init_task"].cast<bool>()){
+        if (!kwargs.contains("init_task_ids")){
+            std::cout << "if use init task, must contain [init_task_ids]!"<<std::endl;
+            exit(1);
+        }
+        std::string init_task_ids_str = kwargs["init_task_ids"].cast<std::string>();
+        nlohmann::json init_task_id_json = nlohmann::json::parse(init_task_ids_str);
+        std::vector<int> init_task_ids;
+        for (auto & id: init_task_id_json){
+            init_task_ids.push_back(id.get<int>());
+        }
+        system_ptr->set_init_task(true, init_task_ids);
     }
 
     system_ptr->set_logger(logger);

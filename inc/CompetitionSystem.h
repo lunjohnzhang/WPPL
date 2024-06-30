@@ -44,6 +44,10 @@ public:
     void set_plan_time_limit(int limit){plan_time_limit = limit;};
     void set_preprocess_time_limit(int limit){preprocess_time_limit = limit;};
     void set_logger(Logger* logger){this->logger = logger;}
+    void set_init_task(bool init_task, std::vector<int> init_task_ids){
+        this->init_task = init_task;
+        this->init_task_ids = init_task_ids;
+    }
 
 	void simulate(int simulation_time);
     vector<Action> plan();
@@ -99,6 +103,9 @@ protected:
     int num_of_task_finish = 0;
     list<double> planner_times; 
     bool fast_mover_feasible = true;
+
+    bool init_task = false;
+    std::vector<int> init_task_ids;
 
 
 	void initialize();
@@ -268,6 +275,10 @@ public:
     void set_plan_time_limit(int limit){plan_time_limit = limit;};
     void set_preprocess_time_limit(int limit){preprocess_time_limit = limit;};
     void set_logger(Logger* logger){this->logger = logger;}
+    void set_init_task(bool init_task, std::vector<int> init_task_ids){
+        this->init_task = init_task;
+        this->init_task_ids = init_task_ids;
+    }
 
 	void simulate(int simulation_time);
     vector<Action> plan();
@@ -323,6 +334,9 @@ protected:
     list<double> planner_times; 
     bool fast_mover_feasible = true;
 
+    
+    bool init_task = false;
+    std::vector<int> init_task_ids;
 
 	void initialize();
     bool planner_initialize();
@@ -467,19 +481,29 @@ private:
 class KivaSystem: public BaseSystem 
 {
 public:
-    KivaSystem(Grid &grid, MAPFPlanner* planner, ActionModelWithRotate* model, int num_agents, uint seed):
+    KivaSystem(Grid &grid, MAPFPlanner* planner, ActionModelWithRotate* model, std::vector<int>& start_locs, uint seed):
         BaseSystem(grid, planner, model), MT(seed), task_id(0)
     {
-        num_of_agents = num_agents;
+        num_of_agents = start_locs.size();
         starts.resize(num_of_agents);
 
-        std::shuffle(grid.empty_locations.begin(),grid.empty_locations.end(), MT);
-
-        for (size_t i = 0; i < num_of_agents; i++)
+        for (size_t i = 0; i < start_locs.size(); i++)
         {
-            starts[i] = State(grid.empty_locations[i], 0, -1);
-            prev_task_locs.push_back(grid.empty_locations[i]);
+            if (grid.map[start_locs[i]] == 1)
+            {
+                cout<<"error: agent "<<i<<"'s start location is an obstacle("<<start_locs[i]<<")"<<endl;
+                exit(0);
+            }
+            starts[i] = State(start_locs[i], 0, -1);
+            prev_task_locs.push_back(start_locs[i]);
         }
+        // std::shuffle(grid.empty_locations.begin(),grid.empty_locations.end(), MT);
+
+        // for (size_t i = 0; i < num_of_agents; i++)
+        // {
+        //     starts[i] = State(grid.empty_locations[i], 0, -1);
+        //     prev_task_locs.push_back(grid.empty_locations[i]);
+        // }
 
         // Initialize agent home location (workstation) distribution
 

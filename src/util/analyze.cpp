@@ -193,13 +193,16 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
 
     nlohmann::json analysis;
     analysis = {
+        {"num_task_finished", throughput}, 
         {"throughput", avg_throughput},
         {"tile_usage", vertex_usage},
         {"edge_pair_usage", edge_pair_usage},
         {"edge_pair_usage_mean", edge_pair_usage_mean},
         {"edge_pair_usage_std", edge_pair_usage_std},
         {"edge_usage_matrix", edge_usage_matrix},
-        {"vertex_wait_matrix", vertex_wait_matrix}
+        {"vertex_wait_matrix", vertex_wait_matrix}, 
+        {"final_pos", result["final_pos"]}, 
+        {"final_tasks", result["final_tasks"]}
     };
     return analysis;
 }
@@ -311,13 +314,16 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
 
     nlohmann::json analysis;
     analysis = {
+        {"num_task_finished", throughput}, 
         {"throughput", avg_throughput},
         {"tile_usage", vertex_usage},
         {"edge_pair_usage", edge_pair_usage},
         {"edge_pair_usage_mean", edge_pair_usage_mean},
         {"edge_pair_usage_std", edge_pair_usage_std},
         {"edge_usage_matrix", edge_usage_matrix},
-        {"vertex_wait_matrix", vertex_wait_matrix}
+        {"vertex_wait_matrix", vertex_wait_matrix}, 
+        {"final_pos", result["final_pos"]}, 
+        {"final_tasks", result["final_tasks"]}
     };
     return analysis;
 }
