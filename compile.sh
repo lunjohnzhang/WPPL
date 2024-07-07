@@ -5,7 +5,8 @@ mkdir build
 # build exec for cpp
 
 cd build
-cmake ../
+cmake ../ -DEIGEN3_INCLUDE_DIR=/media/project0/hongzhi/TrafficFlowMAPF/third_party/eigen \
+    -DMINIDNN_DIR=/media/project0/hongzhi/TrafficFlowMAPF/third_party/MiniDNN/include
 make -j
 
 

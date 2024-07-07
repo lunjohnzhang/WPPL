@@ -7,7 +7,7 @@
     "disable_corner_target_agents": false,
     "LaCAM2": {
         "seed": 0,
-        "planning_window": 1,
+        "planning_window": 10,
         "execution_window": 1,
         "use_external_executor": true,
         "consider_rotation": true,

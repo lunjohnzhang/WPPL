@@ -89,6 +89,10 @@ protected:
 
     vector<State> curr_states;
 
+    
+    vector<list<State>> execution_paths;
+    vector<list<State>> planning_paths;
+    
     vector<list<Action>> actual_movements;
     vector<list<Action>> planner_movements;
 
@@ -319,6 +323,8 @@ protected:
 
     vector<State> curr_states;
 
+    vector<list<State>> execution_paths;
+    vector<list<State>> planning_paths;
     vector<list<Action>> actual_movements;
     vector<list<Action>> planner_movements;
 

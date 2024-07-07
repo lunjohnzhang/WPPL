@@ -83,7 +83,13 @@ vector<Action> BaseSystem::plan_wrapper()
     // std::cout<<"wrapper called"<<std::endl;
     vector<Action> actions;
     // std::cout<<"planning"<<std::endl;
-    planner->plan(plan_time_limit, actions);
+    
+    vector<list<State>> cur_exec_paths(num_of_agents);
+    vector<list<State>> cur_plan_paths(num_of_agents);
+
+    planner->plan(plan_time_limit, actions, cur_exec_paths, cur_plan_paths);
+    this->execution_paths = cur_exec_paths;
+    this->planning_paths = cur_plan_paths;
 
     return actions;
 }
@@ -316,6 +322,10 @@ void BaseSystem::initialize()
     update_tasks();
 
     sync_shared_env();
+
+    
+    this->execution_paths.resize(num_of_agents);
+    this->planning_paths.resize(num_of_agents);
 
     actual_movements.resize(num_of_agents);
     planner_movements.resize(num_of_agents);
@@ -579,6 +589,32 @@ nlohmann::json BaseSystem::analyzeResults()
         final_tasks.push_back(assigned_task_per_agent.back());
     }
     js["final_tasks"] = final_tasks;
+
+    json exec_p = json::array();
+    for (int i=0; i<num_of_agents; ++i){
+        json ss = json::array();
+        for (const auto state: execution_paths[i]){
+            json s = json::array();
+            s.push_back(state.location/map.cols);
+            s.push_back(state.location%map.cols);
+            ss.push_back(s);
+        }
+        exec_p.push_back(ss);
+    }
+    js["execFuture"] = exec_p;
+
+    json plan_p = json::array();
+    for (int i=0; i<num_of_agents; ++i){
+        json ss = json::array();
+        for (const auto state: planning_paths[i]){
+            json s = json::array();
+            s.push_back(state.location/map.cols);
+            s.push_back(state.location%map.cols);
+            ss.push_back(s);
+        }
+        plan_p.push_back(ss);
+    }
+    js["planFuture"] = plan_p;
 
     return analyze_result_json(js, map);
 }
@@ -995,8 +1031,27 @@ vector<Action> BaseSystem::plan_wrapper()
 {
     ONLYDEV(std::cout<<"wrapper called"<<std::endl;)
     vector<Action> actions;
+    vector<list<State>> cur_exec_paths(num_of_agents);
+    vector<list<State>> cur_plan_paths(num_of_agents);
     ONLYDEV(std::cout<<"planning"<<std::endl;)
-    planner->plan(plan_time_limit, actions);
+    planner->plan(plan_time_limit, actions, cur_exec_paths, cur_plan_paths);
+
+    this->execution_paths = cur_exec_paths;
+    this->planning_paths = cur_plan_paths;
+    // cout << "exec:";
+    // for (int i=0; i<num_of_agents; ++i){
+    //     for (const auto loc: cur_exec_paths[i]){
+    //         cout << loc.location << " ";
+    //     }
+    // }
+    // cout << endl;
+    // cout << "plan:";
+    // for (int i=0; i<num_of_agents; ++i){
+    //     for (const auto loc: cur_plan_paths[i]){
+    //         cout << loc.location;
+    //     }
+    // }
+    // cout << endl;
 
     return actions;
 }
@@ -1230,6 +1285,9 @@ void BaseSystem::initialize()
     update_tasks();
 
     sync_shared_env();
+
+    this->execution_paths.resize(num_of_agents);
+    this->planning_paths.resize(num_of_agents);
 
     actual_movements.resize(num_of_agents);
     planner_movements.resize(num_of_agents);
@@ -1501,6 +1559,32 @@ nlohmann::json BaseSystem::analyzeResults()
         final_tasks.push_back(assigned_task_per_agent.back().location);
     }
     js["final_tasks"] = final_tasks;
+
+    json exec_p = json::array();
+    for (int i=0; i<num_of_agents; ++i){
+        json ss = json::array();
+        for (const auto state: execution_paths[i]){
+            json s = json::array();
+            s.push_back(state.location/map.cols);
+            s.push_back(state.location%map.cols);
+            ss.push_back(s);
+        }
+        exec_p.push_back(ss);
+    }
+    js["execFuture"] = exec_p;
+
+    json plan_p = json::array();
+    for (int i=0; i<num_of_agents; ++i){
+        json ss = json::array();
+        for (const auto state: planning_paths[i]){
+            json s = json::array();
+            s.push_back(state.location/map.cols);
+            s.push_back(state.location%map.cols);
+            ss.push_back(s);
+        }
+        plan_p.push_back(ss);
+    }
+    js["planFuture"] = plan_p;
 
     return analyze_result_json(js, map);
 }

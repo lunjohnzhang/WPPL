@@ -77,6 +77,10 @@ void MAPFPlanner::load_configs() {
     }
 }
 
+void MAPFPlanner::set_network_params(std::vector<double>& network_params){
+    this->cnn_net->set_params(network_params);
+}
+
 RHCR::MAPFSolver* MAPFPlanner::rhcr_build_mapf_solver(nlohmann::json & config, RHCR::CompetitionGraph & graph) {
     // build single agent solver
     string solver_name = read_param_json<string>(config,"single_agent_solver");
@@ -298,7 +302,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
 
 
 // plan using simple A* that ignores the time dimension
-void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
+void MAPFPlanner::plan(int time_limit,vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths) 
 {
     // NOTE we need to return within time_limit, but we can exploit this time duration as much as possible
 
@@ -329,13 +333,14 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         lacam2_solver->plan(*env);
         ONLYDEV(g_timer.record_d("mapf_lacam2_plan_s","mapf_lacam2_plan");)
         ONLYDEV(g_timer.record_p("mapf_lacam2_get_step_s");)
-        lacam2_solver->get_step_actions(*env,actions);
+        lacam2_solver->get_step_actions(*env,actions, cur_exec_paths, cur_plan_paths);
         ONLYDEV(g_timer.record_d("mapf_lacam2_get_step_s","mapf_lacam2_get_step");)
+        ONLYDEV(cout<<"end LaCAM2"<<endl;)
     } else if (lifelong_solver_name=="LNS") {
         ONLYDEV(cout<<"using LNS"<<endl;)
         lns_solver->observe(*env);
         lns_solver->plan(*env); 
-        lns_solver->get_step_actions(*env,actions);
+        lns_solver->get_step_actions(*env,actions, cur_exec_paths, cur_plan_paths);
     } else if (lifelong_solver_name=="DUMMY") {
         cout<<"using DUMMY"<<endl;
     } 
@@ -494,6 +499,10 @@ list<pair<int,int>> MAPFPlanner::getNeighbors(int location,int direction) {
 #include "util/MyLogger.h"
 #include "boost/format.hpp"
 #include "util/MyCommon.h"
+
+void MAPFPlanner::set_network_params(std::vector<double>& network_params){
+    this->cnn_net->set_params(network_params);
+}
 
 void MAPFPlanner::load_configs() {
     // load configs
@@ -659,7 +668,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
 
 
 // plan using simple A* that ignores the time dimension
-void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
+void MAPFPlanner::plan(int time_limit,vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths)  
 {
     // NOTE we need to return within time_limit, but we can exploit this time duration as much as possible
 
@@ -679,13 +688,18 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
 
    if (lifelong_solver_name=="LaCAM2") {
         ONLYDEV(cout<<"using LaCAM2"<<endl;)
+        ONLYDEV(g_timer.record_p("mapf_lacam2_plan_s");)
         lacam2_solver->plan(*env);
-        lacam2_solver->get_step_actions(*env,actions);
+        ONLYDEV(g_timer.record_d("mapf_lacam2_plan_s","mapf_lacam2_plan");)
+        ONLYDEV(g_timer.record_p("mapf_lacam2_get_step_s");)
+        lacam2_solver->get_step_actions(*env,actions, cur_exec_paths, cur_plan_paths);
+        ONLYDEV(g_timer.record_d("mapf_lacam2_get_step_s","mapf_lacam2_get_step");)
+        ONLYDEV(cout<<"end LaCAM2"<<endl;)
     } else if (lifelong_solver_name=="LNS") {
         ONLYDEV(cout<<"using LNS"<<endl;)
         lns_solver->observe(*env);
         lns_solver->plan(*env); 
-        lns_solver->get_step_actions(*env,actions);
+        lns_solver->get_step_actions(*env,actions, cur_exec_paths, cur_plan_paths);
     } else {
         cout<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
         exit(-1);

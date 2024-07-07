@@ -31,7 +31,7 @@ ret=py_driver.run(
     # map_path=map_path,
     # map_json_str = map_json_str,
     map_json_path = map_json_path,
-    simulation_steps=10000,
+    simulation_steps=2,
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
     gen_random=True,
@@ -40,6 +40,7 @@ ret=py_driver.run(
     init_task_ids=str([719, 1008, 1008, 1008, 1125, 792, 503, 1043, 1151, 468]), 
     init_agent=True,  
     init_agent_pos=str([1123, 485, 165, 694, 718, 357, 890, 845, 640, 623]), 
+    # network_params=str([1, ]*2693), 
     num_tasks=100000,
     seed=0,
     save_paths=True,
@@ -75,6 +76,13 @@ print(analysis["throughput"],analysis["edge_pair_usage_mean"],analysis["edge_pai
 print(analysis["throughput"], analysis["num_task_finished"])
 print("final_pos:", analysis["final_pos"])
 print("final_tasks:", analysis["final_tasks"])
+print("====")
+print(analysis["actual_paths"])
+print(analysis["starts"])
+print("exec_f:", analysis["exec_future"])
+print("plan_f:", analysis["plan_future"])
+print("exec_m:", analysis["exec_move"])
+print("plan_m:", analysis["plan_move"])
 ##### Only use the following for weight opt case #####
 # because the order of orientation is different in competition code and weight opt code.
 

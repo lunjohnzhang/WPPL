@@ -41,6 +41,10 @@ find_package( Boost 1.49.0 REQUIRED COMPONENTS program_options system filesystem
 
 include_directories( ${Boost_INCLUDE_DIRS} )
 
+include_directories(${EIGEN3_INCLUDE_DIR})
+
+include_directories(${MINIDNN_DIR})
+
 find_package(OpenMP REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Threads REQUIRED)
@@ -50,7 +54,7 @@ IF (MAP_OPT)
     add_subdirectory(pybind11)
 ENDIF()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion")
 
 # IF(PYTHON)
 #     include_directories("python")
@@ -112,7 +116,7 @@ IF (MAP_OPT)
     add_definitions(-DMAP_OPT)
 ENDIF()
 
-SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wfatal-errors")
+# SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wfatal-errors")
 
 add_executable(lifelong_comp ${SOURCES} )
 target_link_libraries(lifelong_comp ${Boost_LIBRARIES})
