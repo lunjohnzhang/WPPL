@@ -354,24 +354,24 @@ std::string run(const py::kwargs& kwargs)
 
     } 
 
-    if (kwargs.contains("network_params")){
-        // std::cout << "has nn params" <<std::endl;
-        std::string netparams_str=kwargs["network_params"].cast<std::string>();
-        nlohmann::json netparams_json=nlohmann::json::parse(netparams_str);
-        std::vector<double> network_params;
-        for (auto & p:netparams_json) {
-            network_params.push_back(p.get<double>());
-        }
-        ONLYDEV(std::cout<<network_params.size()<<std::endl;
-        for (unsigned int i=0; i<network_params.size(); ++i){
-            std::cout<<network_params[i]<<", ";
-        }
-        std::cout<<std::endl;)
-        // std::cout << "here"<<std::endl;
-        planner->init_network(grid.rows, grid.cols);
-        planner->set_network_params(network_params);
-        exit(1);
-    }
+    // if (kwargs.contains("network_params")){
+    //     // std::cout << "has nn params" <<std::endl;
+    //     std::string netparams_str=kwargs["network_params"].cast<std::string>();
+    //     nlohmann::json netparams_json=nlohmann::json::parse(netparams_str);
+    //     std::vector<double> network_params;
+    //     for (auto & p:netparams_json) {
+    //         network_params.push_back(p.get<double>());
+    //     }
+    //     ONLYDEV(std::cout<<network_params.size()<<std::endl;
+    //     for (unsigned int i=0; i<network_params.size(); ++i){
+    //         std::cout<<network_params[i]<<", ";
+    //     }
+    //     std::cout<<std::endl;)
+    //     // std::cout << "here"<<std::endl;
+    //     planner->init_network(grid.rows, grid.cols);
+    //     planner->set_network_params(network_params);
+    //     exit(1);
+    // }
     
     ActionModelWithRotate *model = new ActionModelWithRotate(grid);
     model->set_logger(logger);

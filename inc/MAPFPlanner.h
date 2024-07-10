@@ -20,7 +20,7 @@
 #include <memory>
 #include "LaCAM2/LaCAM2Solver.hpp"
 #include "LNS/LNSSolver.h"
-#include "util/network.h"
+// #include "util/network.h"
 
 class MAPFPlanner
 {
@@ -46,10 +46,10 @@ public:
     std::list<pair<int,int>> getNeighbors(int location, int direction);
     bool validateMove(int loc,int loc2);
 
-    void init_network(int map_h, int map_w){
-        this->cnn_net = std::shared_ptr<CNNNetwork>(new CNNNetwork(map_h, map_w));
-    }
-    void set_network_params(std::vector<double>& network_params);
+    // void init_network(int map_h, int map_w){
+    //     this->cnn_net = std::shared_ptr<CNNNetwork>(new CNNNetwork(map_h, map_w));
+    // }
+    // void set_network_params(std::vector<double>& network_params);
 
     bool consider_rotation=true;
     string lifelong_solver_name;
@@ -68,7 +68,7 @@ public:
     void rhcr_config_solver(std::shared_ptr<RHCR::RHCRSolver> & solver,nlohmann::json & config);
 
     int max_execution_steps;
-    std::shared_ptr<CNNNetwork> cnn_net = std::make_shared<CNNNetwork>();
+    // std::shared_ptr<CNNNetwork> cnn_net = std::make_shared<CNNNetwork>();
 };
 
 #else
@@ -81,7 +81,6 @@ public:
 #include <memory>
 #include "LaCAM2/LaCAM2Solver.hpp"
 #include "LNS/LNSSolver.h"
-#include "util/network.h"
 class MAPFPlanner
 {
 public:
@@ -109,11 +108,11 @@ public:
     std::string load_map_weights(string weights_path);
     
     int max_execution_steps;
-    void set_network_params(std::vector<double>& network_params);
-    void init_network(int map_h, int map_w){
-        this->cnn_net = std::shared_ptr<CNNNetwork>(new CNNNetwork(map_h, map_w));
-    }
-    std::shared_ptr<CNNNetwork> cnn_net = std::make_shared<CNNNetwork>();
+    // void set_network_params(std::vector<double>& network_params);
+    // void init_network(int map_h, int map_w){
+    //     this->cnn_net = std::shared_ptr<CNNNetwork>(new CNNNetwork(map_h, map_w));
+    // }
+    // std::shared_ptr<CNNNetwork> cnn_net = std::make_shared<CNNNetwork>();
 };
 
 #endif

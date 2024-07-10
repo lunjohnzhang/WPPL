@@ -77,9 +77,9 @@ void MAPFPlanner::load_configs() {
     }
 }
 
-void MAPFPlanner::set_network_params(std::vector<double>& network_params){
-    this->cnn_net->set_params(network_params);
-}
+// void MAPFPlanner::set_network_params(std::vector<double>& network_params){
+//     this->cnn_net->set_params(network_params);
+// }
 
 RHCR::MAPFSolver* MAPFPlanner::rhcr_build_mapf_solver(nlohmann::json & config, RHCR::CompetitionGraph & graph) {
     // build single agent solver
@@ -500,9 +500,9 @@ list<pair<int,int>> MAPFPlanner::getNeighbors(int location,int direction) {
 #include "boost/format.hpp"
 #include "util/MyCommon.h"
 
-void MAPFPlanner::set_network_params(std::vector<double>& network_params){
-    this->cnn_net->set_params(network_params);
-}
+// void MAPFPlanner::set_network_params(std::vector<double>& network_params){
+//     this->cnn_net->set_params(network_params);
+// }
 
 void MAPFPlanner::load_configs() {
     // load configs
