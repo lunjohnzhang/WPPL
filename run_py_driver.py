@@ -4,14 +4,14 @@ sys.path.append('scripts')
 from map import Map
 import json
 
-map_path="example_problems/warehouse.domain/maps/kiva_large_w_mode.map"
+# map_path="example_problems/warehouse.domain/maps/kiva_large_w_mode.map"
 # full_weight_path="scripts/random_weight_001.w"
 with_wait_costs=True
 
-map=Map(map_path)
-map.print_graph(map.graph)
+# map=Map(map_path)
+# map.print_graph(map.graph)
 
-map_json_path = "../maps/warehouse/human/kiva_large_w_mode.json"
+map_json_path = "../maps/competition/online_map/task_dist/sortation_small.json"
 with open(map_json_path, "r") as f:
     map_json = json.load(f)
     map_json_str = json.dumps(map_json)
@@ -25,6 +25,8 @@ with open(config_path) as f:
     config=json.load(f)
     config_str=json.dumps(config)
 
+agents_path = "../maps/competition/online_map/task_dist/test.agent"
+tasks_path = "../maps/competition/online_map/task_dist/test.task"
 ret=py_driver.run(
     # For map, it uses map_path by default. If not provided, it'll use map_json
     # which contains json string of the map
@@ -34,12 +36,14 @@ ret=py_driver.run(
     simulation_steps=2,
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
-    gen_random=True,
-    num_agents=10,
-    init_task=True, 
-    init_task_ids=str([719, 1008, 1008, 1008, 1125, 792, 503, 1043, 1151, 468]), 
-    init_agent=True,  
-    init_agent_pos=str([1123, 485, 165, 694, 718, 357, 890, 845, 640, 623]), 
+    gen_random=False,
+    agents_path=agents_path, 
+    tasks_path=tasks_path, 
+    num_agents=800,
+    # init_task=True, 
+    # init_task_ids=str([719, 1008, 1008, 1008, 1125, 792, 503, 1043, 1151, 468]), 
+    # init_agent=True,  
+    # init_agent_pos=str([1123, 485, 165, 694, 718, 357, 890, 845, 640, 623]), 
     # network_params=str([1, ]*2693), 
     num_tasks=100000,
     seed=0,

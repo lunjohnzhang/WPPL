@@ -285,6 +285,11 @@ public:
     }
 
 	void simulate(int simulation_time);
+
+    void warmup(int total_warmup_steps);
+    void update_gg_and_step(int update_gg_interval);
+    // void update_gg_and_step(int update_interval);
+
     vector<Action> plan();
     vector<Action> plan_wrapper();
 
@@ -294,6 +299,7 @@ public:
 
 #ifdef MAP_OPT
     nlohmann::json analyzeResults();
+    int total_simulation_steps;
 #endif
 
 protected:
@@ -308,6 +314,7 @@ protected:
 
     ActionModelWithRotate* model;
 
+    int warmupstep=0;
     // #timesteps for simulation
     int timestep;
 
@@ -321,6 +328,7 @@ protected:
     vector<State> starts;
     int num_of_agents;
 
+    vector<State> curr_starts;
     vector<State> curr_states;
 
     vector<list<State>> execution_paths;

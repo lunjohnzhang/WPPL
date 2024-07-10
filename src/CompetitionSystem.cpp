@@ -1146,6 +1146,101 @@ void BaseSystem::log_event_finished(int agent_id, int task_id, int timestep)
     ONLYDEV(logger->log_info("Agent " + std::to_string(agent_id) + " finishes task " + std::to_string(task_id), timestep);)
 }
 
+void BaseSystem::warmup(int total_warmup_steps){
+    initialize();
+    for (; this->warmupstep< total_warmup_steps;){
+        sync_shared_env();
+        auto start = std::chrono::steady_clock::now();
+        vector<Action> actions = plan();
+        auto end = std::chrono::steady_clock::now();
+        this->warmupstep+=1;
+
+        for (int a = 0; a < num_of_agents; a++){
+            if (!env->goal_locations[a].empty())
+                solution_costs[a]++;
+        }
+
+        // move drives
+        list<Task> new_finished_tasks = move(actions);
+        if (!planner_movements[0].empty() && planner_movements[0].back() == Action::NA){
+            planner_times.back()+=plan_time_limit;  //add planning time to last record
+        } else{
+            auto diff = end-start;
+            planner_times.push_back(std::chrono::duration<double>(diff).count());
+        }
+
+        // TODO: ensure warmup steps does not contribute to the whole setting
+        for (auto task : new_finished_tasks){
+            finished_tasks[task.agent_assigned].emplace_back(task);
+            // num_of_task_finish++;
+        }
+        update_tasks();
+
+        bool complete_all = false;
+        for (auto & t: assigned_tasks){
+            if(t.empty()){
+                complete_all = true;
+            }else{
+                complete_all = false;
+                break;
+            }
+        }
+        if (complete_all){
+            cout << std::endl << "All task finished!" << std::endl;
+            break;
+        }
+    }
+}
+
+void BaseSystem::update_gg_and_step(int update_gg_interval){
+    
+    this->curr_starts = this->curr_states;
+
+    int t_step=0;
+    for (; t_step<update_gg_interval && this->timestep < this->total_simulation_steps;){
+        sync_shared_env();
+        auto start = std::chrono::steady_clock::now();
+        vector<Action> actions = plan();
+        auto end = std::chrono::steady_clock::now();
+        t_step += 1;
+        timestep += 1;
+
+        for (int a = 0; a < num_of_agents; a++){
+            if (!env->goal_locations[a].empty())
+                solution_costs[a]++;
+        }
+
+        // move drives
+        list<Task> new_finished_tasks = move(actions);
+        if (!planner_movements[0].empty() && planner_movements[0].back() == Action::NA){
+            planner_times.back()+=plan_time_limit;  //add planning time to last record
+        } else{
+            auto diff = end-start;
+            planner_times.push_back(std::chrono::duration<double>(diff).count());
+        }
+
+        // TODO: ensure warmup steps does not contribute to the whole setting
+        for (auto task : new_finished_tasks){
+            finished_tasks[task.agent_assigned].emplace_back(task);
+            num_of_task_finish++;
+        }
+        update_tasks();
+
+        bool complete_all = false;
+        for (auto & t: assigned_tasks){
+            if(t.empty()){
+                complete_all = true;
+            }else{
+                complete_all = false;
+                break;
+            }
+        }
+        if (complete_all){
+            cout << std::endl << "All task finished!" << std::endl;
+            break;
+        }
+    }
+}
 
 void BaseSystem::simulate(int simulation_time)
 {
@@ -1271,7 +1366,9 @@ void BaseSystem::initialize()
     finished_tasks.resize(num_of_agents);
     // bool succ = load_records(); // continue simulating from the records
     timestep = 0;
+    this->warmupstep = 0;
     curr_states = starts;
+    this->curr_starts = this->curr_states;
     assigned_tasks.resize(num_of_agents);
 
     //planner initilise before knowing the first goals
@@ -1585,6 +1682,8 @@ nlohmann::json BaseSystem::analyzeResults()
         plan_p.push_back(ss);
     }
     js["planFuture"] = plan_p;
+
+    js["done"] = (this->timestep >= this->total_simulation_steps);
 
     return analyze_result_json(js, map);
 }

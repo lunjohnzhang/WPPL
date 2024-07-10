@@ -332,7 +332,10 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
     int team_size=result["teamSize"].get<int>();
     // std::cout<<"team size: "<<team_size<<std::endl;
 
+    nlohmann::json past_paths =nlohmann::json::array();
     for (int aid=0;aid<team_size;++aid) {
+        nlohmann::json agent_past_path = nlohmann::json::array();
+
         auto actions_str = result["actualPaths"][aid].get<std::string>();
         // std::cerr<<"agent "<<aid<<" actions: "<<actions_str<<std::endl;
 
@@ -349,6 +352,7 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
         auto prev_y=start_y;
         for (int i=0;i<actions_str.size();i=i+2) {
             // std::cerr<<"iter "<<i<<std::endl;
+            agent_past_path.push_back(nlohmann::json::array({prev_y, prev_x}));
             char action=actions_str[i];
             auto curr_x=prev_x;
             auto curr_y=prev_y;
@@ -382,6 +386,8 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
             prev_x=curr_x;
             prev_y=curr_y;
         }
+        agent_past_path.push_back(nlohmann::json::array({prev_y, prev_x}));
+        past_paths.push_back(agent_past_path);
     }
 
     double edge_pair_usage_mean, edge_pair_usage_std;
@@ -475,7 +481,9 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
         {"exec_future", result["execFuture"]}, 
         {"plan_future", result["planFuture"]}, 
         {"exec_move", exec_moves}, 
-        {"plan_move", plan_moves}
+        {"plan_move", plan_moves}, 
+        {"past_paths", past_paths}, 
+        {"done", result["done"]}
     };
     return analysis;
 }
