@@ -41,9 +41,9 @@ find_package( Boost 1.49.0 REQUIRED COMPONENTS program_options system filesystem
 
 include_directories( ${Boost_INCLUDE_DIRS} )
 
-include_directories(${EIGEN3_INCLUDE_DIR})
+# include_directories(${EIGEN3_INCLUDE_DIR})
 
-include_directories(${MINIDNN_DIR})
+# include_directories(${MINIDNN_DIR})
 
 find_package(OpenMP REQUIRED)
 find_package(spdlog REQUIRED)
