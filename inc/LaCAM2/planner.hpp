@@ -7,9 +7,10 @@
 #include "LaCAM2/graph.hpp"
 #include "LaCAM2/instance.hpp"
 #include "LaCAM2/utils.hpp"
-#include "util/HeuristicTable.h"
+#include "util/HeuristicTableV2.h"
 #include <memory>
 #include "LaCAM2/executor.hpp"
+#include "common.h"
 
 namespace LaCAM2 {
 
@@ -59,7 +60,7 @@ struct HNode {
   
   int order_strategy;
 
-  HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Instance * ins, HNode* _parent, float _g,
+  HNode(const Config& _C, const std::shared_ptr<HT_v2::HeuristicTableV2> & HT, Instance * ins, HNode* _parent, float _g,
         float _h, const uint _d, int order_strategy, bool disable_agent_goals);
   ~HNode();
 };
@@ -82,7 +83,7 @@ struct Planner {
   // solver utils
   const uint N;       // number of agents
   const uint V_size;  // number o vertices
-  std::shared_ptr<HeuristicTable> HT;
+  std::shared_ptr<HT_v2::HeuristicTableV2> HT;
   std::shared_ptr<std::vector<float> > map_weights; // map weights
   uint loop_cnt;      // auxiliary
 
@@ -97,7 +98,7 @@ struct Planner {
 
   float get_cost_move(int pst,int ped);
 
-  Planner(Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline, std::mt19937* _MT,
+  Planner(Instance* _ins, const std::shared_ptr<HT_v2::HeuristicTableV2> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline, std::mt19937* _MT,
           const int _verbose = 0,
           // other parameters
           const Objective _objective = OBJ_NONE,

@@ -148,7 +148,7 @@ int LaCAM2Solver::get_neighbor_orientation(int loc1,int loc2) {
 }
 
 float LaCAM2Solver::get_action_cost(int pst, int ost, int ped, int oed) {
-    auto & map_weights=*(HT->map_weights);
+    auto & map_weights=HT->map_weights;
 
     int offset=ped-pst;
     if (offset==0) {
@@ -157,13 +157,13 @@ float LaCAM2Solver::get_action_cost(int pst, int ost, int ped, int oed) {
     } else if (offset==1) {
         // east
         return map_weights[pst*5+0];
-    } else if (offset==HT->env.cols) {
+    } else if (offset==HT->cols) {
         // south
         return map_weights[pst*5+1];
     } else if (offset==-1) {
         // west
         return map_weights[pst*5+2];
-    } else if (offset==-HT->env.cols) {
+    } else if (offset==-HT->cols) {
         // north
         return map_weights[pst*5+3];
     } else {
@@ -197,7 +197,7 @@ float LaCAM2Solver::eval_solution(const Instance & instance, const Solution & so
 #ifndef NO_ROT
             cost += HT->get(loc,orient,instance.goals.locs[aid]->index);
 #else
-            cost += HT->get(loc,instance.goals.locs[aid]->index);
+            cost += HT->get(aid, loc);
 #endif
 
         }
@@ -224,6 +224,13 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
     //         paths[i].push_back(env.curr_states[i]);
     //     }
     // }
+
+    for (int i=0;i<env.num_of_agents;++i) {
+        int start_loc=env.curr_states[i].location;
+        int goal_loc=env.goal_locations[i][0].first;
+        HT->update_start_and_goal(i, start_loc, goal_loc);
+    }
+
 
     if (env.curr_timestep==0 && max_agents_in_use<env.num_of_agents) {
         disable_agents(env);
@@ -260,48 +267,48 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
         bool use_swap=false; // TODO: we need try use_swap
         bool use_orient_in_heuristic=read_param_json<bool>(config,"use_orient_in_heuristic");
 
-        vector<::Path> precomputed_paths;
-        if (read_param_json<int>(config["SUO"],"iterations")>0) {
-            ONLYDEV(g_timer.record_p("suo_init_s");)
-            SUO2::Spatial::SUO suo(
-                env,
-                *map_weights,
-                HT,
-                read_param_json<float>(config["SUO"],"vertex_collision_cost"),
-                read_param_json<int>(config["SUO"],"iterations"),
-                read_param_json<int>(config["SUO"],"max_expanded"),
-                read_param_json<int>(config["SUO"],"window"),
-                read_param_json<float>(config["SUO"],"h_weight")
-            );
-            ONLYDEV(g_timer.record_d("suo_init_s","suo_init");)
-            ONLYDEV(g_timer.record_p("suo_plan_s");)
-            suo.plan();
-            ONLYDEV(g_timer.record_d("suo_plan_s","suo_plan");)
-            g_timer.print_all_d();
+        // vector<::Path> precomputed_paths;
+        // if (read_param_json<int>(config["SUO"],"iterations")>0) {
+        //     ONLYDEV(g_timer.record_p("suo_init_s");)
+        //     SUO2::Spatial::SUO suo(
+        //         env,
+        //         *map_weights,
+        //         HT,
+        //         read_param_json<float>(config["SUO"],"vertex_collision_cost"),
+        //         read_param_json<int>(config["SUO"],"iterations"),
+        //         read_param_json<int>(config["SUO"],"max_expanded"),
+        //         read_param_json<int>(config["SUO"],"window"),
+        //         read_param_json<float>(config["SUO"],"h_weight")
+        //     );
+        //     ONLYDEV(g_timer.record_d("suo_init_s","suo_init");)
+        //     ONLYDEV(g_timer.record_p("suo_plan_s");)
+        //     suo.plan();
+        //     ONLYDEV(g_timer.record_d("suo_plan_s","suo_plan");)
+        //     g_timer.print_all_d();
 
-            ONLYDEV(g_timer.record_p("copy_suo_paths_s");)
+        //     ONLYDEV(g_timer.record_p("copy_suo_paths_s");)
             
 
-            // std::cout<<"here"<<std::endl;
-            precomputed_paths.resize(env.num_of_agents);
-            for (int i=0;i<env.num_of_agents;++i){
-                if (suo.paths[i][0].pos!=env.curr_states[i].location || suo.paths[i][0].orient!=env.curr_states[i].orientation){
-                    cerr<<"agent "<<i<<"'s current state doesn't match with the plan"<<endl;
-                    exit(-1);
-                }
-                for (int j=0;j<suo.paths[i].size();++j){
-                    precomputed_paths[i].emplace_back(suo.paths[i][j].pos,-1,suo.paths[i][j].orient);
-                }
-                // if (i==0){
-                //     std::cout<<"agent "<<i<<" starts:"<<env.curr_states[i]<<" "<<env.goal_locations[i][0].first<<endl;
-                //     std::cout<<precomputed_paths[i]<<endl;
-                // }
-            }
-            // we need to change precomputed_paths to suo_paths. because the former one means hard constraints to follow
-            // but the latter one is just a suggesion.
-            instance.precomputed_paths=&precomputed_paths;
-            ONLYDEV(g_timer.record_d("copy_suo_paths_s","copy_suo_paths");)
-        }
+        //     // std::cout<<"here"<<std::endl;
+        //     precomputed_paths.resize(env.num_of_agents);
+        //     for (int i=0;i<env.num_of_agents;++i){
+        //         if (suo.paths[i][0].pos!=env.curr_states[i].location || suo.paths[i][0].orient!=env.curr_states[i].orientation){
+        //             cerr<<"agent "<<i<<"'s current state doesn't match with the plan"<<endl;
+        //             exit(-1);
+        //         }
+        //         for (int j=0;j<suo.paths[i].size();++j){
+        //             precomputed_paths[i].emplace_back(suo.paths[i][j].pos,-1,suo.paths[i][j].orient);
+        //         }
+        //         // if (i==0){
+        //         //     std::cout<<"agent "<<i<<" starts:"<<env.curr_states[i]<<" "<<env.goal_locations[i][0].first<<endl;
+        //         //     std::cout<<precomputed_paths[i]<<endl;
+        //         // }
+        //     }
+        //     // we need to change precomputed_paths to suo_paths. because the former one means hard constraints to follow
+        //     // but the latter one is just a suggesion.
+        //     instance.precomputed_paths=&precomputed_paths;
+        //     ONLYDEV(g_timer.record_d("copy_suo_paths_s","copy_suo_paths");)
+        // }
 
         float best_cost=FLT_MAX;
         Solution best_solution;
@@ -500,6 +507,7 @@ void LaCAM2Solver::solution_convert(const SharedEnvironment & env, Solution & so
 void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths) {
     // check empty
     assert(actions.empty());
+
 
 
     if (num_task_completed>=max_task_completed) { // only for competition purpose, don't reveal too much information, otherwise it is too tired to overfit... do something fun instead!

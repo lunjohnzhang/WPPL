@@ -52,12 +52,12 @@ bool is_feasible_solution(const Instance& ins, const Solution& solution,
   return true;
 }
 
-float get_makespan(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT, const Solution& solution)
+float get_makespan(const Instance& ins, const std::shared_ptr<HT_v2::HeuristicTableV2>& HT, const Solution& solution)
 {
   if (solution.empty()) return 0;
   float c = 0;
   for (auto i=0;i<ins.N;++i) {
-    c = std::max(c,(float)(solution.size()-1) + HT->get(solution.back().locs[i]->index,solution.back().orients[i],ins.goals.locs[i]->index));
+    c = std::max(c,(float)(solution.size()-1) + HT->get(i, solution.back().locs[i]->index));
   }
   return c;
 }
@@ -80,37 +80,37 @@ int get_sum_of_costs(const Solution& solution)
   return c;
 }
 
-float get_sum_of_loss(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT, const Solution& solution)
+float get_sum_of_loss(const Instance& ins, const std::shared_ptr<HT_v2::HeuristicTableV2>& HT, const Solution& solution)
 {
   if (solution.empty()) return 0;
   float c = 0;
   const auto N = solution.front().size();
   const auto T = solution.size();
   for (size_t i = 0; i < N; ++i) {
-    c+= (float)(solution.size()-1) + HT->get(solution.back().locs[i]->index,solution.back().orients[i],ins.goals.locs[i]->index);
+    c+= (float)(solution.size()-1) + HT->get(i,solution.back().locs[i]->index);
   }
   return c;
 }
 
-float get_makespan_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT)
+float get_makespan_lower_bound(const Instance& ins, const std::shared_ptr<HT_v2::HeuristicTableV2>& HT)
 {
   float c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
-    c = std::max(c, HT->get(ins.starts.locs[i]->index,ins.goals.locs[i]->index));
+    c = std::max(c, HT->get(i,ins.starts.locs[i]->index));
   }
   return c;
 }
 
-float get_sum_of_costs_lower_bound(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT)
+float get_sum_of_costs_lower_bound(const Instance& ins, const std::shared_ptr<HT_v2::HeuristicTableV2>& HT)
 {
   float c = 0;
   for (size_t i = 0; i < ins.N; ++i) {
-    c += HT->get(ins.starts.locs[i]->index,ins.goals.locs[i]->index);
+    c += HT->get(i,ins.starts.locs[i]->index);
   }
   return c;
 }
 
-void print_stats(const int verbose, const Instance& ins, const std::shared_ptr<HeuristicTable>& HT,
+void print_stats(const int verbose, const Instance& ins, const std::shared_ptr<HT_v2::HeuristicTableV2>& HT,
                  const Solution& solution, const double comp_time_ms)
 {
   auto ceil = [](float x) { return std::ceil(x * 100) / 100; };
@@ -138,7 +138,7 @@ void print_stats(const int verbose, const Instance& ins, const std::shared_ptr<H
 // for log of map_name
 static const std::regex r_map_name = std::regex(R"(.+/(.+))");
 
-void make_log(const Instance& ins, const std::shared_ptr<HeuristicTable>& HT, const Solution& solution,
+void make_log(const Instance& ins, const std::shared_ptr<HT_v2::HeuristicTableV2>& HT, const Solution& solution,
               const std::string& output_name, const double comp_time_ms,
               const std::string& map_name, const int seed,
               const std::string& additional_info, const bool log_short)

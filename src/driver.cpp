@@ -129,6 +129,8 @@ int main(int argc, char **argv)
 
     int team_size = read_param_json<int>(data, "teamSize");
 
+    std::cerr<<"team size: "<<team_size<<std::endl;
+
     std::vector<int> agents = read_int_vec(base_folder + read_param_json<std::string>(data, "agentFile"), team_size);
     std::vector<int> tasks = read_int_vec(base_folder + read_param_json<std::string>(data, "taskFile"));
     std::cout << agents.size() << " agents and " << tasks.size() << " tasks"<< std::endl;
