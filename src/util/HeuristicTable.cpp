@@ -56,6 +56,7 @@ void HeuristicTable::compute_weighted_heuristics(){
     DEV_DEBUG("[start] Compute heuristics.");
     ONLYDEV(g_timer.record_p("heu/compute_start");)
 
+    std::cout << "[start] Compute heuristics." <<std::endl;
     // omp_set_num_threads(1);
 
     int n_threads=1; //omp_get_max_threads();
@@ -97,10 +98,12 @@ void HeuristicTable::compute_weighted_heuristics(){
         }
 
         // ONLYDEV(if (empty_locs[loc_idx]==2) {
+        // for (int i=0; i< env.map.size(); ++i){
         //     dump_main_heuristics(
-        //         2,
+        //         i,
         //         "analysis/heuristics/debug"
         //     );
+        // }
         // })
     }
 

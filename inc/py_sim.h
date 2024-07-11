@@ -29,6 +29,7 @@ class py_sim {
     public:
         py_sim(py::kwargs kwargs);
         std::string warmup();
+        std::vector<int> get_curr_pos();
         std::string update_gg_and_step(std::vector<float> edge_weights, std::vector<float> wait_costs);
 
     private:
@@ -56,6 +57,9 @@ class py_sim {
         MAPFPlanner* planner=nullptr;
         ActionModelWithRotate* model;
         std::unique_ptr<BaseSystem> system_ptr;
+
+        bool save_path=false;
+        boost::filesystem::path path_file;
 };
 
 

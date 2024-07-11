@@ -12,6 +12,7 @@ with_wait_costs=True
 # map.print_graph(map.graph)
 
 map_json_path = "../maps/competition/online_map/task_dist/sortation_small.json"
+map_json_path = "../maps/competition/online_map/task_dist/test.json"
 with open(map_json_path, "r") as f:
     map_json = json.load(f)
     map_json_str = json.dumps(map_json)
@@ -25,32 +26,32 @@ with open(config_path) as f:
     config=json.load(f)
     config_str=json.dumps(config)
 
-agents_path = "../maps/competition/online_map/task_dist/test.agent"
-tasks_path = "../maps/competition/online_map/task_dist/test.task"
-ret=py_driver.run(
+# agents_path = "../maps/competition/online_map/task_dist/test.agent"
+# tasks_path = "../maps/competition/online_map/task_dist/test.task"
+kwargs = {
     # For map, it uses map_path by default. If not provided, it'll use map_json
     # which contains json string of the map
     # map_path=map_path,
     # map_json_str = map_json_str,
-    map_json_path = map_json_path,
-    simulation_steps=2,
+    "map_json_path": map_json_path,
+    "simulation_steps": 5,
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
-    gen_random=False,
-    agents_path=agents_path, 
-    tasks_path=tasks_path, 
-    num_agents=800,
+    "gen_random": True,
+    # agents_path=agents_path, 
+    # tasks_path=tasks_path, 
+    "num_agents": 1,
     # init_task=True, 
     # init_task_ids=str([719, 1008, 1008, 1008, 1125, 792, 503, 1043, 1151, 468]), 
     # init_agent=True,  
     # init_agent_pos=str([1123, 485, 165, 694, 718, 357, 890, 845, 640, 623]), 
     # network_params=str([1, ]*2693), 
-    num_tasks=100000,
-    seed=0,
-    save_paths=True,
+    "num_tasks": 100000,
+    "seed": 0,
+    "save_paths": True,
     # weight of the left/right workstation, only applicable for maps with workstations
-    left_w_weight=1,
-    right_w_weight=1,
+    "left_w_weight": 1,
+    "right_w_weight": 1,
     # else we need specify agents and tasks path to load data.
     # agents_path="example_problems/random.domain/agents/random_600.agents",
     # tasks_path="example_problems/random.domain/tasks/random-32-32-20-600.tasks",
@@ -59,18 +60,38 @@ ret=py_driver.run(
     # weights=compressed_weights_json_str,
     # wait_costs=compressed_wait_costs_json_str,    
     # if we don't load config here, the program will load the default config file.
-    config=config_str,    
+    "config": config_str,    
     # the following are some things we don't need to change in the weight optimization case.
-    plan_time_limit=1, # in seconds, time limit for planning at each step, no need to change
-    preprocess_time_limit=1800, # in seconds, time limit for preprocessing, no need to change
-    file_storage_path="large_files/", # where to store the precomputed large files, no need to change
-    task_assignment_strategy="roundrobin", # how to assign tasks to agents, no need to change
-    num_tasks_reveal=1, # how many new tasks are revealed, no need to change
-)
+    "preprocess_time_limit": 1800, 
+    "plan_time_limit": 1, # in seconds, time limit for planning at each step, no need to change
+    "file_storage_path": "large_files/", # where to store the precomputed large files, no need to change
+    "task_assignment_strategy": "roundrobin", # how to assign tasks to agents, no need to change
+    "num_tasks_reveal": 1, 
+}
+
 
 import json
 import numpy as np
 
+init_agent = False
+init_task = False
+for i in range(2):
+    
+    kwargs["file_storage_path"] = f"test{i}"
+    ret=py_driver.run(**kwargs)
+    analysis=json.loads(ret)
+    
+    init_agent_pos = str(analysis["final_pos"])
+    init_task_ids = str(analysis["final_tasks"])
+    print("pos", init_agent_pos)
+    print("task:", init_task_ids)
+    kwargs["init_agent"] = True
+    kwargs["init_task"] = True
+    kwargs["init_agent_pos"] = init_agent_pos
+    kwargs["init_task_ids"] = init_task_ids
+    
+
+raise NotImplementedError
 analysis=json.loads(ret)
 print(analysis.keys())
 print(np.array(analysis["tile_usage"]).shape)

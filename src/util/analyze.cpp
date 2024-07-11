@@ -483,7 +483,7 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
         {"exec_move", exec_moves}, 
         {"plan_move", plan_moves}, 
         {"past_paths", past_paths}, 
-        {"done", result["done"]}
+        {"done", result["done"]}, 
     };
     return analysis;
 }

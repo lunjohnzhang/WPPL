@@ -93,6 +93,7 @@ public:
 
 
     virtual void initialize(int preprocess_time_limit);
+    virtual void update();
 
     // return next states for all agents
     // virtual void plan(int time_limit, std::vector<Action> & plan);

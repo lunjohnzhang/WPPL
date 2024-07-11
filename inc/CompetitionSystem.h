@@ -300,6 +300,9 @@ public:
 #ifdef MAP_OPT
     nlohmann::json analyzeResults();
     int total_simulation_steps;
+    const vector<State>& get_curr_states() const {
+        return this->curr_states;
+    }
 #endif
 
 protected:

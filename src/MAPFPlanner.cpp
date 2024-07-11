@@ -666,6 +666,37 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     cout << "planner initialization ends" << endl;
 }
 
+void MAPFPlanner::update(){
+    cout << "planner update begin" <<endl;
+    std::cout << "now planner weights is:" <<std::endl;
+    for (const auto& weight : *map_weights) {
+        std::cout << weight << ", ";
+    }
+    std::cout << std::endl;
+    std::string suffix="";
+    if (lifelong_solver_name=="LaCAM2") {
+        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
+        // std::cout << "addr ="<<heuristics->loc_idxs <<std::endl;
+        heuristics->preprocess(suffix);
+        this->lacam2_solver->update_HT(heuristics);
+        cout<<"LaCAMSolver2 update"<<endl;
+    } else if (lifelong_solver_name=="LNS") {
+        cout<<"not implemented error"<<lifelong_solver_name<<endl;
+        exit(-1);
+        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
+        heuristics->preprocess(suffix);
+        this->lacam2_solver->update_HT(heuristics);
+        // lns_solver update lacam2 solver and self ht
+        // lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver,max_task_completed);
+        // lns_solver->initialize(*env);
+        // cout<<"LNSSolver initialized"<<endl;
+    }
+    else {
+        cout<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
+        exit(-1);
+    }
+}
+
 
 // plan using simple A* that ignores the time dimension
 void MAPFPlanner::plan(int time_limit,vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths)  

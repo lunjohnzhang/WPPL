@@ -61,6 +61,36 @@ public:
 
     Instance build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr);
 
+    void update_HT(const std::shared_ptr<HeuristicTable> & new_HT){
+        // std::cout << "before update, addr:"<<this->HT.get()<<std::endl;
+        this->HT = new_HT;
+        // std::cout << "end update HT, addr:" << this->HT.get() << ", "<<HT->loc_idxs<< std::endl;
+        // this->print_HT();
+    }
+
+    void print_HT(){
+        // std::cout << "print HT, address ="<< this->HT->loc_idxs <<std::endl;
+        for (int start_loc=0; start_loc<this->HT->env.map.size(); ++start_loc){
+            std::cout << "start loc =" <<start_loc <<std::endl;
+            for (int i=0;i<this->HT->env.rows;++i) {
+                for (int j=0;j<this->HT->env.cols;++j) {
+                    int target_loc=i*this->HT->env.cols+j;
+                    // std::cout<<"target_loc="<<target_loc<<std::endl;
+                    int target_loc_idx=this->HT->loc_idxs[target_loc];
+                    float h=MAX_HEURISTIC;
+                    if (target_loc_idx!=-1){
+                        h=this->HT->main_heuristics[start_loc*this->HT->loc_size+target_loc_idx];
+                    }
+                    cout<<h;
+                    if (j!=this->HT->env.cols-1) {
+                        cout<<",";
+                    }
+                }
+                cout<<endl;
+            }
+        }
+    }
+
     float get_action_cost(int pst, int ost, int ped, int oed);
     float eval_solution(const Instance & instance, const Solution & solution);
 
