@@ -6,7 +6,7 @@
 #include "LaCAM2/instance.hpp"
 #include "LaCAM2/planner.hpp"
 #include <memory>
-#include "util/HeuristicTable.h"
+#include "util/HeuristicTableV2.h"
 #include "LaCAM2/executor.hpp"
 #include "LaCAM2/slow_executor.hpp"
 #include "nlohmann/json.hpp"
@@ -32,7 +32,7 @@ public:
     bool flag = false;
 
     std::shared_ptr<Graph> G; // graph
-    std::shared_ptr<HeuristicTable> HT; // instance
+    std::shared_ptr<HT_v2::HeuristicTableV2> HT; // instance
     std::shared_ptr<std::vector<float> > map_weights; // map weights
 
     std::shared_ptr<std::vector<AgentInfo> > agent_infos;
@@ -98,7 +98,7 @@ public:
 
     void solution_convert(const SharedEnvironment & env, Solution & solution, std::vector<Path> & paths);
 
-    LaCAM2Solver(const std::shared_ptr<HeuristicTable> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<float> > & map_weights, int max_agents_in_use, bool disable_corner_target_agents,
+    LaCAM2Solver(const std::shared_ptr<HT_v2::HeuristicTableV2> & HT, SharedEnvironment * env, std::shared_ptr<std::vector<float> > & map_weights, int max_agents_in_use, bool disable_corner_target_agents,
      int max_task_completed,
      nlohmann::json & config):
         HT(HT),

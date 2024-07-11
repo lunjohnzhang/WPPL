@@ -45,7 +45,7 @@ LNode::LNode(LNode* parent, uint i, const std::tuple<Vertex*,int > & t)
 uint HNode::HNODE_CNT = 0;
 
 // for high-level
-HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Instance * ins, HNode* _parent, float _g,
+HNode::HNode(const Config& _C, const std::shared_ptr<HT_v2::HeuristicTableV2> & HT, Instance * ins, HNode* _parent, float _g,
              float _h, const uint _d, int _order_strategy, bool disable_agent_goals)
     : C(_C),
       parent(_parent),
@@ -104,11 +104,12 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Insta
   //   // }
   // }
 
-  for (int aid=0;aid<N;++aid) {
-    if (ins->agent_infos[aid].disabled) {
-      ins->goals.locs[aid]=C.locs[aid];
-    }
-  }
+  // NOTE: cannot change goals if we use HT_v2
+  // for (int aid=0;aid<N;++aid) {
+  //   if (ins->agent_infos[aid].disabled) {
+  //     ins->goals.locs[aid]=C.locs[aid];
+  //   }
+  // }
 
   // set order
   // TODO: probably we should set a basic ordering at the begining, because it is time consuming to sort everytime with large-scale agents
@@ -140,8 +141,8 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Insta
 
 #else 
 
-        float h1=HT->get(C.locs[i]->index,ins->goals.locs[i]->index);
-        float h2=HT->get(C.locs[j]->index,ins->goals.locs[j]->index);
+        float h1=HT->get(i, C.locs[i]->index);
+        float h2=HT->get(j, C.locs[j]->index);
 
 #endif
 
@@ -191,7 +192,7 @@ HNode::~HNode()
   }
 }
 
-Planner::Planner(Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline,
+Planner::Planner(Instance* _ins, const std::shared_ptr<HT_v2::HeuristicTableV2> & HT, const std::shared_ptr<std::vector<float> > & map_weights, const Deadline* _deadline,
                  std::mt19937* _MT, const int _verbose,
                  const Objective _objective, const float _restart_rate, bool use_swap, bool use_orient_in_heuristic, bool use_external_executor, bool disable_agent_goals)
     : ins(_ins),
@@ -513,9 +514,9 @@ float Planner::get_h_value(const Config& C)
   }
 #else
   if (objective == OBJ_MAKESPAN) {
-    for (auto i = 0; i < N; ++i) cost = std::max(cost, HT->get(C.locs[i]->index, ins->goals.locs[i]->index)*(float)(1-C.arrivals[i]));
+    for (auto i = 0; i < N; ++i) cost = std::max(cost, HT->get(i, C.locs[i]->index)*(float)(1-C.arrivals[i]));
   } else if (objective == OBJ_SUM_OF_LOSS) {
-    for (auto i = 0; i < N; ++i) cost += HT->get(C.locs[i]->index, ins->goals.locs[i]->index)*(float)(1-C.arrivals[i]);
+    for (auto i = 0; i < N; ++i) cost += HT->get(i,C.locs[i]->index)*(float)(1-C.arrivals[i]);
   }
 #endif
 
@@ -933,9 +934,12 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   float cost2=get_cost_move(ai->v_now->index,u->index);
 
   float d1,d2;
-  d1=HT->get(v->index,ins->goals.locs[i]->index)+cost1;
-  d2=HT->get(u->index,ins->goals.locs[i]->index)+cost2;
+  d1=HT->get(i,v->index)+cost1;
+  d2=HT->get(i,u->index)+cost2;
 
+  // std::cerr<<v->index<<":: "<<HT->get(i,v->index)<<std::endl;
+  // std::cerr<<u->index<<":: "<<HT->get(i,u->index)<<std::endl;
+  // std::cerr<<"d1:"<<d1<<" d2:"<<d2<<std::endl;
   
   // if (i==40) {
   //   std::cout<<v->index<<" "<<ins->goals.locs[i]->index<<" "<<d1<<endl;
@@ -1029,7 +1033,7 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
   auto v_puller = v_puller_origin;
   Vertex* tmp = nullptr;
   while (
-      HT->get(v_puller->index, ins->goals.locs[pusher]->index) < HT->get(v_pusher->index, ins->goals.locs[pusher]->index)
+      HT->get(pusher,v_puller->index) < HT->get(pusher,v_pusher->index)
     ) {
     auto n = v_puller->neighbor.size();
     // remove agents who need not to move
@@ -1049,8 +1053,8 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
   }
 
   // judge based on distance
-  return (HT->get(v_pusher->index, ins->goals.locs[puller]->index) < HT->get(v_puller->index, ins->goals.locs[puller]->index)) &&
-          (HT->get(v_pusher->index, ins->goals.locs[pusher]->index) == 0 || HT->get(v_puller->index, ins->goals.locs[pusher]->index) < HT->get(v_pusher->index, ins->goals.locs[pusher]->index));
+  return (HT->get(puller, v_pusher->index) < HT->get(puller, v_puller->index)) &&
+          (HT->get(pusher, v_pusher->index) == 0 || HT->get(pusher, v_puller->index) < HT->get(pusher, v_pusher->index));
 }
 
 // simulate whether the swap is possible

@@ -3,7 +3,7 @@
 #include <MAPFPlanner.h>
 #include <random>
 #include "RHCR/interface/CompetitionGraph.h"
-#include "util/HeuristicTable.h"
+#include "util/HeuristicTableV2.h"
 #include "util/Analyzer.h"
 #include "util/MyLogger.h"
 #include "boost/format.hpp"
@@ -495,6 +495,7 @@ list<pair<int,int>> MAPFPlanner::getNeighbors(int location,int direction) {
 #include <MAPFPlanner.h>
 #include <random>
 #include "util/HeuristicTable.h"
+#include "util/HeuristicTableV2.h"
 #include "util/Analyzer.h"
 #include "util/MyLogger.h"
 #include "boost/format.hpp"
@@ -630,10 +631,59 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         }
         bool disable_corner_target_agents=read_param_json<bool>(config,"disable_corner_target_agents",false);
         int max_task_completed=read_param_json<int>(config,"max_task_completed",1000000);
-        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
-        heuristics->preprocess(suffix);
+
+
+        // auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
+        // heuristics->preprocess(suffix);
+
+
+        auto heuristics_v2 = std::make_shared<HT_v2::HeuristicTableV2>(
+            env->num_of_agents,
+            env->map,
+            env->rows,
+            env->cols,
+            *map_weights
+        );
+
+        // for (int s=0;s<env->rows*env->cols;++s)
+        // for (int g=0;g<env->rows*env->cols;++g) {
+        //     if (env->map[s]==1 || env->map[g]==1) {
+        //         continue;
+        //     }
+        // std::cout<<"s: "<<s<<", g:"<<g<<std::endl;
+
+        // heuristics_v2->update_start_and_goal(0,s,g);
+        //     for (int i=0;i<env->rows*env->cols;++i) {
+        //         if (env->map[i]!=1) {
+        //             if (std::abs(heuristics->get(i,g)-heuristics_v2->get(0,i))>1e6) {
+        //                 std::cerr<<"heuristic mismatch at "<<i<<": "<<heuristics->get(i,g)<<" vs "<<heuristics_v2->get(0,i)<<std::endl;
+        //                 exit(-1);
+        //             }
+        //         }
+        //     }
+
+        // //     // random test 
+        // //     for (int i=0;i<1000;++i) {
+        // //         int loc;
+        // //         while (true) {
+        // //             loc=rand()%(env->rows*env->cols);
+        // //             if (env->map[loc]!=1) {
+        // //                 break;
+        // //             }
+        // //         }
+        // //         if (heuristics->get(loc,g)!=heuristics_v2->get(0,loc)) {
+        // //             std::cerr<<"heuristic mismatch at "<<loc<<": "<<heuristics->get(loc,g)<<" vs "<<heuristics_v2->get(0,loc)<<std::endl;
+        // //             exit(-1);
+        // //         }
+                
+        // //     }
+
+
+        // }
+
+
         lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(
-            heuristics,
+            heuristics_v2,
             env,
             map_weights,
             max_agents_in_use,
@@ -643,6 +693,14 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         lacam2_solver->initialize(*env);
         cout<<"LaCAMSolver2 initialized"<<endl;
     } else if (lifelong_solver_name=="LNS") {
+        auto heuristics_v2 = std::make_shared<HT_v2::HeuristicTableV2>(
+            env->num_of_agents,
+            env->map,
+            env->rows,
+            env->cols,
+            *map_weights
+        );
+
         auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
         heuristics->preprocess(suffix);
         //heuristics->preprocess();
@@ -652,7 +710,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         }
         bool disable_corner_target_agents=read_param_json<bool>(config,"disable_corner_target_agents",false);
         int max_task_completed=read_param_json<int>(config,"max_task_completed",1000000);
-        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics,env,map_weights,max_agents_in_use,disable_corner_target_agents,max_task_completed,config["LNS"]["LaCAM2"]);
+        auto lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(heuristics_v2,env,map_weights,max_agents_in_use,disable_corner_target_agents,max_task_completed,config["LNS"]["LaCAM2"]);
         lacam2_solver->initialize(*env);
         lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver,max_task_completed);
         lns_solver->initialize(*env);
