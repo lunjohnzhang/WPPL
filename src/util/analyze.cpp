@@ -283,6 +283,104 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
     return analysis;
 }
 
+nlohmann::json analyze_curr_result_json(const nlohmann::json & result, Grid & grid) {
+
+    // objective: throughput
+    double throughput=result["numTaskFinishedSoFar"].get<double>();
+    auto actions_str = result["actualPaths"][0].get<std::string>();
+    int T=actions_str.size()/2+1;
+
+    double avg_throughput=throughput/T;
+
+    int team_size=result["teamSize"].get<int>();
+
+    std::cout << 1<<std::endl;
+    nlohmann::json exec_moves =nlohmann::json::array();
+    for(int aid=0; aid<team_size; ++aid){
+        std::string exec_m;
+        int prev_h=-1, prev_w=-1;
+        for (auto loc: result["execFuture"][aid]){
+            int h = loc[0].get<int>();
+            int w = loc[1].get<int>();
+            // std::cout << h<<", "<<w<<std::endl;
+            if(prev_h==-1){
+                prev_h = h;
+                prev_w = w;
+                continue;
+            }
+            
+            if((h==prev_h)&&(w==prev_w)){
+                exec_m += "W";
+            } else if((h==prev_h)&&(w==prev_w+1)){
+                exec_m += "R";
+            } else if ((h==prev_h)&&(w==prev_w-1)){
+                exec_m += "L";
+            } else if ((h==prev_h+1)&&(w==prev_w)){
+                exec_m += "D";
+            } else if ((h==prev_h-1)&&(w==prev_w)){
+                exec_m += "U";
+            } else {
+                std::cout << prev_h <<", "<<prev_w<<", "<<h<<","<<w<<std::endl;
+                std::cout << "must have bug in exec_move" <<std::endl;
+                exit(-1);
+            }
+            prev_h = h;
+            prev_w = w;
+        }
+        exec_moves.push_back(exec_m);
+    }
+std::cout << 2<<std::endl;
+    nlohmann::json plan_moves =nlohmann::json::array();
+    for(int aid=0; aid<team_size; ++aid){
+        int prev_h=-1, prev_w=-1;
+        std::string plan_m;
+        for (auto loc: result["planFuture"][aid]){
+            int h = loc[0].get<int>();
+            int w = loc[1].get<int>();
+            if(prev_h==-1){
+                prev_h = h;
+                prev_w = w;
+                continue;
+            }
+            
+            if((h==prev_h)&&(w==prev_w)){
+                plan_m += "W";
+            } else if((h==prev_h)&&(w==prev_w+1)){
+                plan_m += "R";
+            } else if ((h==prev_h)&&(w==prev_w-1)){
+                plan_m += "L";
+            } else if ((h==prev_h+1)&&(w==prev_w)){
+                plan_m += "D";
+            } else if ((h==prev_h-1)&&(w==prev_w)){
+                plan_m += "U";
+            } else {
+                std::cout << prev_h <<", "<<prev_w<<", "<<h<<","<<w<<std::endl;
+                std::cout << "must have bug in plan_move" <<std::endl;
+                exit(-1);
+            }
+            prev_h = h;
+            prev_w = w;
+        }
+        plan_moves.push_back(plan_m);
+    }
+
+    nlohmann::json analysis;
+    analysis = {
+        {"num_task_finished", throughput}, 
+        {"throughput", avg_throughput},
+        {"final_pos", result["final_pos"]}, 
+        {"final_tasks", result["final_tasks"]}, 
+        {"actual_paths", result["actualPaths"]}, 
+        {"starts", result["start"]}, 
+        {"exec_future", result["execFuture"]}, 
+        {"plan_future", result["planFuture"]}, 
+        {"exec_move", exec_moves}, 
+        {"plan_move", plan_moves}
+    };
+    return analysis;
+}
+
+
 #else 
 
 void move(int & x,int & y, char action) {
@@ -301,6 +399,143 @@ void move(int & x,int & y, char action) {
         exit(-1);
     }
 
+}
+
+nlohmann::json analyze_curr_result_json(const nlohmann::json & result, Grid & grid) {
+
+    int H=grid.rows;
+    int W=grid.cols;
+
+    // objective: throughput
+    double throughput=result["numTaskFinishedSoFar"].get<double>();
+    auto actions_str = result["actualPaths"][0].get<std::string>();
+    int T=actions_str.size()/2+1;
+    // std::cout<<"T: "<<T<<std::endl;
+
+    double avg_throughput=throughput/T;
+    // std::cout<<"total throughput: "<<throughput<<" avg throughput:"<<avg_throughput<<std::endl;
+
+    int team_size=result["teamSize"].get<int>();
+    // std::cout<<"team size: "<<team_size<<std::endl;
+    nlohmann::json past_paths =nlohmann::json::array();
+    for (int aid=0;aid<team_size;++aid) {
+        nlohmann::json agent_past_path = nlohmann::json::array();
+
+        auto actions_str = result["actualPaths"][aid].get<std::string>();
+        // std::cerr<<"agent "<<aid<<" actions: "<<actions_str<<std::endl;
+
+        auto start_y = result["start"][aid][0].get<int>();
+        auto start_x = result["start"][aid][1].get<int>();
+        // std::cerr<<"agent "<<aid<<" start: "<<start_y<<","<<start_x<<std::endl;
+
+        auto pos=start_y*W+start_x;
+
+        // simulate
+        auto prev_x=start_x;
+        auto prev_y=start_y;
+        for (int i=0;i<actions_str.size();i=i+2) {
+            // std::cerr<<"iter "<<i<<std::endl;
+            agent_past_path.push_back(nlohmann::json::array({prev_y, prev_x}));
+            char action=actions_str[i];
+            auto curr_x=prev_x;
+            auto curr_y=prev_y;
+            move(curr_x,curr_y,action);
+
+            if (curr_x<0 || curr_x>=W || curr_y<0 || curr_y>=H) {
+                std::cerr<<"agent "<<aid<<" out of bound"<<std::endl;
+                exit(-1);
+            }
+            prev_x=curr_x;
+            prev_y=curr_y;
+        }
+        agent_past_path.push_back(nlohmann::json::array({prev_y, prev_x}));
+        past_paths.push_back(agent_past_path);
+    }
+    nlohmann::json exec_moves =nlohmann::json::array();
+    for(int aid=0; aid<team_size; ++aid){
+        std::string exec_m;
+        int prev_h=-1, prev_w=-1;
+        for (auto loc: result["execFuture"][aid]){
+            int h = loc[0].get<int>();
+            int w = loc[1].get<int>();
+            // std::cout << h<<", "<<w<<std::endl;
+            if(prev_h==-1){
+                prev_h = h;
+                prev_w = w;
+                continue;
+            }
+            
+            if((h==prev_h)&&(w==prev_w)){
+                exec_m += "W";
+            } else if((h==prev_h)&&(w==prev_w+1)){
+                exec_m += "R";
+            } else if ((h==prev_h)&&(w==prev_w-1)){
+                exec_m += "L";
+            } else if ((h==prev_h+1)&&(w==prev_w)){
+                exec_m += "D";
+            } else if ((h==prev_h-1)&&(w==prev_w)){
+                exec_m += "U";
+            } else {
+                std::cout << prev_h <<", "<<prev_w<<", "<<h<<","<<w<<std::endl;
+                std::cout << "must have bug in exec_move" <<std::endl;
+                exit(-1);
+            }
+            prev_h = h;
+            prev_w = w;
+        }
+        exec_moves.push_back(exec_m);
+    }
+    
+    nlohmann::json plan_moves = nlohmann::json::array();
+    for(int aid=0; aid<team_size; ++aid){
+        int prev_h=-1, prev_w=-1;
+        std::string plan_m;
+        for (auto loc: result["planFuture"][aid]){
+            int h = loc[0].get<int>();
+            int w = loc[1].get<int>();
+            if(prev_h==-1){
+                prev_h = h;
+                prev_w = w;
+                continue;
+            }
+            
+            if((h==prev_h)&&(w==prev_w)){
+                plan_m += "W";
+            } else if((h==prev_h)&&(w==prev_w+1)){
+                plan_m += "R";
+            } else if ((h==prev_h)&&(w==prev_w-1)){
+                plan_m += "L";
+            } else if ((h==prev_h+1)&&(w==prev_w)){
+                plan_m += "D";
+            } else if ((h==prev_h-1)&&(w==prev_w)){
+                plan_m += "U";
+            } else {
+                std::cout << prev_h <<", "<<prev_w<<", "<<h<<","<<w<<std::endl;
+                std::cout << "must have bug in plan_move" <<std::endl;
+                exit(-1);
+            }
+            prev_h = h;
+            prev_w = w;
+        }
+        plan_moves.push_back(plan_m);
+    }
+
+    nlohmann::json analysis;
+    analysis = {
+        {"num_task_finished", throughput}, 
+        {"throughput", avg_throughput},
+        {"final_pos", result["final_pos"]}, 
+        {"final_tasks", result["final_tasks"]}, 
+        {"actual_paths", result["actualPaths"]}, 
+        {"starts", result["start"]}, 
+        {"exec_future", result["execFuture"]}, 
+        {"plan_future", result["planFuture"]}, 
+        {"exec_move", exec_moves}, 
+        {"plan_move", plan_moves}, 
+        {"past_paths", past_paths}, 
+        {"done", result["done"]}, 
+    };
+    return analysis;
 }
 
 nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {

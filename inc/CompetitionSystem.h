@@ -287,7 +287,7 @@ public:
 	void simulate(int simulation_time);
 
     void warmup(int total_warmup_steps);
-    void update_gg_and_step(int update_gg_interval);
+    int update_gg_and_step(int update_gg_interval);
     // void update_gg_and_step(int update_interval);
 
     vector<Action> plan();
@@ -299,6 +299,7 @@ public:
 
 #ifdef MAP_OPT
     nlohmann::json analyzeResults();
+    nlohmann::json analyzeCurrResults(int update_gg_interval);
     int total_simulation_steps;
     const vector<State>& get_curr_states() const {
         return this->curr_states;

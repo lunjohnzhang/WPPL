@@ -61,9 +61,9 @@ public:
 
     Instance build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr);
 
-    void update_HT(const std::shared_ptr<HT_v2::HeuristicTableV2> & new_HT){
+    void update_HT_weights(const std::vector<float> weights){
         // std::cout << "before update, addr:"<<this->HT.get()<<std::endl;
-        this->HT = new_HT;
+        this->HT->update_weights(weights);
         // std::cout << "end update HT, addr:" << this->HT.get() << ", "<<HT->loc_idxs<< std::endl;
         // this->print_HT();
     }

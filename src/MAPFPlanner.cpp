@@ -726,22 +726,16 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
 
 void MAPFPlanner::update(){
     cout << "planner update begin" <<endl;
-    std::cout << "now planner weights is:" <<std::endl;
-    for (const auto& weight : *map_weights) {
-        std::cout << weight << ", ";
-    }
     std::cout << std::endl;
     std::string suffix="";
     if (lifelong_solver_name=="LaCAM2") {
-        auto heuristics =std::make_shared<HT_v2::HeuristicTableV2>(env->num_of_agents, env->map, env->rows, env->cols, *map_weights);
+        // auto heuristics =std::make_shared<HT_v2::HeuristicTableV2>(env->num_of_agents, env->map, env->rows, env->cols, *map_weights);
         // std::cout << "addr ="<<heuristics->loc_idxs <<std::endl;
-        this->lacam2_solver->update_HT(heuristics);
+        this->lacam2_solver->update_HT_weights(*map_weights);
         cout<<"LaCAMSolver2 update"<<endl;
     } else if (lifelong_solver_name=="LNS") {
         cout<<"not implemented error"<<lifelong_solver_name<<endl;
         exit(-1);
-        auto heuristics =std::make_shared<HT_v2::HeuristicTableV2>(env->num_of_agents, env->map, env->rows, env->cols, *map_weights);
-        this->lacam2_solver->update_HT(heuristics);
         // lns_solver update lacam2 solver and self ht
         // lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver,max_task_completed);
         // lns_solver->initialize(*env);

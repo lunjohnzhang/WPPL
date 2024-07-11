@@ -1192,7 +1192,7 @@ void BaseSystem::warmup(int total_warmup_steps){
     }
 }
 
-void BaseSystem::update_gg_and_step(int update_gg_interval){
+int BaseSystem::update_gg_and_step(int update_gg_interval){
     
     this->curr_starts = this->curr_states;
 
@@ -1240,6 +1240,8 @@ void BaseSystem::update_gg_and_step(int update_gg_interval){
             break;
         }
     }
+    return t_step;
+    // exit(1);
 }
 
 void BaseSystem::simulate(int simulation_time)
@@ -1440,6 +1442,115 @@ void BaseSystem::savePaths(const string &fileName, int option) const
 }
 
 #ifdef MAP_OPT
+
+nlohmann::json BaseSystem::analyzeCurrResults(int update_gg_interval)
+{
+    json js;
+    // Save action model
+    js["actionModel"] = "MAPF";
+
+    std::string feasible = fast_mover_feasible ? "Yes" : "No";
+    js["AllValid"] = feasible;
+
+    js["teamSize"] = num_of_agents;
+
+    // Save start locations[x,y,orientation]
+    json curr_start = json::array();
+    for (int i = 0; i < num_of_agents; i++)
+    {
+        json s = json::array();
+        s.push_back(curr_starts[i].location/map.cols);
+        s.push_back(curr_starts[i].location%map.cols);
+        // s.push_back(starts[i].location/map.cols);
+        // s.push_back(starts[i].location%map.cols);
+        curr_start.push_back(s);
+        // std::cout << "agent"<<i<<", curr states ="<<this->curr_states[i].location/map.cols<<", "<<this->curr_states[i].location%map.cols<<std::endl;
+    }
+    js["start"] = curr_start;
+
+    js["numTaskFinishedSoFar"] = num_of_task_finish;
+
+    // Save actual paths
+    json apaths = json::array();
+    for (int i = 0; i < num_of_agents; i++)
+    {
+        std::string path;
+        bool first = true;
+
+        if (update_gg_interval > actual_movements[i].size()){
+            std::cout << "must have bug here!" <<std::endl;
+        }
+        auto it = std::prev(actual_movements[i].end(), update_gg_interval);
+        // auto it = actual_movements[i].begin();
+        // for (const auto action : actual_movements[i])
+        for (; it!=actual_movements[i].end(); ++it){
+            auto action = *it;
+            if (!first){
+                path+= ",";
+            } else{
+                first = false;
+            }
+
+            if (action == Action::R){
+                path+="R";
+            } else if (action == Action::D){
+                path+="D";
+            } else if (action == Action::L){
+                path+="L";
+            } else if (action == Action::U){
+                path+="U";
+            } else if (action == Action::W){
+                path+="W";
+            } else{
+                path+="X";
+            }
+        }
+        apaths.push_back(path);
+    }
+    js["actualPaths"] = apaths;
+
+    json final_states = json::array();
+    for (auto s: this->curr_states){
+        final_states.push_back(s.location);
+    }
+    js["final_pos"] = final_states;
+
+    json final_tasks = json::array();
+    for (auto assigned_task_per_agent: this->assigned_tasks){
+        final_tasks.push_back(assigned_task_per_agent.back().location);
+    }
+    js["final_tasks"] = final_tasks;
+
+    json exec_p = json::array();
+    for (int i=0; i<num_of_agents; ++i){
+        json ss = json::array();
+        for (const auto state: execution_paths[i]){
+            json s = json::array();
+            s.push_back(state.location/map.cols);
+            s.push_back(state.location%map.cols);
+            ss.push_back(s);
+        }
+        exec_p.push_back(ss);
+    }
+    js["execFuture"] = exec_p;
+
+    json plan_p = json::array();
+    for (int i=0; i<num_of_agents; ++i){
+        json ss = json::array();
+        for (const auto state: planning_paths[i]){
+            json s = json::array();
+            s.push_back(state.location/map.cols);
+            s.push_back(state.location%map.cols);
+            ss.push_back(s);
+        }
+        plan_p.push_back(ss);
+    }
+    js["planFuture"] = plan_p;
+
+    js["done"] = (this->timestep >= this->total_simulation_steps);
+
+    return analyze_curr_result_json(js, map);
+}
 
 nlohmann::json BaseSystem::analyzeResults()
 {

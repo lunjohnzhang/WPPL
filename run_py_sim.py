@@ -39,7 +39,7 @@ simulator=py_sim.py_sim(
     # map_json_str = map_json_str,
     map_json_path = map_json_path,
     simulation_steps=1000,
-    update_gg_interval=1000, 
+    update_gg_interval=20, 
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
     gen_random=True,
@@ -49,9 +49,9 @@ simulator=py_sim.py_sim(
     # init_agent_pos=str([1123, 485, 165, 694, 718, 357, 890, 845, 640, 623]), 
     # network_params=str([1, ]*2693), 
     num_tasks=100000,
-    warmup_steps = 1000, 
+    warmup_steps = 10, 
     seed=0,
-    save_paths=True,
+    # save_paths=True,
     # weight of the left/right workstation, only applicable for maps with workstations
     left_w_weight=1,
     right_w_weight=1,
@@ -62,6 +62,8 @@ simulator=py_sim.py_sim(
     # if not specified here, then the program will use the one specified in the config file.
     # weights=compressed_weights_json_str,
     # wait_costs=compressed_wait_costs_json_str, 
+    weights=str([1]*3126), 
+    wait_costs=str([1]*948), 
     # if we don't load config here, the program will load the default config file.
     config=config_str,    
     # the following are some things we don't need to change in the weight optimization case.
@@ -74,26 +76,31 @@ simulator=py_sim.py_sim(
 
 
 warmup_r = simulator.warmup()
-print(json.loads(warmup_r).keys())
+# print(json.loads(warmup_r).keys())
 # print("curr pos:", simulator.get_curr_pos())
 # raise NotImplementedError
 import time
+
+cnt = 0
 while True:
+    cnt += 1
     start = time.time()
     update_r_str = simulator.update_gg_and_step([1]*3126, [1]*948)
     end = time.time()
+    # raise NotImplementedError
     print(end-start)
-    update_r = json.loads(update_r_str)
+    # update_r = json.loads(update_r_str)
     
-    final_pos = update_r["final_pos"]
-    final_task = update_r["final_tasks"]
-    curr_pos = simulator.get_curr_pos()
+    # final_pos = update_r["final_pos"]
+    # final_task = update_r["final_tasks"]
+    # curr_pos = simulator.get_curr_pos()
     # print("final task:", final_task)
     # print("curr pos:", curr_pos)
-    print(update_r["num_task_finished"])
-    if update_r["done"]:
-        print("done!")
-        print(update_r["throughput"])
+    if cnt > 20:
+        break
+    # print(update_r["num_task_finished"])
+    # if update_r["done"]:
+    #     print("done!")
         
-        break       
+    #     break       
             

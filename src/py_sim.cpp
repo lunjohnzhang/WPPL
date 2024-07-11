@@ -15,16 +15,17 @@ std::string py_sim::warmup(){
         this->system_ptr->saveResults(this->path_file.string());
     }
     return this->system_ptr->analyzeResults().dump(4);
+    // return "hi!";
 }
 
 std::string py_sim::update_gg_and_step(std::vector<float> edge_weights, std::vector<float> wait_costs){
     this->planner->map_weights=weight_format_conversion_with_wait_costs(this->grid, edge_weights, wait_costs);
     this->planner->update();
-    this->system_ptr->update_gg_and_step(this->update_gg_interval);
+    int actual_sim_steps = this->system_ptr->update_gg_and_step(this->update_gg_interval);
     if (this->save_path){
         this->system_ptr->saveResults(this->path_file.string());
     }
-    return this->system_ptr->analyzeResults().dump(4);
+    return this->system_ptr->analyzeCurrResults(actual_sim_steps).dump(4);
 }
 
 
