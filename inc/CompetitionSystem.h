@@ -328,6 +328,8 @@ protected:
 
     std::vector<Path> paths;
     std::vector<std::list<Task > > finished_tasks; // location + finish time
+    std::vector<int> curr_finish_task_agents;
+
 
     vector<State> starts;
     int num_of_agents;

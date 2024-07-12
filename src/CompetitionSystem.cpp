@@ -1170,8 +1170,10 @@ void BaseSystem::warmup(int total_warmup_steps){
         }
 
         // TODO: ensure warmup steps does not contribute to the whole setting
+        this->curr_finish_task_agents.clear();
         for (auto task : new_finished_tasks){
             finished_tasks[task.agent_assigned].emplace_back(task);
+            this->curr_finish_task_agents.push_back(task.agent_assigned);
             // num_of_task_finish++;
         }
         update_tasks();
@@ -1219,9 +1221,10 @@ int BaseSystem::update_gg_and_step(int update_gg_interval){
             planner_times.push_back(std::chrono::duration<double>(diff).count());
         }
 
-        // TODO: ensure warmup steps does not contribute to the whole setting
+        this->curr_finish_task_agents.clear();
         for (auto task : new_finished_tasks){
             finished_tasks[task.agent_assigned].emplace_back(task);
+            this->curr_finish_task_agents.push_back(task.agent_assigned);
             num_of_task_finish++;
         }
         update_tasks();
@@ -1311,11 +1314,14 @@ void BaseSystem::simulate(int simulation_time)
         ONLYDEV(cout << new_finished_tasks.size() << " tasks has been finished in this timestep" << std::endl;)
 
         // update tasks
+        this->curr_finish_task_agents.clear();
         for (auto task : new_finished_tasks)
         {
             // int id, loc, t;
             // std::tie(id, loc, t) = task;
             finished_tasks[task.agent_assigned].emplace_back(task);
+            this->curr_finish_task_agents.push_back(task.agent_assigned);
+
             num_of_tasks++;
             num_of_task_finish++;
         }
@@ -1547,6 +1553,12 @@ nlohmann::json BaseSystem::analyzeCurrResults(int update_gg_interval)
     }
     js["planFuture"] = plan_p;
 
+    json agents_finish_task = json::array();
+    for (auto a_id: this->curr_finish_task_agents){
+        agents_finish_task.push_back(a_id);
+    }
+    js["agents_finish_task"] = agents_finish_task;
+
     js["done"] = (this->timestep >= this->total_simulation_steps);
 
     return analyze_curr_result_json(js, map);
@@ -1767,6 +1779,12 @@ nlohmann::json BaseSystem::analyzeResults()
         final_tasks.push_back(assigned_task_per_agent.back().location);
     }
     js["final_tasks"] = final_tasks;
+
+    json agents_finish_task = json::array();
+    for (auto a_id: this->curr_finish_task_agents){
+        agents_finish_task.push_back(a_id);
+    }
+    js["agents_finish_task"] = agents_finish_task;
 
     json exec_p = json::array();
     for (int i=0; i<num_of_agents; ++i){
