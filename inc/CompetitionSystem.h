@@ -13,6 +13,7 @@
 #ifdef MAP_OPT
 #include "nlohmann/json.hpp"
 #include "util/analyze.h"
+#include "util/TaskDistGenerator.h"
 #endif
 
 #ifndef NO_ROT
@@ -256,6 +257,8 @@ class BaseSystem
 {
 public:
     int num_tasks_reveal = 1;
+    int task_dist_change_interval = -1;
+
     Logger* logger = nullptr;
 
 	BaseSystem(Grid &grid, MAPFPlanner* planner, ActionModelWithRotate* model):
@@ -296,6 +299,21 @@ public:
     void savePaths(const string &fileName, int option) const; //option = 0: save actual movement, option = 1: save planner movement
     //void saveSimulationIssues(const string &fileName) const;
     void saveResults(const string &fileName) const;
+
+    virtual void update_tasks_base_distribution(std::vector<double> new_distribution){
+        std::cout << "in BaseSystem::update_tasks_base_distribution "<<std::endl;
+        exit(1);
+    };
+
+    virtual void update_tasks_distribution(){
+        std::cout << "in BaseSystem::update_tasks_distribution "<<std::endl;
+        exit(1);
+    };
+
+    virtual void random_update_tasks_distribution(){
+        std::cout << "in BaseSystem::random_update_tasks_distribution "<<std::endl;
+        exit(1);
+    };
 
 #ifdef MAP_OPT
     nlohmann::json analyzeResults();
@@ -354,7 +372,6 @@ protected:
     list<double> planner_times; 
     bool fast_mover_feasible = true;
 
-    
     bool init_task = false;
     std::vector<int> init_task_ids;
 
@@ -527,9 +544,26 @@ public:
 
         // Initialize agent home location (workstation) distribution
 
+        this->home_loc_weights.clear();
+        for (auto w: grid.agent_home_loc_weights){
+            this->home_loc_weights.push_back(w);
+        }
+
+        this->end_pts_weights.clear();
+        for (int i=0; i<grid.end_points.size(); ++i){
+            this->end_pts_weights.push_back(1.0);
+        }
+
         this->agent_home_loc_dist = std::discrete_distribution<int>(
-            grid.agent_home_loc_weights.begin(),
-            grid.agent_home_loc_weights.end());
+            this->home_loc_weights.begin(),
+            this->home_loc_weights.end()
+        );
+        
+        this->agent_end_pts_dist = std::discrete_distribution<int>(
+            this->end_pts_weights.begin(),
+            this->end_pts_weights.end()
+        );
+        
         cout << "agent_home_loc distribution: ";
         for (auto w: grid.agent_home_loc_weights)
         {
@@ -539,14 +573,20 @@ public:
 
     };
 
+    void update_tasks_base_distribution(std::vector<double> new_distribution) override;
+    void update_tasks_distribution() override;
+    void random_update_tasks_distribution() override;
 private:
     std::mt19937 MT;
     int task_id=0;
 
     void update_tasks();
     std::discrete_distribution<int> agent_home_loc_dist;
+    std::discrete_distribution<int> agent_end_pts_dist;
 
     std::vector<int> prev_task_locs;
+    std::vector<double> home_loc_weights;
+    std::vector<double> end_pts_weights;
 
 };
 

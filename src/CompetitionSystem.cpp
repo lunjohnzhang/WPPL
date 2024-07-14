@@ -1227,6 +1227,11 @@ int BaseSystem::update_gg_and_step(int update_gg_interval){
             this->curr_finish_task_agents.push_back(task.agent_assigned);
             num_of_task_finish++;
         }
+
+        if (this->task_dist_change_interval>0 && this->timestep%this->task_dist_change_interval == 0){
+            this->random_update_tasks_distribution();
+        }
+
         update_tasks();
 
         bool complete_all = false;
@@ -1328,6 +1333,10 @@ void BaseSystem::simulate(int simulation_time)
         ONLYDEV(cout << num_of_tasks << " tasks has been finished by far in total" << std::endl;)
 
         ONLYDEV(analyzer.data["finished_tasks"]=num_of_tasks;)
+
+        if (this->task_dist_change_interval>0 && this->timestep%this->task_dist_change_interval == 0){
+            this->random_update_tasks_distribution();
+        }
 
         update_tasks();
 
@@ -2149,6 +2158,36 @@ void InfAssignSystem::update_tasks(){
     }
 }
 
+void KivaSystem::update_tasks_base_distribution(std::vector<double> new_distribution){
+    int home_loc_size = this->home_loc_weights.size();
+    int end_pts_size = this->end_pts_weights.size();
+    if (new_distribution.size()!= home_loc_size+end_pts_size){
+        std::cout << "Error for distribution size! "<<std::endl;
+        std::cout << "home_loc_size ="<<home_loc_size<<", end_pts_size ="<<end_pts_size<<", ";
+        std::cout << "but get input size ="<<new_distribution.size()<<std::endl;
+        exit(1);
+    }
+    for(int i=0; i<home_loc_size; ++i){
+        this->home_loc_weights[i] = new_distribution[i];
+    }
+    for(int i=0; i<end_pts_size; ++i){
+        this->end_pts_weights[i] = new_distribution[home_loc_size+i];
+    }
+    this->update_tasks_distribution();
+}
+
+void KivaSystem::update_tasks_distribution(){
+    this->agent_home_loc_dist = std::discrete_distribution<int>(
+        this->home_loc_weights.begin(),
+        this->home_loc_weights.end()
+    );
+    
+    this->agent_end_pts_dist = std::discrete_distribution<int>(
+        this->end_pts_weights.begin(),
+        this->end_pts_weights.end()
+    );
+}
+
 void KivaSystem::update_tasks(){
     for (int k = 0; k < num_of_agents; k++)
     {
@@ -2171,7 +2210,8 @@ void KivaSystem::update_tasks(){
                 } else if (map.grid_types[prev_task_loc]=='w')
                 {
                     // next task would e
-                    int idx=MT()%map.end_points.size();
+                    // int idx=MT()%map.end_points.size();
+                    int idx = this->agent_end_pts_dist(this->MT);
                     loc=map.end_points[idx];
                 } else {
                     std::cout<<"unknown grid type"<<std::endl;
@@ -2188,6 +2228,13 @@ void KivaSystem::update_tasks(){
             task_id++;
         }
     }
+}
+
+void KivaSystem::random_update_tasks_distribution(){
+    // std::cout << "begin distribution update"<<std::endl;
+    generateTaskAndAgentDist(this->map, this->MT, this->home_loc_weights, this->end_pts_weights);
+    this->update_tasks_distribution();
+    // std::cout << "end distribution update"<<std::endl;
 }
 
 

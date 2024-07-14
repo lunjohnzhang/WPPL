@@ -5,7 +5,8 @@ PYBIND11_MODULE(py_sim, m){
         .def(py::init<py::kwargs>())
         .def("warmup", &py_sim::warmup)
         .def("update_gg_and_step", &py_sim::update_gg_and_step)
-        .def("get_curr_pos", &py_sim::get_curr_pos);
+        .def("get_curr_pos", &py_sim::get_curr_pos)
+        .def("update_tasks_base_distribution", &py_sim::update_tasks_base_distribution);
 }
 
 std::string py_sim::warmup(){
@@ -28,7 +29,9 @@ std::string py_sim::update_gg_and_step(std::vector<float> edge_weights, std::vec
     return this->system_ptr->analyzeCurrResults(actual_sim_steps).dump(4);
 }
 
-
+void py_sim::update_tasks_base_distribution(std::vector<double>& new_distribution){
+    this->system_ptr->update_tasks_base_distribution(new_distribution);
+}
 std::vector<int> py_sim::get_curr_pos(){
     auto curr_states = this->system_ptr->get_curr_states();
     std::vector<int> curr_pos;
@@ -52,6 +55,7 @@ py_sim::py_sim(py::kwargs kwargs){
     if (kwargs.contains("update_gg_interval")){
         this->update_gg_interval = kwargs["update_gg_interval"].cast<int>();
     }
+    
 
     // Read in left and right weights
     if (kwargs.contains("left_w_weight")){
@@ -151,7 +155,7 @@ py_sim::py_sim(py::kwargs kwargs){
             {
                 assigned_tasks[i % agents.size()].push_back(tasks[i]);
             }
-            system_ptr = std::make_unique<FixedAssignSystem>(grid, planner, agents, assigned_tasks, model);
+            this->system_ptr = std::make_unique<FixedAssignSystem>(grid, planner, agents, assigned_tasks, model);
         } else{
             std::cerr << "unkown task assignment strategy " << task_assignment_strategy << std::endl;
             logger->log_fatal("unkown task assignment strategy " + task_assignment_strategy);
@@ -176,12 +180,12 @@ py_sim::py_sim(py::kwargs kwargs){
             agents.clear();
             agents = this->init_agents(kwargs);
         }
-        system_ptr = std::make_unique<KivaSystem>(grid,planner,model,agents,seed);
+        this->system_ptr = std::make_unique<KivaSystem>(grid,planner,model,agents,seed);
     }
 
     if (kwargs.contains("init_task") && kwargs["init_task"].cast<bool>()){
         std::vector<int> init_task_ids = this->init_tasks(kwargs);
-        system_ptr->set_init_task(true, init_task_ids);
+        this->system_ptr->set_init_task(true, init_task_ids);
     }
 
     this->system_ptr->set_logger(logger);
@@ -189,7 +193,10 @@ py_sim::py_sim(py::kwargs kwargs){
     this->system_ptr->set_preprocess_time_limit(preprocess_time_limit);
     this->system_ptr->set_num_tasks_reveal(num_tasks_reveal);
 
-
+    if(kwargs.contains("task_dist_change_interval")){
+        int interval = kwargs["task_dist_change_interval"].cast<int>();
+        system_ptr->task_dist_change_interval = interval;
+    }
     // clock_t start_time = clock();
     // system_ptr->simulate(simulation_steps);
     // double runtime = (double)(clock() - start_time)/ CLOCKS_PER_SEC;

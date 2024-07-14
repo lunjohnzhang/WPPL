@@ -240,50 +240,6 @@ std::string run(const py::kwargs& kwargs)
         grid.load_map_from_json(map_json, left_w_weight, right_w_weight);
     }
     
-    // // should be a command line string running the code
-    // std::string cmd=kwargs["cmd"].cast<std::string>();
-    // std::cout<<"cmd from python is: "<<cmd<<std::endl;
-
-    // // Declare the supported options.
-    // po::options_description desc("Allowed options");
-    // desc.add_options()("help", "produce help message")
-    //     // ("inputFolder", po::value<std::string>()->default_value("."), "input folder")
-    //     ("inputFile,i", po::value<std::string>()->required(), "input file name")
-    //     ("output,o", po::value<std::string>()->default_value("./test.json"), "output file name")
-    //     ("evaluationMode", po::value<bool>()->default_value(false), "evaluate an existing output file")
-    //     ("simulationTime", po::value<int>()->default_value(5000), "run simulation")
-    //     ("fileStoragePath", po::value<std::string>()->default_value(""), "the path to the storage path")
-    //     ("planTimeLimit", po::value<int>()->default_value(INT_MAX), "the time limit for planner in seconds")
-    //     ("preprocessTimeLimit", po::value<int>()->default_value(INT_MAX), "the time limit for preprocessing in seconds")
-    //     ("logFile,l", po::value<std::string>(), "issue log file name");
-    // clock_t start_time = clock();
-    // // po::store(po::parse_command_line(argc, argv, desc), vm);
-
-    // po::store(po::command_line_parser(po::split_unix(cmd)).options(desc).run(), vm);
-
-    // if (vm.count("help"))
-    // {
-    //     std::cout << desc << std::endl;
-    //     exit(-1);
-    // }
-
-    // po::notify(vm);
-
-    // std::string base_folder = vm["inputFolder"].as<std::string>();
-    // boost::filesystem::path p(vm["inputFile"].as<std::string>());
-
-    // ONLYDEV(
-    //     const auto & filename=p.filename();
-    //     analyzer.data["instance"]=filename.c_str();
-    // )
-
-    // boost::filesystem::path dir = p.parent_path();
-    // std::string base_folder = dir.string();
-    // std::cout << base_folder << std::endl;
-    // if (base_folder.size() > 0 && base_folder.back() != '/')
-    // {
-    //     base_folder += "/";
-    // }
 
     Logger *logger = new Logger();
     // if (vm.count("logFile"))
@@ -478,6 +434,22 @@ std::string run(const py::kwargs& kwargs)
         }
         
         system_ptr = std::make_unique<KivaSystem>(grid,planner,model,agents,seed);
+    }
+
+    
+    if(kwargs.contains("dist_weights")){
+        std::string weight_str=kwargs["dist_weights"].cast<std::string>();
+        nlohmann::json weight_json=nlohmann::json::parse(weight_str);
+        std::vector<double> weights;
+        for (auto & w:weight_json) {
+            weights.push_back(w.get<double>());
+        }
+        system_ptr->update_tasks_base_distribution(weights);
+    }
+
+    if(kwargs.contains("task_dist_change_interval")){
+        int interval = kwargs["task_dist_change_interval"].cast<int>();
+        system_ptr->task_dist_change_interval = interval;
     }
 
     if (kwargs.contains("init_task") && kwargs["init_task"].cast<bool>()){

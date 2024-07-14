@@ -3,6 +3,7 @@ sys.path.append('build')
 sys.path.append('scripts')
 from map import Map
 import json
+import numpy as np
 
 with_wait_costs=True
 
@@ -10,7 +11,8 @@ with_wait_costs=True
 # map.print_graph(map.graph)
 
 # map_json_path = "../maps/competition/online_map/task_dist/test.json"
-map_json_path = "../maps/competition/human/pibt_warehouse_33x36_w_mode.json"
+# map_json_path = "../maps/competition/human/pibt_warehouse_33x36_w_mode.json"
+map_json_path = "../maps/competition/online_map/sortation_small.json"
 with open(map_json_path, "r") as f:
     map_json = json.load(f)
     map_json_str = json.dumps(map_json)
@@ -62,8 +64,9 @@ simulator=py_sim.py_sim(
     # if not specified here, then the program will use the one specified in the config file.
     # weights=compressed_weights_json_str,
     # wait_costs=compressed_wait_costs_json_str, 
-    weights=str([1]*3126), 
-    wait_costs=str([1]*948), 
+    task_dist_change_interval = 300,
+    weights=str([1]*5064), 
+    wait_costs=str([1]*1564), 
     # if we don't load config here, the program will load the default config file.
     config=config_str,    
     # the following are some things we don't need to change in the weight optimization case.
@@ -82,25 +85,31 @@ warmup_r = simulator.warmup()
 import time
 
 cnt = 0
+# new_distribution = np.random.randn(502).tolist()
+# simulator.update_tasks_base_distribution(new_distribution)
 while True:
     cnt += 1
     start = time.time()
-    update_r_str = simulator.update_gg_and_step([1]*3126, [1]*948)
+
+    
+    
+    update_r_str = simulator.update_gg_and_step([1]*5064, [1]*1564)
     end = time.time()
     # raise NotImplementedError
     print(end-start)
-    # update_r = json.loads(update_r_str)
+    update_r = json.loads(update_r_str)
     
+    agents_finish_task = update_r["agents_finish_task"]
+    # print(agents_finish_task)
     # final_pos = update_r["final_pos"]
     # final_task = update_r["final_tasks"]
     # curr_pos = simulator.get_curr_pos()
     # print("final task:", final_task)
     # print("curr pos:", curr_pos)
-    if cnt > 20:
-        break
-    # print(update_r["num_task_finished"])
-    # if update_r["done"]:
-    #     print("done!")
-        
-    #     break       
+    # if cnt >= 100:
+    #     break
+    print(update_r["num_task_finished"])
+    if update_r["done"]:
+        print("done!") 
+        break       
             

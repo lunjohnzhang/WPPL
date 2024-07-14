@@ -3,6 +3,7 @@ sys.path.append('build')
 sys.path.append('scripts')
 from map import Map
 import json
+import numpy as np
 
 # map_path="example_problems/warehouse.domain/maps/kiva_large_w_mode.map"
 # full_weight_path="scripts/random_weight_001.w"
@@ -11,8 +12,8 @@ with_wait_costs=True
 # map=Map(map_path)
 # map.print_graph(map.graph)
 
-map_json_path = "../maps/competition/online_map/task_dist/sortation_small.json"
-map_json_path = "../maps/competition/online_map/task_dist/test.json"
+map_json_path = "../maps/competition/online_map/sortation_small.json"
+# map_json_path = "../maps/competition/online_map/task_dist/test.json"
 with open(map_json_path, "r") as f:
     map_json = json.load(f)
     map_json_str = json.dumps(map_json)
@@ -34,20 +35,20 @@ kwargs = {
     # map_path=map_path,
     # map_json_str = map_json_str,
     "map_json_path": map_json_path,
-    "simulation_steps": 5,
+    "simulation_steps": 1000,
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
     "gen_random": True,
     # agents_path=agents_path, 
     # tasks_path=tasks_path, 
-    "num_agents": 1,
+    "num_agents": 800,
     # init_task=True, 
     # init_task_ids=str([719, 1008, 1008, 1008, 1125, 792, 503, 1043, 1151, 468]), 
     # init_agent=True,  
     # init_agent_pos=str([1123, 485, 165, 694, 718, 357, 890, 845, 640, 623]), 
     # network_params=str([1, ]*2693), 
     "num_tasks": 100000,
-    "seed": 0,
+    "seed": 2,
     "save_paths": True,
     # weight of the left/right workstation, only applicable for maps with workstations
     "left_w_weight": 1,
@@ -69,26 +70,25 @@ kwargs = {
     "num_tasks_reveal": 1, 
 }
 
-
 import json
 import numpy as np
 
 init_agent = False
 init_task = False
-for i in range(2):
-    
-    kwargs["file_storage_path"] = f"test{i}"
+for i in range(5):
+    kwargs["task_dist_change_interval"] = (i+1) * 50
     ret=py_driver.run(**kwargs)
     analysis=json.loads(ret)
     
-    init_agent_pos = str(analysis["final_pos"])
-    init_task_ids = str(analysis["final_tasks"])
-    print("pos", init_agent_pos)
-    print("task:", init_task_ids)
-    kwargs["init_agent"] = True
-    kwargs["init_task"] = True
-    kwargs["init_agent_pos"] = init_agent_pos
-    kwargs["init_task_ids"] = init_task_ids
+    # init_agent_pos = str(analysis["final_pos"])
+    # init_task_ids = str(analysis["final_tasks"])
+    # print("pos", init_agent_pos)
+    # print("task:", init_task_ids)
+    print("tp", analysis["throughput"])
+    # kwargs["init_agent"] = True
+    # kwargs["init_task"] = True
+    # kwargs["init_agent_pos"] = init_agent_pos
+    # kwargs["init_task_ids"] = init_task_ids
     
 
 raise NotImplementedError
