@@ -64,7 +64,9 @@ simulator=py_sim.py_sim(
     # if not specified here, then the program will use the one specified in the config file.
     # weights=compressed_weights_json_str,
     # wait_costs=compressed_wait_costs_json_str, 
+    h_update_late=True,
     task_dist_change_interval = 300,
+    task_random_type="Gaussian", 
     weights=str([1]*5064), 
     wait_costs=str([1]*1564), 
     # if we don't load config here, the program will load the default config file.
@@ -93,7 +95,7 @@ while True:
 
     
     
-    update_r_str = simulator.update_gg_and_step([1]*5064, [1]*1564)
+    update_r_str = simulator.update_gg_and_step([0.1] + [10]*5062 + [0.1], [1]*1564)
     end = time.time()
     # raise NotImplementedError
     print(end-start)

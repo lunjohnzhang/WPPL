@@ -53,7 +53,7 @@ void readMap(const Grid& map, vector<vector<double>>& map_e, vector<vector<doubl
 }
 
 // Function to generate task and agent distribution
-void generateTaskAndAgentDist(const Grid& map, mt19937 MT, vector<double>& w_dist, vector<double>& e_dist) {
+void generateTaskAndAgentGaussianDist(const Grid& map, mt19937 MT, vector<double>& w_dist, vector<double>& e_dist) {
     vector<vector<double>> map_e, map_w;
 
     readMap(map, map_e, map_w);
@@ -96,4 +96,25 @@ void generateTaskAndAgentDist(const Grid& map, mt19937 MT, vector<double>& w_dis
 
     // For demonstration purposes
     // cout << "Task and Agent Distribution Generated Successfully!" << endl;
+}
+
+void generateTaskAndAgentLRDist(const Grid& map, mt19937 MT, vector<double>& w_dist, vector<double>& e_dist) {
+    double left_right_ratio_bound = 0.1;
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+    double p = dis(MT);
+    double r0 = dis(MT) * (1-left_right_ratio_bound) + left_right_ratio_bound;
+    double r = (p<0.5)? r0: 1/r0;
+
+    w_dist.clear();
+    for (auto w_id: map.agent_home_locations){
+        int r = w_id / map.cols;
+        int c = w_id % map.cols;
+        if (c==0){
+            w_dist.push_back(r);
+        } else {
+            w_dist.push_back(1.0);
+        }
+    }
+
+    e_dist.resize(map.end_points.size(), 1.0);
 }

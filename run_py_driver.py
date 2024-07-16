@@ -12,7 +12,8 @@ with_wait_costs=True
 # map=Map(map_path)
 # map.print_graph(map.graph)
 
-map_json_path = "../maps/competition/online_map/sortation_small.json"
+# map_json_path = "../maps/competition/online_map/sortation_small.json"
+map_json_path = "../maps/competition/human/pibt_warehouse_33x36_w_mode.json"
 # map_json_path = "../maps/competition/online_map/task_dist/test.json"
 with open(map_json_path, "r") as f:
     map_json = json.load(f)
@@ -35,20 +36,20 @@ kwargs = {
     # map_path=map_path,
     # map_json_str = map_json_str,
     "map_json_path": map_json_path,
-    "simulation_steps": 1000,
+    "simulation_steps": 20,
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
     "gen_random": True,
     # agents_path=agents_path, 
     # tasks_path=tasks_path, 
-    "num_agents": 800,
+    "num_agents": 400,
     # init_task=True, 
     # init_task_ids=str([719, 1008, 1008, 1008, 1125, 792, 503, 1043, 1151, 468]), 
     # init_agent=True,  
     # init_agent_pos=str([1123, 485, 165, 694, 718, 357, 890, 845, 640, 623]), 
     # network_params=str([1, ]*2693), 
     "num_tasks": 100000,
-    "seed": 2,
+    "seed": 0,
     "save_paths": True,
     # weight of the left/right workstation, only applicable for maps with workstations
     "left_w_weight": 1,
@@ -57,6 +58,8 @@ kwargs = {
     # agents_path="example_problems/random.domain/agents/random_600.agents",
     # tasks_path="example_problems/random.domain/tasks/random-32-32-20-600.tasks",
     # weights are the edge weights, wait_costs are the vertex wait costs
+    "weights": str([1]* 3126), 
+    "wait_costs": str([1]* 948), 
     # if not specified here, then the program will use the one specified in the config file.
     # weights=compressed_weights_json_str,
     # wait_costs=compressed_wait_costs_json_str,    
@@ -75,22 +78,28 @@ import numpy as np
 
 init_agent = False
 init_task = False
-for i in range(5):
-    kwargs["task_dist_change_interval"] = (i+1) * 50
+task_num = 0
+for i in range(1):
+    kwargs["seed"] = i
+    # print(kwargs)
     ret=py_driver.run(**kwargs)
     analysis=json.loads(ret)
     
-    # init_agent_pos = str(analysis["final_pos"])
-    # init_task_ids = str(analysis["final_tasks"])
+    init_agent_pos = str(analysis["final_pos"])
+    init_task_ids = str(analysis["final_tasks"])
+    print("start", analysis["starts"])
     # print("pos", init_agent_pos)
     # print("task:", init_task_ids)
-    print("tp", analysis["throughput"])
-    # kwargs["init_agent"] = True
-    # kwargs["init_task"] = True
-    # kwargs["init_agent_pos"] = init_agent_pos
-    # kwargs["init_task_ids"] = init_task_ids
+    print("path0", analysis["actual_paths"][0])
+    # print("tp", analysis["throughput"])
+    task_num += analysis["num_task_finished"]
+    print(analysis["num_task_finished"])
+    kwargs["init_agent"] = True
+    kwargs["init_task"] = True
+    kwargs["init_agent_pos"] = init_agent_pos
+    kwargs["init_task_ids"] = init_task_ids
     
-
+print(task_num)
 raise NotImplementedError
 analysis=json.loads(ret)
 print(analysis.keys())

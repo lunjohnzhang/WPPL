@@ -88,6 +88,11 @@ py_sim::py_sim(py::kwargs kwargs){
     this->planner->env->map_name = grid.map_name;
     this->planner->env->file_storage_path = file_storage_path;
 
+    if (kwargs.contains("h_update_late")){
+        bool h_update_late = kwargs["h_update_late"].cast<bool>();
+        this->planner->h_update_late = h_update_late;
+    }
+
     if (kwargs.contains("config")){
         std::string config_str=kwargs["config"].cast<std::string>();
         nlohmann::json config=nlohmann::json::parse(config_str);
@@ -196,6 +201,11 @@ py_sim::py_sim(py::kwargs kwargs){
     if(kwargs.contains("task_dist_change_interval")){
         int interval = kwargs["task_dist_change_interval"].cast<int>();
         system_ptr->task_dist_change_interval = interval;
+    }
+
+    if(kwargs.contains("task_random_type")){
+        std::string random_type = kwargs["task_random_type"].cast<std::string>();
+        system_ptr->random_type = random_type;
     }
     // clock_t start_time = clock();
     // system_ptr->simulate(simulation_steps);

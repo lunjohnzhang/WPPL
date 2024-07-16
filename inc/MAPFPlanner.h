@@ -103,6 +103,8 @@ public:
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;
     std::shared_ptr<LNS::LNSSolver> lns_solver;
 
+    bool h_update_late=true;
+
     std::shared_ptr<std::vector<float> > map_weights;
     nlohmann::json config;
     void load_configs();

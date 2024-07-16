@@ -300,6 +300,7 @@ public:
     //void saveSimulationIssues(const string &fileName) const;
     void saveResults(const string &fileName) const;
 
+    std::string random_type="LR";
     virtual void update_tasks_base_distribution(std::vector<double> new_distribution){
         std::cout << "in BaseSystem::update_tasks_base_distribution "<<std::endl;
         exit(1);

@@ -135,28 +135,18 @@ public:
         this->new_min_map_weight = _new_min_map_weight;
     }
 
-    float get_h(int y, int x) {
-        return min_map_weight*(std::abs(y-sy)+std::abs(x-sx));
+
+    void update_weights_at_once(std::vector<float> _new_weights, float _new_min_map_weight){
+        this->update_newest_weights(_new_weights, _new_min_map_weight);
+        this->update_weights_to_newest();
+        this->reset_ht();
     }
 
-    void update_start_and_goal(int _start_loc, int _goal_loc) {
-        // std::cout << "update_start_and_goal" <<std::endl;
-        if (goal_loc==_goal_loc) {
-            return;
-        }
-
-        // std::cout<<"update start and goal to "<<_start_loc<<" "<<_goal_loc<<std::endl;
-
-        if (!this->is_newest_weights){
-            this->update_weights_to_newest();
-        }
-
-        start_loc=_start_loc;
-        goal_loc=_goal_loc;
-        sy=start_loc/cols;
-        sx=start_loc%cols;
-        gy=goal_loc/cols;
-        gx=goal_loc%cols;
+    void reset_ht(){
+        sy=this->start_loc/cols;
+        sx=this->start_loc%cols;
+        gy=this->goal_loc/cols;
+        gx=this->goal_loc%cols;
 
 
         for (size_t i=0;i<h_vals.size();++i) {
@@ -175,6 +165,27 @@ public:
         root->closed = false;
         root->open_handle=open_list.push(root);
         all_states.insert(root);
+    }
+
+    float get_h(int y, int x) {
+        return min_map_weight*(std::abs(y-sy)+std::abs(x-sx));
+    }
+
+    void update_start_and_goal(int _start_loc, int _goal_loc) {
+        // std::cout << "update_start_and_goal" <<std::endl;
+        if (goal_loc==_goal_loc) {
+            return;
+        }
+
+        // std::cout<<"update start and goal to "<<_start_loc<<" "<<_goal_loc<<std::endl;
+
+        if (!this->is_newest_weights){
+            this->update_weights_to_newest();
+        }
+
+        start_loc=_start_loc;
+        goal_loc=_goal_loc;
+        this->reset_ht();
     }
 
     float get(int loc) {
@@ -279,6 +290,9 @@ class HeuristicTableV2 {
 public:
     std::vector<float> map_weights;
     const std::vector<int> & map;
+
+    bool update_late=false;
+
     int rows;
     int cols;
     // const std::vector<float> & map_weights;
@@ -328,8 +342,12 @@ public:
         }
 
         for (int i=0; i<heuristic_tables.size(); ++i){
-            heuristic_tables[i].is_newest_weights = false;
-            heuristic_tables[i].update_newest_weights(_map_weights, min_map_weight);
+            if (this->update_late){
+                heuristic_tables[i].is_newest_weights = false;
+                heuristic_tables[i].update_newest_weights(_map_weights, min_map_weight);
+            } else {
+                heuristic_tables[i].update_weights_at_once(_map_weights, min_map_weight);
+            }
         }
     }
 

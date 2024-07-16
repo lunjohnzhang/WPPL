@@ -2232,7 +2232,15 @@ void KivaSystem::update_tasks(){
 
 void KivaSystem::random_update_tasks_distribution(){
     // std::cout << "begin distribution update"<<std::endl;
-    generateTaskAndAgentDist(this->map, this->MT, this->home_loc_weights, this->end_pts_weights);
+    if (this->random_type == "Gaussian"){
+        generateTaskAndAgentGaussianDist(this->map, this->MT, this->home_loc_weights, this->end_pts_weights);
+    } else if (this->random_type == "LR"){
+        generateTaskAndAgentLRDist(this->map, this->MT, this->home_loc_weights, this->end_pts_weights);
+    } else {
+        std::cout << "random type ["<< this->random_type<< "] not support yet"<<std::endl;
+        exit(1);
+    }
+    
     this->update_tasks_distribution();
     // std::cout << "end distribution update"<<std::endl;
 }

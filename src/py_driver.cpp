@@ -280,6 +280,11 @@ std::string run(const py::kwargs& kwargs)
     // planner->env->file_storage_path = vm["fileStoragePath"].as<std::string>();
     planner->env->file_storage_path = file_storage_path;
 
+    if (kwargs.contains("h_update_late")){
+        bool h_update_late = kwargs["h_update_late"].cast<bool>();
+        planner->h_update_late = h_update_late;
+    }
+
     if (kwargs.contains("config")){
         std::string config_str=kwargs["config"].cast<std::string>();
         nlohmann::json config=nlohmann::json::parse(config_str);
@@ -452,6 +457,11 @@ std::string run(const py::kwargs& kwargs)
         system_ptr->task_dist_change_interval = interval;
     }
 
+    if(kwargs.contains("task_random_type")){
+        std::string random_type = kwargs["task_random_type"].cast<std::string>();
+        system_ptr->random_type = random_type;
+    }
+    
     if (kwargs.contains("init_task") && kwargs["init_task"].cast<bool>()){
         if (!kwargs.contains("init_task_ids")){
             std::cout << "if use init task, must contain [init_task_ids]!"<<std::endl;

@@ -645,6 +645,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
             *map_weights
         );
 
+        heuristics_v2->update_late = this->h_update_late;
+
         // for (int s=0;s<env->rows*env->cols;++s)
         // for (int g=0;g<env->rows*env->cols;++g) {
         //     if (env->map[s]==1 || env->map[g]==1) {
