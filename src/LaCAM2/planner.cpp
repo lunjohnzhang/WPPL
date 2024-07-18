@@ -217,6 +217,7 @@ Planner::Planner(Instance* _ins, const std::shared_ptr<HT_v2::HeuristicTableV2> 
       use_external_executor(use_external_executor),
       disable_agent_goals(disable_agent_goals)
 {
+  //  std::cout << "init planner: 1st map weights =" << this->map_weights->at(0) <<std::endl;
 }
 
 Planner::~Planner() {}

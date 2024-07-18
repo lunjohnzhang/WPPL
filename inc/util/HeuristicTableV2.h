@@ -58,13 +58,16 @@ public:
 
 class LazyBDHeuristicTable {
 private:
+    int id;
     std::vector<float> map_weights;
     std::vector<float> newest_map_weights;
 
     void update_weights_to_newest(){
-        for (int i=0; i<newest_map_weights.size(); ++i){
-            this->map_weights[i] = this->newest_map_weights[i];
-        }
+        // std::cout << "id="<<this->id<<", update to newest, 1st weights =" <<this->newest_map_weights[0]<<", origin 1st ="<<this->map_weights[0]<<std::endl;
+        // for (int i=0; i<newest_map_weights.size(); ++i){
+        //     this->map_weights[i] = this->newest_map_weights[i];
+        // }
+        this->map_weights = this->newest_map_weights;
         this->min_map_weight = this->new_min_map_weight;
         this->is_newest_weights = true;
         // std::cout << "update_weights_to_newest end" <<std::endl;
@@ -93,8 +96,8 @@ public:
     const int dy[4]={0,1,0,-1};
     const int dx[4]={1,0,-1,0};
 
-    LazyBDHeuristicTable(const std::vector<int> & _map, int _rows, int _cols, const std::vector<float> & _map_weights, float _min_map_weight=-1):
-        map(_map), rows(_rows), cols(_cols), map_weights(_map_weights), newest_map_weights(_map_weights), 
+    LazyBDHeuristicTable(int _id, const std::vector<int> & _map, int _rows, int _cols, const std::vector<float> _map_weights, float _min_map_weight=-1):
+        id(_id), map(_map), rows(_rows), cols(_cols), map_weights(_map_weights), newest_map_weights(_map_weights), 
         h_vals(_rows*_cols, -1), min_map_weight(_min_map_weight), new_min_map_weight(_min_map_weight), is_newest_weights(true) {
         // check map weights' size
         if (map_weights.size()!=_rows*_cols*5) {
@@ -128,10 +131,10 @@ public:
             exit(1);
         }
         
-        for (int i=0; i<_new_weights.size(); ++i){
-            this->newest_map_weights[i] = _new_weights[i];
-
-        }
+        // for (int i=0; i<_new_weights.size(); ++i){
+        //     this->newest_map_weights[i] = _new_weights[i];
+        // }
+        this->newest_map_weights = _new_weights;
         this->new_min_map_weight = _new_min_map_weight;
     }
 
@@ -143,6 +146,7 @@ public:
     }
 
     void reset_ht(){
+        // std::cout << "reset ht for id="<<this->id<<", start loc ="<< this->start_loc << ", goal loc ="<<this->goal_loc <<std::endl;
         sy=this->start_loc/cols;
         sx=this->start_loc%cols;
         gy=this->goal_loc/cols;
@@ -188,6 +192,11 @@ public:
         this->reset_ht();
     }
 
+    void update_start(int _start_loc){
+        // std::cout << "warning: only use when update at once!!" <<std::endl;
+        this->start_loc = _start_loc;
+    }
+
     float get(int loc) {
         float h=max_heuristic_val;
 
@@ -208,6 +217,7 @@ public:
             h = h_vals[loc];
         }
 
+        // std::cout << "id ="<< this->id <<", loc =" << loc <<", goal = "<< this->goal_loc << ", h = "<< h <<", expand node = "<< this->all_states.size() <<std::endl;
         return h;
     }
 
@@ -302,7 +312,7 @@ public:
 
     std::vector<LazyBDHeuristicTable> heuristic_tables;
 
-    HeuristicTableV2(int num_of_agents, const std::vector<int> & _map, int _rows, int _cols, const std::vector<float> & _map_weights, float _min_map_weight=-1):
+    HeuristicTableV2(int num_of_agents, const std::vector<int> & _map, int _rows, int _cols, const std::vector<float> _map_weights, float _min_map_weight=-1):
         map(_map), rows(_rows), cols(_cols), map_weights(_map_weights), min_map_weight(_min_map_weight) {
         // check map weights' size
         if (map_weights.size()!=_rows*_cols*5) {
@@ -320,7 +330,7 @@ public:
         }
 
         for (int i=0;i<num_of_agents;++i) {
-            heuristic_tables.emplace_back(map, rows, cols, map_weights, min_map_weight);
+            heuristic_tables.emplace_back(i, map, rows, cols, map_weights, min_map_weight);
         }
     }
 
@@ -332,7 +342,7 @@ public:
         return heuristic_tables[agent_idx].get(loc);
     }
 
-    void update_weights(const std::vector<float> _map_weights){
+    void update_weights(const std::vector<float> _map_weights, const std::vector<::State>& curr_states){
         map_weights = _map_weights;
         min_map_weight = max_heuristic_val;
         for (size_t i=0;i<map_weights.size();++i) {
@@ -340,12 +350,14 @@ public:
                 min_map_weight=map_weights[i];
             }
         }
+        // std::cout << "new min weight =" <<min_map_weight<<std::endl;
 
         for (int i=0; i<heuristic_tables.size(); ++i){
             if (this->update_late){
                 heuristic_tables[i].is_newest_weights = false;
                 heuristic_tables[i].update_newest_weights(_map_weights, min_map_weight);
             } else {
+                heuristic_tables[i].update_start(curr_states[i].location);
                 heuristic_tables[i].update_weights_at_once(_map_weights, min_map_weight);
             }
         }

@@ -6,7 +6,8 @@ PYBIND11_MODULE(py_sim, m){
         .def("warmup", &py_sim::warmup)
         .def("update_gg_and_step", &py_sim::update_gg_and_step)
         .def("get_curr_pos", &py_sim::get_curr_pos)
-        .def("update_tasks_base_distribution", &py_sim::update_tasks_base_distribution);
+        .def("update_tasks_base_distribution", &py_sim::update_tasks_base_distribution)
+        .def("get_tasks_distribution", &py_sim::get_tasks_distribution);
 }
 
 std::string py_sim::warmup(){
@@ -32,6 +33,11 @@ std::string py_sim::update_gg_and_step(std::vector<float> edge_weights, std::vec
 void py_sim::update_tasks_base_distribution(std::vector<double>& new_distribution){
     this->system_ptr->update_tasks_base_distribution(new_distribution);
 }
+
+std::vector<double> py_sim::get_tasks_distribution(){
+    return this->system_ptr->get_tasks_distribution();
+}
+
 std::vector<int> py_sim::get_curr_pos(){
     auto curr_states = this->system_ptr->get_curr_states();
     std::vector<int> curr_pos;

@@ -316,6 +316,11 @@ public:
         exit(1);
     };
 
+    virtual std::vector<double> get_tasks_distribution(){
+        std::cout << "in BaseSystem::get_tasks_distribution" <<std::endl;
+        exit(1);
+    }
+
 #ifdef MAP_OPT
     nlohmann::json analyzeResults();
     nlohmann::json analyzeCurrResults(int update_gg_interval);
@@ -577,6 +582,7 @@ public:
     void update_tasks_base_distribution(std::vector<double> new_distribution) override;
     void update_tasks_distribution() override;
     void random_update_tasks_distribution() override;
+    std::vector<double> get_tasks_distribution() override;
 private:
     std::mt19937 MT;
     int task_id=0;

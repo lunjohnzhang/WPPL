@@ -733,7 +733,8 @@ void MAPFPlanner::update(){
     if (lifelong_solver_name=="LaCAM2") {
         // auto heuristics =std::make_shared<HT_v2::HeuristicTableV2>(env->num_of_agents, env->map, env->rows, env->cols, *map_weights);
         // std::cout << "addr ="<<heuristics->loc_idxs <<std::endl;
-        this->lacam2_solver->update_HT_weights(*map_weights);
+        this->lacam2_solver->map_weights = map_weights;
+        this->lacam2_solver->update_HT_weights(*map_weights, *this->env);
         cout<<"LaCAMSolver2 update"<<endl;
     } else if (lifelong_solver_name=="LNS") {
         cout<<"not implemented error"<<lifelong_solver_name<<endl;

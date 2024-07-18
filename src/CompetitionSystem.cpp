@@ -2188,6 +2188,18 @@ void KivaSystem::update_tasks_distribution(){
     );
 }
 
+std::vector<double> KivaSystem::get_tasks_distribution(){
+    std::vector<double> dist;
+    for (auto w: this->home_loc_weights){
+        dist.push_back(w);
+    }
+    for (auto w: this->end_pts_weights){
+        dist.push_back(w);
+    }
+    return dist;
+}
+
+
 void KivaSystem::update_tasks(){
     for (int k = 0; k < num_of_agents; k++)
     {
