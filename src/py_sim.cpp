@@ -167,6 +167,9 @@ py_sim::py_sim(py::kwargs kwargs){
                 assigned_tasks[i % agents.size()].push_back(tasks[i]);
             }
             this->system_ptr = std::make_unique<FixedAssignSystem>(grid, planner, agents, assigned_tasks, model);
+        } else if (task_assignment_strategy == "online_generate"){
+            uint seed=kwargs["seed"].cast<uint>();
+            system_ptr = std::make_unique<OnlineGenerateTaskSystem>(grid, planner, agents, model, seed);
         } else{
             std::cerr << "unkown task assignment strategy " << task_assignment_strategy << std::endl;
             logger->log_fatal("unkown task assignment strategy " + task_assignment_strategy);
@@ -211,7 +214,7 @@ py_sim::py_sim(py::kwargs kwargs){
 
     if(kwargs.contains("task_random_type")){
         std::string random_type = kwargs["task_random_type"].cast<std::string>();
-        system_ptr->random_type = random_type;
+        system_ptr->set_random_type(random_type);
     }
     // clock_t start_time = clock();
     // system_ptr->simulate(simulation_steps);

@@ -13,6 +13,7 @@ with_wait_costs=True
 # map.print_graph(map.graph)
 
 # map_json_path = "../maps/competition/online_map/sortation_small.json"
+# map_json_path = "../maps/competition/human/pibt_room-64-64-8.json"
 map_json_path = "../maps/competition/human/pibt_warehouse_33x36_w_mode.json"
 # map_json_path = "../maps/competition/online_map/task_dist/test.json"
 with open(map_json_path, "r") as f:
@@ -36,13 +37,15 @@ kwargs = {
     # map_path=map_path,
     # map_json_str = map_json_str,
     "map_json_path": map_json_path,
-    "simulation_steps": 20,
+    "simulation_steps": 1000,
     # for the problem instance we use:
     # if random then we need specify the number of agents and total tasks, also random seed,
     "gen_random": True,
     # agents_path=agents_path, 
     # tasks_path=tasks_path, 
     "num_agents": 400,
+    "task_dist_change_interval": -1, 
+    "task_random_type": "LR", 
     # init_task=True, 
     # init_task_ids=str([719, 1008, 1008, 1008, 1125, 792, 503, 1043, 1151, 468]), 
     # init_agent=True,  
@@ -87,13 +90,13 @@ for i in range(1):
     
     init_agent_pos = str(analysis["final_pos"])
     init_task_ids = str(analysis["final_tasks"])
-    print("start", analysis["starts"])
+    # print("start", analysis["starts"])
     # print("pos", init_agent_pos)
     # print("task:", init_task_ids)
-    print("path0", analysis["actual_paths"][0])
+    # print("path0", analysis["actual_paths"][0])
     # print("tp", analysis["throughput"])
     task_num += analysis["num_task_finished"]
-    print(analysis["num_task_finished"])
+    # print(analysis["num_task_finished"])
     kwargs["init_agent"] = True
     kwargs["init_task"] = True
     kwargs["init_agent_pos"] = init_agent_pos

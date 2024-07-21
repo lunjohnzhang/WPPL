@@ -2248,6 +2248,19 @@ void KivaSystem::random_update_tasks_distribution(){
         generateTaskAndAgentGaussianDist(this->map, this->MT, this->home_loc_weights, this->end_pts_weights);
     } else if (this->random_type == "LR"){
         generateTaskAndAgentLRDist(this->map, this->MT, this->home_loc_weights, this->end_pts_weights);
+        
+        // debug
+        std::cout << "home loc:" <<std::endl;
+        for (auto w: this->home_loc_weights){
+            std::cout << w <<", ";
+        }
+        std::cout << std::endl;
+
+        // std::cout << "end loc" <<std::endl;
+        // for (auto w: this->end_pts_weights){
+        //     std::cout << w <<", ";
+        // }
+        // std::cout << std::endl;
     } else {
         std::cout << "random type ["<< this->random_type<< "] not support yet"<<std::endl;
         exit(1);
@@ -2273,6 +2286,43 @@ void InfAssignSystem::resume_from_file(string snapshot_fp, int w){
         std::cout<<p<<" "<<x<<" "<<y<<std::endl;
         starts[k]=State(p,0,-1);
     }
+}
+
+void OnlineGenerateTaskSystem::update_tasks(){
+    for (int k=0; k<this->num_of_agents; ++k){
+        while(assigned_tasks[k].size() < this->num_tasks_reveal){
+            int loc;
+            if(this->init_task && this->init_task_ids[k]!=-1){
+                loc = this->init_task_ids[k];
+                this->init_task_ids[k] = -1;
+            } else {
+                int idx = this->goal_loc_dist(this->MT);
+                loc = this->map.empty_locations[idx];
+            }
+
+            Task task(this->task_id, loc, this->timestep, k);
+            assigned_tasks[k].push_back(task);
+            events[k].push_back(make_tuple(task.task_id, this->timestep, "assigned"));
+            log_event_assigned(k, task.task_id, timestep);
+            all_tasks.push_back(task);
+            task_id++;
+        }
+    }
+}
+
+void OnlineGenerateTaskSystem::random_update_tasks_distribution(){
+    // std::cout << "calling Online::random_update_task_distribution, random_type =" <<this->random_type <<std::endl;
+    if (this->random_type == "uniform"){
+        this->empty_weights.resize(this->map.empty_locations.size(), 1);
+    } else if (this->random_type == "Gaussian"){
+        generateTaskAndAgentGaussianEmptyDist(this->map, this->MT, this->empty_weights);
+    } else {
+        std::cout << "random type [" << this->random_type << "] is not supported in OnlineGenerateSystem yet!" <<std::endl;
+        exit(1);
+    }
+    this->goal_loc_dist = std::discrete_distribution<int>(
+        this->empty_weights.begin(), this->empty_weights.end()
+    );
 }
 
 #endif

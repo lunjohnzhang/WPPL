@@ -300,7 +300,7 @@ public:
     //void saveSimulationIssues(const string &fileName) const;
     void saveResults(const string &fileName) const;
 
-    std::string random_type="LR";
+    std::string random_type;
     virtual void update_tasks_base_distribution(std::vector<double> new_distribution){
         std::cout << "in BaseSystem::update_tasks_base_distribution "<<std::endl;
         exit(1);
@@ -319,6 +319,10 @@ public:
     virtual std::vector<double> get_tasks_distribution(){
         std::cout << "in BaseSystem::get_tasks_distribution" <<std::endl;
         exit(1);
+    }
+
+    void set_random_type(std::string _random_type){
+        this->random_type = _random_type;
     }
 
 #ifdef MAP_OPT
@@ -530,6 +534,8 @@ public:
         num_of_agents = start_locs.size();
         starts.resize(num_of_agents);
 
+        this->random_type = "LR";
+
         for (size_t i = 0; i < start_locs.size(); i++)
         {
             if (grid.map[start_locs[i]] == 1)
@@ -595,6 +601,41 @@ private:
     std::vector<double> home_loc_weights;
     std::vector<double> end_pts_weights;
 
+};
+
+class OnlineGenerateTaskSystem: public BaseSystem{
+    public:
+    OnlineGenerateTaskSystem(Grid &grid, MAPFPlanner* planner, std::vector<int>& start_locs, ActionModelWithRotate* model, uint seed):
+        BaseSystem(grid, planner, model), MT(seed)
+    {
+        this->num_of_agents = start_locs.size();
+        this->starts.resize(this->num_of_agents);
+
+        for (size_t i = 0; i < start_locs.size(); i++){
+            if (grid.map[start_locs[i]] == 1)
+            {
+                cout<<"error: agent "<<i<<"'s start location is an obstacle("<<start_locs[i]<<")"<<endl;
+                exit(0);
+            }
+            starts[i] = State(start_locs[i], 0, -1);
+        }
+
+        this->empty_weights.clear();
+        this->random_type = "uniform"; // we can change this after initialization
+        this->empty_weights.resize(this->map.empty_locations.size(), 1.0);
+        
+        this->goal_loc_dist = std::discrete_distribution<int>(
+            this->empty_weights.begin(), this->empty_weights.end()
+        );
+    }
+    void random_update_tasks_distribution() override;
+
+    private:
+    std::mt19937 MT;
+    std::vector<double> empty_weights;
+    std::discrete_distribution<int> goal_loc_dist;
+    int task_id = 0;
+    void update_tasks();
 };
 
 #endif

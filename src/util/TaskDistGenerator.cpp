@@ -98,19 +98,58 @@ void generateTaskAndAgentGaussianDist(const Grid& map, mt19937 MT, vector<double
     // cout << "Task and Agent Distribution Generated Successfully!" << endl;
 }
 
+void generateTaskAndAgentGaussianEmptyDist(const Grid& map, mt19937 MT, vector<double>& empty_weights) {
+    
+    vector<vector<double>> map_e(map.rows, vector<double>(map.cols, 0));
+    for (auto loc: map.empty_locations){
+        int r = loc / map.cols;
+        int c = loc & map.cols;
+        map_e[r][c] = 1;
+    }
+
+    int h = map.rows;
+    int w = map.cols;
+
+    random_device rd;
+    uniform_int_distribution<> dis_h(0, h - 1);
+    uniform_int_distribution<> dis_w(0, w - 1);
+    
+    int center_h = dis_h(MT);
+    int center_w = dis_w(MT);
+    
+    vector<vector<double>> dist_full = getGaussian(h, w, center_h, center_w);
+    vector<vector<double>> dist_e(h, vector<double>(w, 0));
+    double max_val = 0;
+
+    for (int r = 0; r < h; ++r) {
+        for (int c = 0; c < w; ++c) {
+            dist_e[r][c] = dist_full[r][c] * map_e[r][c];
+            if (dist_e[r][c] > max_val) max_val = dist_e[r][c];
+        }
+    }
+
+    for (int r = 0; r < h; ++r) {
+        for (int c = 0; c < w; ++c) {
+            dist_e[r][c] /= max_val; // normalize
+        }
+    }
+
+    empty_weights = generateVecEDist(map_e, dist_e);
+}
+
 void generateTaskAndAgentLRDist(const Grid& map, mt19937 MT, vector<double>& w_dist, vector<double>& e_dist) {
     double left_right_ratio_bound = 0.1;
     std::uniform_real_distribution<> dis(0.0, 1.0);
     double p = dis(MT);
     double r0 = dis(MT) * (1-left_right_ratio_bound) + left_right_ratio_bound;
-    double r = (p<0.5)? r0: 1/r0;
+    double ratio = (p<0.5)? r0: 1/r0;
 
     w_dist.clear();
     for (auto w_id: map.agent_home_locations){
         int r = w_id / map.cols;
         int c = w_id % map.cols;
         if (c==0){
-            w_dist.push_back(r);
+            w_dist.push_back(ratio);
         } else {
             w_dist.push_back(1.0);
         }
