@@ -170,6 +170,9 @@ py_sim::py_sim(py::kwargs kwargs){
         } else if (task_assignment_strategy == "online_generate"){
             uint seed=kwargs["seed"].cast<uint>();
             system_ptr = std::make_unique<OnlineGenerateTaskSystem>(grid, planner, agents, model, seed);
+        } else if (task_assignment_strategy == "multi_category"){
+            uint seed=kwargs["seed"].cast<uint>();
+            system_ptr = std::make_unique<MultiCategoryTaskSystem>(grid, planner, agents, model, seed);
         } else{
             std::cerr << "unkown task assignment strategy " << task_assignment_strategy << std::endl;
             logger->log_fatal("unkown task assignment strategy " + task_assignment_strategy);

@@ -2325,4 +2325,48 @@ void OnlineGenerateTaskSystem::random_update_tasks_distribution(){
     );
 }
 
+void MultiCategoryTaskSystem::random_update_tasks_distribution(){
+    double p1 = 0.1/7;
+    double p2 = 0.2/2;
+    double p3 = 0.7/1;
+    std::uniform_real_distribution<> dis(0.0, 1.0);
+
+    this->empty_weights.clear();
+    for(int i=0; i<this->map.empty_locations.size(); ++i){
+        double q = dis(this->MT);
+        if (q<0.7){
+            this->empty_weights.push_back(p1);
+        } else if (q<0.9){
+            this->empty_weights.push_back(p2);
+        } else {
+            this->empty_weights.push_back(p3);
+        }
+    }
+    
+    this->goal_loc_dist = std::discrete_distribution<int>(
+        this->empty_weights.begin(), this->empty_weights.end()
+    );
+}
+
+void MultiCategoryTaskSystem::update_tasks(){
+    for (int k=0; k<this->num_of_agents; ++k){
+        while(assigned_tasks[k].size() < this->num_tasks_reveal){
+            int loc;
+            if(this->init_task && this->init_task_ids[k]!=-1){
+                loc = this->init_task_ids[k];
+                this->init_task_ids[k] = -1;
+            } else {
+                int idx = this->goal_loc_dist(this->MT);
+                loc = this->map.empty_locations[idx];
+            }
+
+            Task task(this->task_id, loc, this->timestep, k);
+            assigned_tasks[k].push_back(task);
+            events[k].push_back(make_tuple(task.task_id, this->timestep, "assigned"));
+            log_event_assigned(k, task.task_id, timestep);
+            all_tasks.push_back(task);
+            task_id++;
+        }
+    }
+}
 #endif

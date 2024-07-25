@@ -638,4 +638,33 @@ class OnlineGenerateTaskSystem: public BaseSystem{
     void update_tasks();
 };
 
+class MultiCategoryTaskSystem: public BaseSystem{
+    // for 7:2:1 task distribution strategy
+    public:
+    MultiCategoryTaskSystem(Grid &grid, MAPFPlanner* planner, std::vector<int>& start_locs, ActionModelWithRotate* model, uint seed):
+        BaseSystem(grid, planner, model), MT(seed)
+    {
+        this->num_of_agents = start_locs.size();
+        this->starts.resize(this->num_of_agents);
+
+        for (size_t i = 0; i < start_locs.size(); i++){
+            if (grid.map[start_locs[i]] == 1)
+            {
+                cout<<"error: agent "<<i<<"'s start location is an obstacle("<<start_locs[i]<<")"<<endl;
+                exit(0);
+            }
+            starts[i] = State(start_locs[i], 0, -1);
+        }
+
+        this->random_update_tasks_distribution();
+    }
+    void random_update_tasks_distribution() override;
+
+    private:
+    std::mt19937 MT;
+    std::vector<double> empty_weights;
+    std::discrete_distribution<int> goal_loc_dist;
+    int task_id = 0;
+    void update_tasks();
+};
 #endif

@@ -221,6 +221,29 @@ public:
         return h;
     }
 
+    float get_cost_move(int pst, int ped){
+        if (ped-pst==1) {
+            // east
+            return map_weights[pst*5+0];
+        } else if (ped-pst==cols) {
+            // south
+            return map_weights[pst*5+1];
+        } else if (ped-pst==-1) {
+            // west
+            return map_weights[pst*5+2];
+        } else if (ped-pst==-cols) {
+            // north
+            return map_weights[pst*5+3];
+        } else if (ped-pst==0) {
+            // stay
+            return map_weights[pst*5+4]; // means no move is needed.
+        }
+        else {
+            std::cerr<<"invalid move: "<<pst<<" "<<ped<<std::endl;
+            exit(-1);
+        }
+    }
+
     bool astar(int loc) {
         bool ret=false;
 
@@ -340,6 +363,10 @@ public:
 
     float get(int agent_idx, int loc) {
         return heuristic_tables[agent_idx].get(loc);
+    }
+
+    float get_cost_move(int agent_idx, int pst, int ped) {
+        return heuristic_tables[agent_idx].get_cost_move(pst, ped);
     }
 
     void update_weights(const std::vector<float> _map_weights, const std::vector<::State>& curr_states){
