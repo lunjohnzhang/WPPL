@@ -2316,6 +2316,8 @@ void OnlineGenerateTaskSystem::random_update_tasks_distribution(){
         this->empty_weights.resize(this->map.empty_locations.size(), 1);
     } else if (this->random_type == "Gaussian"){
         generateTaskAndAgentGaussianEmptyDist(this->map, this->MT, this->empty_weights);
+    } else if (this->random_type == "GaussianMixed"){
+        generateMultiModeGaussianEmptyDist(this->map, this->MT, this->empty_weights);
     } else {
         std::cout << "random type [" << this->random_type << "] is not supported in OnlineGenerateSystem yet!" <<std::endl;
         exit(1);
@@ -2368,5 +2370,13 @@ void MultiCategoryTaskSystem::update_tasks(){
             task_id++;
         }
     }
+}
+
+std::vector<double> MultiCategoryTaskSystem::get_tasks_distribution(){
+    return this->empty_weights;
+}
+
+std::vector<double> OnlineGenerateTaskSystem::get_tasks_distribution(){
+    return this->empty_weights;
 }
 #endif

@@ -629,7 +629,8 @@ class OnlineGenerateTaskSystem: public BaseSystem{
         );
     }
     void random_update_tasks_distribution() override;
-
+    std::vector<double> get_tasks_distribution() override;
+    
     private:
     std::mt19937 MT;
     std::vector<double> empty_weights;
@@ -659,7 +660,7 @@ class MultiCategoryTaskSystem: public BaseSystem{
         this->random_update_tasks_distribution();
     }
     void random_update_tasks_distribution() override;
-
+    std::vector<double> get_tasks_distribution() override;
     private:
     std::mt19937 MT;
     std::vector<double> empty_weights;

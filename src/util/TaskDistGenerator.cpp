@@ -53,7 +53,7 @@ void readMap(const Grid& map, vector<vector<double>>& map_e, vector<vector<doubl
 }
 
 // Function to generate task and agent distribution
-void generateTaskAndAgentGaussianDist(const Grid& map, mt19937 MT, vector<double>& w_dist, vector<double>& e_dist) {
+void generateTaskAndAgentGaussianDist(const Grid& map, mt19937& MT, vector<double>& w_dist, vector<double>& e_dist) {
     vector<vector<double>> map_e, map_w;
 
     readMap(map, map_e, map_w);
@@ -74,6 +74,7 @@ void generateTaskAndAgentGaussianDist(const Grid& map, mt19937 MT, vector<double
     
     int center_h = dis_h(MT);
     int center_w = dis_w(MT);
+    std::cout << "gaussian center = "<< center_h <<", " << center_w<<std::endl;
     
     vector<vector<double>> dist_full = getGaussian(h, w, center_h, center_w);
     vector<vector<double>> dist_e(h, vector<double>(w, 0));
@@ -98,7 +99,7 @@ void generateTaskAndAgentGaussianDist(const Grid& map, mt19937 MT, vector<double
     // cout << "Task and Agent Distribution Generated Successfully!" << endl;
 }
 
-void generateTaskAndAgentGaussianEmptyDist(const Grid& map, mt19937 MT, vector<double>& empty_weights) {
+void generateTaskAndAgentGaussianEmptyDist(const Grid& map, mt19937& MT, vector<double>& empty_weights) {
     
     vector<vector<double>> map_e(map.rows, vector<double>(map.cols, 0));
     for (auto loc: map.empty_locations){
@@ -116,6 +117,8 @@ void generateTaskAndAgentGaussianEmptyDist(const Grid& map, mt19937 MT, vector<d
     
     int center_h = dis_h(MT);
     int center_w = dis_w(MT);
+
+    std::cout << "gaussian center = "<< center_h <<", " << center_w<<std::endl;
     
     vector<vector<double>> dist_full = getGaussian(h, w, center_h, center_w);
     vector<vector<double>> dist_e(h, vector<double>(w, 0));
@@ -137,7 +140,23 @@ void generateTaskAndAgentGaussianEmptyDist(const Grid& map, mt19937 MT, vector<d
     empty_weights = generateVecEDist(map_e, dist_e);
 }
 
-void generateTaskAndAgentLRDist(const Grid& map, mt19937 MT, vector<double>& w_dist, vector<double>& e_dist) {
+void generateMultiModeGaussianEmptyDist(const Grid& map, mt19937& MT,  vector<double>& empty_weights, int K){
+    std::vector<std::vector<double>> all_weights(K);
+    for (int i=0; i<K; ++i){
+        generateTaskAndAgentGaussianEmptyDist(map, MT, all_weights[i]);
+    }
+    empty_weights.clear();
+    for (int i=0; i<all_weights[0].size(); ++i){
+        double w = 0;
+        for (int k=0; k<K; ++k){
+            w += all_weights[k][i];
+        }
+        empty_weights.push_back(w);
+    }
+}
+
+
+void generateTaskAndAgentLRDist(const Grid& map, mt19937& MT, vector<double>& w_dist, vector<double>& e_dist) {
     double left_right_ratio_bound = 0.1;
     std::uniform_real_distribution<> dis(0.0, 1.0);
     double p = dis(MT);
