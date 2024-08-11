@@ -2246,6 +2246,10 @@ void KivaSystem::random_update_tasks_distribution(){
     // std::cout << "begin distribution update"<<std::endl;
     if (this->random_type == "Gaussian"){
         generateTaskAndAgentGaussianDist(this->map, this->MT, this->home_loc_weights, this->end_pts_weights);
+    } else if (this->random_type == "GaussianMixed"){
+        generateTaskAndAgentMultiModeGaussianDist(this->map, this->MT, this->home_loc_weights, this->end_pts_weights);
+    } else if (this->random_type == "GaussianMixedRandomK"){
+        generateTaskAndAgentMultiModeGaussianRandomKDist(this->map, this->MT, this->home_loc_weights, this->end_pts_weights);
     } else if (this->random_type == "LR"){
         generateTaskAndAgentLRDist(this->map, this->MT, this->home_loc_weights, this->end_pts_weights);
         

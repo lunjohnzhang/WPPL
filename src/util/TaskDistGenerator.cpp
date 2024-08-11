@@ -3,8 +3,11 @@
 
 using namespace std;
 
+DistributionParams dist_params = DistributionParams();
+
 // Function to generate a Gaussian distribution
-vector<vector<double>> getGaussian(int h, int w, int center_h, int center_w, double sigma = 0.5) {
+vector<vector<double>> getGaussian(int h, int w, int center_h, int center_w, double sigma = dist_params.sigma) {
+    std::cout << "sigma = " << sigma <<std::endl;
     vector<double> x0(w);
     vector<double> y0(h);
     for (int i = 0; i < w; ++i) x0[i] = -5 + i * 10.0 / (w - 1);
@@ -69,11 +72,11 @@ void generateTaskAndAgentGaussianDist(const Grid& map, mt19937& MT, vector<doubl
     int w = map.cols;
 
     random_device rd;
-    uniform_int_distribution<> dis_h(0, h - 1);
-    uniform_int_distribution<> dis_w(0, w - 1);
+    uniform_int_distribution<> dis_center_id(0, map.end_points.size()-1);
     
-    int center_h = dis_h(MT);
-    int center_w = dis_w(MT);
+    int center_id = dis_center_id(MT);
+    int center_h = map.end_points[center_id] / w;
+    int center_w = map.end_points[center_id] % w;
     std::cout << "gaussian center = "<< center_h <<", " << center_w<<std::endl;
     
     vector<vector<double>> dist_full = getGaussian(h, w, center_h, center_w);
@@ -99,12 +102,48 @@ void generateTaskAndAgentGaussianDist(const Grid& map, mt19937& MT, vector<doubl
     // cout << "Task and Agent Distribution Generated Successfully!" << endl;
 }
 
+
+void generateTaskAndAgentMultiModeGaussianDist(const Grid& map, std::mt19937& MT, vector<double>& w_dist, vector<double>& e_dist, int K){
+    std::cout << "select K = "<< K <<std::endl;
+    std::vector<std::vector<double>> all_weights_w(K);
+    std::vector<std::vector<double>> all_weights_e(K);
+    for (int i=0; i<K; ++i){
+        generateTaskAndAgentGaussianDist(map, MT, all_weights_w[i], all_weights_e[i]);
+    }
+    
+    e_dist.clear();
+    for (int i=0; i<all_weights_e[0].size(); ++i){
+        double w = 0;
+        for (int k=0; k<K; ++k){
+            w += all_weights_e[k][i];
+        }
+        e_dist.push_back(w);
+    }
+
+    w_dist.clear();
+     for (int i=0; i<all_weights_w[0].size(); ++i){
+        double w = 0;
+        for (int k=0; k<K; ++k){
+            w += all_weights_w[k][i];
+        }
+        w_dist.push_back(w);
+    }
+}
+
+
+void generateTaskAndAgentMultiModeGaussianRandomKDist(const Grid& map, std::mt19937& MT, vector<double>& w_dist, vector<double>& e_dist){
+    uniform_int_distribution<> dis_k(std::max(1, int(dist_params.k_ratio_low*map.end_points.size())), int(dist_params.k_ratio_high*map.end_points.size()));
+    int k = dis_k(MT);
+    generateTaskAndAgentMultiModeGaussianDist(map, MT, w_dist, e_dist, k);
+}
+
+
 void generateTaskAndAgentGaussianEmptyDist(const Grid& map, mt19937& MT, vector<double>& empty_weights) {
     
     vector<vector<double>> map_e(map.rows, vector<double>(map.cols, 0));
     for (auto loc: map.empty_locations){
         int r = loc / map.cols;
-        int c = loc & map.cols;
+        int c = loc % map.cols;
         map_e[r][c] = 1;
     }
 

@@ -458,6 +458,14 @@ std::string run(const py::kwargs& kwargs)
         system_ptr->update_tasks_base_distribution(weights);
     }
 
+    if (kwargs.contains("dist_sigma")){
+        double sigma = kwargs["dist_sigma"].cast<double>();
+        dist_params.sigma = sigma;
+    }
+    if (kwargs.contains("dist_K")){
+        int K = kwargs["dist_K"].cast<int>();
+        dist_params.K = K;
+    }
     if(kwargs.contains("task_dist_change_interval")){
         int interval = kwargs["task_dist_change_interval"].cast<int>();
         system_ptr->task_dist_change_interval = interval;
