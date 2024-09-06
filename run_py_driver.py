@@ -9,6 +9,8 @@ from env_search.utils import kiva_env_str2number, get_chute_loc, read_in_kiva_ma
 import py_driver  # type: ignore # ignore pylance warning
 import json
 
+np.random.seed(0)
+
 map_path = "example_problems/warehouse.domain/maps/kiva_large_w_mode.map"
 # full_weight_path="scripts/random_weight_001.w"
 with_wait_costs = True
@@ -31,6 +33,7 @@ with open(config_path) as f:
 # list of destinations
 n_destinations = 100
 packages = np.random.randint(0, n_destinations, size=100000).tolist()
+package_dist_weight = np.random.rand(n_destinations).tolist()
 # print(packages)
 
 all_chutes = get_chute_loc(map_np).tolist()
@@ -39,8 +42,8 @@ n_chutes = len(all_chutes)
 
 # destination id to location of chutes
 chute_mapping = {
-    i: int(np.random.choice(all_chutes))
-    for i in range(n_destinations)
+    j: int(np.random.choice(all_chutes))
+    for j in range(n_destinations)
 }
 ret = py_driver.run(
     scenario="sortation",  # one of ["kiva", "competition", "sortation"]
@@ -80,12 +83,11 @@ ret = py_driver.run(
     "roundrobin",  # how to assign tasks to agents, no need to change
     num_tasks_reveal=1,  # how many new tasks are revealed, no need to change
     # Chute mapping related
-    packages=json.dumps(packages),
+    # packages=json.dumps(packages),
+    package_dist_weight=json.dumps(package_dist_weight),
+    package_mode="dist",
     chute_mapping=json.dumps(chute_mapping),
 )
-
-import json
-import numpy as np
 
 analysis = json.loads(ret)
 print(analysis.keys())

@@ -22,7 +22,26 @@ void SortationSystem::update_tasks()
             {
                 // next task would be an endpoint determined by the packages
                 // and chute mapping
-                int next_package = this->packages[this->package_id];
+                int next_package;
+                if (this->package_mode == "explicit")
+                {
+                    if (this->package_id >= this->packages.size())
+                    {
+                        std::cout << "not enough packages" << std::endl;
+                        exit(-1);
+                    }
+                    next_package = this->packages[this->package_id];
+                }
+                else if (this->package_mode == "dist")
+                {
+                    next_package = this->package_dist(this->MT);
+                }
+                else
+                {
+                    std::cout << "unkonw package mode" << std::endl;
+                    exit(-1);
+                }
+
                 this->package_id++;
                 int next_chute = this->chute_mapping[next_package];
                 // Choose a random endpoint around the mapped chute

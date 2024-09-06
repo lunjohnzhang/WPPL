@@ -9,9 +9,12 @@ public:
                     ActionModelWithRotate *model,
                     // from destination to chutes
                     std::map<int, int> chute_mapping,
+                    std::string package_mode,
                     // list of packages, essentially list of destinations
                     vector<int> packages,
-                    int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), packages(packages)
+                    // distribution of packages on each destination
+                    vector<double> package_dist_weight,
+                    int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), package_mode(package_mode), packages(packages), package_dist_weight(package_dist_weight)
     {
         num_of_agents = num_agents;
         starts.resize(num_of_agents);
@@ -36,6 +39,21 @@ public:
         }
         cout << endl;
 
+        // Initialize package distribution
+        if (package_mode == "dist")
+        {
+            this->package_dist = std::discrete_distribution<int>(
+                package_dist_weight.begin(),
+                package_dist_weight.end());
+            cout << "package distribution: ";
+            for (auto w : package_dist_weight)
+            {
+                cout << w << ", ";
+            }
+            cout << endl;
+        }
+
+
         // Shuffle the packages
         std::shuffle(this->packages.begin(), this->packages.end(), MT);
     };
@@ -47,8 +65,11 @@ private:
 
     void update_tasks();
     std::discrete_distribution<int> agent_home_loc_dist;
+    std::discrete_distribution<int> package_dist;
 
+    std::string package_mode;
     std::vector<int> prev_task_locs;
     std::vector<int> packages;
+    std::vector<double> package_dist_weight;
     std::map<int, int> chute_mapping;
 };

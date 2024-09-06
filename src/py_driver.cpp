@@ -429,13 +429,43 @@ std::string run(const py::kwargs& kwargs)
     {
         // Sortation system assumes the existence of "packages" and
         // "chute_mapping" arguments, both of which are json strings
-        nlohmann::json packages_json = nlohmann::json::parse(
-            kwargs["packages"].cast<std::string>());
-        vector<int> packages = packages_json.get<vector<int>>();
+
+        // For packages, the program accepts a list of explicit "packages" or a
+        // distribution of packages on each destination
+        std::string package_mode = kwargs["package_mode"].cast<std::string>();
+        vector<int> packages;
+        vector<double> package_dist_weight;
+        if (package_mode == "explicit")
+        {
+            if (!kwargs.contains("packages"))
+            {
+                logger->log_fatal("packages must be provided for sortation system");
+                exit(1);
+            }
+            nlohmann::json packages_json = nlohmann::json::parse(
+                kwargs["packages"].cast<std::string>());
+            packages = packages_json.get<vector<int>>();
+        }
+        else if (package_mode == "dist")
+        {
+            if (!kwargs.contains("package_dist_weight"))
+            {
+                logger->log_fatal("package_dist_weight must be provided for sortation system");
+                exit(1);
+            }
+            nlohmann::json package_dist_weight_json = nlohmann::json::parse(
+                kwargs["package_dist_weight"].cast<std::string>());
+            package_dist_weight = package_dist_weight_json.get<vector<double>>();
+        }
+        else
+        {
+            logger->log_fatal("packages or package_dist_weight must be provided for sortation system");
+            exit(1);
+        }
 
         nlohmann::json chute_mapping_json = nlohmann::json::parse(
             kwargs["chute_mapping"].cast<std::string>());
-        cout << chute_mapping_json << endl;
+        // cout << chute_mapping_json << endl;
         map<string, int> chute_mapping = chute_mapping_json.get<map<string, int>>();
 
         // Transform map<string, int> to a map<int, int>
@@ -459,7 +489,9 @@ std::string run(const py::kwargs& kwargs)
 
         uint seed=kwargs["seed"].cast<uint>();
         int num_agents=kwargs["num_agents"].cast<int>();
-        system_ptr = std::make_unique<SortationSystem>(grid, planner, model, chute_mapping_int, packages, num_agents, seed);
+        system_ptr = std::make_unique<SortationSystem>(grid, planner, model,
+            chute_mapping_int, package_mode, packages, package_dist_weight,
+            num_agents, seed);
     }
 
     system_ptr->set_logger(logger);
