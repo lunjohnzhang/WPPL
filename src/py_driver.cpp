@@ -10,6 +10,8 @@
 #include <memory>
 #include <util/Analyzer.h>
 #include "nlohmann/json.hpp"
+#include <cassert>
+#include "SortationSystem.h"
 
 #ifdef MAP_OPT
 #include "util/analyze.h"
@@ -36,10 +38,6 @@ std::unique_ptr<BaseSystem> system_ptr;
 //     _exit(0);
 // }
 
-
-int _get_Manhattan_distance(int loc1, int loc2, int cols) {
-    return abs(loc1 / cols - loc2 / cols) + abs(loc1 % cols - loc2 % cols);
-}
 
 std::shared_ptr<std::vector<float> > weight_format_conversion(Grid & grid, std::vector<float> & weights)
 {
@@ -357,7 +355,14 @@ std::string run(const py::kwargs& kwargs)
     ActionModelWithRotate *model = new ActionModelWithRotate(grid);
     model->set_logger(logger);
 
-    if (grid.agent_home_locations.size()==0 || grid.end_points.size()==0) {
+    std::string scenario = kwargs["scenario"].cast<std::string>();
+
+    // Get the scenario
+    if (scenario == "competition")
+    {
+        assert(grid.agent_home_locations.size()==0 ||
+               grid.end_points.size()==0);
+
         std::vector<int> agents;
         std::vector<int> tasks;
 
@@ -405,7 +410,9 @@ std::string run(const py::kwargs& kwargs)
             logger->log_fatal("unkown task assignment strategy " + task_assignment_strategy);
             exit(1);
         }
-    } else {
+    }
+
+    else if (scenario == "kiva") {
         if (!kwargs.contains("gen_random") || !kwargs["gen_random"].cast<bool>()){
             logger->log_fatal("must generate instance randomly");
             exit(1);
@@ -413,9 +420,46 @@ std::string run(const py::kwargs& kwargs)
 
         int num_agents=kwargs["num_agents"].cast<int>();
         std::cout << "using kiva system (random task generation) with "<<num_agents<<" agents"<<std::endl;
-        
+
         uint seed=kwargs["seed"].cast<uint>();
         system_ptr = std::make_unique<KivaSystem>(grid,planner,model,num_agents,seed);
+    }
+
+    else if (scenario == "sortation")
+    {
+        // Sortation system assumes the existence of "packages" and
+        // "chute_mapping" arguments, both of which are json strings
+        nlohmann::json packages_json = nlohmann::json::parse(
+            kwargs["packages"].cast<std::string>());
+        vector<int> packages = packages_json.get<vector<int>>();
+
+        nlohmann::json chute_mapping_json = nlohmann::json::parse(
+            kwargs["chute_mapping"].cast<std::string>());
+        cout << chute_mapping_json << endl;
+        map<string, int> chute_mapping = chute_mapping_json.get<map<string, int>>();
+
+        // Transform map<string, int> to a map<int, int>
+        map<int, int> chute_mapping_int;
+        for (auto const &pair : chute_mapping)
+        {
+            chute_mapping_int[stoi(pair.first)] = pair.second;
+        }
+
+        // // Print content of packages
+        // for (int i = 0; i < packages.size(); i++)
+        // {
+        //     std::cout << packages[i] << " ";
+        // }
+        // cout << endl;
+        // // Print content of chute_mapping
+        // for (auto const &pair : chute_mapping)
+        // {
+        //     std::cout << "{" << pair.first << ": " << pair.second << "}" << std::endl;
+        // }
+
+        uint seed=kwargs["seed"].cast<uint>();
+        int num_agents=kwargs["num_agents"].cast<int>();
+        system_ptr = std::make_unique<SortationSystem>(grid, planner, model, chute_mapping_int, packages, num_agents, seed);
     }
 
     system_ptr->set_logger(logger);

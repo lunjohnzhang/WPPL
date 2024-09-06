@@ -44,7 +44,7 @@ include_directories( ${Boost_INCLUDE_DIRS} )
 find_package(OpenMP REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Python 3.8 COMPONENTS Interpreter Development REQUIRED)
+find_package(Python 3.8 EXACT COMPONENTS Interpreter Development REQUIRED)
 
 IF (MAP_OPT)
     add_subdirectory(pybind11)

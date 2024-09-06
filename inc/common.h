@@ -174,3 +174,8 @@ T read_param_json(nlohmann::json& data, std::string name, T default_value)
         exit(1);
     }
 }
+
+
+inline int _get_Manhattan_distance(int loc1, int loc2, int cols) {
+    return abs(loc1 / cols - loc2 / cols) + abs(loc1 % cols - loc2 % cols);
+}
