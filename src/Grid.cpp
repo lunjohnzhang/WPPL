@@ -205,7 +205,9 @@ void Grid::get_adj_endpoints()
                 adj_eps.push_back(ep);
             }
         }
-        this->obs_adj_endpoints[obs] = adj_eps;
+        // Only add the adjacent endpoints if there are any
+        if (adj_eps.size() > 0)
+            this->obs_adj_endpoints[obs] = adj_eps;
     }
 
     // // Print the content of obs_adj_endpoints

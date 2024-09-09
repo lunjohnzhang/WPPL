@@ -291,6 +291,7 @@ void HeuristicTable::preprocess(string suffix) {
     } else {
         compute_weighted_heuristics();
         // ONLYDEV(save(fpath));
+        // save(fpath);
     }
 }
 
