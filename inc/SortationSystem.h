@@ -8,7 +8,7 @@ public:
                     MAPFPlanner *planner,
                     ActionModelWithRotate *model,
                     // from destination to chutes
-                    std::map<int, int> chute_mapping,
+                    std::map<int, vector<int>> chute_mapping,
                     std::string package_mode,
                     // list of packages, essentially list of destinations
                     vector<int> packages,
@@ -71,5 +71,5 @@ private:
     std::vector<int> prev_task_locs;
     std::vector<int> packages;
     std::vector<double> package_dist_weight;
-    std::map<int, int> chute_mapping;
+    std::map<int, vector<int>> chute_mapping;
 };

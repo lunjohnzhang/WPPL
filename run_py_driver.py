@@ -111,8 +111,8 @@ def main(seed=0):
     # map = Map(map_path)
     # map.print_graph(map.graph)
 
-    # map_json_path = "../maps/sortation/sortation_33_57.json"
-    map_json_path = "../maps/sortation/sortation_140_500.json"
+    map_json_path = "../maps/sortation/sortation_33_57.json"
+    # map_json_path = "../maps/sortation/sortation_140_500.json"
     with open(map_json_path, "r") as f:
         map_json = json.load(f)
         map_json_str = json.dumps(map_json)
@@ -136,11 +136,11 @@ def main(seed=0):
 
     # destination id to location of chutes
     chute_mapping = {
-        j: int(np.random.choice(all_chutes))
+        j: np.random.choice(all_chutes, size=2).astype(int).tolist()
         for j in range(n_destinations)
     }
     ret = py_driver.run(
-        scenario="sortation",  # one of ["kiva", "competition", "sortation"]
+        scenario="SORTING",  # one of ["KIVA", "COMPETITION", "SORTING"]
         # For map, it uses map_path by default. If not provided, it'll use map_json
         # which contains json string of the map
         # map_path=map_path,

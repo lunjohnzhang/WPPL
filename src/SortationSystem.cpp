@@ -43,10 +43,11 @@ void SortationSystem::update_tasks()
                 }
 
                 this->package_id++;
-                int next_chute = this->chute_mapping[next_package];
+                int chute_idx = MT() % this->chute_mapping[next_package].size();
+                int next_chute = this->chute_mapping[next_package][chute_idx];
                 // Choose a random endpoint around the mapped chute
-                int idx = MT() % map.obs_adj_endpoints[next_chute].size();
-                loc = map.obs_adj_endpoints[next_chute][idx];
+                int endpt_idx = MT() % map.obs_adj_endpoints[next_chute].size();
+                loc = map.obs_adj_endpoints[next_chute][endpt_idx];
             }
             else
             {

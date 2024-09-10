@@ -358,7 +358,7 @@ std::string run(const py::kwargs& kwargs)
     std::string scenario = kwargs["scenario"].cast<std::string>();
 
     // Get the scenario
-    if (scenario == "competition")
+    if (scenario == "COMPETITION")
     {
         assert(grid.agent_home_locations.size()==0 ||
                grid.end_points.size()==0);
@@ -412,7 +412,7 @@ std::string run(const py::kwargs& kwargs)
         }
     }
 
-    else if (scenario == "kiva") {
+    else if (scenario == "KIVA") {
         if (!kwargs.contains("gen_random") || !kwargs["gen_random"].cast<bool>()){
             logger->log_fatal("must generate instance randomly");
             exit(1);
@@ -425,7 +425,7 @@ std::string run(const py::kwargs& kwargs)
         system_ptr = std::make_unique<KivaSystem>(grid,planner,model,num_agents,seed);
     }
 
-    else if (scenario == "sortation")
+    else if (scenario == "SORTING")
     {
         // Sortation system assumes the existence of "packages" and
         // "chute_mapping" arguments, both of which are json strings
@@ -466,10 +466,10 @@ std::string run(const py::kwargs& kwargs)
         nlohmann::json chute_mapping_json = nlohmann::json::parse(
             kwargs["chute_mapping"].cast<std::string>());
         // cout << chute_mapping_json << endl;
-        map<string, int> chute_mapping = chute_mapping_json.get<map<string, int>>();
+        map<string, vector<int>> chute_mapping = chute_mapping_json.get<map<string, vector<int>>>();
 
-        // Transform map<string, int> to a map<int, int>
-        map<int, int> chute_mapping_int;
+        // Transform map<string, vector<int>> to a map<int, vector<int>>
+        map<int, vector<int>> chute_mapping_int;
         for (auto const &pair : chute_mapping)
         {
             chute_mapping_int[stoi(pair.first)] = pair.second;
@@ -481,10 +481,15 @@ std::string run(const py::kwargs& kwargs)
         //     std::cout << packages[i] << " ";
         // }
         // cout << endl;
-        // // Print content of chute_mapping
-        // for (auto const &pair : chute_mapping)
+        // Print content of chute_mapping
+        // for (auto const &pair : chute_mapping_int)
         // {
-        //     std::cout << "{" << pair.first << ": " << pair.second << "}" << std::endl;
+        //     std::cout << "{" << pair.first << ": ";
+        //     for (int i = 0; i < pair.second.size(); i++)
+        //     {
+        //         std::cout << pair.second[i] << " ";
+        //     }
+        //     std::cout << "}" << std::endl;
         // }
 
         uint seed=kwargs["seed"].cast<uint>();
@@ -492,6 +497,11 @@ std::string run(const py::kwargs& kwargs)
         system_ptr = std::make_unique<SortationSystem>(grid, planner, model,
             chute_mapping_int, package_mode, packages, package_dist_weight,
             num_agents, seed);
+    }
+    else
+    {
+        logger->log_fatal("unknown scenario: "+scenario);
+        exit(1);
     }
 
     system_ptr->set_logger(logger);
