@@ -53,10 +53,17 @@ public:
             cout << endl;
         }
 
+        // Initialize number of robots going to each workstation
+        for (auto workstation : grid.agent_home_locations)
+        {
+            robots_in_workstations[workstation] = 0;
+        }
 
         // Shuffle the packages
         std::shuffle(this->packages.begin(), this->packages.end(), MT);
     };
+
+    void simulate(int simulation_time);
 
 private:
     std::mt19937 MT;
@@ -72,4 +79,11 @@ private:
     std::vector<int> packages;
     std::vector<double> package_dist_weight;
     std::map<int, vector<int>> chute_mapping;
+
+    // workstations and #robots that intends to go to this workstation
+    boost::unordered_map<int, int> robots_in_workstations;
+
+    double assign_C = 8;
+
+    int assign_workstation(int curr_loc) const;
 };

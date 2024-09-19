@@ -96,8 +96,10 @@ public:
     nlohmann::json config;
     void load_configs();
     std::string load_map_weights(string weights_path);
-    
+
     int max_execution_steps;
+
+    std::shared_ptr<HeuristicTable> heuristics;
 };
 
 #endif

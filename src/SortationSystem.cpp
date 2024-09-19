@@ -1,4 +1,35 @@
 #include "SortationSystem.h"
+#include "util/Analyzer.h"
+
+int SortationSystem::assign_workstation(int curr_loc) const
+{
+    // Choose a workstation based on:
+    // heuristic[curr][next] + C * #robots targeting `next`
+    int assigned_loc;
+    double min_cost = DBL_MAX;
+
+    ONLYDEV(
+        int x = curr_loc % map.cols;
+        int y = curr_loc / map.cols;
+        cout << "current loc: (" << x << ", " << y << ")" << endl;
+    )
+
+    for (auto workstation : this->robots_in_workstations)
+    {
+        double cost = this->planner->heuristics->get(curr_loc, workstation.first) + this->assign_C * workstation.second;
+        if (cost < min_cost)
+        {
+            min_cost = cost;
+            assigned_loc = workstation.first;
+        }
+    }
+    ONLYDEV(
+        x = assigned_loc % map.cols;
+        y = assigned_loc / map.cols;
+        cout << "assigned workstation: (" << x << ", " << y << ")" << endl;
+    )
+    return assigned_loc;
+}
 
 void SortationSystem::update_tasks()
 {
@@ -13,10 +44,11 @@ void SortationSystem::update_tasks()
                 map.grid_types[prev_task_loc] == 'e')
             {
                 // next task would be w
-                // Sample a workstation based on given distribution
-                int idx = this->agent_home_loc_dist(this->MT);
+                // int idx = this->agent_home_loc_dist(this->MT);
                 // int idx=MT()%map.agent_home_locations.size();
-                loc = map.agent_home_locations[idx];
+                // loc = map.agent_home_locations[idx];
+                loc = assign_workstation(prev_task_loc);
+                this->robots_in_workstations[loc]++;
             }
             else if (map.grid_types[prev_task_loc] == 'w')
             {
@@ -64,4 +96,125 @@ void SortationSystem::update_tasks()
             task_id++;
         }
     }
+}
+
+void SortationSystem::simulate(int simulation_time)
+{
+    // init logger
+    // Logger* log = new Logger();
+
+    ONLYDEV(g_timer.record_p("simulate_start");)
+
+    initialize();
+
+    ONLYDEV(g_timer.record_d("simulate_start", "initialize_end", "initialization");)
+    int num_of_tasks = 0;
+
+    for (; timestep < simulation_time;)
+    {
+        ONLYDEV(
+            cout << "----------------------------" << std::endl;
+            cout << "Timestep " << timestep << std::endl;)
+
+        // find a plan
+        sync_shared_env();
+        // vector<Action> actions = planner->plan(plan_time_limit);
+        // vector<Action> actions;
+        // planner->plan(plan_time_limit,actions);
+
+        auto start = std::chrono::steady_clock::now();
+
+        vector<Action> actions = plan();
+
+        ONLYDEV(
+            if (actions.size() == num_of_agents) {
+                analyzer.data["moving_steps"] = analyzer.data["moving_steps"].get<int>() + 1;
+            } else {
+                if (actions.size() != 0)
+                {
+                    DEV_DEBUG("planner return wrong number of actions: {}", actions.size());
+                    exit(-1);
+                }
+                else
+                {
+                    DEV_WARN("planner return no actions: most likely exceeding the time limit.");
+                }
+            })
+
+        auto end = std::chrono::steady_clock::now();
+
+        timestep += 1;
+        ONLYDEV(analyzer.data["timesteps"] = timestep;)
+
+        for (int a = 0; a < num_of_agents; a++)
+        {
+            if (!env->goal_locations[a].empty())
+                solution_costs[a]++;
+        }
+
+        // move drives
+        list<Task> new_finished_tasks = move(actions);
+        if (!planner_movements[0].empty() && planner_movements[0].back() == Action::NA)
+        {
+            planner_times.back() += plan_time_limit; // add planning time to last record
+        }
+        else
+        {
+            auto diff = end - start;
+            planner_times.push_back(std::chrono::duration<double>(diff).count());
+        }
+        ONLYDEV(cout << new_finished_tasks.size() << " tasks has been finished in this timestep" << std::endl;)
+
+        // update tasks
+        for (auto task : new_finished_tasks)
+        {
+            // int id, loc, t;
+            // std::tie(id, loc, t) = task;
+            finished_tasks[task.agent_assigned].emplace_back(task);
+            num_of_tasks++;
+            num_of_task_finish++;
+
+            // update the number of robots in the workstation
+            if (map.grid_types[task.location] == 'w')
+            {
+                this->robots_in_workstations[task.location]--;
+            }
+        }
+        ONLYDEV(cout << num_of_tasks << " tasks has been finished by far in total" << std::endl;)
+
+        ONLYDEV(analyzer.data["finished_tasks"] = num_of_tasks;)
+
+        update_tasks();
+
+        bool complete_all = false;
+        for (auto &t : assigned_tasks)
+        {
+            if (t.empty())
+            {
+                complete_all = true;
+            }
+            else
+            {
+                complete_all = false;
+                break;
+            }
+        }
+        if (complete_all)
+        {
+            cout << std::endl
+                 << "All task finished!" << std::endl;
+            break;
+        }
+
+        ONLYDEV(g_timer.print_all_d(););
+    }
+    ONLYDEV(g_timer.record_d("initialize_end", "simulate_end", "simulation");)
+
+    ONLYDEV(g_timer.print_all_d();)
+
+    cout << std::endl
+         << "Done!" << std::endl;
+    cout << num_of_tasks << " tasks has been finished by far in total" << std::endl;
+
+    ONLYDEV(analyzer.dump();)
 }
