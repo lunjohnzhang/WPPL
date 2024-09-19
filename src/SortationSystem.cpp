@@ -31,6 +31,25 @@ int SortationSystem::assign_workstation(int curr_loc) const
     return assigned_loc;
 }
 
+int SortationSystem::assign_endpoint(int curr_loc, vector<int> endpoints) const
+{
+    // Choose an endpoint based on:
+    // heuristic[curr][next] + C * #robots targeting `next`
+    int assigned_loc;
+    double min_cost = DBL_MAX;
+
+    for (auto endpoint : endpoints)
+    {
+        double cost = this->planner->heuristics->get(curr_loc, endpoint) + this->assign_C * this->robots_in_endpoints.at(endpoint);
+        if (cost < min_cost)
+        {
+            min_cost = cost;
+            assigned_loc = endpoint;
+        }
+    }
+    return assigned_loc;
+}
+
 void SortationSystem::update_tasks()
 {
     for (int k = 0; k < num_of_agents; k++)
@@ -75,11 +94,25 @@ void SortationSystem::update_tasks()
                 }
 
                 this->package_id++;
-                int chute_idx = MT() % this->chute_mapping[next_package].size();
-                int next_chute = this->chute_mapping[next_package][chute_idx];
-                // Choose a random endpoint around the mapped chute
-                int endpt_idx = MT() % map.obs_adj_endpoints[next_chute].size();
-                loc = map.obs_adj_endpoints[next_chute][endpt_idx];
+
+                // int chute_idx = MT() % this->chute_mapping[next_package].size();
+                // int next_chute = this->chute_mapping[next_package][chute_idx];
+                // // Choose a random endpoint around the mapped chute
+                // int endpt_idx = MT() % map.obs_adj_endpoints[next_chute].size();
+                // loc = map.obs_adj_endpoints[next_chute][endpt_idx];
+
+                // Get all endpoints around the chutes being mapped to
+                vector<int> endpoints;
+                for (auto chute : this->chute_mapping[next_package])
+                {
+                    for (auto endpoint : map.obs_adj_endpoints[chute])
+                    {
+                        endpoints.push_back(endpoint);
+                    }
+                }
+                // Choose the next endpoint
+                loc = assign_endpoint(prev_task_loc, endpoints);
+                this->robots_in_endpoints[loc]++;
             }
             else
             {
@@ -178,6 +211,10 @@ void SortationSystem::simulate(int simulation_time)
             if (map.grid_types[task.location] == 'w')
             {
                 this->robots_in_workstations[task.location]--;
+            }
+            else if (map.grid_types[task.location] == 'e')
+            {
+                this->robots_in_endpoints[task.location]--;
             }
         }
         ONLYDEV(cout << num_of_tasks << " tasks has been finished by far in total" << std::endl;)

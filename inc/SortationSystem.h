@@ -59,6 +59,12 @@ public:
             robots_in_workstations[workstation] = 0;
         }
 
+        // Initialize number of robots going to each endpoint
+        for (auto endpoint : grid.end_points)
+        {
+            robots_in_endpoints[endpoint] = 0;
+        }
+
         // Shuffle the packages
         std::shuffle(this->packages.begin(), this->packages.end(), MT);
     };
@@ -82,8 +88,11 @@ private:
 
     // workstations and #robots that intends to go to this workstation
     boost::unordered_map<int, int> robots_in_workstations;
+    // endpoints and #robots that intends to go to this endpoint
+    boost::unordered_map<int, int> robots_in_endpoints;
 
     double assign_C = 8;
 
     int assign_workstation(int curr_loc) const;
+    int assign_endpoint(int curr_loc, vector<int> endpoints) const;
 };
