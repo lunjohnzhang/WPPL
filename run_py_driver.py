@@ -111,8 +111,8 @@ def main(seed=0):
     # map = Map(map_path)
     # map.print_graph(map.graph)
 
-    map_json_path = "../maps/sortation/sortation_33_57.json"
-    # map_json_path = "../maps/sortation/sortation_140_500.json"
+    # map_json_path = "../maps/sortation/sortation_33_57.json"
+    map_json_path = "../maps/sortation/sortation_140_500.json"
     with open(map_json_path, "r") as f:
         map_json = json.load(f)
         map_json_str = json.dumps(map_json)
@@ -139,8 +139,8 @@ def main(seed=0):
         j: np.random.choice(all_chutes, size=2).astype(int).tolist()
         for j in range(n_destinations)
     }
-    # with open("random_chute_mapping_2_chutes_per_dest.json", "w") as f:
-    #     json.dump(chute_mapping, f)
+    with open("random_chute_mapping_2_chutes_per_dest.json", "w") as f:
+        json.dump(chute_mapping, f)
 
     ret = py_driver.run(
         scenario="SORTING",  # one of ["KIVA", "COMPETITION", "SORTING"]
@@ -153,7 +153,7 @@ def main(seed=0):
         # for the problem instance we use:
         # if random then we need specify the number of agents and total tasks, also random seed,
         gen_random=True,
-        num_agents=500,
+        num_agents=600,
         num_tasks=100000,
         seed=0,
         save_paths=True,
@@ -189,10 +189,11 @@ def main(seed=0):
     analysis = json.loads(ret)
     print(analysis.keys())
     print(np.array(analysis["tile_usage"]).shape)
-    print(np.array(analysis["edge_pair_usage"]).shape)
+    # print(np.array(analysis["edge_pair_usage"]).shape)
 
-    print(analysis["throughput"], analysis["edge_pair_usage_mean"],
-          analysis["edge_pair_usage_std"])
+    # print(analysis["throughput"], analysis["edge_pair_usage_mean"],
+        #   analysis["edge_pair_usage_std"])
+    print(analysis["throughput"])
 
     # ##### Only use the following for weight opt case #####
     # # because the order of orientation is different in competition code and weight opt code.
