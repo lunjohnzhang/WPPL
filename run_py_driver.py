@@ -140,7 +140,7 @@ def main(seed=0):
         for j in range(n_destinations)
     }
     with open("random_chute_mapping_2_chutes_per_dest.json", "w") as f:
-        json.dump(chute_mapping, f)
+        json.dump(chute_mapping, f, indent=4)
 
     ret = py_driver.run(
         scenario="SORTING",  # one of ["KIVA", "COMPETITION", "SORTING"]
