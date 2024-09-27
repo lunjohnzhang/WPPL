@@ -112,7 +112,8 @@ def main(seed=0):
     # map.print_graph(map.graph)
 
     # map_json_path = "../maps/sortation/sortation_33_57.json"
-    map_json_path = "../maps/sortation/sortation_140_500.json"
+    map_json_path = "../maps/sortation/sortation_50_86.json"
+    # map_json_path = "../maps/sortation/sortation_140_500.json"
     with open(map_json_path, "r") as f:
         map_json = json.load(f)
         map_json_str = json.dumps(map_json)
@@ -125,7 +126,7 @@ def main(seed=0):
         config_str = json.dumps(config)
 
     # list of destinations
-    n_destinations = 100
+    n_destinations = 300
     packages = np.random.randint(0, n_destinations, size=100000).tolist()
     package_dist_weight = np.random.rand(n_destinations).tolist()
     # print(packages)

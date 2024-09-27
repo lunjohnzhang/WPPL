@@ -274,7 +274,7 @@ void HeuristicTable::preprocess(string suffix) {
         return;
     }
 
-    string fname=env.map_name.substr(0,env.map_name.size()-4);
+    string fname=env.map_name;
     string folder=env.file_storage_path;
     if (folder[folder.size()-1]!=boost::filesystem::path::preferred_separator){
         folder+=boost::filesystem::path::preferred_separator;
