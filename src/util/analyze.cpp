@@ -248,7 +248,7 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
 
     // NOTE: this format is different from what we used in c++ code: right, up, left, down
     // std::vector<double> edge_usage_matrix(map_size*4,0);
-    // std::vector<double> vertex_wait_matrix(map_size,0);
+    std::vector<double> vertex_wait_matrix(map_size,0);
 
     int team_size=result["teamSize"].get<int>();
     // std::cout<<"team size: "<<team_size<<std::endl;
@@ -293,7 +293,11 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
             //     edge_usage_matrix[prev_pos*4+1]+=1;
             // } else if (action=='W') {
             //     vertex_wait_matrix[prev_pos]+=1;
-            // } 
+            // }
+
+            if (action=='W') {
+                vertex_wait_matrix[prev_pos]+=1;
+            }
 
             // update vertex usage
             vertex_usage[curr_pos]+=1;
@@ -317,7 +321,7 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
         // {"edge_pair_usage_mean", edge_pair_usage_mean},
         // {"edge_pair_usage_std", edge_pair_usage_std},
         // {"edge_usage_matrix", edge_usage_matrix},
-        // {"vertex_wait_matrix", vertex_wait_matrix}
+        {"vertex_wait_matrix", vertex_wait_matrix}
     };
     return analysis;
 }

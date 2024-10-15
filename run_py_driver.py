@@ -190,6 +190,7 @@ def main(seed=0):
     analysis = json.loads(ret)
     print(analysis.keys())
     print(np.array(analysis["tile_usage"]).shape)
+    print(np.array(analysis["vertex_wait_matrix"]).shape)
     # print(np.array(analysis["edge_pair_usage"]).shape)
 
     # print(analysis["throughput"], analysis["edge_pair_usage_mean"],
