@@ -28,7 +28,7 @@ class py_sim
 public:
     py_sim(py::kwargs kwargs);
     std::string warmup();
-    std::vector<int> get_curr_pos();
+    // std::vector<int> get_curr_pos();
     std::string update_gg_and_step(std::vector<float> edge_weights, std::vector<float> wait_costs);
     // void update_tasks_base_distribution(std::vector<double>& new_distribution);
     // std::vector<double> get_tasks_distribution();

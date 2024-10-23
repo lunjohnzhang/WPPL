@@ -271,7 +271,7 @@ public:
 
 	void simulate(int simulation_time);
     void warmup(int total_warmup_steps);
-    // int update_gg_and_step(int update_gg_interval);
+    int update_gg_and_step(int update_gg_interval);
     vector<Action> plan();
     vector<Action> plan_wrapper();
 
@@ -282,6 +282,7 @@ public:
 #ifdef MAP_OPT
     int total_simulation_steps;
     nlohmann::json analyzeResults();
+    nlohmann::json analyzeCurrResults(int update_gg_interval);
 #endif
 
 protected:

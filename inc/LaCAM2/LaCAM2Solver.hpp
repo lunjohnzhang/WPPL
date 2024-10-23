@@ -61,6 +61,13 @@ public:
 
     Instance build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr);
 
+    void update_HT_weights(const std::vector<float> weights, const SharedEnvironment & env){
+        // std::cout << "before update, addr:"<<this->HT.get()<<std::endl;
+        this->HT->update_weights(weights, env.curr_states);
+        // std::cout << "end update HT, addr:" << this->HT.get() << ", "<<HT->loc_idxs<< std::endl;
+        // this->print_HT();
+    }
+
     float get_action_cost(int pst, int ost, int ped, int oed);
     float eval_solution(const Instance & instance, const Solution & solution);
 

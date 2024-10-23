@@ -4,12 +4,24 @@ PYBIND11_MODULE(py_sim, m)
 {
     py::class_<py_sim>(m, "py_sim")
         .def(py::init<py::kwargs>())
-        .def("warmup", &py_sim::warmup);
-        // .def("update_gg_and_step", &py_sim::update_gg_and_step)
+        .def("warmup", &py_sim::warmup)
+        .def("update_gg_and_step", &py_sim::update_gg_and_step);
         // .def("get_curr_pos", &py_sim::get_curr_pos);
     // .def("update_tasks_base_distribution", &py_sim::update_tasks_base_distribution)
     // .def("get_tasks_distribution", &py_sim::get_tasks_distribution);
 }
+
+
+std::string py_sim::update_gg_and_step(std::vector<float> edge_weights, std::vector<float> wait_costs){
+    this->planner->map_weights=weight_format_conversion_with_wait_costs(this->grid, edge_weights, wait_costs);
+    this->planner->update();
+    int actual_sim_steps = this->system_ptr->update_gg_and_step(this->update_gg_interval);
+    if (this->save_path){
+        this->system_ptr->saveResults(this->path_file.string());
+    }
+    return this->system_ptr->analyzeCurrResults(actual_sim_steps).dump(4);
+}
+
 
 py_sim::py_sim(py::kwargs kwargs)
 {
