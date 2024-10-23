@@ -270,6 +270,8 @@ public:
     void set_logger(Logger* logger){this->logger = logger;}
 
 	void simulate(int simulation_time);
+    void warmup(int total_warmup_steps);
+    // int update_gg_and_step(int update_gg_interval);
     vector<Action> plan();
     vector<Action> plan_wrapper();
 
@@ -278,6 +280,7 @@ public:
     void saveResults(const string &fileName) const;
 
 #ifdef MAP_OPT
+    int total_simulation_steps;
     nlohmann::json analyzeResults();
 #endif
 
@@ -293,6 +296,7 @@ protected:
 
     ActionModelWithRotate* model;
 
+    int warmupstep=0;
     // #timesteps for simulation
     int timestep;
 
@@ -302,12 +306,16 @@ protected:
 
     std::vector<Path> paths;
     std::vector<std::list<Task > > finished_tasks; // location + finish time
+    std::vector<int> curr_finish_task_agents;
 
     vector<State> starts;
     int num_of_agents;
 
+    vector<State> curr_starts;
     vector<State> curr_states;
 
+    vector<list<State>> execution_paths;
+    vector<list<State>> planning_paths;
     vector<list<Action>> actual_movements;
     vector<list<Action>> planner_movements;
 

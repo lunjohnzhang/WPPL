@@ -30,7 +30,7 @@ public:
     void initialize(const SharedEnvironment & env);
     void observe(const SharedEnvironment & env);
     void plan(const SharedEnvironment & env);
-    void get_step_actions(const SharedEnvironment & env, vector<Action> & actions);
+    void get_step_actions(const SharedEnvironment & env, vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths);
     // Action get_action_from_states(const State & state, const State & next_state);
     // [end]
 

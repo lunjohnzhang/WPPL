@@ -35,7 +35,9 @@ public:
     virtual void initialize(int preprocess_time_limit);
 
     // return next states for all agents
-    virtual void plan(int time_limit, std::vector<Action> & plan);
+    // virtual void plan(int time_limit, std::vector<Action> & plan);
+    virtual void plan(int time_limit,vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths);
+
 
     // Start kit dummy implementation
     std::list<pair<int,int>>single_agent_plan(int start,int start_direct, int end);
@@ -86,7 +88,8 @@ public:
     virtual void initialize(int preprocess_time_limit);
 
     // return next states for all agents
-    virtual void plan(int time_limit, std::vector<Action> & plan);
+    // virtual void plan(int time_limit, std::vector<Action> & plan);
+    virtual void plan(int time_limit,vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths);
 
     string lifelong_solver_name;
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;

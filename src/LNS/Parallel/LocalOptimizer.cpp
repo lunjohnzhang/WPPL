@@ -114,7 +114,7 @@ bool LocalOptimizer::runPP(Neighbor & neighbor, const TimeLimiter & time_limiter
     auto p = shuffled_agents.begin();
     neighbor.sum_of_costs = 0;
     CBSNode node;
-    int suboptimality=1.2;
+    // int suboptimality=1.2;
     int search_priority=1;
     bool use_soft_constraint=true;
     ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table, nullptr, window_size_for_CT, window_size_for_CAT, window_size_for_PATH);

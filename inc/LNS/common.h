@@ -43,7 +43,7 @@ using namespace std::chrono;
 typedef std::chrono::high_resolution_clock Time;
 typedef std::chrono::duration<float> fsec;
 
-#define MAX_TIMESTEP  INT_MAX
+#define MAX_TIMESTEP  INT_MAX / 2
 #define MAX_COST FLT_MAX / 2
 #define MAX_NODES INT_MAX / 2
 

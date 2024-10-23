@@ -497,7 +497,7 @@ void LaCAM2Solver::solution_convert(const SharedEnvironment & env, Solution & so
     }
 }
 
-void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action> & actions) {
+void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths) {
     // check empty
     assert(actions.empty());
 
@@ -519,6 +519,14 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
             if (paths[i][timestep+1].location==env.goal_locations[i][0].first){
                 ++num_task_completed;
             }
+        }
+    }
+
+    for (int i=0;i<env.num_of_agents;++i) {
+        cur_exec_paths[i].clear();
+        cur_plan_paths[i].clear();
+        for (int j=0; j<paths[i].size(); ++j){
+            cur_plan_paths[i].push_back(paths[i][j].location);
         }
     }
 

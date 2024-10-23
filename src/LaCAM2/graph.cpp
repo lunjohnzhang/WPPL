@@ -161,7 +161,7 @@ uint ConfigHasher::operator()(const Config& C) const
   // we will just do it simple here and revisit it later.
   uint hash = C.size();
   for (auto i=0;i<C.size();++i) {
-    hash ^= C.locs[i]->id<<3 + C.orients[i]<<1 + C.arrivals[i] + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    hash ^= C.locs[i]->id<<(3 + C.orients[i])<<(1 + C.arrivals[i] + 0x9e3779b9 + (hash << 6) + (hash >> 2));
   }
   return hash;
 }

@@ -108,7 +108,7 @@ void HeuristicTable::compute_weighted_heuristics(){
     for (int i=0;i<n_threads;++i) {
         delete planners[i];
     }
-    delete planners;
+    delete [] planners;
 
     ONLYDEV(g_timer.record_d("heu/compute_start","heu/compute_end","heu/compute");)
 

@@ -83,7 +83,13 @@ vector<Action> BaseSystem::plan_wrapper()
     // std::cout<<"wrapper called"<<std::endl;
     vector<Action> actions;
     // std::cout<<"planning"<<std::endl;
-    planner->plan(plan_time_limit, actions);
+
+    vector<list<State>> cur_exec_paths(num_of_agents);
+    vector<list<State>> cur_plan_paths(num_of_agents);
+
+    planner->plan(plan_time_limit, actions, cur_exec_paths, cur_plan_paths);
+    this->execution_paths = cur_exec_paths;
+    this->planning_paths = cur_plan_paths;
 
     return actions;
 }
@@ -159,7 +165,7 @@ void BaseSystem::log_preprocessing(bool succ)
     if (succ)
     {
         logger->log_info("Preprocessing success", timestep);
-    } 
+    }
     else
     {
         logger->log_fatal("Preprocessing timeout", timestep);
@@ -173,7 +179,7 @@ void BaseSystem::log_event_assigned(int agent_id, int task_id, int timestep)
 }
 
 
-void BaseSystem::log_event_finished(int agent_id, int task_id, int timestep) 
+void BaseSystem::log_event_finished(int agent_id, int task_id, int timestep)
 {
     // logger->log_info("Agent " + std::to_string(agent_id) + " finishes task " + std::to_string(task_id), timestep);
 }
@@ -262,7 +268,7 @@ void BaseSystem::simulate(int simulation_time)
         bool complete_all = false;
         for (auto & t: assigned_tasks)
         {
-            if(t.empty()) 
+            if(t.empty())
             {
                 complete_all = true;
             }
@@ -307,7 +313,7 @@ void BaseSystem::initialize()
 
     //planner initilise before knowing the first goals
     auto planner_initialize_success= planner_initialize();
-    
+
     log_preprocessing(planner_initialize_success);
     if (!planner_initialize_success)
         return;
@@ -357,8 +363,8 @@ void BaseSystem::savePaths(const string &fileName, int option) const
                 if (!first)
                 {
                     output << ",";
-                } 
-                else 
+                }
+                else
                 {
                     first = false;
                 }
@@ -426,7 +432,7 @@ nlohmann::json BaseSystem::analyzeResults()
     }
     js["sumOfCost"] = sum_of_cost;
     js["makespan"] = makespan;
-  
+
     // Save actual paths
     json apaths = json::array();
     for (int i = 0; i < num_of_agents; i++)
@@ -451,7 +457,7 @@ nlohmann::json BaseSystem::analyzeResults()
             else if (action == Action::CR)
             {
                 path+="R";
-            } 
+            }
             else if (action == Action::CCR)
             {
                 path+="C";
@@ -480,8 +486,8 @@ nlohmann::json BaseSystem::analyzeResults()
             if (!first)
             {
                 path+= ",";
-            } 
-            else 
+            }
+            else
             {
                 first = false;
             }
@@ -493,11 +499,11 @@ nlohmann::json BaseSystem::analyzeResults()
             else if (action == Action::CR)
             {
                 path+="R";
-            } 
+            }
             else if (action == Action::CCR)
             {
                 path+="C";
-            } 
+            }
             else if (action == Action::NA)
             {
                 path+="T";
@@ -506,7 +512,7 @@ nlohmann::json BaseSystem::analyzeResults()
             {
                 path+="W";
             }
-        }  
+        }
         ppaths.push_back(path);
     }
     js["plannerPaths"] = ppaths;
@@ -534,7 +540,7 @@ nlohmann::json BaseSystem::analyzeResults()
 
     }
     js["errors"] = errors;
-  
+
     // Save events
     json events_json = json::array();
     for (int i = 0; i < num_of_agents; i++)
@@ -567,6 +573,44 @@ nlohmann::json BaseSystem::analyzeResults()
         tasks.push_back(task);
     }
     js["tasks"] = tasks;
+
+    json final_states = json::array();
+    for (auto s: this->curr_states){
+        final_states.push_back(s);
+    }
+    js["final_pos"] = final_states;
+
+    json final_tasks = json::array();
+    for (auto assigned_task_per_agent: this->assigned_tasks){
+        final_tasks.push_back(assigned_task_per_agent.back());
+    }
+    js["final_tasks"] = final_tasks;
+
+    json exec_p = json::array();
+    for (int i=0; i<num_of_agents; ++i){
+        json ss = json::array();
+        for (const auto state: execution_paths[i]){
+            json s = json::array();
+            s.push_back(state.location/map.cols);
+            s.push_back(state.location%map.cols);
+            ss.push_back(s);
+        }
+        exec_p.push_back(ss);
+    }
+    js["execFuture"] = exec_p;
+
+    json plan_p = json::array();
+    for (int i=0; i<num_of_agents; ++i){
+        json ss = json::array();
+        for (const auto state: planning_paths[i]){
+            json s = json::array();
+            s.push_back(state.location/map.cols);
+            s.push_back(state.location%map.cols);
+            ss.push_back(s);
+        }
+        plan_p.push_back(ss);
+    }
+    js["planFuture"] = plan_p;
 
     return analyze_result_json(js, map);
 }
@@ -627,7 +671,7 @@ void BaseSystem::saveResults(const string &fileName) const
     }
     js["sumOfCost"] = sum_of_cost;
     js["makespan"] = makespan;
-  
+
     // Save actual paths
     json apaths = json::array();
     for (int i = 0; i < num_of_agents; i++)
@@ -652,7 +696,7 @@ void BaseSystem::saveResults(const string &fileName) const
             else if (action == Action::CR)
             {
                 path+="R";
-            } 
+            }
             else if (action == Action::CCR)
             {
                 path+="C";
@@ -681,8 +725,8 @@ void BaseSystem::saveResults(const string &fileName) const
             if (!first)
             {
                 path+= ",";
-            } 
-            else 
+            }
+            else
             {
                 first = false;
             }
@@ -694,11 +738,11 @@ void BaseSystem::saveResults(const string &fileName) const
             else if (action == Action::CR)
             {
                 path+="R";
-            } 
+            }
             else if (action == Action::CCR)
             {
                 path+="C";
-            } 
+            }
             else if (action == Action::NA)
             {
                 path+="T";
@@ -707,7 +751,7 @@ void BaseSystem::saveResults(const string &fileName) const
             {
                 path+="W";
             }
-        }  
+        }
         ppaths.push_back(path);
     }
     js["plannerPaths"] = ppaths;
@@ -735,7 +779,7 @@ void BaseSystem::saveResults(const string &fileName) const
 
     }
     js["errors"] = errors;
-  
+
     // Save events
     json events_json = json::array();
     for (int i = 0; i < num_of_agents; i++)
@@ -799,7 +843,7 @@ bool FixedAssignSystem::load_agent_tasks(string fname)
     }
     starts.resize(num_of_agents);
     task_queue.resize(num_of_agents);
-  
+
     for (int i = 0; i < num_of_agents; i++)
     {
         cout << "agent " << i << ": ";
@@ -873,7 +917,7 @@ void TaskAssignSystem::update_tasks()
 void InfAssignSystem::update_tasks(){
     for (int k = 0; k < num_of_agents; k++)
     {
-        while (assigned_tasks[k].size() < num_tasks_reveal) 
+        while (assigned_tasks[k].size() < num_tasks_reveal)
         {
             int i = task_counter[k] * num_of_agents + k;
             int loc = tasks[i%tasks_size];
@@ -977,8 +1021,13 @@ vector<Action> BaseSystem::plan_wrapper()
 {
     ONLYDEV(std::cout<<"wrapper called"<<std::endl;)
     vector<Action> actions;
+    vector<list<State>> cur_exec_paths(num_of_agents);
+    vector<list<State>> cur_plan_paths(num_of_agents);
     ONLYDEV(std::cout<<"planning"<<std::endl;)
-    planner->plan(plan_time_limit, actions);
+    planner->plan(plan_time_limit, actions, cur_exec_paths, cur_plan_paths);
+
+    this->execution_paths = cur_exec_paths;
+    this->planning_paths = cur_plan_paths;
 
     return actions;
 }
@@ -1054,7 +1103,7 @@ void BaseSystem::log_preprocessing(bool succ)
     if (succ)
     {
         logger->log_info("Preprocessing success", timestep);
-    } 
+    }
     else
     {
         logger->log_fatal("Preprocessing timeout", timestep);
@@ -1068,9 +1117,58 @@ void BaseSystem::log_event_assigned(int agent_id, int task_id, int timestep)
 }
 
 
-void BaseSystem::log_event_finished(int agent_id, int task_id, int timestep) 
+void BaseSystem::log_event_finished(int agent_id, int task_id, int timestep)
 {
     ONLYDEV(logger->log_info("Agent " + std::to_string(agent_id) + " finishes task " + std::to_string(task_id), timestep);)
+}
+
+
+void BaseSystem::warmup(int total_warmup_steps){
+    initialize();
+    for (; this->warmupstep< total_warmup_steps;){
+        sync_shared_env();
+        auto start = std::chrono::steady_clock::now();
+        vector<Action> actions = plan();
+        auto end = std::chrono::steady_clock::now();
+        this->warmupstep+=1;
+
+        for (int a = 0; a < num_of_agents; a++){
+            if (!env->goal_locations[a].empty())
+                solution_costs[a]++;
+        }
+
+        // move drives
+        list<Task> new_finished_tasks = move(actions);
+        if (!planner_movements[0].empty() && planner_movements[0].back() == Action::NA){
+            planner_times.back()+=plan_time_limit;  //add planning time to last record
+        } else{
+            auto diff = end-start;
+            planner_times.push_back(std::chrono::duration<double>(diff).count());
+        }
+
+        // TODO: ensure warmup steps does not contribute to the whole setting
+        this->curr_finish_task_agents.clear();
+        for (auto task : new_finished_tasks){
+            finished_tasks[task.agent_assigned].emplace_back(task);
+            this->curr_finish_task_agents.push_back(task.agent_assigned);
+            // num_of_task_finish++;
+        }
+        update_tasks();
+
+        bool complete_all = false;
+        for (auto & t: assigned_tasks){
+            if(t.empty()){
+                complete_all = true;
+            }else{
+                complete_all = false;
+                break;
+            }
+        }
+        if (complete_all){
+            cout << std::endl << "All task finished!" << std::endl;
+            break;
+        }
+    }
 }
 
 
@@ -1158,7 +1256,7 @@ void BaseSystem::simulate(int simulation_time)
         bool complete_all = false;
         for (auto & t: assigned_tasks)
         {
-            if(t.empty()) 
+            if(t.empty())
             {
                 complete_all = true;
             }
@@ -1198,12 +1296,14 @@ void BaseSystem::initialize()
     finished_tasks.resize(num_of_agents);
     // bool succ = load_records(); // continue simulating from the records
     timestep = 0;
+    this->warmupstep = 0;
     curr_states = starts;
+    this->curr_starts = this->curr_states;
     assigned_tasks.resize(num_of_agents);
 
     //planner initilise before knowing the first goals
     auto planner_initialize_success= planner_initialize();
-    
+
     log_preprocessing(planner_initialize_success);
     if (!planner_initialize_success)
         return;
@@ -1213,6 +1313,9 @@ void BaseSystem::initialize()
 
     sync_shared_env();
 
+    this->execution_paths.resize(num_of_agents);
+    this->planning_paths.resize(num_of_agents);
+
     actual_movements.resize(num_of_agents);
     planner_movements.resize(num_of_agents);
     solution_costs.resize(num_of_agents);
@@ -1221,6 +1324,7 @@ void BaseSystem::initialize()
         solution_costs[a] = 0;
     }
 }
+
 
 void BaseSystem::savePaths(const string &fileName, int option) const
 {
@@ -1253,8 +1357,8 @@ void BaseSystem::savePaths(const string &fileName, int option) const
                 if (!first)
                 {
                     output << ",";
-                } 
-                else 
+                }
+                else
                 {
                     first = false;
                 }
@@ -1322,7 +1426,7 @@ nlohmann::json BaseSystem::analyzeResults()
     }
     js["sumOfCost"] = sum_of_cost;
     js["makespan"] = makespan;
-  
+
     // Save actual paths
     json apaths = json::array();
     for (int i = 0; i < num_of_agents; i++)
@@ -1347,7 +1451,7 @@ nlohmann::json BaseSystem::analyzeResults()
             else if (action == Action::D)
             {
                 path+="D";
-            } 
+            }
             else if (action == Action::L)
             {
                 path+="L";
@@ -1380,8 +1484,8 @@ nlohmann::json BaseSystem::analyzeResults()
             if (!first)
             {
                 path+= ",";
-            } 
-            else 
+            }
+            else
             {
                 first = false;
             }
@@ -1393,7 +1497,7 @@ nlohmann::json BaseSystem::analyzeResults()
             else if (action == Action::D)
             {
                 path+="D";
-            } 
+            }
             else if (action == Action::L)
             {
                 path+="L";
@@ -1410,7 +1514,7 @@ nlohmann::json BaseSystem::analyzeResults()
             {
                 path+="X";
             }
-        }  
+        }
         ppaths.push_back(path);
     }
     js["plannerPaths"] = ppaths;
@@ -1438,7 +1542,7 @@ nlohmann::json BaseSystem::analyzeResults()
 
     }
     js["errors"] = errors;
-  
+
     // Save events
     json events_json = json::array();
     for (int i = 0; i < num_of_agents; i++)
@@ -1472,9 +1576,54 @@ nlohmann::json BaseSystem::analyzeResults()
     }
     js["tasks"] = tasks;
 
+    json final_states = json::array();
+    for (auto s: this->curr_states){
+        final_states.push_back(s.location);
+    }
+    js["final_pos"] = final_states;
+
+    json final_tasks = json::array();
+    for (auto assigned_task_per_agent: this->assigned_tasks){
+        final_tasks.push_back(assigned_task_per_agent.back().location);
+    }
+    js["final_tasks"] = final_tasks;
+
+    json agents_finish_task = json::array();
+    for (auto a_id: this->curr_finish_task_agents){
+        agents_finish_task.push_back(a_id);
+    }
+    js["agents_finish_task"] = agents_finish_task;
+
+    json exec_p = json::array();
+    for (int i=0; i<num_of_agents; ++i){
+        json ss = json::array();
+        for (const auto state: execution_paths[i]){
+            json s = json::array();
+            s.push_back(state.location/map.cols);
+            s.push_back(state.location%map.cols);
+            ss.push_back(s);
+        }
+        exec_p.push_back(ss);
+    }
+    js["execFuture"] = exec_p;
+
+    json plan_p = json::array();
+    for (int i=0; i<num_of_agents; ++i){
+        json ss = json::array();
+        for (const auto state: planning_paths[i]){
+            json s = json::array();
+            s.push_back(state.location/map.cols);
+            s.push_back(state.location%map.cols);
+            ss.push_back(s);
+        }
+        plan_p.push_back(ss);
+    }
+    js["planFuture"] = plan_p;
+
+    js["done"] = (this->timestep >= this->total_simulation_steps);
+
     return analyze_result_json(js, map);
 }
-
 #endif
 
 void BaseSystem::saveResults(const string &fileName) const
@@ -1531,7 +1680,7 @@ void BaseSystem::saveResults(const string &fileName) const
     }
     js["sumOfCost"] = sum_of_cost;
     js["makespan"] = makespan;
-  
+
     // Save actual paths
     json apaths = json::array();
     for (int i = 0; i < num_of_agents; i++)
@@ -1556,7 +1705,7 @@ void BaseSystem::saveResults(const string &fileName) const
             else if (action == Action::D)
             {
                 path+="D";
-            } 
+            }
             else if (action == Action::L)
             {
                 path+="L";
@@ -1589,8 +1738,8 @@ void BaseSystem::saveResults(const string &fileName) const
             if (!first)
             {
                 path+= ",";
-            } 
-            else 
+            }
+            else
             {
                 first = false;
             }
@@ -1602,7 +1751,7 @@ void BaseSystem::saveResults(const string &fileName) const
             else if (action == Action::D)
             {
                 path+="D";
-            } 
+            }
             else if (action == Action::L)
             {
                 path+="L";
@@ -1619,7 +1768,7 @@ void BaseSystem::saveResults(const string &fileName) const
             {
                 path+="X";
             }
-        }  
+        }
         ppaths.push_back(path);
     }
     js["plannerPaths"] = ppaths;
@@ -1647,7 +1796,7 @@ void BaseSystem::saveResults(const string &fileName) const
 
     }
     js["errors"] = errors;
-  
+
     // Save events
     json events_json = json::array();
     for (int i = 0; i < num_of_agents; i++)
@@ -1711,7 +1860,7 @@ bool FixedAssignSystem::load_agent_tasks(string fname)
     }
     starts.resize(num_of_agents);
     task_queue.resize(num_of_agents);
-  
+
     for (int i = 0; i < num_of_agents; i++)
     {
         cout << "agent " << i << ": ";
@@ -1785,7 +1934,7 @@ void TaskAssignSystem::update_tasks()
 void InfAssignSystem::update_tasks(){
     for (int k = 0; k < num_of_agents; k++)
     {
-        while (assigned_tasks[k].size() < num_tasks_reveal) 
+        while (assigned_tasks[k].size() < num_tasks_reveal)
         {
             int i = task_counter[k] * num_of_agents + k;
             int loc = tasks[i%tasks_size];
@@ -1803,12 +1952,12 @@ void InfAssignSystem::update_tasks(){
 void KivaSystem::update_tasks(){
     for (int k = 0; k < num_of_agents; k++)
     {
-        while (assigned_tasks[k].size() < num_tasks_reveal) 
+        while (assigned_tasks[k].size() < num_tasks_reveal)
         {
             int prev_task_loc=prev_task_locs[k];
 
             int loc;
-            if (map.grid_types[prev_task_loc]=='.' || map.grid_types[prev_task_loc]=='e') 
+            if (map.grid_types[prev_task_loc]=='.' || map.grid_types[prev_task_loc]=='e')
             {
                 // next task would be w
                 // Sample a workstation based on given distribution
@@ -1824,7 +1973,7 @@ void KivaSystem::update_tasks(){
                 std::cout<<"unkonw grid type"<<std::endl;
                 exit(-1);
             }
-            
+
             Task task(task_id,loc,timestep,k);
             assigned_tasks[k].push_back(task);
             events[k].push_back(make_tuple(task.task_id,timestep,"assigned"));
