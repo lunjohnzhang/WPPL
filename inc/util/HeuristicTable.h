@@ -81,4 +81,5 @@ public:
     void preprocess(string suffix="");
     void save(const string & fpath);
     void load(const string & fpath);
+    void print();
 };
