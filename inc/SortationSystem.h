@@ -14,7 +14,9 @@ public:
                     vector<int> packages,
                     // distribution of packages on each destination
                     vector<double> package_dist_weight,
-                    int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), package_mode(package_mode), packages(packages), package_dist_weight(package_dist_weight)
+                    // task assignment cost
+                    std::string task_assignment_cost,
+                    int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), package_mode(package_mode), packages(packages), package_dist_weight(package_dist_weight), task_assignment_cost(task_assignment_cost)
     {
         num_of_agents = num_agents;
         starts.resize(num_of_agents);
@@ -75,6 +77,7 @@ private:
     std::mt19937 MT;
     int task_id = 0;
     int package_id = 0;
+    std::string task_assignment_cost;
 
     void update_tasks();
     std::discrete_distribution<int> agent_home_loc_dist;
@@ -92,7 +95,8 @@ private:
     boost::unordered_map<int, int> robots_in_endpoints;
 
     double assign_C = 8;
-
+    double compute_assignment_cost(
+        int curr_loc, pair<int, int> workstation) const;
     int assign_workstation(int curr_loc) const;
     int assign_endpoint(int curr_loc, vector<int> endpoints) const;
 };

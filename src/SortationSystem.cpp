@@ -1,6 +1,26 @@
 #include "SortationSystem.h"
 #include "util/Analyzer.h"
 
+double SortationSystem::compute_assignment_cost(
+    int curr_loc, pair<int, int> workstation) const
+{
+    double cost = -1;
+    if (this->task_assignment_cost == "heuristic+num_agents")
+    {
+        cost = this->planner->heuristics->get(curr_loc, workstation.first) + this->assign_C * workstation.second;
+    }
+    else if (this->task_assignment_cost == "heuristic")
+    {
+        cost = this->planner->heuristics->get(curr_loc, workstation.first);
+    }
+    else
+    {
+        std::cout << "unknown task assignment strategy" << std::endl;
+        exit(-1);
+    }
+    return cost;
+}
+
 int SortationSystem::assign_workstation(int curr_loc) const
 {
     // Choose a workstation based on:
@@ -16,7 +36,8 @@ int SortationSystem::assign_workstation(int curr_loc) const
 
     for (auto workstation : this->robots_in_workstations)
     {
-        double cost = this->planner->heuristics->get(curr_loc, workstation.first) + this->assign_C * workstation.second;
+        // double cost = this->planner->heuristics->get(curr_loc, workstation.first) + this->assign_C * workstation.second;
+        double cost = this->compute_assignment_cost(curr_loc, workstation);
         if (cost < min_cost)
         {
             min_cost = cost;
@@ -26,8 +47,7 @@ int SortationSystem::assign_workstation(int curr_loc) const
     ONLYDEV(
         x = assigned_loc % map.cols;
         y = assigned_loc / map.cols;
-        cout << "assigned workstation: (" << x << ", " << y << ")" << endl;
-    )
+        cout << "assigned workstation: (" << x << ", " << y << ")" << endl;)
     return assigned_loc;
 }
 

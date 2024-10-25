@@ -268,9 +268,10 @@ py_sim::py_sim(py::kwargs kwargs)
 
         uint seed = kwargs["seed"].cast<uint>();
         int num_agents = kwargs["num_agents"].cast<int>();
+        string task_assignment_cost=kwargs["task_assignment_cost"].cast<std::string>();
         this->system_ptr = std::make_unique<SortationSystem>(grid, planner,
             model, chute_mapping_int, package_mode, packages,
-            package_dist_weight, num_agents, seed);
+            package_dist_weight, task_assignment_cost, num_agents, seed);
     }
     else
     {
