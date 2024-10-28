@@ -103,7 +103,7 @@ struct Planner {
           // other parameters
           const Objective _objective = OBJ_NONE,
           const float _restart_rate = 0.001f,
-          bool use_swap=false,
+          bool use_swap=true,
           bool use_orient_in_heuristic=false,
           bool use_external_executor=false,
           bool disable_agent_goals=true);

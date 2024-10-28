@@ -264,7 +264,7 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
 
         ONLYDEV(g_timer.record_d("lacam_build_instance_s","lacam_build_instance");)
         const auto deadline = Deadline(time_limit_sec * 1000);
-        bool use_swap=false; // TODO: we need try use_swap
+        bool use_swap=true; // TODO: we need try use_swap
         bool use_orient_in_heuristic=read_param_json<bool>(config,"use_orient_in_heuristic");
 
         // vector<::Path> precomputed_paths;

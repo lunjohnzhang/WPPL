@@ -957,8 +957,10 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   Agent* swap_agent=nullptr;
   if (use_swap) {
     swap_agent = swap_possible_and_required(ai);
-    if (swap_agent != nullptr)
+    if (swap_agent != nullptr){
+      // std::cout << "has swap" <<std::endl;
       std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
+    }
   }
 
   // main operation
@@ -1003,22 +1005,27 @@ Agent* Planner::swap_possible_and_required(Agent* ai)
 {
   const auto i = ai->id;
   // ai wanna stay at v_now -> no need to swap
+  // std::cout << "case 0?" <<std::endl;
   if (C_next[i][0] == ai->v_now) return nullptr;
 
   // usual swap situation, c.f., case-a, b
+  // std::cout << "case 1?" <<std::endl;
   auto aj = occupied_now[C_next[i][0]->id];
   if (aj != nullptr && aj->v_next == nullptr &&
       is_swap_required(ai->id, aj->id, ai->v_now, aj->v_now) &&
       is_swap_possible(aj->v_now, ai->v_now)) {
+    // std::cout << "hit case 1"<<std::endl;
     return aj;
   }
 
+  // std::cout << "case 2?" <<std::endl;
   // for clear operation, c.f., case-c
   for (auto u : ai->v_now->neighbor) {
     auto ak = occupied_now[u->id];
     if (ak == nullptr || C_next[i][0] == ak->v_now) continue;
     if (is_swap_required(ak->id, ai->id, ai->v_now, C_next[i][0]) &&
         is_swap_possible(C_next[i][0], ai->v_now)) {
+      // std::cout << "hit case 2"<<std::endl;
       return ak;
     }
   }
@@ -1040,14 +1047,16 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
     // remove agents who need not to move
     for (auto u : v_puller->neighbor) {
       auto a = occupied_now[u->id];
-      if (u == v_pusher ||
-          (u->neighbor.size() == 1 && a != nullptr && ins->goals.locs[a->id] == u)) {
+      if (u == v_pusher 
+      // ||  (u->neighbor.size() == 1 && a != nullptr && ins->goals.locs[a->id] == u)
+      ) {
         --n;
       } else {
         tmp = u;
       }
     }
-    if (n >= 2) return false;  // able to swap
+    // std::cout << "n = "<< n<<std::endl;
+    if (n >= 1) return false;  // able to swap
     if (n <= 0) break;
     v_pusher = v_puller;
     v_puller = tmp;
@@ -1055,7 +1064,8 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
 
   // judge based on distance
   return (HT->get(puller, v_pusher->index) < HT->get(puller, v_puller->index)) &&
-          (HT->get(pusher, v_pusher->index) == 0 || HT->get(pusher, v_puller->index) < HT->get(pusher, v_pusher->index));
+          // (HT->get(pusher, v_pusher->index) == 0 || 
+          HT->get(pusher, v_puller->index) < HT->get(pusher, v_pusher->index);
 }
 
 // simulate whether the swap is possible
@@ -1068,8 +1078,9 @@ bool Planner::is_swap_possible(Vertex* v_pusher_origin, Vertex* v_puller_origin)
     auto n = v_puller->neighbor.size();  // count #(possible locations) to pull
     for (auto u : v_puller->neighbor) {
       auto a = occupied_now[u->id];
-      if (u == v_pusher ||
-          (u->neighbor.size() == 1 && a != nullptr && ins->goals.locs[a->id] == u)) {
+      if (u == v_pusher 
+      // || (u->neighbor.size() == 1 && a != nullptr && ins->goals.locs[a->id] == u)
+          ) {
         --n;      // pull-impossible with u
       } else {
         tmp = u;  // pull-possible with u
