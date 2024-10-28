@@ -1,17 +1,19 @@
 #include "SortationSystem.h"
 #include "util/Analyzer.h"
 
+// next_pos: (next_loc, num_robots_targeting_next_loc)
 double SortationSystem::compute_assignment_cost(
-    int curr_loc, pair<int, int> workstation) const
+    int curr_loc, pair<int, int> next_pos) const
 {
     double cost = -1;
     if (this->task_assignment_cost == "heuristic+num_agents")
     {
-        cost = this->planner->heuristics->get(curr_loc, workstation.first) + this->assign_C * workstation.second;
+        cost = this->planner->heuristics->get(curr_loc, next_pos.first) +
+               this->assign_C * next_pos.second;
     }
     else if (this->task_assignment_cost == "heuristic")
     {
-        cost = this->planner->heuristics->get(curr_loc, workstation.first);
+        cost = this->planner->heuristics->get(curr_loc, next_pos.first);
     }
     else
     {
@@ -60,7 +62,10 @@ int SortationSystem::assign_endpoint(int curr_loc, vector<int> endpoints) const
 
     for (auto endpoint : endpoints)
     {
-        double cost = this->planner->heuristics->get(curr_loc, endpoint) + this->assign_C * this->robots_in_endpoints.at(endpoint);
+        // double cost = this->planner->heuristics->get(curr_loc, endpoint) + this->assign_C * this->robots_in_endpoints.at(endpoint);
+        double cost = this->compute_assignment_cost(
+            curr_loc,
+            make_pair(endpoint, this->robots_in_endpoints.at(endpoint)));
         if (cost < min_cost)
         {
             min_cost = cost;
