@@ -15,6 +15,21 @@ double SortationSystem::compute_assignment_cost(
     {
         cost = this->planner->heuristics->get(curr_loc, next_pos.first);
     }
+    else if (this->task_assignment_cost == "opt_quadratic_f")
+    {
+        // Cost is computed by a function
+        // f(x, y) = a_0 * x^2 + a_1 y^2 + a_2 * xy + a_3* x + a_4 * y + a_5,
+        // where x and y are heuristic and number of agents, respectively, and
+        // a's are optimized parameters
+        double x = this->planner->heuristics->get(curr_loc, next_pos.first);
+        double y = next_pos.second;
+        cost = this->task_assignment_params[0] * x * x +
+               this->task_assignment_params[1] * y * y +
+               this->task_assignment_params[2] * x * y +
+               this->task_assignment_params[3] * x +
+               this->task_assignment_params[4] * y +
+               this->task_assignment_params[5];
+    }
     else
     {
         std::cout << "unknown task assignment strategy" << std::endl;

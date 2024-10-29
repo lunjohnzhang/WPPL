@@ -143,6 +143,9 @@ def main(seed=0):
     # with open("random_chute_mapping_2_chutes_per_dest.json", "w") as f:
     #     json.dump(chute_mapping, f, indent=4)
 
+    # Task assignment policy
+    task_assignment_params = np.random.rand(6).tolist()
+
     ret = py_driver.run(
         scenario="SORTING",  # one of ["KIVA", "COMPETITION", "SORTING"]
         # For map, it uses map_path by default. If not provided, it'll use map_json
@@ -185,7 +188,8 @@ def main(seed=0):
         package_dist_weight=json.dumps(package_dist_weight),
         package_mode="dist",
         chute_mapping=json.dumps(chute_mapping),
-        task_assignment_cost="heuristic",
+        task_assignment_cost="heuristic+num_agents",
+        task_assignment_params=json.dumps(task_assignment_params),
     )
 
     analysis = json.loads(ret)
