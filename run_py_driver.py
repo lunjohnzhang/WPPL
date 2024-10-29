@@ -156,7 +156,7 @@ def main(seed=0):
         gen_random=True,
         num_agents=600,
         num_tasks=100000,
-        seed=0,
+        seed=seed,
         save_paths=True,
         # weight of the left/right workstation, only applicable for maps with workstations
         left_w_weight=1,

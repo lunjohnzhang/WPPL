@@ -116,6 +116,7 @@ IF (MAP_OPT)
 ENDIF()
 
 # SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wfatal-errors")
+# SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall")
 
 add_executable(lifelong_comp ${SOURCES} )
 target_link_libraries(lifelong_comp ${Boost_LIBRARIES})
