@@ -378,7 +378,7 @@ void BaseSystem::savePaths(const string &fileName, int option) const
 
 #ifdef MAP_OPT
 
-nlohmann::json BaseSystem::analyzeResults()
+nlohmann::json BaseSystem::analyzeResults(bool online)
 {
     json js;
     // Save action model
@@ -612,7 +612,7 @@ nlohmann::json BaseSystem::analyzeResults()
     }
     js["planFuture"] = plan_p;
 
-    return analyze_result_json(js, map);
+    return analyze_result_json(js, map, online);
 }
 
 #endif
@@ -1546,7 +1546,7 @@ nlohmann::json BaseSystem::analyzeCurrResults(int update_gg_interval)
 }
 
 
-nlohmann::json BaseSystem::analyzeResults()
+nlohmann::json BaseSystem::analyzeResults(bool online)
 {
     json js;
     // Save action model
@@ -1796,7 +1796,7 @@ nlohmann::json BaseSystem::analyzeResults()
 
     js["done"] = (this->timestep >= this->total_simulation_steps);
 
-    return analyze_result_json(js, map);
+    return analyze_result_json(js, map, online);
 }
 #endif
 

@@ -378,7 +378,7 @@ std::string run(const py::kwargs& kwargs)
     system_ptr->simulate(simulation_steps);
     double runtime = (double)(clock() - start_time)/ CLOCKS_PER_SEC;
 
-    nlohmann::json analysis=system_ptr->analyzeResults();
+    nlohmann::json analysis=system_ptr->analyzeResults(false);
     analysis["cpu_runtime"] = runtime;
 
     // Save path if applicable

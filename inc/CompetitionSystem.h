@@ -54,7 +54,7 @@ public:
     void saveResults(const string &fileName) const;
 
 #ifdef MAP_OPT
-    nlohmann::json analyzeResults();
+    nlohmann::json analyzeResults(bool online = true);
 #endif
 
 
@@ -281,7 +281,7 @@ public:
 
 #ifdef MAP_OPT
     int total_simulation_steps;
-    nlohmann::json analyzeResults();
+    nlohmann::json analyzeResults(bool online = true);
     nlohmann::json analyzeCurrResults(int update_gg_interval);
 #endif
 

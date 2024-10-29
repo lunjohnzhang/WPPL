@@ -96,7 +96,8 @@ void move(int & x,int & y,int & o, char action) {
 
 }
 
-nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
+nlohmann::json analyze_result_json(
+    const nlohmann::json & result, Grid & grid, bool online) {
 
     int h=grid.rows;
     int w=grid.cols;
@@ -262,24 +263,54 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
     }
 
     nlohmann::json analysis;
-    analysis = {
-        {"num_task_finished", throughput},
-        {"throughput", avg_throughput},
-        {"tile_usage", vertex_usage},
-        {"edge_pair_usage", edge_pair_usage},
-        {"edge_pair_usage_mean", edge_pair_usage_mean},
-        {"edge_pair_usage_std", edge_pair_usage_std},
-        {"edge_usage_matrix", edge_usage_matrix},
-        {"vertex_wait_matrix", vertex_wait_matrix},
-        {"final_pos", result["final_pos"]},
-        {"final_tasks", result["final_tasks"]},
-        {"actual_paths", result["actualPaths"]},
-        {"starts", result["start"]},
-        {"exec_future", result["execFuture"]},
-        {"plan_future", result["planFuture"]},
-        {"exec_move", exec_moves},
-        {"plan_move", plan_moves}
-    };
+    if (online)
+    {
+        analysis = {
+            {"num_task_finished", throughput},
+            {"throughput", avg_throughput},
+            {"tile_usage", vertex_usage},
+            // {"edge_pair_usage", edge_pair_usage},
+            // {"edge_pair_usage_mean", edge_pair_usage_mean},
+            // {"edge_pair_usage_std", edge_pair_usage_std},
+            {"edge_usage_matrix", edge_usage_matrix},
+            {"vertex_wait_matrix", vertex_wait_matrix},
+            {"final_pos", result["final_pos"]},
+            {"final_tasks", result["final_tasks"]},
+            {"actual_paths", result["actualPaths"]},
+            {"starts", result["start"]},
+            {"exec_future", result["execFuture"]},
+            {"plan_future", result["planFuture"]},
+            {"exec_move", exec_moves},
+            {"plan_move", plan_moves},
+            // {"past_paths", past_paths},
+            {"done", result["done"]},
+            {"agents_finish_task", result["agents_finish_task"]}
+        };
+    }
+    else
+    {
+        analysis = {
+            {"num_task_finished", throughput},
+            {"throughput", avg_throughput},
+            {"tile_usage", vertex_usage},
+            // {"edge_pair_usage", edge_pair_usage},
+            // {"edge_pair_usage_mean", edge_pair_usage_mean},
+            // {"edge_pair_usage_std", edge_pair_usage_std},
+            {"edge_usage_matrix", edge_usage_matrix},
+            {"vertex_wait_matrix", vertex_wait_matrix},
+            // {"final_pos", result["final_pos"]},
+            // {"final_tasks", result["final_tasks"]},
+            // {"actual_paths", result["actualPaths"]},
+            // {"starts", result["start"]},
+            // {"exec_future", result["execFuture"]},
+            // {"plan_future", result["planFuture"]},
+            // {"exec_move", exec_moves},
+            // {"plan_move", plan_moves},
+            // {"past_paths", past_paths},
+            // {"done", result["done"]},
+            // {"agents_finish_task", result["agents_finish_task"]}
+        };
+    }
     return analysis;
 }
 
@@ -539,7 +570,8 @@ nlohmann::json analyze_curr_result_json(const nlohmann::json & result, Grid & gr
     return analysis;
 }
 
-nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
+nlohmann::json analyze_result_json(
+    const nlohmann::json & result, Grid & grid, bool online) {
 
     int h=grid.rows;
     int w=grid.cols;
@@ -701,27 +733,54 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
     }
 
     nlohmann::json analysis;
-    analysis = {
-        {"num_task_finished", throughput},
-        {"throughput", avg_throughput},
-        {"tile_usage", vertex_usage},
-        // {"edge_pair_usage", edge_pair_usage},
-        // {"edge_pair_usage_mean", edge_pair_usage_mean},
-        // {"edge_pair_usage_std", edge_pair_usage_std},
-        {"edge_usage_matrix", edge_usage_matrix},
-        {"vertex_wait_matrix", vertex_wait_matrix},
-        {"final_pos", result["final_pos"]},
-        {"final_tasks", result["final_tasks"]},
-        {"actual_paths", result["actualPaths"]},
-        {"starts", result["start"]},
-        {"exec_future", result["execFuture"]},
-        {"plan_future", result["planFuture"]},
-        {"exec_move", exec_moves},
-        {"plan_move", plan_moves},
-        {"past_paths", past_paths},
-        {"done", result["done"]},
-        {"agents_finish_task", result["agents_finish_task"]}
-    };
+    if (online)
+    {
+        analysis = {
+            {"num_task_finished", throughput},
+            {"throughput", avg_throughput},
+            {"tile_usage", vertex_usage},
+            // {"edge_pair_usage", edge_pair_usage},
+            // {"edge_pair_usage_mean", edge_pair_usage_mean},
+            // {"edge_pair_usage_std", edge_pair_usage_std},
+            {"edge_usage_matrix", edge_usage_matrix},
+            {"vertex_wait_matrix", vertex_wait_matrix},
+            {"final_pos", result["final_pos"]},
+            {"final_tasks", result["final_tasks"]},
+            {"actual_paths", result["actualPaths"]},
+            {"starts", result["start"]},
+            {"exec_future", result["execFuture"]},
+            {"plan_future", result["planFuture"]},
+            {"exec_move", exec_moves},
+            {"plan_move", plan_moves},
+            {"past_paths", past_paths},
+            {"done", result["done"]},
+            {"agents_finish_task", result["agents_finish_task"]}
+        };
+    }
+    else
+    {
+        analysis = {
+            {"num_task_finished", throughput},
+            {"throughput", avg_throughput},
+            {"tile_usage", vertex_usage},
+            // {"edge_pair_usage", edge_pair_usage},
+            // {"edge_pair_usage_mean", edge_pair_usage_mean},
+            // {"edge_pair_usage_std", edge_pair_usage_std},
+            {"edge_usage_matrix", edge_usage_matrix},
+            {"vertex_wait_matrix", vertex_wait_matrix},
+            // {"final_pos", result["final_pos"]},
+            // {"final_tasks", result["final_tasks"]},
+            // {"actual_paths", result["actualPaths"]},
+            // {"starts", result["start"]},
+            // {"exec_future", result["execFuture"]},
+            // {"plan_future", result["planFuture"]},
+            // {"exec_move", exec_moves},
+            // {"plan_move", plan_moves},
+            // {"past_paths", past_paths},
+            // {"done", result["done"]},
+            // {"agents_finish_task", result["agents_finish_task"]}
+        };
+    }
     return analysis;
 }
 
