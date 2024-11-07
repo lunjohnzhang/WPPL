@@ -144,7 +144,7 @@ def main(seed=0):
     #     json.dump(chute_mapping, f, indent=4)
 
     # Task assignment policy
-    task_assignment_params = np.random.rand(6).tolist()
+    task_assignment_params = np.random.rand(5).tolist()
 
     ret = py_driver.run(
         scenario="SORTING",  # one of ["KIVA", "COMPETITION", "SORTING"]

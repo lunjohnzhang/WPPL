@@ -27,8 +27,7 @@ double SortationSystem::compute_assignment_cost(
                this->task_assignment_params[1] * y * y +
                this->task_assignment_params[2] * x * y +
                this->task_assignment_params[3] * x +
-               this->task_assignment_params[4] * y +
-               this->task_assignment_params[5];
+               this->task_assignment_params[4] * y;
     }
     else
     {
