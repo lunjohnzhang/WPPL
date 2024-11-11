@@ -17,8 +17,10 @@ public:
                     // task assignment cost
                     std::string task_assignment_cost,
                     vector<double> task_assignment_params,
+                    double assign_C,
                     int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), package_mode(package_mode), packages(packages), package_dist_weight(package_dist_weight), task_assignment_cost(task_assignment_cost),
-                        task_assignment_params(task_assignment_params)
+                        task_assignment_params(task_assignment_params),
+                        assign_C(assign_C)
     {
         num_of_agents = num_agents;
         starts.resize(num_of_agents);

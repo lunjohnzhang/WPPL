@@ -274,17 +274,26 @@ py_sim::py_sim(py::kwargs kwargs)
         // If the task assignment policy is of an optimization-based policy,
         // read the parameters
         vector<double> task_assignment_params;
+        double assign_C = 8.0; // Default
         if (task_assignment_cost == "opt_quadratic_f")
         {
             nlohmann::json task_assignment_params_json = nlohmann::json::parse(
                 kwargs["task_assignment_params"].cast<std::string>());
             task_assignment_params = task_assignment_params_json.get<vector<double>>();
         }
+        else if (task_assignment_cost == "heuristic+num_agents")
+        {
+            if (kwargs.contains("assign_C"))
+            {
+                assign_C = kwargs["assign_C"].cast<double>();
+            }
+        }
+        cout << "Assign C " << assign_C << endl;
 
         this->system_ptr = std::make_unique<SortationSystem>(grid, planner,
             model, chute_mapping_int, package_mode, packages,
             package_dist_weight, task_assignment_cost, task_assignment_params,
-            num_agents, seed);
+            assign_C, num_agents, seed);
     }
     else
     {

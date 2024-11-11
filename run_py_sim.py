@@ -9,7 +9,8 @@ import numpy as np
 from py_sim import py_sim  # type: ignore # ignore pylance warning
 
 
-def main():
+def main(seed=0):
+    np.random.seed(seed)
     with open("demo_kwargs.json") as f:
         kwargs = json.load(f)
     n_valid_edges = len(json.loads(kwargs["weights"]))
