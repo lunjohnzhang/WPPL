@@ -344,7 +344,7 @@ void SortationSystem::warmup(int total_warmup_steps){
 
 int SortationSystem::update_gg_and_step(int update_gg_interval){
     this->curr_starts = this->curr_states;
-    cout << "Sortation system: update_gg_and_step" << endl;
+    // cout << "Sortation system: update_gg_and_step" << endl;
 
     int t_step=0;
     for (; t_step<update_gg_interval && this->timestep < this->total_simulation_steps;){
