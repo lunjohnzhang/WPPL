@@ -21,13 +21,31 @@ double SortationSystem::compute_assignment_cost(
         // f(x, y) = a_0 * x^2 + a_1 y^2 + a_2 * xy + a_3* x + a_4 * y + a_5,
         // where x and y are heuristic and number of agents, respectively, and
         // a's are optimized parameters
+        // Use different sets of parameters for different targets
         double x = this->planner->heuristics->get(curr_loc, next_pos.first);
         double y = next_pos.second;
-        cost = this->task_assignment_params[0] * x * x +
-               this->task_assignment_params[1] * y * y +
-               this->task_assignment_params[2] * x * y +
-               this->task_assignment_params[3] * x +
-               this->task_assignment_params[4] * y;
+        if (this->map.grid_types[next_pos.first] == 'w')
+        {
+            cost = this->task_assignment_params[0] * x * x +
+                this->task_assignment_params[1] * y * y +
+                this->task_assignment_params[2] * x * y +
+                this->task_assignment_params[3] * x +
+                this->task_assignment_params[4] * y;
+        }
+        else if (this->map.grid_types[next_pos.first] == 'e')
+        {
+            cost = this->task_assignment_params[5] * x * x +
+                this->task_assignment_params[6] * y * y +
+                this->task_assignment_params[7] * x * y +
+                this->task_assignment_params[8] * x +
+                this->task_assignment_params[9] * y;
+        }
+        else
+        {
+            std::cout << "Compute assignment cost: unknown grid type"
+                      << std::endl;
+            exit(-1);
+        }
     }
     else
     {

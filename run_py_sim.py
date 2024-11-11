@@ -17,6 +17,7 @@ def main(seed=0):
     n_wait_costs = len(json.loads(kwargs["wait_costs"]))
     weights = np.ones(n_valid_edges).tolist()
     wait_costs = np.ones(n_wait_costs).tolist()
+    kwargs["task_assignment_params"] = json.dumps(np.random.rand(10).tolist())
     simulator = py_sim(**kwargs)
     result_warm = simulator.warmup()
     result_warm = json.loads(result_warm)
