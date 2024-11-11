@@ -174,7 +174,7 @@ void SortationSystem::simulate(int simulation_time)
 {
     // init logger
     // Logger* log = new Logger();
-
+    // cout << "Sorting Simulation starts!" << std::endl;
     ONLYDEV(g_timer.record_p("simulate_start");)
 
     initialize();
@@ -247,20 +247,14 @@ void SortationSystem::simulate(int simulation_time)
             num_of_task_finish++;
 
             // update the number of robots in the workstation
-            if (map.grid_types[task.location] == 'w')
-            {
-                this->robots_in_workstations[task.location]--;
-            }
-            else if (map.grid_types[task.location] == 'e')
-            {
-                this->robots_in_endpoints[task.location]--;
-            }
+            this->update_n_agents(task);
         }
         ONLYDEV(cout << num_of_tasks << " tasks has been finished by far in total" << std::endl;)
 
         ONLYDEV(analyzer.data["finished_tasks"] = num_of_tasks;)
 
         update_tasks();
+        ONLYDEV(check_n_agents_sum();)
 
         bool complete_all = false;
         for (auto &t : assigned_tasks)
@@ -293,4 +287,164 @@ void SortationSystem::simulate(int simulation_time)
     cout << num_of_tasks << " tasks has been finished by far in total" << std::endl;
 
     ONLYDEV(analyzer.dump();)
+}
+
+
+void SortationSystem::warmup(int total_warmup_steps){
+    initialize();
+    for (; this->warmupstep< total_warmup_steps;){
+        sync_shared_env();
+        auto start = std::chrono::steady_clock::now();
+        vector<Action> actions = plan();
+        auto end = std::chrono::steady_clock::now();
+        this->warmupstep+=1;
+
+        for (int a = 0; a < num_of_agents; a++){
+            if (!env->goal_locations[a].empty())
+                solution_costs[a]++;
+        }
+
+        // move drives
+        list<Task> new_finished_tasks = move(actions);
+        if (!planner_movements[0].empty() && planner_movements[0].back() == Action::NA){
+            planner_times.back()+=plan_time_limit;  //add planning time to last record
+        } else{
+            auto diff = end-start;
+            planner_times.push_back(std::chrono::duration<double>(diff).count());
+        }
+
+        // TODO: ensure warmup steps does not contribute to the whole setting
+        this->curr_finish_task_agents.clear();
+        for (auto task : new_finished_tasks){
+            finished_tasks[task.agent_assigned].emplace_back(task);
+            this->curr_finish_task_agents.push_back(task.agent_assigned);
+            // num_of_task_finish++;
+            // update the number of robots in the workstation
+            this->update_n_agents(task);
+        }
+        update_tasks();
+        ONLYDEV(check_n_agents_sum();)
+
+        bool complete_all = false;
+        for (auto & t: assigned_tasks){
+            if(t.empty()){
+                complete_all = true;
+            }else{
+                complete_all = false;
+                break;
+            }
+        }
+        if (complete_all){
+            cout << std::endl << "All task finished!" << std::endl;
+            break;
+        }
+    }
+}
+
+
+int SortationSystem::update_gg_and_step(int update_gg_interval){
+    this->curr_starts = this->curr_states;
+    cout << "Sortation system: update_gg_and_step" << endl;
+
+    int t_step=0;
+    for (; t_step<update_gg_interval && this->timestep < this->total_simulation_steps;){
+        sync_shared_env();
+        auto start = std::chrono::steady_clock::now();
+        vector<Action> actions = plan();
+        auto end = std::chrono::steady_clock::now();
+        t_step += 1;
+        timestep += 1;
+
+        for (int a = 0; a < num_of_agents; a++){
+            if (!env->goal_locations[a].empty())
+                solution_costs[a]++;
+        }
+
+        // move drives
+        list<Task> new_finished_tasks = move(actions);
+        if (!planner_movements[0].empty() && planner_movements[0].back() == Action::NA){
+            planner_times.back()+=plan_time_limit;  //add planning time to last record
+        } else{
+            auto diff = end-start;
+            planner_times.push_back(std::chrono::duration<double>(diff).count());
+        }
+
+        this->curr_finish_task_agents.clear();
+        for (auto task : new_finished_tasks){
+            finished_tasks[task.agent_assigned].emplace_back(task);
+            this->curr_finish_task_agents.push_back(task.agent_assigned);
+            num_of_task_finish++;
+            // update the number of robots in the workstation
+            this->update_n_agents(task);
+        }
+
+        // // Print content of robots_in_workstations and robots_in_endpoints
+        // cout << "robots_in_workstations: ";
+        // for (auto & r: robots_in_workstations){
+        //     cout << r.second << ", ";
+        // }
+        // cout << endl;
+        // cout << "robots_in_endpoints: ";
+        // for (auto & r: robots_in_endpoints){
+        //     cout << r.second << ", ";
+        // }
+        // cout << endl;
+
+
+        // if (this->task_dist_change_interval>0 && this->timestep%this->task_dist_change_interval == 0){
+        //     this->random_update_tasks_distribution();
+        // }
+
+        update_tasks();
+        ONLYDEV(check_n_agents_sum();)
+
+        // Sum of robots in robots_in_workstations and robots_in_endpoints must be equal to num_of_agents
+
+        bool complete_all = false;
+        for (auto & t: assigned_tasks){
+            if(t.empty()){
+                complete_all = true;
+            }else{
+                complete_all = false;
+                break;
+            }
+        }
+        if (complete_all){
+            cout << std::endl << "All task finished!" << std::endl;
+            break;
+        }
+    }
+    return t_step;
+    // exit(1);
+}
+
+
+void SortationSystem::update_n_agents(Task task)
+{
+    if (map.grid_types[task.location] == 'w')
+    {
+        this->robots_in_workstations[task.location]--;
+    }
+    else if (map.grid_types[task.location] == 'e')
+    {
+        this->robots_in_endpoints[task.location]--;
+    }
+}
+
+void SortationSystem::check_n_agents_sum()
+{
+    int sum = 0;
+    for (auto & r: robots_in_workstations){
+        sum += r.second;
+    }
+    for (auto & r: robots_in_endpoints){
+        sum += r.second;
+    }
+    if (sum != num_of_agents){
+        cout << "Sum of robots in workstations and endpoints is not equal to num_of_agents" << endl;
+        exit(-1);
+    }
+    else{
+        cout << "Sum of robots in workstations and endpoints is equal to num_of_agents" << endl;
+    }
 }

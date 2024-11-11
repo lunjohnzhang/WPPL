@@ -73,7 +73,9 @@ public:
         std::shuffle(this->packages.begin(), this->packages.end(), MT);
     };
 
-    void simulate(int simulation_time);
+    void simulate(int simulation_time) override;
+    void warmup(int total_warmup_steps) override;
+    int update_gg_and_step(int update_gg_interval) override;
 
 private:
     std::mt19937 MT;
@@ -81,7 +83,7 @@ private:
     int package_id = 0;
     std::string task_assignment_cost;
 
-    void update_tasks();
+    void update_tasks() override;
     std::discrete_distribution<int> agent_home_loc_dist;
     std::discrete_distribution<int> package_dist;
 
@@ -102,4 +104,6 @@ private:
         int curr_loc, pair<int, int> workstation) const;
     int assign_workstation(int curr_loc) const;
     int assign_endpoint(int curr_loc, vector<int> endpoints) const;
+    void update_n_agents(Task task);
+    void check_n_agents_sum();
 };

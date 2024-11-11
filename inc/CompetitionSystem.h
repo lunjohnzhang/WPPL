@@ -269,9 +269,9 @@ public:
     void set_preprocess_time_limit(int limit){preprocess_time_limit = limit;};
     void set_logger(Logger* logger){this->logger = logger;}
 
-	void simulate(int simulation_time);
-    void warmup(int total_warmup_steps);
-    int update_gg_and_step(int update_gg_interval);
+	virtual void simulate(int simulation_time);
+    virtual void warmup(int total_warmup_steps);
+    virtual int update_gg_and_step(int update_gg_interval);
     vector<Action> plan();
     vector<Action> plan_wrapper();
 

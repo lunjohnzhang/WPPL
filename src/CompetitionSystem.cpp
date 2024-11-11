@@ -1173,6 +1173,8 @@ void BaseSystem::warmup(int total_warmup_steps){
 
 
 int BaseSystem::update_gg_and_step(int update_gg_interval){
+    cout << "Base system: update_gg_and_step" << endl;
+
     this->curr_starts = this->curr_states;
 
     int t_step=0;
