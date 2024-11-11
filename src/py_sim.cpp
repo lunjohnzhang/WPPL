@@ -19,7 +19,9 @@ std::string py_sim::update_gg_and_step(std::vector<float> edge_weights, std::vec
     if (this->save_path){
         this->system_ptr->saveResults(this->path_file.string());
     }
-    return this->system_ptr->analyzeCurrResults(actual_sim_steps).dump(4);
+    auto results = this->system_ptr->analyzeCurrResults(actual_sim_steps);
+    cout << "system curr sim step: " << this->system_ptr->get_timesteps() << endl;
+    return results.dump(4);
 }
 
 

@@ -565,7 +565,8 @@ nlohmann::json analyze_curr_result_json(const nlohmann::json & result, Grid & gr
         {"plan_move", plan_moves},
         {"past_paths", past_paths},
         {"done", result["done"]},
-        {"agents_finish_task", result["agents_finish_task"]}
+        {"agents_finish_task", result["agents_finish_task"]},
+        {"finished_tasks", result["finished_tasks"]} // empty if not last step
     };
     return analysis;
 }

@@ -263,7 +263,18 @@ public:
             delete planner;
         }
     };
-
+    std::vector<pair<int, int>> get_finished_tasks() const {
+        std::vector<pair<int, int>> finished_tasks_;
+        for (auto& tasks: this->finished_tasks) {
+            for (auto& task: tasks) {
+                finished_tasks_.emplace_back(task.location, task.t_completed);
+            }
+        }
+        return finished_tasks_;
+    }
+    int get_timesteps() const {
+        return timestep;
+    }
     void set_num_tasks_reveal(int num){num_tasks_reveal = num;};
     void set_plan_time_limit(int limit){plan_time_limit = limit;};
     void set_preprocess_time_limit(int limit){preprocess_time_limit = limit;};

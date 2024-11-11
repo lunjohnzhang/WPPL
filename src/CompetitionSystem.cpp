@@ -1544,6 +1544,22 @@ nlohmann::json BaseSystem::analyzeCurrResults(int update_gg_interval)
 
     js["done"] = (this->timestep >= this->total_simulation_steps);
 
+    std::vector<pair<int, int>> real_finished_tasks;
+    if (js["done"])
+    {
+        // Filter the tasks beyond warm up step
+        for (auto& tasks: this->finished_tasks) {
+            for (auto& task: tasks) {
+                if (task.t_completed > 0)
+                {
+                    real_finished_tasks.emplace_back(
+                        task.location, task.t_completed);
+                }
+            }
+        }
+    }
+    js["finished_tasks"] = real_finished_tasks;
+
     return analyze_curr_result_json(js, map);
 }
 
