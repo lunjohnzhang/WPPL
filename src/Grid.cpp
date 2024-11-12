@@ -76,6 +76,10 @@ void Grid::load_map_from_path(string fname,
             {
                 map[id] = 1;
                 obstacles.push_back(id);
+                if (line[j] == '@')
+                {
+                    chutes.push_back(id);
+                }
             }
             else
             { // free space
@@ -146,6 +150,10 @@ void Grid::load_map_from_json(nlohmann::json map_json,
             {
                 map[id] = 1;
                 obstacles.push_back(id);
+                if (line[j] == '@')
+                {
+                    chutes.push_back(id);
+                }
             }
             else
             { // free space

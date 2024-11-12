@@ -61,4 +61,5 @@ private:
 
     bool save_path = false;
     boost::filesystem::path path_file;
+    std::string scenario;
 };

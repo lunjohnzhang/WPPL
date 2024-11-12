@@ -20,6 +20,13 @@ std::string py_sim::update_gg_and_step(std::vector<float> edge_weights, std::vec
         this->system_ptr->saveResults(this->path_file.string());
     }
     auto results = this->system_ptr->analyzeCurrResults(actual_sim_steps);
+    if (this->scenario == "SORTING")
+    {
+        auto sorting_system = dynamic_cast<SortationSystem*>(system_ptr.get());
+        results["n_finish_task_plus_n_recirs"] = sorting_system->get_n_finish_task_plus_n_recirs();
+        results["n_recirs"] = sorting_system->get_n_recirs();
+        results["recirc_rate"] = (double)sorting_system->get_n_recirs() / sorting_system->get_n_finish_task_plus_n_recirs();
+    }
     return results.dump(4);
 }
 
@@ -122,7 +129,7 @@ py_sim::py_sim(py::kwargs kwargs)
     this->model->set_logger(logger);
 
     cout << "Loading scenario" << endl;
-    std::string scenario = kwargs["scenario"].cast<std::string>();
+    this->scenario = kwargs["scenario"].cast<std::string>();
 
     // Get the scenario
     if (scenario == "COMPETITION")
@@ -289,12 +296,15 @@ py_sim::py_sim(py::kwargs kwargs)
                 assign_C = kwargs["assign_C"].cast<double>();
             }
         }
-        cout << "Assign C " << assign_C << endl;
+        // cout << "Assign C " << assign_C << endl;
+
+        // Recirculation mechanism
+        bool recirc_mechanism = kwargs["recirc_mechanism"].cast<bool>();
 
         this->system_ptr = std::make_unique<SortationSystem>(grid, planner,
             model, chute_mapping_int, package_mode, packages,
             package_dist_weight, task_assignment_cost, task_assignment_params,
-            assign_C, num_agents, seed);
+            assign_C, recirc_mechanism, num_agents, seed);
     }
     else
     {

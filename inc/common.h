@@ -13,6 +13,7 @@
 #include <boost/tokenizer.hpp>
 #include "nlohmann/json.hpp"
 #include <boost/format.hpp>
+#include <queue>
 
 using boost::heap::fibonacci_heap;
 using boost::heap::compare;
@@ -35,6 +36,7 @@ using std::ostream;
 using std::string;
 using std::max;
 using std::min;
+using std::queue;
 using std::priority_queue;
 
 //#include <boost/graph/adjacency_list.hpp>

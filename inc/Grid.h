@@ -35,6 +35,7 @@ public:
     std::vector<int> agent_home_locations;
     std::vector<int> empty_locations;
     std::vector<int> obstacles;
+    std::vector<int> chutes;
 
     std::vector<char> grid_types;
 

@@ -55,7 +55,9 @@ def main(seed=0):
         if update_r["done"]:
             print("done!")
             break
-
+    print(update_r["n_finish_task_plus_n_recirs"])
+    print(update_r["n_recirs"])
+    print(update_r["recirc_rate"])
 
 if __name__ == '__main__':
     fire.Fire(main)

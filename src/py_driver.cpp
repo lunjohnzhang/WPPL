@@ -364,9 +364,12 @@ std::string run(const py::kwargs& kwargs)
             }
         }
 
+        bool recirc_mechanism = kwargs["recirc_mechanism"].cast<bool>();
+
         system_ptr = std::make_unique<SortationSystem>(grid, planner, model,
             chute_mapping_int, package_mode, packages, package_dist_weight,
-            task_assignment_cost, task_assignment_params, assign_C, num_agents,
+            task_assignment_cost, task_assignment_params, assign_C,
+            recirc_mechanism, num_agents,
             seed);
     }
     else
@@ -389,6 +392,14 @@ std::string run(const py::kwargs& kwargs)
 
     nlohmann::json analysis=system_ptr->analyzeResults(false);
     analysis["cpu_runtime"] = runtime;
+    if (scenario == "SORTING")
+    {
+        auto sorting_system = dynamic_cast<SortationSystem*>(system_ptr.get());
+        analysis["n_finish_task_plus_n_recirs"] = sorting_system->get_n_finish_task_plus_n_recirs();
+        analysis["n_recirs"] = sorting_system->get_n_recirs();
+        analysis["recirc_rate"] = (double)sorting_system->get_n_recirs() / sorting_system->get_n_finish_task_plus_n_recirs();
+    }
+
 
     // Save path if applicable
     if (kwargs.contains("save_paths") && kwargs["save_paths"].cast<bool>())
