@@ -389,7 +389,6 @@ std::string run(const py::kwargs& kwargs)
 
     nlohmann::json analysis=system_ptr->analyzeResults(false);
     analysis["cpu_runtime"] = runtime;
-    analysis["finished_tasks"]  = system_ptr->get_finished_tasks();
 
     // Save path if applicable
     if (kwargs.contains("save_paths") && kwargs["save_paths"].cast<bool>())

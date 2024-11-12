@@ -202,7 +202,6 @@ def main(seed=0):
     # print(analysis["throughput"], analysis["edge_pair_usage_mean"],
         #   analysis["edge_pair_usage_std"])
     print(analysis["throughput"])
-    breakpoint()
 
     # ##### Only use the following for weight opt case #####
     # # because the order of orientation is different in competition code and weight opt code.

@@ -1544,7 +1544,7 @@ nlohmann::json BaseSystem::analyzeCurrResults(int update_gg_interval)
 
     js["done"] = (this->timestep >= this->total_simulation_steps);
 
-    std::vector<pair<int, int>> real_finished_tasks;
+    std::vector<double> real_finished_tasks(this->map.rows*this->map.cols, 0);
     if (js["done"])
     {
         // Filter the tasks beyond warm up step
@@ -1552,8 +1552,9 @@ nlohmann::json BaseSystem::analyzeCurrResults(int update_gg_interval)
             for (auto& task: tasks) {
                 if (task.t_completed > 0)
                 {
-                    real_finished_tasks.emplace_back(
-                        task.location, task.t_completed);
+                    real_finished_tasks[task.location] += 1;
+                    // real_finished_tasks.emplace_back(
+                    //     task.location, task.t_completed);
                 }
             }
         }
@@ -1813,6 +1814,14 @@ nlohmann::json BaseSystem::analyzeResults(bool online)
     js["planFuture"] = plan_p;
 
     js["done"] = (this->timestep >= this->total_simulation_steps);
+
+    std::vector<double> real_finished_tasks(this->map.rows*this->map.cols, 0);
+    for (auto& tasks: this->finished_tasks) {
+        for (auto& task: tasks) {
+            real_finished_tasks[task.location] += 1;
+        }
+    }
+    js["finished_tasks"] = real_finished_tasks;
 
     return analyze_result_json(js, map, online);
 }

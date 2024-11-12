@@ -769,6 +769,7 @@ nlohmann::json analyze_result_json(
             // {"edge_pair_usage_std", edge_pair_usage_std},
             {"edge_usage_matrix", edge_usage_matrix},
             {"vertex_wait_matrix", vertex_wait_matrix},
+            {"finished_tasks", result["finished_tasks"]},
             // {"final_pos", result["final_pos"]},
             // {"final_tasks", result["final_tasks"]},
             // {"actual_paths", result["actualPaths"]},
