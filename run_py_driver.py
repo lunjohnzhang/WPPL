@@ -198,7 +198,7 @@ def main(seed=0):
         package_dist_weight=json.dumps(package_dist_weight),
         package_mode="dist",
         chute_mapping=json.dumps(chute_mapping),
-        task_assignment_cost="heuristic+num_agents",
+        task_assignment_cost="random",
         task_assignment_params=json.dumps(task_assignment_params),
         # assign_C=15,
     )

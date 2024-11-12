@@ -55,8 +55,15 @@ double SortationSystem::compute_assignment_cost(
     return cost;
 }
 
-int SortationSystem::assign_workstation(int curr_loc) const
+int SortationSystem::assign_workstation(int curr_loc)
 {
+    // Assign random workstation if task assignment is random
+    if (this->task_assignment_cost == "random")
+    {
+        int idx = MT() % this->map.agent_home_locations.size();
+        return this->map.agent_home_locations[idx];
+    }
+
     // Choose a workstation based on:
     // heuristic[curr][next] + C * #robots targeting `next`
     int assigned_loc;
@@ -85,8 +92,15 @@ int SortationSystem::assign_workstation(int curr_loc) const
     return assigned_loc;
 }
 
-int SortationSystem::assign_endpoint(int curr_loc, vector<int> endpoints) const
+int SortationSystem::assign_endpoint(int curr_loc, vector<int> endpoints)
 {
+    // Assign random workstation if task assignment is random
+    if (this->task_assignment_cost == "random")
+    {
+        int idx = MT() % endpoints.size();
+        return endpoints[idx];
+    }
+
     // Choose an endpoint based on:
     // heuristic[curr][next] + C * #robots targeting `next`
     int assigned_loc;

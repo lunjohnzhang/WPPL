@@ -104,8 +104,8 @@ private:
     std::vector<double> task_assignment_params;
     double compute_assignment_cost(
         int curr_loc, pair<int, int> workstation) const;
-    int assign_workstation(int curr_loc) const;
-    int assign_endpoint(int curr_loc, vector<int> endpoints) const;
+    int assign_workstation(int curr_loc);
+    int assign_endpoint(int curr_loc, vector<int> endpoints);
     void update_n_agents(Task task);
     void check_n_agents_sum();
 };
