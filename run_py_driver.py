@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append('build')
 sys.path.append('scripts')
 import fire
@@ -7,7 +8,8 @@ import json
 import numpy as np
 from env_search.utils import (kiva_env_str2number, get_chute_loc,
                               read_in_kiva_map, read_in_sortation_map,
-                              sortation_env_str2number)
+                              sortation_env_str2number, get_n_valid_edges,
+                              get_n_valid_vertices)
 import py_driver  # type: ignore # ignore pylance warning
 import json
 
@@ -134,6 +136,14 @@ def main(seed=0):
     all_chutes = get_chute_loc(map_np).tolist()
     n_chutes = len(all_chutes)
     # print(all_chutes)
+    n_valid_edges = get_n_valid_edges(map_np,
+                                      bi_directed=True,
+                                      domain="sortation")
+    n_valid_vertices = get_n_valid_vertices(map_np, domain="sortation")
+    compressed_weights_json_str = json.dumps(
+        np.ones(n_valid_edges).tolist())
+    compressed_wait_costs_json_str = json.dumps(
+        np.ones(n_valid_vertices).tolist())
 
     # destination id to location of chutes
     chute_mapping = {
@@ -151,7 +161,7 @@ def main(seed=0):
         # For map, it uses map_path by default. If not provided, it'll use map_json
         # which contains json string of the map
         # map_path=map_path,
-        map_json_str = map_json_str,
+        map_json_str=map_json_str,
         # map_json_path=map_json_path,
         simulation_steps=1000,
         # for the problem instance we use:
@@ -169,8 +179,8 @@ def main(seed=0):
         # tasks_path="example_problems/random.domain/tasks/random-32-32-20-600.tasks",
         # weights are the edge weights, wait_costs are the vertex wait costs
         # if not specified here, then the program will use the one specified in the config file.
-        # weights=compressed_weights_json_str,
-        # wait_costs=compressed_wait_costs_json_str,
+        weights=compressed_weights_json_str,
+        wait_costs=compressed_wait_costs_json_str,
         # if we don't load config here, the program will load the default config file.
         config=config_str,
         # the following are some things we don't need to change in the weight optimization case.
@@ -200,7 +210,7 @@ def main(seed=0):
     # print(np.array(analysis["edge_pair_usage"]).shape)
 
     # print(analysis["throughput"], analysis["edge_pair_usage_mean"],
-        #   analysis["edge_pair_usage_std"])
+    #   analysis["edge_pair_usage_std"])
     print(analysis["throughput"])
 
     # ##### Only use the following for weight opt case #####
