@@ -58,6 +58,11 @@ def main(seed=0):
     print(update_r["n_finish_task_plus_n_recirs"])
     print(update_r["n_recirs"])
     print(update_r["recirc_rate"])
+    print("Chute sleep count ", update_r["chute_sleep_count"])
+    total_n_sleep = 0
+    for k, v in update_r["chute_sleep_count"]:
+        total_n_sleep += v
+    print("Total sleep count: ", total_n_sleep)
 
 if __name__ == '__main__':
     fire.Fire(main)

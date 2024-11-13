@@ -93,6 +93,7 @@ public:
             this->chute_sleeping_time[chute] = 0;
             this->chute_sleeping[chute] = false;
             this->packages_in_chutes[chute] = 0;
+            this->chute_sleep_count[chute] = 0;
         }
     };
 
@@ -106,6 +107,10 @@ public:
     int get_n_recirs() const
     {
         return n_recirs;
+    }
+    boost::unordered_map<int, int> get_chute_sleep_count() const
+    {
+        return chute_sleep_count;
     }
 
 
@@ -144,6 +149,8 @@ private:
     boost::unordered_map<int, int> chute_sleeping_time;
     // whether chute is sleeping
     boost::unordered_map<int, bool> chute_sleeping;
+    // Number of times each chute has slept
+    boost::unordered_map<int, int> chute_sleep_count;
 
     double assign_C = 8;
     std::vector<double> task_assignment_params;

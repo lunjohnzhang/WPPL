@@ -614,6 +614,7 @@ void SortationSystem::update_chute_sleeping()
                 this->packages_in_chutes[chute.first] >= MAX_PACKAGE_IN_CHUTE)
             {
                 this->chute_sleeping[chute.first] = true;
+                this->chute_sleep_count[chute.first]++;
             }
         }
     }

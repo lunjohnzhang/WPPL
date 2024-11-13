@@ -217,6 +217,7 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
     print(analysis["n_finish_task_plus_n_recirs"])
     print(analysis["n_recirs"])
     print(analysis["recirc_rate"])
+    print("Chute sleep count ", analysis["chute_sleep_count"])
 
     # ##### Only use the following for weight opt case #####
     # # because the order of orientation is different in competition code and weight opt code.
