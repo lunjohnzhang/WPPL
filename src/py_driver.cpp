@@ -407,8 +407,10 @@ std::string run(const py::kwargs& kwargs)
     {
         boost::filesystem::path output_dir(kwargs["file_storage_path"].cast<std::string>());
         boost::filesystem::create_directories(output_dir);
-        boost::filesystem::path path_file = output_dir / "results.json";
-        system_ptr->saveResults(path_file.string());
+        // boost::filesystem::path result_file = output_dir / "results.json";
+        boost::filesystem::path path_file = output_dir / "paths.txt";
+        // system_ptr->saveResults(result_file.string());
+        system_ptr->savePathsLoc(path_file.string());
     }
 
     // system_ptr->saveResults("debug.json");

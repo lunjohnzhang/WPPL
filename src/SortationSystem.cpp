@@ -136,6 +136,7 @@ void SortationSystem::update_tasks()
             int loc;
             bool recirc = false;
             int next_package = -1;
+            int assigned_chute = -1;
             if (map.grid_types[prev_task_loc] == '.' ||
                 map.grid_types[prev_task_loc] == 'e')
             {
@@ -145,6 +146,7 @@ void SortationSystem::update_tasks()
                 // loc = map.agent_home_locations[idx];
                 loc = assign_workstation(prev_task_loc);
                 this->robots_in_workstations[loc]++;
+                // cout << "Agent " << k << " Assigned workstation: " << loc << endl;
             }
             else if (map.grid_types[prev_task_loc] == 'w')
             {
@@ -226,16 +228,14 @@ void SortationSystem::update_tasks()
                 }
 
                 // Choose the next endpoint
-                int assigned_chute;
                 std::tie(loc, assigned_chute) = assign_endpoint(
                     prev_task_loc, endpoints);
                 this->robots_in_endpoints[loc]++;
-                this->packages_in_chutes[assigned_chute]++;
-                // if (recirc)
-                // {
-                //     cout << "Assigned endpoint: " << loc << " (chute: "
-                //      << assigned_chute << ")" << endl;
-                // }
+                ONLYDEV(if (recirc)
+                {
+                    cout << "Agent " << k << " Assigned endpoint: " << loc
+                         << " (chute: " << assigned_chute << ")" << endl;
+                })
             }
             else
             {
@@ -243,7 +243,8 @@ void SortationSystem::update_tasks()
                 exit(-1);
             }
 
-            Task task(task_id, loc, timestep, k, recirc, next_package);
+            Task task(task_id, loc, timestep, k, recirc, next_package,
+                      assigned_chute);
             assigned_tasks[k].push_back(task);
             events[k].push_back(make_tuple(task.task_id, timestep, "assigned"));
             log_event_assigned(k, task.task_id, timestep);
@@ -337,24 +338,37 @@ void SortationSystem::simulate(int simulation_time)
             else
             {
                 this->n_recirs++;
-                // cout << "Adding recirculation package " << task.package_dest << " finished" << std::endl;
+                ONLYDEV(cout << "Adding recirculation package "
+                             << task.package_dest
+                             << " finished" << std::endl;)
                 this->recirc_packages.push(task.package_dest);
             }
+            ONLYDEV(cout << "Agent " << task.agent_assigned
+                         << " finished task " << task.location
+                         << " for chute " << task.assigned_chute
+                         << " at timestep " << timestep << endl;)
 
-            // update the number of robots in the workstation
+            // decrement the number of robots in the workstation
             this->update_n_agents(task);
+
+            // update the number of packages in the chute
+            this->update_package_in_chute(task);
         }
         ONLYDEV(cout << this->n_finish_task_plus_n_recirs << " tasks has been finished by far in total" << std::endl;)
 
         ONLYDEV(analyzer.data["finished_tasks"] = this->n_finish_task_plus_n_recirs;)
 
-        update_tasks();
+        // Put chutes to sleep if they are full
         if (this->recirc_mechanism)
         {
             update_chute_sleeping();
             // if (timestep % 500 == 0)
-            //     print_chute_sleeping_status();
+                // print_chute_sleeping_status();
         }
+
+        // Generate new tasks
+        update_tasks();
+
         ONLYDEV(check_n_agents_sum();)
 
         bool complete_all = false;
@@ -428,7 +442,18 @@ void SortationSystem::warmup(int total_warmup_steps)
             // num_of_task_finish++;
             // update the number of robots in the workstation
             this->update_n_agents(task);
+
+            // Update number of packages in the chute
+            this->update_package_in_chute(task);
+
         }
+
+        // Put chutes to sleep if they are full
+        if (this->recirc_mechanism)
+        {
+            update_chute_sleeping();
+        }
+
         update_tasks();
         ONLYDEV(check_n_agents_sum();)
 
@@ -503,8 +528,11 @@ int SortationSystem::update_gg_and_step(int update_gg_interval)
                 this->recirc_packages.push(task.package_dest);
                 // cout << "Adding recirculation package " << task.package_dest << " finished" << std::endl;
             }
-            // update the number of robots in the workstation
+            // Decrement the number of robots in the workstation
             this->update_n_agents(task);
+
+            // update the number of packages in the chute
+            this->update_package_in_chute(task);
         }
 
         // // Print content of robots_in_workstations and robots_in_endpoints
@@ -523,12 +551,16 @@ int SortationSystem::update_gg_and_step(int update_gg_interval)
         //     this->random_update_tasks_distribution();
         // }
 
-        update_tasks();
+        // Put chutes to sleep if they are full
         if (this->recirc_mechanism)
         {
             update_chute_sleeping();
             // print_chute_sleeping_status();
         }
+
+        // Generate new tasks
+        update_tasks();
+
         ONLYDEV(check_n_agents_sum();)
 
         // Sum of robots in robots_in_workstations and robots_in_endpoints must be equal to num_of_agents
@@ -626,7 +658,7 @@ void SortationSystem::print_chute_sleeping_status()
     cout << "Packages in chutes: ";
     for (auto &chute : this->packages_in_chutes)
     {
-        cout << chute.second << " ";
+        cout << chute.first << ": " << chute.second << " ";
         // cout << "Chute " << chute.first << ": " << chute.second << " packages" << endl;
     }
     cout << endl;
@@ -638,9 +670,13 @@ void SortationSystem::print_chute_sleeping_status()
         {
             cout << "Chute " << chute.first << ": " << "sleeping for " << this->chute_sleeping_time[chute.first] << " timesteps" << endl;
         }
-        else
-        {
-            // cout << "awake" << endl;
-        }
+    }
+}
+
+void SortationSystem::update_package_in_chute(Task task)
+{
+    if (task.assigned_chute != -1)
+    {
+        this->packages_in_chutes[task.assigned_chute]++;
     }
 }

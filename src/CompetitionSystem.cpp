@@ -1430,6 +1430,30 @@ void BaseSystem::savePaths(const string &fileName, int option) const
     output.close();
 }
 
+
+// Save path using the same format as RHCR code base
+void BaseSystem::savePathsLoc(const string &fileName) const
+{
+    std::ofstream output;
+
+    output.open(fileName, std::ios::out);
+    output << num_of_agents << std::endl;
+    for (int k = 0; k < num_of_agents; k++)
+    {
+        State prev_state = starts[k];
+        output << this->starts[k] << ";";
+        for (const auto t : actual_movements[k])
+        {
+            auto curr_state = this->model->result_state(prev_state, t);
+            output << curr_state << ";";
+            prev_state = curr_state;
+        }
+        output << std::endl;
+    }
+    output.close();
+}
+
+
 #ifdef MAP_OPT
 
 nlohmann::json BaseSystem::analyzeCurrResults(int update_gg_interval)

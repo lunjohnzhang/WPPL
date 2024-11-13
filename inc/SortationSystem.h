@@ -142,9 +142,9 @@ private:
     // number of packages in each chute
     boost::unordered_map<int, int> packages_in_chutes;
     // once exceeded, chute goes to sleep for 50 timesteps
-    int MAX_PACKAGE_IN_CHUTE = 50;
+    int MAX_PACKAGE_IN_CHUTE = 1;
     // sleeping time for chute
-    int CHUTE_SLEEP_TIME = 50;
+    int CHUTE_SLEEP_TIME = 10;
     // number of timesteps chute has been sleeping
     boost::unordered_map<int, int> chute_sleeping_time;
     // whether chute is sleeping
@@ -163,4 +163,5 @@ private:
     void check_n_agents_sum();
     void update_chute_sleeping();
     void print_chute_sleeping_status();
+    void update_package_in_chute(Task task);
 };

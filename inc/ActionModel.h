@@ -126,14 +126,6 @@ public:
         return next;
     };
 
-
-protected:
-    const Grid& grid;
-    int rows;
-    int cols;
-    int moves[5];
-    Logger* logger = nullptr;
-
     State result_state(const State & prev, Action action)
     {
         // NOTE: we don't care about orientation, just keep it intact for now.
@@ -149,6 +141,14 @@ protected:
 
         return State(new_location, prev.timestep + 1, -1);
     }
+
+protected:
+    const Grid& grid;
+    int rows;
+    int cols;
+    int moves[5];
+    Logger* logger = nullptr;
+
 };
 
 

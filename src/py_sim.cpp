@@ -16,17 +16,25 @@ std::string py_sim::update_gg_and_step(std::vector<float> edge_weights, std::vec
     this->planner->map_weights=weight_format_conversion_with_wait_costs(this->grid, edge_weights, wait_costs);
     this->planner->update();
     int actual_sim_steps = this->system_ptr->update_gg_and_step(this->update_gg_interval);
-    if (this->save_path){
-        this->system_ptr->saveResults(this->path_file.string());
-    }
     auto results = this->system_ptr->analyzeCurrResults(actual_sim_steps);
-    if (this->scenario == "SORTING")
-    {
-        auto sorting_system = dynamic_cast<SortationSystem*>(system_ptr.get());
-        results["n_finish_task_plus_n_recirs"] = sorting_system->get_n_finish_task_plus_n_recirs();
-        results["n_recirs"] = sorting_system->get_n_recirs();
-        results["recirc_rate"] = (double)sorting_system->get_n_recirs() / sorting_system->get_n_finish_task_plus_n_recirs();
-        results["chute_sleep_count"]  = sorting_system->get_chute_sleep_count();
+
+    // Last timestep, save path if necessary
+    if (results["done"]){
+        if (this->save_path)
+        {
+            cout << "Saving paths" << endl;
+            // this->system_ptr->saveResults(this->path_file.string());
+            this->system_ptr->savePathsLoc(this->path_file.string());
+        }
+        // For sortation system, add additional information
+        if (this->scenario == "SORTING")
+        {
+            auto sorting_system = dynamic_cast<SortationSystem*>(system_ptr.get());
+            results["n_finish_task_plus_n_recirs"] = sorting_system->get_n_finish_task_plus_n_recirs();
+            results["n_recirs"] = sorting_system->get_n_recirs();
+            results["recirc_rate"] = (double)sorting_system->get_n_recirs() / sorting_system->get_n_finish_task_plus_n_recirs();
+            results["chute_sleep_count"]  = sorting_system->get_chute_sleep_count();
+        }
     }
     return results.dump(4);
 }
@@ -328,12 +336,14 @@ py_sim::py_sim(py::kwargs kwargs)
     // analysis["cpu_runtime"] = runtime;
 
     // Save path if applicable
-    if (kwargs.contains("save_paths") && kwargs["save_paths"].cast<bool>())
+    if (kwargs.contains("save_paths"))
     {
+        this->save_path = kwargs["save_paths"].cast<bool>();
+
         boost::filesystem::path output_dir(kwargs["file_storage_path"].cast<std::string>());
         boost::filesystem::create_directories(output_dir);
-        boost::filesystem::path path_file = output_dir / "results.json";
-        system_ptr->saveResults(path_file.string());
+        this->path_file = output_dir / "paths.txt";
+        // system_ptr->saveResults(path_file.string());
     }
 
     // return analysis.dump(4);
@@ -343,10 +353,10 @@ std::string py_sim::warmup()
 {
     this->system_ptr->total_simulation_steps = this->simulation_steps;
     this->system_ptr->warmup(this->warmup_steps);
-    if (this->save_path)
-    {
-        this->system_ptr->saveResults(this->path_file.string());
-    }
+    // if (this->save_path)
+    // {
+    //     this->system_ptr->savePathsLoc(this->path_file.string());
+    // }
     return this->system_ptr->analyzeResults(true).dump(4);
     // return "hi!";
 }
