@@ -142,9 +142,9 @@ private:
     // number of packages in each chute
     boost::unordered_map<int, int> packages_in_chutes;
     // once exceeded, chute goes to sleep for 50 timesteps
-    int MAX_PACKAGE_IN_CHUTE = 1;
+    int MAX_PACKAGE_IN_CHUTE = 50;
     // sleeping time for chute
-    int CHUTE_SLEEP_TIME = 10;
+    int CHUTE_SLEEP_TIME = 50;
     // number of timesteps chute has been sleeping
     boost::unordered_map<int, int> chute_sleeping_time;
     // whether chute is sleeping
