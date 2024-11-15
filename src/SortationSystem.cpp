@@ -669,6 +669,13 @@ bool SortationSystem::update_task_status(Task task)
     {
         waiting_time = this->workstation_waiting_time;
     }
+
+    // No need to wait
+    if (waiting_time == 0)
+    {
+        return true;
+    }
+
     // Current task is a regular task, then the agent should starting waiting
     // on the task
     int ag = task.agent_assigned;

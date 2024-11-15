@@ -13,7 +13,7 @@ from env_search.utils import (
     kiva_env_str2number, get_chute_loc, read_in_kiva_map,
     read_in_sortation_map, sortation_env_str2number, get_n_valid_edges,
     get_n_valid_vertices, DIRS, read_in_sortation_map, sortation_obj_types,
-    get_Manhattan_distance_coor, load_pibt_default_config)
+    get_Manhattan_distance_coor, load_pibt_default_config, get_workstation_loc)
 import py_driver  # type: ignore # ignore pylance warning
 import json
 
@@ -144,8 +144,10 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
     # print(packages)
 
     all_chutes = get_chute_loc(map_np).tolist()
+    all_workstations = get_workstation_loc(map_np).tolist()
     n_chutes = len(all_chutes)
-    # print(all_chutes)
+    print(all_chutes)
+    print(all_workstations)
     n_valid_edges = get_n_valid_edges(map_np,
                                       bi_directed=True,
                                       domain="sortation")
@@ -164,11 +166,11 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
         # map_path=map_path,
         map_json_str=map_json_str,
         # map_json_path=map_json_path,
-        simulation_steps=5000,
+        simulation_steps=100,
         # for the problem instance we use:
         # if random then we need specify the number of agents and total tasks, also random seed,
         gen_random=True,
-        num_agents=800,
+        num_agents=2,
         num_tasks=100000,
         seed=seed,
         save_paths=True,
@@ -202,8 +204,8 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
         task_assignment_cost="random",
         task_assignment_params=json.dumps(task_assignment_params),
         recirc_mechanism=False,
-        task_waiting_time=5,
-        workstation_waiting_time=1,
+        task_waiting_time=0,
+        workstation_waiting_time=0,
         # assign_C=15,
     )
 
