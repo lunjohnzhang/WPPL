@@ -206,7 +206,11 @@ float LaCAM2Solver::eval_solution(const Instance & instance, const Solution & so
     return cost;
 }
 
-void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths, std::vector<::State> * starts, std::vector<::State> * goals){
+void LaCAM2Solver::plan(const SharedEnvironment & env,
+                        std::vector<Path> * precomputed_paths,
+                        std::vector<::State> * starts,
+                        std::vector<::State> * goals,
+                        std::set<int> task_wait_agents){
     ONLYDEV(g_timer.record_p("lacam2_plan_pre_s");)
     // std::cerr<<"random :"<<get_random_int(MT,0,100)<<std::endl;
 
@@ -331,7 +335,8 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
             ONLYDEV(g_timer.record_d("lacam_build_planner_s","lacam_build_planner");)
             auto additional_info = std::string("");
             ONLYDEV(g_timer.record_p("lacam_solve_s");)
-            auto solution=planner.solve(additional_info,order_strategy);
+            auto solution=planner.solve(additional_info,order_strategy,
+                                        task_wait_agents);
             ONLYDEV(g_timer.record_d("lacam_solve_s","lacam_solve");)
             auto cost=eval_solution(instance,solution);
             // #pragma omp critical

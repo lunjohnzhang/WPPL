@@ -692,7 +692,10 @@ void MAPFPlanner::update(){
 
 
 // plan using simple A* that ignores the time dimension
-void MAPFPlanner::plan(int time_limit,vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths)  
+void MAPFPlanner::plan(int time_limit,vector<Action> & actions,
+                       vector<list<State>>& cur_exec_paths,
+                       vector<list<State>>& cur_plan_paths,
+                       std::set<int> task_wait_agents)
 {
     // NOTE we need to return within time_limit, but we can exploit this time duration as much as possible
 
@@ -713,7 +716,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions, vector<list<Stat
    if (lifelong_solver_name=="LaCAM2") {
         ONLYDEV(cout<<"using LaCAM2"<<endl;)
         ONLYDEV(g_timer.record_p("mapf_lacam2_plan_s");)
-        lacam2_solver->plan(*env);
+        lacam2_solver->plan(*env, nullptr, nullptr, nullptr, task_wait_agents);
         ONLYDEV(g_timer.record_d("mapf_lacam2_plan_s","mapf_lacam2_plan");)
         ONLYDEV(g_timer.record_p("mapf_lacam2_get_step_s");)
         lacam2_solver->get_step_actions(*env,actions, cur_exec_paths, cur_plan_paths);

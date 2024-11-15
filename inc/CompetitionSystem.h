@@ -338,6 +338,9 @@ protected:
     vector<list<std::tuple<int,int,std::string>>> events;
     list<Task> all_tasks;
 
+    // Agents that are forced to wait at current goals
+    std::set<int> task_wait_agents = {};
+
     //for evaluation
     vector<int> solution_costs;
     int num_of_task_finish = 0;

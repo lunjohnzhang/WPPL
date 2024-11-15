@@ -19,10 +19,11 @@ public:
                     vector<double> task_assignment_params,
                     double assign_C,
                     bool recirc_mechanism,
+                    int task_waiting_time,
                     int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), package_mode(package_mode), packages(packages), package_dist_weight(package_dist_weight), task_assignment_cost(task_assignment_cost),
                         task_assignment_params(task_assignment_params),
-                        assign_C(assign_C),
-                        recirc_mechanism(recirc_mechanism)
+                        assign_C(assign_C), recirc_mechanism(recirc_mechanism),
+                        task_waiting_time(task_waiting_time)
     {
         num_of_agents = num_agents;
         starts.resize(num_of_agents);
@@ -32,8 +33,10 @@ public:
 
         for (size_t i = 0; i < num_of_agents; i++)
         {
-            starts[i] = State(grid.empty_locations[i], 0, -1);
-            prev_task_locs.push_back(grid.empty_locations[i]);
+            int loc = grid.empty_locations[i];
+            starts[i] = State(loc, 0, -1);
+            prev_task_locs.push_back(loc);
+            prev_tasks.push_back(Task(-1, loc));
         }
 
         // Initialize agent home location (workstation) distribution
@@ -95,6 +98,16 @@ public:
             this->packages_in_chutes[chute] = 0;
             this->chute_sleep_count[chute] = 0;
         }
+
+        // Task waiting mechanism
+        for (int i = 0; i < num_of_agents; i++)
+        {
+            this->agent_task_waiting_time.push_back(0);
+            this->agent_task_waiting.push_back(false);
+            this->agent_task_waiting_loc.push_back(-1);
+        }
+
+
     };
 
     void simulate(int simulation_time) override;
@@ -126,6 +139,7 @@ private:
 
     std::string package_mode;
     std::vector<int> prev_task_locs;
+    std::vector<Task> prev_tasks;
     std::vector<int> packages;
     std::vector<double> package_dist_weight;
     std::map<int, vector<int>> chute_mapping;
@@ -152,6 +166,16 @@ private:
     // Number of times each chute has slept
     boost::unordered_map<int, int> chute_sleep_count;
 
+    // Task waiting mechanism: Agents need to wait at their goal for a fixed
+    // number of timesteps
+    int task_waiting_time = 5;
+    // Task waiting time counter
+    vector<int> agent_task_waiting_time;
+    // Task waiting status
+    vector<bool> agent_task_waiting;
+    // Task waiting location
+    vector<int> agent_task_waiting_loc;
+
     double assign_C = 8;
     std::vector<double> task_assignment_params;
     double compute_assignment_cost(
@@ -164,4 +188,7 @@ private:
     void update_chute_sleeping();
     void print_chute_sleeping_status();
     void update_package_in_chute(Task task);
+    bool update_task_status(Task task);
+    void process_finished_task_offline(Task task);
+    void process_finished_task_online(Task task, bool warmup);
 };

@@ -168,7 +168,7 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
         # for the problem instance we use:
         # if random then we need specify the number of agents and total tasks, also random seed,
         gen_random=True,
-        num_agents=600,
+        num_agents=800,
         num_tasks=100000,
         seed=seed,
         save_paths=True,
@@ -201,7 +201,8 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
         chute_mapping=chute_mapping_json,
         task_assignment_cost="random",
         task_assignment_params=json.dumps(task_assignment_params),
-        recirc_mechanism=True,
+        recirc_mechanism=False,
+        task_waiting_time=5,
         # assign_C=15,
     )
 

@@ -1024,7 +1024,8 @@ vector<Action> BaseSystem::plan_wrapper()
     vector<list<State>> cur_exec_paths(num_of_agents);
     vector<list<State>> cur_plan_paths(num_of_agents);
     ONLYDEV(std::cout<<"planning"<<std::endl;)
-    planner->plan(plan_time_limit, actions, cur_exec_paths, cur_plan_paths);
+    planner->plan(plan_time_limit, actions, cur_exec_paths, cur_plan_paths,
+                  this->task_wait_agents);
 
     this->execution_paths = cur_exec_paths;
     this->planning_paths = cur_plan_paths;

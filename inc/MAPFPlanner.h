@@ -93,7 +93,7 @@ public:
 
     // return next states for all agents
     // virtual void plan(int time_limit, std::vector<Action> & plan);
-    virtual void plan(int time_limit,vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths);
+    virtual void plan(int time_limit,vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths, std::set<int> task_wait_agents);
 
     string lifelong_solver_name;
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;

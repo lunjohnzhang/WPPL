@@ -113,7 +113,7 @@ HNode::HNode(const Config& _C, const std::shared_ptr<HeuristicTable> & HT, Insta
   // set order
   // TODO: probably we should set a basic ordering at the begining, because it is time consuming to sort everytime with large-scale agents
   std::iota(order.begin(), order.end(), 0);
-  std::sort(order.begin(), order.end(), [&](int i, int j) { 
+  std::sort(order.begin(), order.end(), [&](int i, int j) {
         const AgentInfo & a=ins->agent_infos[i];
         const AgentInfo & b=ins->agent_infos[j];
 
@@ -220,12 +220,20 @@ Planner::Planner(Instance* _ins, const std::shared_ptr<HeuristicTable> & HT, con
 
 Planner::~Planner() {}
 
-Solution Planner::solve(std::string& additional_info, int order_strategy)
+Solution Planner::solve(std::string& additional_info, int order_strategy,
+                        std::set<int> task_wait_agents)
 {
   solver_info(1, "start search");
 
   // setup agents
-  for (auto i = 0; i < N; ++i) A[i] = new Agent(i);
+  for (auto i = 0; i < N; ++i)
+  {
+    A[i] = new Agent(i);
+    if (task_wait_agents.find(i) != task_wait_agents.end())
+    {
+      A[i]->task_wait = true;
+    }
+  }
 
   // setup search
   auto OPEN = std::stack<HNode*>();
@@ -959,6 +967,9 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   // main operation
   for (auto k = 0; k < K + 1; ++k) {
     auto u = C_next[i][k];
+
+    // For task waiting agent, force it to wait
+    if (ai->task_wait && ai->v_now != u) continue;
 
     // avoid vertex conflicts
     if (occupied_next[u->id] != nullptr) continue;

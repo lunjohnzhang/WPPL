@@ -23,7 +23,9 @@ struct Agent {
   Vertex* v_now;   // current location
   Vertex* v_next;  // next location
   int o_next;
-  Agent(uint _id) : id(_id), v_now(nullptr), v_next(nullptr), o_next(-1) {}
+  bool task_wait; // if true, force the agent to wait at the current location
+  Agent(uint _id) : id(_id), v_now(nullptr), v_next(nullptr), o_next(-1),
+                    task_wait(false) {}
 };
 using Agents = std::vector<Agent*>;
 
@@ -110,7 +112,8 @@ struct Planner {
 
   Executor executor;
 
-  Solution solve(std::string& additional_info, int order_strategy);
+  Solution solve(std::string& additional_info, int order_strategy,
+                 std::set<int> task_wait_agents);
 
   std::vector<std::tuple<Vertex *,int> > get_successors(Vertex *v, int orient);
 
