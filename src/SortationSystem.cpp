@@ -664,6 +664,11 @@ void SortationSystem::update_package_in_chute(Task task)
 // task to be processed
 bool SortationSystem::update_task_status(Task task)
 {
+    int waiting_time = this->task_waiting_time;
+    if (this->map.grid_types[task.location] == 'w')
+    {
+        waiting_time = this->workstation_waiting_time;
+    }
     // Current task is a regular task, then the agent should starting waiting
     // on the task
     int ag = task.agent_assigned;
@@ -682,7 +687,7 @@ bool SortationSystem::update_task_status(Task task)
     // If the waiting has not finished, increment the corresponding waiting
     // status
     else if (task.dummy_waiting &&
-             this->agent_task_waiting_time[ag] < this->task_waiting_time)
+             this->agent_task_waiting_time[ag] < waiting_time)
     {
         ONLYDEV(cout << "t=" << timestep << " Agent " << ag
                      << " is waiting for the task " << task.location << endl;)
@@ -691,7 +696,7 @@ bool SortationSystem::update_task_status(Task task)
     }
     // Waiting has finished, add the task as finished task
     else if (task.dummy_waiting &&
-             this->agent_task_waiting_time[ag] >= this->task_waiting_time)
+             this->agent_task_waiting_time[ag] >= waiting_time)
     {
         ONLYDEV(cout << "t=" << timestep << " Agent " << ag
                      << " ends waiting for the task " << task.location << endl;)

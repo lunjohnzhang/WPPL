@@ -20,10 +20,12 @@ public:
                     double assign_C,
                     bool recirc_mechanism,
                     int task_waiting_time,
+                    int workstation_waiting_time,
                     int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), package_mode(package_mode), packages(packages), package_dist_weight(package_dist_weight), task_assignment_cost(task_assignment_cost),
                         task_assignment_params(task_assignment_params),
                         assign_C(assign_C), recirc_mechanism(recirc_mechanism),
-                        task_waiting_time(task_waiting_time)
+                        task_waiting_time(task_waiting_time),
+                        workstation_waiting_time(workstation_waiting_time)
     {
         num_of_agents = num_agents;
         starts.resize(num_of_agents);
@@ -169,6 +171,7 @@ private:
     // Task waiting mechanism: Agents need to wait at their goal for a fixed
     // number of timesteps
     int task_waiting_time = 5;
+    int workstation_waiting_time = 1;
     // Task waiting time counter
     vector<int> agent_task_waiting_time;
     // Task waiting status

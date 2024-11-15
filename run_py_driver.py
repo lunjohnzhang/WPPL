@@ -203,6 +203,7 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
         task_assignment_params=json.dumps(task_assignment_params),
         recirc_mechanism=False,
         task_waiting_time=5,
+        workstation_waiting_time=1,
         # assign_C=15,
     )
 
