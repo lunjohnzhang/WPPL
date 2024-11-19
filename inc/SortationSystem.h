@@ -182,7 +182,10 @@ private:
     double assign_C = 8;
     std::vector<double> task_assignment_params;
     double compute_assignment_cost(
-        int curr_loc, pair<int, int> workstation) const;
+        int curr_loc,
+        int next_loc,
+        int robot_in_next_loc,
+        int package_in_chute) const;
     int assign_workstation(int curr_loc);
     pair<int, int> assign_endpoint(int curr_loc,
                                    vector<pair<int, int>> endpoints);

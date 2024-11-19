@@ -3,17 +3,40 @@
 
 // next_pos: (next_loc, num_robots_targeting_next_loc)
 double SortationSystem::compute_assignment_cost(
-    int curr_loc, pair<int, int> next_pos) const
+    int curr_loc,
+    int next_loc,
+    int robot_in_next_loc,
+    int package_in_chute) const
 {
     double cost = -1;
     if (this->task_assignment_cost == "heuristic+num_agents")
     {
-        cost = this->planner->heuristics->get(curr_loc, next_pos.first) +
-               this->assign_C * next_pos.second;
+        cost = this->planner->heuristics->get(curr_loc, next_loc) +
+               this->assign_C * robot_in_next_loc;
+    }
+    else if (this->task_assignment_cost == "heuristic+num_packages")
+    {
+        if (this->map.grid_types[next_loc] == 'w')
+        {
+            cost = this->planner->heuristics->get(curr_loc, next_loc) +
+                   this->assign_C * robot_in_next_loc;
+        }
+        // Use number of packages in the chute while going to endpionts
+        else if (this->map.grid_types[next_loc] == 'e')
+        {
+            cost = this->planner->heuristics->get(curr_loc, next_loc) +
+                   this->assign_C * package_in_chute;
+        }
+        else
+        {
+            std::cout << "Compute assignment cost: unknown grid type"
+                      << std::endl;
+            exit(-1);
+        }
     }
     else if (this->task_assignment_cost == "heuristic")
     {
-        cost = this->planner->heuristics->get(curr_loc, next_pos.first);
+        cost = this->planner->heuristics->get(curr_loc, next_loc);
     }
     else if (this->task_assignment_cost == "opt_quadratic_f")
     {
@@ -22,9 +45,9 @@ double SortationSystem::compute_assignment_cost(
         // where x and y are heuristic and number of agents, respectively, and
         // a's are optimized parameters
         // Use different sets of parameters for different targets
-        double x = this->planner->heuristics->get(curr_loc, next_pos.first);
-        double y = next_pos.second;
-        if (this->map.grid_types[next_pos.first] == 'w')
+        double x = this->planner->heuristics->get(curr_loc, next_loc);
+        double y = robot_in_next_loc;
+        if (this->map.grid_types[next_loc] == 'w')
         {
             cost = this->task_assignment_params[0] * x * x +
                    this->task_assignment_params[1] * y * y +
@@ -32,7 +55,7 @@ double SortationSystem::compute_assignment_cost(
                    this->task_assignment_params[3] * x +
                    this->task_assignment_params[4] * y;
         }
-        else if (this->map.grid_types[next_pos.first] == 'e')
+        else if (this->map.grid_types[next_loc] == 'e')
         {
             cost = this->task_assignment_params[5] * x * x +
                    this->task_assignment_params[6] * y * y +
@@ -77,7 +100,8 @@ int SortationSystem::assign_workstation(int curr_loc)
     for (auto workstation : this->robots_in_workstations)
     {
         // double cost = this->planner->heuristics->get(curr_loc, workstation.first) + this->assign_C * workstation.second;
-        double cost = this->compute_assignment_cost(curr_loc, workstation);
+        double cost = this->compute_assignment_cost(
+            curr_loc, workstation.first, workstation.second, -1);
         if (cost < min_cost)
         {
             min_cost = cost;
@@ -113,8 +137,9 @@ pair<int, int> SortationSystem::assign_endpoint(
         int chute = ele.second;
         // double cost = this->planner->heuristics->get(curr_loc, endpoint) + this->assign_C * this->robots_in_endpoints.at(endpoint);
         double cost = this->compute_assignment_cost(
-            curr_loc,
-            make_pair(endpoint, this->robots_in_endpoints.at(endpoint)));
+            curr_loc, endpoint,
+            this->robots_in_endpoints.at(endpoint),
+            this->packages_in_chutes[chute]);
         if (cost < min_cost)
         {
             min_cost = cost;
