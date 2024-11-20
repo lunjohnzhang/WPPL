@@ -38,6 +38,10 @@ double SortationSystem::compute_assignment_cost(
     {
         cost = this->planner->heuristics->get(curr_loc, next_loc);
     }
+    else if (this->task_assignment_cost == "num_agents")
+    {
+        cost = robot_in_next_loc;
+    }
     else if (this->task_assignment_cost == "opt_quadratic_f")
     {
         // Cost is computed by a function
