@@ -154,8 +154,60 @@ pair<int, int> SortationSystem::assign_endpoint(
     return make_pair(assigned_loc, assigned_chute);
 }
 
+void SortationSystem::create_task_distribution(vector<double> dist)
+{
+    if (package_mode == "dist")
+    {
+        if (this->recirc_mechanism)
+        {
+            this->package_dist = std::discrete_distribution<int>(
+                dist.begin(),
+                dist.end() - 1);
+            this->recir_chute = chute_mapping[
+                dist.size() - 1][0];
+        }
+        else
+        {
+            this->package_dist = std::discrete_distribution<int>(
+                dist.begin(),
+                dist.end());
+        }
+        // cout << "Update package distribution: ";
+        // for (auto w : dist)
+        // {
+        //     cout << w << ", ";
+        // }
+        // cout << endl;
+    }
+}
+
+void SortationSystem::update_task_distribution()
+{
+    // Sample gaussian noise
+    std::normal_distribution<double> dist(0, this->task_gaussian_sigma);
+    for (int i = 0; i < this->package_dist_weight.size(); i++)
+    {
+        // Add gaussian noise to the package distribution weights
+        this->package_dist_weight[i] = this->init_package_dist_weight[i] +
+                                       dist(this->MT);
+        if (this->package_dist_weight[i] < 0)
+        {
+            this->package_dist_weight[i] = 0;
+        }
+    }
+    // Update the package distribution
+    this->create_task_distribution(this->package_dist_weight);
+}
+
+
 void SortationSystem::update_tasks()
 {
+    // Update task distribution
+    if (this->timestep % this->task_change_time == 0)
+    {
+        this->update_task_distribution();
+    }
+
     for (int k = 0; k < num_of_agents; k++)
     {
         while (assigned_tasks[k].size() < num_tasks_reveal)

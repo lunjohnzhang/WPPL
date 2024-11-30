@@ -367,12 +367,14 @@ std::string run(const py::kwargs& kwargs)
         bool recirc_mechanism = kwargs["recirc_mechanism"].cast<bool>();
         int task_waiting_time = kwargs["task_waiting_time"].cast<int>();
         int workstation_waiting_time = kwargs["workstation_waiting_time"].cast<int>();
+        double task_gaussian_sigma = kwargs["task_gaussian_sigma"].cast<double>();
+        int task_change_time = kwargs["task_change_time"].cast<int>();
 
         system_ptr = std::make_unique<SortationSystem>(grid, planner, model,
             chute_mapping_int, package_mode, packages, package_dist_weight,
             task_assignment_cost, task_assignment_params, assign_C,
             recirc_mechanism, task_waiting_time, workstation_waiting_time,
-            num_agents, seed);
+            task_gaussian_sigma, task_change_time, num_agents, seed);
     }
     else
     {

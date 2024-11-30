@@ -206,6 +206,8 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
         recirc_mechanism=True,
         task_waiting_time=0,
         workstation_waiting_time=0,
+        task_change_time=100,
+        task_gaussian_sigma=0.01,
         # assign_C=15,
     )
 
@@ -217,7 +219,7 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
 
     # print(analysis["throughput"], analysis["edge_pair_usage_mean"],
     #   analysis["edge_pair_usage_std"])
-    print(analysis["throughput"])
+    print("throughput", analysis["throughput"])
     print(analysis["n_finish_task_plus_n_recirs"])
     print(analysis["n_recirs"])
     print(analysis["recirc_rate"])

@@ -21,11 +21,17 @@ public:
                     bool recirc_mechanism,
                     int task_waiting_time,
                     int workstation_waiting_time,
-                    int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), package_mode(package_mode), packages(packages), package_dist_weight(package_dist_weight), task_assignment_cost(task_assignment_cost),
+                    double task_gaussian_sigma,
+                    int task_change_time,
+                    int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), package_mode(package_mode), packages(packages), package_dist_weight(package_dist_weight),
+                        init_package_dist_weight(package_dist_weight),
+                        task_assignment_cost(task_assignment_cost),
                         task_assignment_params(task_assignment_params),
                         assign_C(assign_C), recirc_mechanism(recirc_mechanism),
                         task_waiting_time(task_waiting_time),
-                        workstation_waiting_time(workstation_waiting_time)
+                        workstation_waiting_time(workstation_waiting_time),
+                        task_gaussian_sigma(task_gaussian_sigma),
+                        task_change_time(task_change_time)
     {
         num_of_agents = num_agents;
         starts.resize(num_of_agents);
@@ -53,29 +59,7 @@ public:
         cout << endl;
 
         // Initialize package distribution
-        if (package_mode == "dist")
-        {
-            if (this->recirc_mechanism)
-            {
-                this->package_dist = std::discrete_distribution<int>(
-                    package_dist_weight.begin(),
-                    package_dist_weight.end() - 1);
-                this->recir_chute = chute_mapping[
-                    package_dist_weight.size() - 1][0];
-            }
-            else
-            {
-                this->package_dist = std::discrete_distribution<int>(
-                    package_dist_weight.begin(),
-                    package_dist_weight.end());
-            }
-            cout << "package distribution: ";
-            for (auto w : package_dist_weight)
-            {
-                cout << w << ", ";
-            }
-            cout << endl;
-        }
+        this->create_task_distribution(package_dist_weight);
 
         // Initialize number of robots going to each workstation
         for (auto workstation : grid.agent_home_locations)
@@ -144,6 +128,7 @@ private:
     std::vector<Task> prev_tasks;
     std::vector<int> packages;
     std::vector<double> package_dist_weight;
+    std::vector<double> init_package_dist_weight;
     std::map<int, vector<int>> chute_mapping;
     bool recirc_mechanism = true;
     int recir_chute = -1;
@@ -179,6 +164,10 @@ private:
     // Task waiting location
     vector<int> agent_task_waiting_loc;
 
+    // Change task distribution every task_change_time timesteps
+    int task_change_time = 100;
+    double task_gaussian_sigma = 0;
+
     double assign_C = 8;
     std::vector<double> task_assignment_params;
     double compute_assignment_cost(
@@ -197,4 +186,6 @@ private:
     bool update_task_status(Task task);
     void process_finished_task_offline(Task task);
     void process_finished_task_online(Task task, bool warmup);
+    void update_task_distribution();
+    void create_task_distribution(vector<double> dist);
 };
