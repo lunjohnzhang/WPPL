@@ -183,20 +183,47 @@ void SortationSystem::create_task_distribution(vector<double> dist)
 
 void SortationSystem::update_task_distribution()
 {
-    // Sample gaussian noise
-    std::normal_distribution<double> dist(0, this->task_gaussian_sigma);
-    for (int i = 0; i < this->package_dist_weight.size(); i++)
+    if (this->time_dist)
     {
-        // Add gaussian noise to the package distribution weights
-        this->package_dist_weight[i] = this->init_package_dist_weight[i] +
-                                       dist(this->MT);
-        if (this->package_dist_weight[i] < 0)
+        if (this->timestep < this->total_simulation_steps)
         {
-            this->package_dist_weight[i] = 0;
+            // Update the package distribution
+            this->create_task_distribution(
+                this->time_package_dist_weight[this->timestep]);
         }
     }
-    // Update the package distribution
-    this->create_task_distribution(this->package_dist_weight);
+    else
+    {
+        // Sample gaussian noise
+        for (int i = 0; i < this->package_dist_weight.size(); i++)
+        {
+            // Sample gaussian noise
+            double sigma;
+            // If the task_gaussian_sigma is not set, use half of the weight as
+            // the sigma, make sure the resulting weight has low probability of
+            // being
+            // negative
+            if (this->task_gaussian_sigma == -1)
+            {
+                sigma = this->init_package_dist_weight[i] / 2.0;
+            }
+            else
+            {
+                sigma = this->task_gaussian_sigma;
+            }
+            std::normal_distribution<double> dist(0, sigma);
+            // Add gaussian noise to the package distribution weights
+            this->package_dist_weight[i] = this->init_package_dist_weight[i] +
+                                           dist(this->MT);
+            if (this->package_dist_weight[i] < 0)
+            {
+                this->package_dist_weight[i] = 0;
+            }
+        }
+        // Update the package distribution
+        this->create_task_distribution(this->package_dist_weight);
+    }
+
 }
 
 
@@ -880,4 +907,45 @@ void SortationSystem::process_finished_task_online(Task task, bool warmup)
 
     // Update number of packages in the chute
     this->update_package_in_chute(task);
+}
+
+
+void SortationSystem::gen_time_dist(
+    int n_destinations,
+    const std::vector<double>& package_weight_dist,
+    int time_sigma,
+    int T
+) {
+    // Ensure the input weights match the number of destinations
+    assert(static_cast<int>(package_weight_dist.size()) == n_destinations);
+
+    // Random number generator
+    // std::random_device rd;
+    // std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> random_time(0, T - 1);
+
+    // Container for the distribution over time
+    this->time_package_dist_weight.resize(
+        T, std::vector<double>(n_destinations, 0.0));
+    // std::vector<std::vector<double>> dist_over_time(
+    //     T, std::vector<double>(n_destinations, 0.0));
+
+    // Generate a Gaussian for each destination
+    for (int d = 0; d < n_destinations; ++d) {
+        double volume = package_weight_dist[d];
+        int t = random_time(this->MT); // Random time center
+
+        // Create the Gaussian distribution
+        std::vector<double> gaussian(T);
+        double gaussian_sum = 0.0;
+        for (int i = 0; i < T; ++i) {
+            gaussian[i] = std::exp(-std::pow(i + 1 - t, 2) / (2.0 * std::pow(time_sigma, 2)));
+            gaussian_sum += gaussian[i];
+        }
+
+        // Normalize the Gaussian to match the volume
+        for (int i = 0; i < T; ++i) {
+            this->time_package_dist_weight[i][d] = (gaussian[i] / gaussian_sum) * volume;
+        }
+    }
 }

@@ -23,6 +23,9 @@ public:
                     int workstation_waiting_time,
                     double task_gaussian_sigma,
                     int task_change_time,
+                    bool time_dist,
+                    int time_sigma,
+                    int total_simulation_steps,
                     int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), package_mode(package_mode), packages(packages), package_dist_weight(package_dist_weight),
                         init_package_dist_weight(package_dist_weight),
                         task_assignment_cost(task_assignment_cost),
@@ -31,10 +34,11 @@ public:
                         task_waiting_time(task_waiting_time),
                         workstation_waiting_time(workstation_waiting_time),
                         task_gaussian_sigma(task_gaussian_sigma),
-                        task_change_time(task_change_time)
+                        task_change_time(task_change_time), time_dist(time_dist)
     {
         num_of_agents = num_agents;
         starts.resize(num_of_agents);
+        this->total_simulation_steps = total_simulation_steps;
 
         // Initial states of the agents
         std::shuffle(grid.empty_locations.begin(), grid.empty_locations.end(), MT);
@@ -59,7 +63,20 @@ public:
         cout << endl;
 
         // Initialize package distribution
-        this->create_task_distribution(package_dist_weight);
+        if (this->time_dist)
+        {
+            this->task_change_time = 1; // Overwrite passed in task_change_time
+            this->gen_time_dist(
+                package_dist_weight.size(),
+                package_dist_weight,
+                time_sigma,
+                total_simulation_steps);
+            this->create_task_distribution(this->time_package_dist_weight[0]);
+        }
+        else
+        {
+            this->create_task_distribution(package_dist_weight);
+        }
 
         // Initialize number of robots going to each workstation
         for (auto workstation : grid.agent_home_locations)
@@ -129,6 +146,8 @@ private:
     std::vector<int> packages;
     std::vector<double> package_dist_weight;
     std::vector<double> init_package_dist_weight;
+    std::vector<std::vector<double>> time_package_dist_weight;
+    bool time_dist = false;
     std::map<int, vector<int>> chute_mapping;
     bool recirc_mechanism = true;
     int recir_chute = -1;
@@ -188,4 +207,8 @@ private:
     void process_finished_task_online(Task task, bool warmup);
     void update_task_distribution();
     void create_task_distribution(vector<double> dist);
+    void gen_time_dist(int n_destinations,
+                       const std::vector<double>& package_weight_dist,
+                       int time_sigma,
+                       int T);
 };
