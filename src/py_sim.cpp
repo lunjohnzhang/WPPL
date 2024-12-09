@@ -1,6 +1,6 @@
 #include "py_sim.h"
 
-PYBIND11_MODULE(py_sim, m)
+PYBIND11_MODULE(wppl_py_sim, m)
 {
     py::class_<py_sim>(m, "py_sim")
         .def(py::init<py::kwargs>())

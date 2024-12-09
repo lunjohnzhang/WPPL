@@ -14,7 +14,7 @@ from env_search.utils import (
     read_in_sortation_map, sortation_env_str2number, get_n_valid_edges,
     get_n_valid_vertices, DIRS, read_in_sortation_map, sortation_obj_types,
     get_Manhattan_distance_coor, load_pibt_default_config, get_workstation_loc)
-import py_driver  # type: ignore # ignore pylance warning
+import wppl_py_driver  # type: ignore # ignore pylance warning
 import json
 
 
@@ -159,7 +159,7 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
     # Task assignment policy
     task_assignment_params = np.random.rand(10).tolist()
 
-    ret = py_driver.run(
+    ret = wppl_py_driver.run(
         scenario="SORTING",  # one of ["KIVA", "COMPETITION", "SORTING"]
         # For map, it uses map_path by default. If not provided, it'll use map_json
         # which contains json string of the map

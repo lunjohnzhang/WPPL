@@ -448,7 +448,7 @@ string playground(){
 }
 
 
-PYBIND11_MODULE(py_driver, m) {
+PYBIND11_MODULE(wppl_py_driver, m) {
 	// optional module docstring
     // m.doc() = ;
 
