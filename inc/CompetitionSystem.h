@@ -54,7 +54,7 @@ public:
     void saveResults(const string &fileName) const;
 
 #ifdef MAP_OPT
-    nlohmann::json analyzeResults();
+    nlohmann::json analyzeResults(bool online = true);
 #endif
 
 
@@ -263,22 +263,38 @@ public:
             delete planner;
         }
     };
-
+    std::vector<pair<int, int>> get_finished_tasks() const {
+        std::vector<pair<int, int>> finished_tasks_;
+        for (auto& tasks: this->finished_tasks) {
+            for (auto& task: tasks) {
+                finished_tasks_.emplace_back(task.location, task.t_completed);
+            }
+        }
+        return finished_tasks_;
+    }
+    int get_timesteps() const {
+        return timestep;
+    }
     void set_num_tasks_reveal(int num){num_tasks_reveal = num;};
     void set_plan_time_limit(int limit){plan_time_limit = limit;};
     void set_preprocess_time_limit(int limit){preprocess_time_limit = limit;};
     void set_logger(Logger* logger){this->logger = logger;}
 
-	void simulate(int simulation_time);
+	virtual void simulate(int simulation_time);
+    virtual void warmup(int total_warmup_steps);
+    virtual int update_gg_and_step(int update_gg_interval);
     vector<Action> plan();
     vector<Action> plan_wrapper();
 
     void savePaths(const string &fileName, int option) const; //option = 0: save actual movement, option = 1: save planner movement
     //void saveSimulationIssues(const string &fileName) const;
+    void savePathsLoc(const string &fileName) const;
     void saveResults(const string &fileName) const;
 
 #ifdef MAP_OPT
-    nlohmann::json analyzeResults();
+    int total_simulation_steps;
+    nlohmann::json analyzeResults(bool online = true);
+    nlohmann::json analyzeCurrResults(int update_gg_interval);
 #endif
 
 protected:
@@ -293,6 +309,7 @@ protected:
 
     ActionModelWithRotate* model;
 
+    int warmupstep=0;
     // #timesteps for simulation
     int timestep;
 
@@ -302,12 +319,16 @@ protected:
 
     std::vector<Path> paths;
     std::vector<std::list<Task > > finished_tasks; // location + finish time
+    std::vector<int> curr_finish_task_agents;
 
     vector<State> starts;
     int num_of_agents;
 
+    vector<State> curr_starts;
     vector<State> curr_states;
 
+    vector<list<State>> execution_paths;
+    vector<list<State>> planning_paths;
     vector<list<Action>> actual_movements;
     vector<list<Action>> planner_movements;
 
@@ -316,6 +337,9 @@ protected:
 
     vector<list<std::tuple<int,int,std::string>>> events;
     list<Task> all_tasks;
+
+    // Agents that are forced to wait at current goals
+    std::set<int> task_wait_agents = {};
 
     //for evaluation
     vector<int> solution_costs;

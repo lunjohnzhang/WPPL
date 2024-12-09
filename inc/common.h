@@ -7,12 +7,16 @@
 #include <cfloat>
 #include <ctime>
 #include <fstream>
+#include <cmath>
+#include <random>
+#include <cassert>
 #include <boost/heap/fibonacci_heap.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/tokenizer.hpp>
 #include "nlohmann/json.hpp"
 #include <boost/format.hpp>
+#include <queue>
 
 using boost::heap::fibonacci_heap;
 using boost::heap::compare;
@@ -35,6 +39,7 @@ using std::ostream;
 using std::string;
 using std::max;
 using std::min;
+using std::queue;
 using std::priority_queue;
 
 //#include <boost/graph/adjacency_list.hpp>
@@ -173,4 +178,9 @@ T read_param_json(nlohmann::json& data, std::string name, T default_value)
         std::cerr << "Message: " << error.what() << std::endl;
         exit(1);
     }
+}
+
+
+inline int _get_Manhattan_distance(int loc1, int loc2, int cols) {
+    return abs(loc1 / cols - loc2 / cols) + abs(loc1 % cols - loc2 % cols);
 }

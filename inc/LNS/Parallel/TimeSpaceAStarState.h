@@ -60,7 +60,7 @@ public:
     struct Hash {
         std::size_t operator()(const TimeSpaceAStarState *s) const {
             // TODO: we may replace the hash here!
-            size_t h = std::hash<int>()(s->t<<21+s->pos<<5+s->orient<<1+s->arrived);
+            size_t h = std::hash<int>()(s->t<<(21+s->pos)<<(5+s->orient)<<(1+s->arrived));
             return h;        
         }
     };

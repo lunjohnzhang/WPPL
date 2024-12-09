@@ -10,6 +10,9 @@
 #include <memory>
 #include <util/Analyzer.h>
 #include "nlohmann/json.hpp"
+#include <cassert>
+#include "SortationSystem.h"
+#include "py_utils.h"
 
 #ifdef MAP_OPT
 #include "util/analyze.h"
@@ -37,164 +40,8 @@ std::unique_ptr<BaseSystem> system_ptr;
 // }
 
 
-int _get_Manhattan_distance(int loc1, int loc2, int cols) {
-    return abs(loc1 / cols - loc2 / cols) + abs(loc1 % cols - loc2 % cols);
-}
-
-std::shared_ptr<std::vector<float> > weight_format_conversion(Grid & grid, std::vector<float> & weights)
-{
-    const int max_weight=100000;
-    std::shared_ptr<std::vector<float> > map_weights_ptr = std::make_shared<std::vector<float> >(grid.map.size()*5, max_weight);
-    auto & map_weights=*map_weights_ptr;
-
-    const int dirs[4]={1,-grid.cols, -1, grid.cols};
-    const int map_weights_idxs[4]={0,3,2,1};
-
-    int j=0;
-
-    ++j; // the 0 indexed weight is for wait
-
-    for (int i=0;i<grid.map.size();++i) {
-        if (grid.map[i] == 1) {
-            continue;
-        }
-
-        map_weights[i*5+4] = weights[0];
-
-        for (int d=0;d<4;++d) {
-            int dir=dirs[d];
-            if (
-                0<=i+dir && i+dir<grid.map.size() &&
-                _get_Manhattan_distance(i, i+dir, grid.cols) <= 1 &&
-                grid.map[i+dir] != 1
-            ) {
-                float weight = weights.at(j);
-                if (weight==-1) {
-                    weight=max_weight;
-                }
-
-                int map_weight_idx=map_weights_idxs[d];
-                map_weights[i*5+map_weight_idx]=weight;
-                ++j;
-            }
-        }
-    }
-
-    // std::cout<<"map weights: ";
-    // for (auto i=0;i<map_weights.size();++i) {
-    //     std::cout<<map_weights[i]<<" ";
-    // }
-    // std::cout<<endl;
-
-    if (j!=weights.size()) {
-        std::cout<<"weight size mismatch: "<<j<<" vs "<<weights.size()<<std::endl;
-        exit(1);
-    }
-
-    return map_weights_ptr;
-}
-
-
-std::shared_ptr<std::vector<float> > weight_format_conversion_with_wait_costs(Grid & grid, std::vector<float> & edge_weights, std::vector<float> & wait_costs)
-{
-    const int max_weight=100000;
-    std::shared_ptr<std::vector<float> > map_weights_ptr = std::make_shared<std::vector<float> >(grid.map.size()*5, max_weight);
-    auto & map_weights=*map_weights_ptr;
-
-    const int dirs[4]={1,-grid.cols, -1, grid.cols};
-    const int map_weights_idxs[4]={0,3,2,1};
-
-    // read wait cost
-    int j=0;
-    for (int i=0;i<grid.map.size();++i) {
-        if (grid.map[i] == 1) {
-            continue;
-        }
-        map_weights[i*5+4] = wait_costs[j];
-        ++j;
-    }
-
-    if (j!=wait_costs.size()) {
-        std::cout<<"wait cost size mismatch: "<<j<<" vs "<<wait_costs.size()<<std::endl;
-        exit(1);
-    }
-
-
-    // read edge cost
-    j=0;
-    for (int i=0;i<grid.map.size();++i) {
-        if (grid.map[i] == 1) {
-            continue;
-        }
-
-        for (int d=0;d<4;++d) {
-            int dir=dirs[d];
-            if (
-                0<=i+dir && i+dir<grid.map.size() &&
-                _get_Manhattan_distance(i, i+dir, grid.cols) <= 1 &&
-                grid.map[i+dir] != 1
-            ) {
-                float weight = edge_weights.at(j);
-                if (weight==-1) {
-                    weight=max_weight;
-                }
-
-                int map_weight_idx=map_weights_idxs[d];
-                map_weights[i*5+map_weight_idx]=weight;
-                ++j;
-            }
-        }
-    }
-
-    // std::cout<<"map weights: ";
-    // for (auto i=0;i<map_weights.size();++i) {
-    //     std::cout<<map_weights[i]<<" ";
-    // }
-    // std::cout<<endl;
-
-    if (j!=edge_weights.size()) {
-        std::cout<<"edge weight size mismatch: "<<j<<" vs "<<edge_weights.size()<<std::endl;
-        exit(1);
-    }
-
-    return map_weights_ptr;
-}
-
-
-void gen_random_instance(Grid & grid, std::vector<int> & agents, std::vector<int> & tasks, int num_agents, int num_tasks, uint seed) {
-    std::mt19937 MT(seed);
-
-    std::vector<int> empty_locs;
-    for (int i=0;i<grid.map.size();++i) {
-        if (grid.map[i] == 0) {
-            empty_locs.push_back(i);
-        }
-    }
-
-    std::shuffle(empty_locs.begin(), empty_locs.end(), MT);
-
-    for (int i=0;i<num_agents;++i) {
-        agents.push_back(empty_locs[i]);
-    }
-
-    if (grid.end_points.size()>0) {
-        // only sample goal locations from end_points
-        std::cout<<"sample goal locations from end points"<<std::endl;
-        for (int i=0;i<num_tasks;++i) {
-            int rnd_idx=MT()%grid.end_points.size();
-            tasks.push_back(grid.end_points[rnd_idx]);
-        }        
-    } else {
-        std::cout<<"sample goal locations from empty locations"<<std::endl;
-        for (int i=0;i<num_tasks;++i) {
-            int rnd_idx=MT()%empty_locs.size();
-            tasks.push_back(empty_locs[rnd_idx]);
-        }
-    }
-}
-
 std::string run(const py::kwargs& kwargs)
-{    
+{
     int simulation_steps=kwargs["simulation_steps"].cast<int>();
     double plan_time_limit=kwargs["plan_time_limit"].cast<double>();
     double preprocess_time_limit=kwargs["preprocess_time_limit"].cast<double>();
@@ -352,12 +199,19 @@ std::string run(const py::kwargs& kwargs)
             planner->map_weights=weight_format_conversion(grid, weights);
         }
 
-    } 
+    }
 
     ActionModelWithRotate *model = new ActionModelWithRotate(grid);
     model->set_logger(logger);
 
-    if (grid.agent_home_locations.size()==0 || grid.end_points.size()==0) {
+    std::string scenario = kwargs["scenario"].cast<std::string>();
+
+    // Get the scenario
+    if (scenario == "COMPETITION")
+    {
+        assert(grid.agent_home_locations.size()==0 ||
+               grid.end_points.size()==0);
+
         std::vector<int> agents;
         std::vector<int> tasks;
 
@@ -405,7 +259,9 @@ std::string run(const py::kwargs& kwargs)
             logger->log_fatal("unkown task assignment strategy " + task_assignment_strategy);
             exit(1);
         }
-    } else {
+    }
+
+    else if (scenario == "KIVA") {
         if (!kwargs.contains("gen_random") || !kwargs["gen_random"].cast<bool>()){
             logger->log_fatal("must generate instance randomly");
             exit(1);
@@ -413,9 +269,120 @@ std::string run(const py::kwargs& kwargs)
 
         int num_agents=kwargs["num_agents"].cast<int>();
         std::cout << "using kiva system (random task generation) with "<<num_agents<<" agents"<<std::endl;
-        
+
         uint seed=kwargs["seed"].cast<uint>();
         system_ptr = std::make_unique<KivaSystem>(grid,planner,model,num_agents,seed);
+    }
+
+    else if (scenario == "SORTING")
+    {
+        // Sortation system assumes the existence of "packages" and
+        // "chute_mapping" arguments, both of which are json strings
+
+        // For packages, the program accepts a list of explicit "packages" or a
+        // distribution of packages on each destination
+        std::string package_mode = kwargs["package_mode"].cast<std::string>();
+        vector<int> packages;
+        vector<double> package_dist_weight;
+        if (package_mode == "explicit")
+        {
+            if (!kwargs.contains("packages"))
+            {
+                logger->log_fatal("packages must be provided for sortation system");
+                exit(1);
+            }
+            nlohmann::json packages_json = nlohmann::json::parse(
+                kwargs["packages"].cast<std::string>());
+            packages = packages_json.get<vector<int>>();
+        }
+        else if (package_mode == "dist")
+        {
+            if (!kwargs.contains("package_dist_weight"))
+            {
+                logger->log_fatal("package_dist_weight must be provided for sortation system");
+                exit(1);
+            }
+            nlohmann::json package_dist_weight_json = nlohmann::json::parse(
+                kwargs["package_dist_weight"].cast<std::string>());
+            package_dist_weight = package_dist_weight_json.get<vector<double>>();
+        }
+        else
+        {
+            logger->log_fatal("packages or package_dist_weight must be provided for sortation system");
+            exit(1);
+        }
+
+        nlohmann::json chute_mapping_json = nlohmann::json::parse(
+            kwargs["chute_mapping"].cast<std::string>());
+        // cout << chute_mapping_json << endl;
+        map<string, vector<int>> chute_mapping = chute_mapping_json.get<map<string, vector<int>>>();
+
+        // Transform map<string, vector<int>> to a map<int, vector<int>>
+        map<int, vector<int>> chute_mapping_int;
+        for (auto const &pair : chute_mapping)
+        {
+            chute_mapping_int[stoi(pair.first)] = pair.second;
+        }
+
+        // // Print content of packages
+        // for (int i = 0; i < packages.size(); i++)
+        // {
+        //     std::cout << packages[i] << " ";
+        // }
+        // cout << endl;
+        // Print content of chute_mapping
+        // for (auto const &pair : chute_mapping_int)
+        // {
+        //     std::cout << "{" << pair.first << ": ";
+        //     for (int i = 0; i < pair.second.size(); i++)
+        //     {
+        //         std::cout << pair.second[i] << " ";
+        //     }
+        //     std::cout << "}" << std::endl;
+        // }
+
+        uint seed=kwargs["seed"].cast<uint>();
+        int num_agents=kwargs["num_agents"].cast<int>();
+
+        // Task assignment policy
+        string task_assignment_cost=kwargs["task_assignment_cost"].cast<std::string>();
+        // If the task assignment policy is of an optimization-based policy,
+        // read the parameters
+        vector<double> task_assignment_params;
+        double assign_C = 8.0; // Default
+        if (task_assignment_cost == "opt_quadratic_f")
+        {
+            nlohmann::json task_assignment_params_json = nlohmann::json::parse(
+                kwargs["task_assignment_params"].cast<std::string>());
+            task_assignment_params = task_assignment_params_json.get<vector<double>>();
+        }
+        else if (task_assignment_cost == "heuristic+num_agents")
+        {
+            if (kwargs.contains("assign_C"))
+            {
+                assign_C = kwargs["assign_C"].cast<double>();
+            }
+        }
+
+        bool recirc_mechanism = kwargs["recirc_mechanism"].cast<bool>();
+        int task_waiting_time = kwargs["task_waiting_time"].cast<int>();
+        int workstation_waiting_time = kwargs["workstation_waiting_time"].cast<int>();
+        double task_gaussian_sigma = kwargs["task_gaussian_sigma"].cast<double>();
+        int task_change_time = kwargs["task_change_time"].cast<int>();
+        bool time_dist = kwargs["time_dist"].cast<bool>();
+        int time_sigma = kwargs["time_sigma"].cast<int>();
+
+        system_ptr = std::make_unique<SortationSystem>(grid, planner, model,
+            chute_mapping_int, package_mode, packages, package_dist_weight,
+            task_assignment_cost, task_assignment_params, assign_C,
+            recirc_mechanism, task_waiting_time, workstation_waiting_time,
+            task_gaussian_sigma, task_change_time, time_dist, time_sigma,
+            simulation_steps, num_agents, seed);
+    }
+    else
+    {
+        logger->log_fatal("unknown scenario: "+scenario);
+        exit(1);
     }
 
     system_ptr->set_logger(logger);
@@ -430,16 +397,27 @@ std::string run(const py::kwargs& kwargs)
     system_ptr->simulate(simulation_steps);
     double runtime = (double)(clock() - start_time)/ CLOCKS_PER_SEC;
 
-    nlohmann::json analysis=system_ptr->analyzeResults();
+    nlohmann::json analysis=system_ptr->analyzeResults(false);
     analysis["cpu_runtime"] = runtime;
+    if (scenario == "SORTING")
+    {
+        auto sorting_system = dynamic_cast<SortationSystem*>(system_ptr.get());
+        analysis["n_finish_task_plus_n_recirs"] = sorting_system->get_n_finish_task_plus_n_recirs();
+        analysis["n_recirs"] = sorting_system->get_n_recirs();
+        analysis["recirc_rate"] = (double)sorting_system->get_n_recirs() / sorting_system->get_n_finish_task_plus_n_recirs();
+        analysis["chute_sleep_count"]  = sorting_system->get_chute_sleep_count();
+    }
+
 
     // Save path if applicable
     if (kwargs.contains("save_paths") && kwargs["save_paths"].cast<bool>())
     {
         boost::filesystem::path output_dir(kwargs["file_storage_path"].cast<std::string>());
         boost::filesystem::create_directories(output_dir);
-        boost::filesystem::path path_file = output_dir / "results.json";
-        system_ptr->saveResults(path_file.string());
+        // boost::filesystem::path result_file = output_dir / "results.json";
+        boost::filesystem::path path_file = output_dir / "paths.txt";
+        // system_ptr->saveResults(result_file.string());
+        system_ptr->savePathsLoc(path_file.string());
     }
 
     // system_ptr->saveResults("debug.json");

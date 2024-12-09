@@ -24,8 +24,12 @@ public:
     int total_feasible_timestep = 0;
     int timestep = 0;
     void initialize(const SharedEnvironment & env);
-    void plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr, std::vector<::State> * starts=nullptr, std::vector<::State> * goals=nullptr);
-    void get_step_actions(const SharedEnvironment & env, vector<Action> & actions);
+    void plan(const SharedEnvironment & env,
+              std::vector<Path> * precomputed_paths=nullptr,
+              std::vector<::State> * starts=nullptr,
+              std::vector<::State> * goals=nullptr,
+              std::set<int> task_wait_agents={});
+    void get_step_actions(const SharedEnvironment & env, vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths);
     // Action get_action_from_states(const State & state, const State & next_state);
     // [end]
 
@@ -60,6 +64,13 @@ public:
     nlohmann::json config;
 
     Instance build_instance(const SharedEnvironment & env, std::vector<Path> * precomputed_paths=nullptr);
+
+    void update_HT_weights(const std::vector<float> weights, const SharedEnvironment & env){
+        // std::cout << "before update, addr:"<<this->HT.get()<<std::endl;
+        this->HT->update_weights(weights, env.curr_states);
+        // std::cout << "end update HT, addr:" << this->HT.get() << ", "<<HT->loc_idxs<< std::endl;
+        // this->print_HT();
+    }
 
     float get_action_cost(int pst, int ost, int ped, int oed);
     float eval_solution(const Instance & instance, const Solution & solution);

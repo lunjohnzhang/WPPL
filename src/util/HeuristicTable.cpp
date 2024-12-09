@@ -1,6 +1,6 @@
 #include "util/HeuristicTable.h"
-    
-    
+
+
 HeuristicTable::HeuristicTable(SharedEnvironment * _env, const std::shared_ptr<std::vector<float> > & map_weights, bool consider_rotation):
     env(*_env),
     action_model(_env),
@@ -62,7 +62,7 @@ void HeuristicTable::compute_weighted_heuristics(){
     // BS::thread_pool pool(n_threads);
 
     // int n_threads=pool.get_thread_count();
-    cout<<"number of threads used for heuristic computation: "<<n_threads<<endl;
+    ONLYDEV(cout<<"number of threads used for heuristic computation: "<<n_threads<<endl;)
     float * values = new float[n_threads*n_orientations*state_size];
     UTIL::SPATIAL::SpatialAStar ** planners= new UTIL::SPATIAL::SpatialAStar* [n_threads];
     for (int i=0;i<n_threads;++i) {
@@ -108,7 +108,7 @@ void HeuristicTable::compute_weighted_heuristics(){
     for (int i=0;i<n_threads;++i) {
         delete planners[i];
     }
-    delete planners;
+    delete [] planners;
 
     ONLYDEV(g_timer.record_d("heu/compute_start","heu/compute_end","heu/compute");)
 
@@ -124,7 +124,7 @@ void HeuristicTable::_compute_weighted_heuristics(
     if (!consider_rotation){
         planner->reset();
         planner->search_for_all(start_loc,-1);
-        
+
         for (int loc_idx=0;loc_idx<loc_size;++loc_idx) {
             int loc=empty_locs[loc_idx];
             UTIL::SPATIAL::State * state=planner->all_states+loc;
@@ -265,7 +265,7 @@ float HeuristicTable::get(int loc1, int orient1, int loc2) {
     size_t main_idx=loc_idx1*loc_size+loc_idx2;
     size_t sub_idx=(loc_idx1*loc_size+loc_idx2)*n_orientations+orient1;
     return main_heuristics[main_idx]+sub_heuristics[sub_idx];
-} 
+}
 
 void HeuristicTable::preprocess(string suffix) {
 
@@ -274,7 +274,7 @@ void HeuristicTable::preprocess(string suffix) {
         return;
     }
 
-    string fname=env.map_name.substr(0,env.map_name.size()-4);
+    string fname=env.map_name;
     string folder=env.file_storage_path;
     if (folder[folder.size()-1]!=boost::filesystem::path::preferred_separator){
         folder+=boost::filesystem::path::preferred_separator;
@@ -291,6 +291,7 @@ void HeuristicTable::preprocess(string suffix) {
     } else {
         compute_weighted_heuristics();
         // ONLYDEV(save(fpath));
+        // save(fpath);
     }
 }
 
@@ -304,7 +305,7 @@ void HeuristicTable::save(const string & fpath) {
     boost::iostreams::filtering_streambuf<boost::iostreams::output> outbuf;
     outbuf.push(boost::iostreams::zlib_compressor());
     outbuf.push(fout);
-    
+
     std::ostream out(&outbuf);
 
     // save loc size
@@ -322,7 +323,7 @@ void HeuristicTable::save(const string & fpath) {
 
     boost::iostreams::close(outbuf);
     fout.close();
-    
+
     ONLYDEV(g_timer.record_d("heu/save_start","heu/save_end","heu/save");)
 
     DEV_DEBUG("[end] Save heuristics to {}. (duration: {:.3f})", fpath, g_timer.get_d("heu/save"));
@@ -364,7 +365,7 @@ void HeuristicTable::load(const string & fpath) {
 
     // load main heurisitcs
     in.read((char *)main_heuristics,sizeof(float)*loc_size*loc_size);
-    
+
     // load sub heuristics
     if (consider_rotation)
         in.read((char *)sub_heuristics,sizeof(float)*state_size*loc_size);
@@ -372,4 +373,19 @@ void HeuristicTable::load(const string & fpath) {
     ONLYDEV(g_timer.record_d("heu/load_start","heu/load_end","heu/load");)
 
     DEV_DEBUG("[end] load heuristics from {}. (duration: {:.3f})",fpath,g_timer.get_d("heu/load"));
+}
+
+void HeuristicTable::print()
+{
+    cout << "Map weights: ";
+    for (int i=0; i<50; ++i){
+        cout << this->map_weights->at(i) << " ";
+    }
+    cout << endl;
+
+    cout << "Main heuristics: ";
+    for(int i=0; i<50; ++i){
+        cout << this->main_heuristics[i] << " ";
+    }
+    cout << endl;
 }

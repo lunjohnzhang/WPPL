@@ -141,6 +141,8 @@ void ConstraintTable::insert2CT(const list<Constraint>& constraints, int agent)
                 insert2CT(x, y, t + 1); // the agent cannot stay at x from timestep y to timestep t.
             }
             break;
+        case constraint_type::CONSTRAINT_COUNT:
+            break;
     }
 }
 void ConstraintTable::insert2CT(const Path& path)

@@ -255,8 +255,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
             exit(-1);
         }
 
-        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,read_param_json<bool>(config["LaCAM2"],"use_orient_in_heuristic"));
-        heuristics->preprocess(suffix);
+        this->heuristics = std::make_shared<HeuristicTable>(env,map_weights,read_param_json<bool>(config["LaCAM2"],"use_orient_in_heuristic"));
+        this->heuristics->preprocess(suffix);
         int max_agents_in_use=read_param_json<int>(config,"max_agents_in_use",-1);
         if (max_agents_in_use==-1) {
             max_agents_in_use=env->num_of_agents;
@@ -271,8 +271,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
             std::cerr<<"In LNS, must not consider rotation when compiled with NO_ROT unset"<<std::endl;
             exit(-1);
         }
-        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,true);
-        heuristics->preprocess(suffix);
+        this->heuristics =std::make_shared<HeuristicTable>(env,map_weights,true);
+        this->heuristics->preprocess(suffix);
         //heuristics->preprocess();
         int max_agents_in_use=read_param_json<int>(config,"max_agents_in_use",-1);
         if (max_agents_in_use==-1) {
@@ -298,7 +298,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
 
 
 // plan using simple A* that ignores the time dimension
-void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
+void MAPFPlanner::plan(int time_limit,vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths) 
 {
     // NOTE we need to return within time_limit, but we can exploit this time duration as much as possible
 
@@ -329,13 +329,14 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         lacam2_solver->plan(*env);
         ONLYDEV(g_timer.record_d("mapf_lacam2_plan_s","mapf_lacam2_plan");)
         ONLYDEV(g_timer.record_p("mapf_lacam2_get_step_s");)
-        lacam2_solver->get_step_actions(*env,actions);
+        lacam2_solver->get_step_actions(*env,actions, cur_exec_paths, cur_plan_paths);
         ONLYDEV(g_timer.record_d("mapf_lacam2_get_step_s","mapf_lacam2_get_step");)
+        ONLYDEV(cout<<"end LaCAM2"<<endl;)
     } else if (lifelong_solver_name=="LNS") {
         ONLYDEV(cout<<"using LNS"<<endl;)
         lns_solver->observe(*env);
         lns_solver->plan(*env); 
-        lns_solver->get_step_actions(*env,actions);
+        lns_solver->get_step_actions(*env,actions, cur_exec_paths, cur_plan_paths);
     } else if (lifelong_solver_name=="DUMMY") {
         cout<<"using DUMMY"<<endl;
     } 
@@ -497,9 +498,13 @@ list<pair<int,int>> MAPFPlanner::getNeighbors(int location,int direction) {
 
 void MAPFPlanner::load_configs() {
     // load configs
-    char * config_root_path=getenv("CONFIG_ROOT_PATH");
-    if (config_root_path==NULL) {
+    const char * config_root_path_tmp=getenv("CONFIG_ROOT_PATH");
+    string config_root_path;
+    if (config_root_path_tmp==NULL) {
         config_root_path="configs/";
+    }
+    else {
+        config_root_path=string(config_root_path_tmp);
     }
 
 	string config_path=config_root_path+env->map_name.substr(0,env->map_name.find_last_of("."))+"_no_rot.json";
@@ -621,8 +626,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         }
         bool disable_corner_target_agents=read_param_json<bool>(config,"disable_corner_target_agents",false);
         int max_task_completed=read_param_json<int>(config,"max_task_completed",1000000);
-        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
-        heuristics->preprocess(suffix);
+        this->heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
+        this->heuristics->preprocess(suffix);
         lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(
             heuristics,
             env,
@@ -634,8 +639,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         lacam2_solver->initialize(*env);
         cout<<"LaCAMSolver2 initialized"<<endl;
     } else if (lifelong_solver_name=="LNS") {
-        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
-        heuristics->preprocess(suffix);
+        this->heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
+        this->heuristics->preprocess(suffix);
         //heuristics->preprocess();
         int max_agents_in_use=read_param_json<int>(config,"max_agents_in_use",-1);
         if (max_agents_in_use==-1) {
@@ -658,8 +663,39 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
 }
 
 
+
+void MAPFPlanner::update(){
+    ONLYDEV(
+        cout << "planner update begin" <<endl;
+        std::cout << std::endl;
+    )
+    std::string suffix="";
+    if (lifelong_solver_name=="LaCAM2") {
+        // auto heuristics =std::make_shared<HT_v2::HeuristicTableV2>(env->num_of_agents, env->map, env->rows, env->cols, *map_weights);
+        // std::cout << "addr ="<<heuristics->loc_idxs <<std::endl;
+        this->lacam2_solver->map_weights = map_weights;
+        this->lacam2_solver->update_HT_weights(*map_weights, *this->env);
+        ONLYDEV(cout<<"LaCAMSolver2 update"<<endl;)
+    } else if (lifelong_solver_name=="LNS") {
+        cout<<"not implemented error"<<lifelong_solver_name<<endl;
+        exit(-1);
+        // lns_solver update lacam2 solver and self ht
+        // lns_solver = std::make_shared<LNS::LNSSolver>(heuristics,env,map_weights,config["LNS"],lacam2_solver,max_task_completed);
+        // lns_solver->initialize(*env);
+        // cout<<"LNSSolver initialized"<<endl;
+    }
+    else {
+        cout<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
+        exit(-1);
+    }
+}
+
+
 // plan using simple A* that ignores the time dimension
-void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
+void MAPFPlanner::plan(int time_limit,vector<Action> & actions,
+                       vector<list<State>>& cur_exec_paths,
+                       vector<list<State>>& cur_plan_paths,
+                       std::set<int> task_wait_agents)
 {
     // NOTE we need to return within time_limit, but we can exploit this time duration as much as possible
 
@@ -679,13 +715,18 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
 
    if (lifelong_solver_name=="LaCAM2") {
         ONLYDEV(cout<<"using LaCAM2"<<endl;)
-        lacam2_solver->plan(*env);
-        lacam2_solver->get_step_actions(*env,actions);
+        ONLYDEV(g_timer.record_p("mapf_lacam2_plan_s");)
+        lacam2_solver->plan(*env, nullptr, nullptr, nullptr, task_wait_agents);
+        ONLYDEV(g_timer.record_d("mapf_lacam2_plan_s","mapf_lacam2_plan");)
+        ONLYDEV(g_timer.record_p("mapf_lacam2_get_step_s");)
+        lacam2_solver->get_step_actions(*env,actions, cur_exec_paths, cur_plan_paths);
+        ONLYDEV(g_timer.record_d("mapf_lacam2_get_step_s","mapf_lacam2_get_step");)
+        ONLYDEV(cout<<"end LaCAM2"<<endl;)
     } else if (lifelong_solver_name=="LNS") {
         ONLYDEV(cout<<"using LNS"<<endl;)
         lns_solver->observe(*env);
         lns_solver->plan(*env); 
-        lns_solver->get_step_actions(*env,actions);
+        lns_solver->get_step_actions(*env,actions, cur_exec_paths, cur_plan_paths);
     } else {
         cout<<"unknown lifelong solver name"<<lifelong_solver_name<<endl;
         exit(-1);

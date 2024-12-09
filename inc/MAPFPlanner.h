@@ -35,7 +35,9 @@ public:
     virtual void initialize(int preprocess_time_limit);
 
     // return next states for all agents
-    virtual void plan(int time_limit, std::vector<Action> & plan);
+    // virtual void plan(int time_limit, std::vector<Action> & plan);
+    virtual void plan(int time_limit,vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths);
+
 
     // Start kit dummy implementation
     std::list<pair<int,int>>single_agent_plan(int start,int start_direct, int end);
@@ -60,6 +62,9 @@ public:
     void rhcr_config_solver(std::shared_ptr<RHCR::RHCRSolver> & solver,nlohmann::json & config);
 
     int max_execution_steps;
+
+    std::shared_ptr<HeuristicTable> heuristics;
+
 };
 
 #else
@@ -84,9 +89,11 @@ public:
 
 
     virtual void initialize(int preprocess_time_limit);
+    virtual void update();
 
     // return next states for all agents
-    virtual void plan(int time_limit, std::vector<Action> & plan);
+    // virtual void plan(int time_limit, std::vector<Action> & plan);
+    virtual void plan(int time_limit,vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths, std::set<int> task_wait_agents);
 
     string lifelong_solver_name;
     std::shared_ptr<LaCAM2::LaCAM2Solver> lacam2_solver;
@@ -96,8 +103,10 @@ public:
     nlohmann::json config;
     void load_configs();
     std::string load_map_weights(string weights_path);
-    
+
     int max_execution_steps;
+
+    std::shared_ptr<HeuristicTable> heuristics;
 };
 
 #endif

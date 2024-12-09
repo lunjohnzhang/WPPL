@@ -24,6 +24,8 @@ public:
                             double left_w_weight = 1,
                             double right_w_weight = 1);
 
+    void get_adj_endpoints();
+
     int rows = 0;
     int cols = 0;
     std::vector<int> map;
@@ -32,8 +34,13 @@ public:
     std::vector<int> end_points;
     std::vector<int> agent_home_locations;
     std::vector<int> empty_locations;
+    std::vector<int> obstacles;
+    std::vector<int> chutes;
 
     std::vector<char> grid_types;
 
     std::vector<double> agent_home_loc_weights;
+
+    // Map from obstacles (chutes) to their adjacent endpoints
+    std::map<int, std::vector<int>> obs_adj_endpoints;
 };

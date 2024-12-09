@@ -206,7 +206,11 @@ float LaCAM2Solver::eval_solution(const Instance & instance, const Solution & so
     return cost;
 }
 
-void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * precomputed_paths, std::vector<::State> * starts, std::vector<::State> * goals){
+void LaCAM2Solver::plan(const SharedEnvironment & env,
+                        std::vector<Path> * precomputed_paths,
+                        std::vector<::State> * starts,
+                        std::vector<::State> * goals,
+                        std::set<int> task_wait_agents){
     ONLYDEV(g_timer.record_p("lacam2_plan_pre_s");)
     // std::cerr<<"random :"<<get_random_int(MT,0,100)<<std::endl;
 
@@ -331,7 +335,8 @@ void LaCAM2Solver::plan(const SharedEnvironment & env, std::vector<Path> * preco
             ONLYDEV(g_timer.record_d("lacam_build_planner_s","lacam_build_planner");)
             auto additional_info = std::string("");
             ONLYDEV(g_timer.record_p("lacam_solve_s");)
-            auto solution=planner.solve(additional_info,order_strategy);
+            auto solution=planner.solve(additional_info,order_strategy,
+                                        task_wait_agents);
             ONLYDEV(g_timer.record_d("lacam_solve_s","lacam_solve");)
             auto cost=eval_solution(instance,solution);
             // #pragma omp critical
@@ -497,7 +502,7 @@ void LaCAM2Solver::solution_convert(const SharedEnvironment & env, Solution & so
     }
 }
 
-void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action> & actions) {
+void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths) {
     // check empty
     assert(actions.empty());
 
@@ -519,6 +524,14 @@ void LaCAM2Solver::get_step_actions(const SharedEnvironment & env, vector<Action
             if (paths[i][timestep+1].location==env.goal_locations[i][0].first){
                 ++num_task_completed;
             }
+        }
+    }
+
+    for (int i=0;i<env.num_of_agents;++i) {
+        cur_exec_paths[i].clear();
+        cur_plan_paths[i].clear();
+        for (int j=0; j<paths[i].size(); ++j){
+            cur_plan_paths[i].push_back(paths[i][j].location);
         }
     }
 

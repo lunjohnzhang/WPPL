@@ -36,6 +36,15 @@ public:
 
     std::shared_ptr<std::vector<float> > map_weights;
 
+    void update_weights(const std::vector<float> _map_weights, const std::vector<::State>& curr_states){
+        for (int i = 0; i < this->map_weights->size(); i++){
+            this->map_weights->at(i) = _map_weights[i];
+        }
+        // map_weights = _map_weights;
+        // Recompute heuristics
+        compute_weighted_heuristics();
+    }
+
     HeuristicTable(SharedEnvironment * _env, const std::shared_ptr<std::vector<float> > & map_weights, bool consider_rotation=true);
     ~HeuristicTable();
 
@@ -72,4 +81,5 @@ public:
     void preprocess(string suffix="");
     void save(const string & fpath);
     void load(const string & fpath);
+    void print();
 };

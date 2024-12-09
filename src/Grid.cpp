@@ -73,7 +73,14 @@ void Grid::load_map_from_path(string fname,
             int id = cols * i + j;
             grid_types.push_back(line[j]);
             if (line[j] == '@' || line[j] == 'T') // obstacle
+            {
                 map[id] = 1;
+                obstacles.push_back(id);
+                if (line[j] == '@')
+                {
+                    chutes.push_back(id);
+                }
+            }
             else
             { // free space
                 map[id] = 0;
@@ -102,6 +109,9 @@ void Grid::load_map_from_path(string fname,
             }
         }
     }
+
+    // Get adjacent endpoints of each obstacle
+    get_adj_endpoints();
 
     myfile.close();
     double runtime = (std::clock() - t) / CLOCKS_PER_SEC;
@@ -137,7 +147,14 @@ void Grid::load_map_from_json(nlohmann::json map_json,
             int id = cols * i + j;
             grid_types.push_back(line[j]);
             if (line[j] == '@' || line[j] == 'T') // obstacle
+            {
                 map[id] = 1;
+                obstacles.push_back(id);
+                if (line[j] == '@')
+                {
+                    chutes.push_back(id);
+                }
+            }
             else
             { // free space
                 map[id] = 0;
@@ -167,10 +184,48 @@ void Grid::load_map_from_json(nlohmann::json map_json,
         }
     }
 
+    // Get adjacent endpoints of each obstacle
+    get_adj_endpoints();
+
     double runtime = (std::clock() - t) / CLOCKS_PER_SEC;
     cout << "Map size: " << rows << "x" << cols << ", empty locs: "
          << empty_locations.size() << ", end_points: " << end_points.size()
          << ", agent_homes (workstations): " << agent_home_locations.size()
          << endl;
     cout << "Done! (load time: " << runtime << " s)" << std::endl;
+}
+
+void Grid::get_adj_endpoints()
+{
+    const int dirs[4] = {1, -this->cols, -1, this->cols};
+    for (unsigned int i = 0; i < this->obstacles.size(); i++)
+    {
+        int obs = this->obstacles[i];
+        std::vector<int> adj_eps;
+        for (int d = 0; d < 4; d++)
+        {
+            int dir = dirs[d];
+            int ep = obs + dir;
+            if (0 <= ep && ep < map.size() &&
+                _get_Manhattan_distance(obs, ep, cols) <= 1 &&
+                grid_types[ep] == 'e')
+            {
+                adj_eps.push_back(ep);
+            }
+        }
+        // Only add the adjacent endpoints if there are any
+        if (adj_eps.size() > 0)
+            this->obs_adj_endpoints[obs] = adj_eps;
+    }
+
+    // // Print the content of obs_adj_endpoints
+    // for (auto const &pair : obs_adj_endpoints)
+    // {
+    //     std::cout << pair.first << " -> ";
+    //     for (auto const &ep : pair.second)
+    //     {
+    //         std::cout << ep << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
 }

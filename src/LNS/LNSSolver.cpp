@@ -401,7 +401,7 @@ void LNSSolver::observe(const SharedEnvironment & env){
 
     // if run out of execution instructions, we need to copy new ones into execution_paths
     if (executed_step==execution_paths[0].size()-1){
-        std::cerr<<"need new execution paths"<<std::endl;
+        ONLYDEV(std::cerr<<"need new execution paths"<<std::endl;)
         need_new_execution_paths=true;
     } else {
         need_new_execution_paths=false;
@@ -410,7 +410,7 @@ void LNSSolver::observe(const SharedEnvironment & env){
     ONLYDEV(g_timer.record_d("observe_s","observe_e","observe");)
 }
 
-void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> & actions){
+void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> & actions, vector<list<State>>& cur_exec_paths, vector<list<State>>& cur_plan_paths){
     ONLYDEV(g_timer.record_p("get_step_actions_s");)
 
     assert(actions.empty());
@@ -489,6 +489,17 @@ void LNSSolver::get_step_actions(const SharedEnvironment & env, vector<Action> &
             if (execution_paths[i][executed_step+1].location==env.goal_locations[i][0].first){
                 ++num_task_completed;
             }
+        }
+    }
+
+    for (int i=0;i<env.num_of_agents;++i) {
+        cur_exec_paths[i].clear();
+        cur_plan_paths[i].clear();
+        for (int j=executed_step; j<execution_paths[i].size(); ++j){
+            cur_exec_paths[i].push_back(execution_paths[i][j].location);
+        }
+        for (int j=0; j<planning_paths[i].size(); ++j){
+            cur_plan_paths[i].push_back(planning_paths[i][j].location);
         }
     }
 
