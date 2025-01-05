@@ -163,8 +163,7 @@ void SortationSystem::create_task_distribution(vector<double> dist)
             this->package_dist = std::discrete_distribution<int>(
                 dist.begin(),
                 dist.end() - 1);
-            this->recir_chute = chute_mapping[
-                dist.size() - 1][0];
+            this->recir_chute = chute_mapping[dist.size() - 1][0];
         }
         else
         {
@@ -223,9 +222,7 @@ void SortationSystem::update_task_distribution()
         // Update the package distribution
         this->create_task_distribution(this->package_dist_weight);
     }
-
 }
-
 
 void SortationSystem::update_tasks()
 {
@@ -544,7 +541,6 @@ void SortationSystem::warmup(int total_warmup_steps)
             {
                 this->process_finished_task_online(task, true);
             }
-
         }
 
         // Put chutes to sleep if they are full
@@ -717,7 +713,8 @@ void SortationSystem::update_chute_sleeping()
         if (chute.second)
         {
             this->chute_sleeping_time[chute.first]++;
-            if (this->chute_sleeping_time[chute.first] >= CHUTE_SLEEP_TIME)
+            if (this->chute_sleeping_time[chute.first] >=
+                this->chute_sleep_time[chute.first])
             {
                 this->chute_sleeping[chute.first] = false;
                 this->chute_sleeping_time[chute.first] = 0;
@@ -830,7 +827,6 @@ bool SortationSystem::update_task_status(Task task)
             exit(-1);
         }
         return true;
-
     }
     else
     {
@@ -851,14 +847,14 @@ void SortationSystem::process_finished_task_offline(Task task)
     {
         this->n_recirs++;
         ONLYDEV(cout << "Adding recirculation package "
-                        << task.package_dest
-                        << " finished" << std::endl;)
+                     << task.package_dest
+                     << " finished" << std::endl;)
         this->recirc_packages.push(task.package_dest);
     }
     ONLYDEV(cout << "Agent " << task.agent_assigned
-                    << " finished task " << task.location
-                    << " for chute " << task.assigned_chute
-                    << " at timestep " << timestep << endl;)
+                 << " finished task " << task.location
+                 << " for chute " << task.assigned_chute
+                 << " at timestep " << timestep << endl;)
 
     this->n_finish_task_plus_n_recirs++;
     // decrement the number of robots going to the goals
@@ -909,13 +905,12 @@ void SortationSystem::process_finished_task_online(Task task, bool warmup)
     this->update_package_in_chute(task);
 }
 
-
 void SortationSystem::gen_time_dist(
     int n_destinations,
-    const std::vector<double>& package_weight_dist,
+    const std::vector<double> &package_weight_dist,
     int time_sigma,
-    int T
-) {
+    int T)
+{
     // Ensure the input weights match the number of destinations
     assert(static_cast<int>(package_weight_dist.size()) == n_destinations);
 
@@ -931,20 +926,23 @@ void SortationSystem::gen_time_dist(
     //     T, std::vector<double>(n_destinations, 0.0));
 
     // Generate a Gaussian for each destination
-    for (int d = 0; d < n_destinations; ++d) {
+    for (int d = 0; d < n_destinations; ++d)
+    {
         double volume = package_weight_dist[d];
         int t = random_time(this->MT); // Random time center
 
         // Create the Gaussian distribution
         std::vector<double> gaussian(T);
         double gaussian_sum = 0.0;
-        for (int i = 0; i < T; ++i) {
+        for (int i = 0; i < T; ++i)
+        {
             gaussian[i] = std::exp(-std::pow(i + 1 - t, 2) / (2.0 * std::pow(time_sigma, 2)));
             gaussian_sum += gaussian[i];
         }
 
         // Normalize the Gaussian to match the volume
-        for (int i = 0; i < T; ++i) {
+        for (int i = 0; i < T; ++i)
+        {
             this->time_package_dist_weight[i][d] = (gaussian[i] / gaussian_sum) * volume;
         }
     }

@@ -27,14 +27,14 @@ public:
                     int time_sigma,
                     int total_simulation_steps,
                     int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), package_mode(package_mode), packages(packages), package_dist_weight(package_dist_weight),
-                        init_package_dist_weight(package_dist_weight),
-                        task_assignment_cost(task_assignment_cost),
-                        task_assignment_params(task_assignment_params),
-                        assign_C(assign_C), recirc_mechanism(recirc_mechanism),
-                        task_waiting_time(task_waiting_time),
-                        workstation_waiting_time(workstation_waiting_time),
-                        task_gaussian_sigma(task_gaussian_sigma),
-                        task_change_time(task_change_time), time_dist(time_dist)
+                                                 init_package_dist_weight(package_dist_weight),
+                                                 task_assignment_cost(task_assignment_cost),
+                                                 task_assignment_params(task_assignment_params),
+                                                 assign_C(assign_C), recirc_mechanism(recirc_mechanism),
+                                                 task_waiting_time(task_waiting_time),
+                                                 workstation_waiting_time(workstation_waiting_time),
+                                                 task_gaussian_sigma(task_gaussian_sigma),
+                                                 task_change_time(task_change_time), time_dist(time_dist)
     {
         num_of_agents = num_agents;
         starts.resize(num_of_agents);
@@ -110,7 +110,9 @@ public:
             this->agent_task_waiting_loc.push_back(-1);
         }
 
-
+        // Compute chute sleep time
+        compute_chute_sleep_time(
+            chute_mapping, this->chute_sleep_time, grid.cols);
     };
 
     void simulate(int simulation_time) override;
@@ -128,7 +130,6 @@ public:
     {
         return chute_sleep_count;
     }
-
 
 private:
     std::mt19937 MT;
@@ -164,13 +165,15 @@ private:
     // once exceeded, chute goes to sleep for 50 timesteps
     int MAX_PACKAGE_IN_CHUTE = 50;
     // sleeping time for chute
-    int CHUTE_SLEEP_TIME = 50;
+    // int CHUTE_SLEEP_TIME = 50;
     // number of timesteps chute has been sleeping
     boost::unordered_map<int, int> chute_sleeping_time;
     // whether chute is sleeping
     boost::unordered_map<int, bool> chute_sleeping;
     // Number of times each chute has slept
     boost::unordered_map<int, int> chute_sleep_count;
+    // Chute sleep time
+    boost::unordered_map<int, int> chute_sleep_time;
 
     // Task waiting mechanism: Agents need to wait at their goal for a fixed
     // number of timesteps
@@ -208,7 +211,7 @@ private:
     void update_task_distribution();
     void create_task_distribution(vector<double> dist);
     void gen_time_dist(int n_destinations,
-                       const std::vector<double>& package_weight_dist,
+                       const std::vector<double> &package_weight_dist,
                        int time_sigma,
                        int T);
 };

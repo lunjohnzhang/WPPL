@@ -184,3 +184,46 @@ T read_param_json(nlohmann::json& data, std::string name, T default_value)
 inline int _get_Manhattan_distance(int loc1, int loc2, int cols) {
     return abs(loc1 / cols - loc2 / cols) + abs(loc1 % cols - loc2 % cols);
 }
+
+
+// Compute sleep time for each chute
+inline void compute_chute_sleep_time(
+    const std::map<int, vector<int>> chute_mapping,
+    boost::unordered_map<int, int>& chute_sleep_time,
+    int num_col
+)
+{
+    // For chutes of the same destinations, compute the centroid
+    // and compute the average distance between each chute to the centroid.
+    // The chute sleep time is proportional to the avg distance to the centroid.
+    for (auto ele : chute_mapping)
+    {
+        int dest = ele.first;
+        vector<int> chutes = ele.second;
+        int sum_x = 0;
+        int sum_y = 0;
+        for (int chute : chutes)
+        {
+            sum_x += chute / num_col;
+            sum_y += chute % num_col;
+        }
+        double centroid_x = sum_x / chutes.size();
+        double centroid_y = sum_y / chutes.size();
+        double avg_dist = 0;
+        for (int chute : chutes)
+        {
+            avg_dist += sqrt(pow(centroid_x - chute / num_col, 2) + pow(centroid_y - chute % num_col, 2));
+        }
+        avg_dist /= chutes.size();
+
+        // All chutes of the same destination have the same sleep time
+        for (int chute : chutes)
+        {
+            chute_sleep_time[chute] = static_cast<int>(
+                2 * pow(avg_dist, 2) + 50);
+        }
+        // cout << "Destination " << dest << " avg dist: " << avg_dist
+        //      <<  ", sleep time: " << chute_sleep_time[chutes[0]]
+        //      << endl;
+    }
+}
