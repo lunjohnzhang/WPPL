@@ -206,10 +206,10 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
         recirc_mechanism=True,
         task_waiting_time=0,
         workstation_waiting_time=0,
-        task_change_time=100,
+        task_change_time=-1, # Don't update task dist
         task_gaussian_sigma=0.01,
         time_sigma=1000,
-        time_dist=True,
+        time_dist=False,
         # assign_C=15,
     )
 

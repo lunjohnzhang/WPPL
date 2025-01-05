@@ -227,7 +227,8 @@ void SortationSystem::update_task_distribution()
 void SortationSystem::update_tasks()
 {
     // Update task distribution
-    if (this->timestep % this->task_change_time == 0)
+    if (this->task_change_time > 0 &&
+        this->timestep % this->task_change_time == 0)
     {
         this->update_task_distribution();
     }
