@@ -100,6 +100,8 @@ public:
             this->chute_sleeping[chute] = false;
             this->packages_in_chutes[chute] = 0;
             this->chute_sleep_count[chute] = 0;
+            this->total_chute_sleep_time[chute] = 0;
+            this->robots_in_chutes[chute] = 0;
         }
 
         // Task waiting mechanism
@@ -129,6 +131,10 @@ public:
     boost::unordered_map<int, int> get_chute_sleep_count() const
     {
         return chute_sleep_count;
+    }
+    boost::unordered_map<int, int> get_total_chute_sleep_time() const
+    {
+        return total_chute_sleep_time;
     }
 
 private:
@@ -162,6 +168,8 @@ private:
     boost::unordered_map<int, int> robots_in_endpoints;
     // number of packages in each chute
     boost::unordered_map<int, int> packages_in_chutes;
+    // number of robots in each chute
+    boost::unordered_map<int, int> robots_in_chutes;
     // once exceeded, chute goes to sleep for 50 timesteps
     int MAX_PACKAGE_IN_CHUTE = 50;
     // sleeping time for chute
@@ -174,6 +182,8 @@ private:
     boost::unordered_map<int, int> chute_sleep_count;
     // Chute sleep time
     boost::unordered_map<int, int> chute_sleep_time;
+    // Number of timesteps each chute goes to sleep
+    boost::unordered_map<int, int> total_chute_sleep_time;
 
     // Task waiting mechanism: Agents need to wait at their goal for a fixed
     // number of timesteps
@@ -200,6 +210,8 @@ private:
     int assign_workstation(int curr_loc);
     pair<int, int> assign_endpoint(int curr_loc,
                                    vector<pair<int, int>> endpoints);
+    pair<vector<pair<int, int>>, bool> find_endpoints(
+        int package, boost::unordered_set<int> skip_chutes = {});
     void update_n_agents(Task task);
     void check_n_agents_sum();
     void update_chute_sleeping();
@@ -214,4 +226,5 @@ private:
                        const std::vector<double> &package_weight_dist,
                        int time_sigma,
                        int T);
+    void switch_endpoint_goals(int chute);
 };

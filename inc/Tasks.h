@@ -26,4 +26,10 @@ struct Task
         agent_assigned(agent_assigned), recirc(recirc),
         package_dest(package_dest), assigned_chute(assigned_chute),
         dummy_waiting(dummy_waiting) {};
+    Task(const Task& other):
+        task_id(other.task_id), location(other.location),
+        t_assigned(other.t_assigned), t_completed(other.t_completed),
+        agent_assigned(other.agent_assigned), recirc(other.recirc),
+        package_dest(other.package_dest), assigned_chute(other.assigned_chute),
+        dummy_waiting(other.dummy_waiting) {};
 };
