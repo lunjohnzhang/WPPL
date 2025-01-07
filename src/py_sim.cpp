@@ -34,6 +34,7 @@ std::string py_sim::update_gg_and_step(std::vector<float> edge_weights, std::vec
             results["n_recirs"] = sorting_system->get_n_recirs();
             results["recirc_rate"] = (double)sorting_system->get_n_recirs() / sorting_system->get_n_finish_task_plus_n_recirs();
             results["chute_sleep_count"]  = sorting_system->get_chute_sleep_count();
+            results["chute_sleep_time"] = sorting_system->get_chute_sleep_time();
             results["total_chute_sleep_time"] = sorting_system->get_total_chute_sleep_time();
         }
     }

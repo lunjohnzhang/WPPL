@@ -406,6 +406,7 @@ std::string run(const py::kwargs& kwargs)
         analysis["n_recirs"] = sorting_system->get_n_recirs();
         analysis["recirc_rate"] = (double)sorting_system->get_n_recirs() / sorting_system->get_n_finish_task_plus_n_recirs();
         analysis["chute_sleep_count"]  = sorting_system->get_chute_sleep_count();
+        analysis["chute_sleep_time"] = sorting_system->get_chute_sleep_time();
         analysis["total_chute_sleep_time"] = sorting_system->get_total_chute_sleep_time();
     }
 

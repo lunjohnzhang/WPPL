@@ -136,6 +136,10 @@ public:
     {
         return total_chute_sleep_time;
     }
+    boost::unordered_map<int, int> get_chute_sleep_time() const
+    {
+        return chute_sleep_time;
+    }
 
 private:
     std::mt19937 MT;
