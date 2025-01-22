@@ -16,7 +16,9 @@ Graph::~Graph()
 }
 
 
-Graph::Graph(const SharedEnvironment & env): V(Vertices()), width(env.cols), height(env.rows) {
+Graph::Graph(const SharedEnvironment & env,
+             const std::shared_ptr<std::vector<float> > & map_weights):
+             V(Vertices()), width(env.cols), height(env.rows) {
   U = Vertices(width * height, nullptr);
   cout<<"graph size "<<U.size()<<endl;
 
@@ -36,27 +38,43 @@ Graph::Graph(const SharedEnvironment & env): V(Vertices()), width(env.cols), hei
   // create edges
   for (int y = 0; y < height; ++y) {
     for (int x = 0; x < width; ++x) {
-      auto v = U[width * y + x];
+      int pos = width * y + x;
+      auto v = U[pos];
+      int idx = pos * 5;
       if (v == nullptr) continue;
+      // Add neighbors if the neighbor is not an obstacle and if the
+      // map_weights allows it
       // left
       if (x > 0) {
         auto u = U[width * y + (x - 1)];
-        if (u != nullptr) v->neighbor.push_back(u);
+        // Edge cost from v to u
+        auto cost = map_weights->at(idx + 2);
+        // cout << cost << endl;
+        if (u != nullptr && cost != -1) v->neighbor.push_back(u);
       }
       // right
       if (x < width - 1) {
         auto u = U[width * y + (x + 1)];
-        if (u != nullptr) v->neighbor.push_back(u);
-      }
-      // up
-      if (y < height - 1) {
-        auto u = U[width * (y + 1) + x];
-        if (u != nullptr) v->neighbor.push_back(u);
+        // Edge cost from v to u
+        auto cost = map_weights->at(idx);
+        // cout << cost << endl;
+        if (u != nullptr && cost != -1) v->neighbor.push_back(u);
       }
       // down
+      if (y < height - 1) {
+        auto u = U[width * (y + 1) + x];
+        // Edge cost from v to u
+        auto cost = map_weights->at(idx + 1);
+        // cout << cost << endl;
+        if (u != nullptr && cost != -1) v->neighbor.push_back(u);
+      }
+      // up
       if (y > 0) {
         auto u = U[width * (y - 1) + x];
-        if (u != nullptr) v->neighbor.push_back(u);
+        // Edge cost from v to u
+        auto cost = map_weights->at(idx + 3);
+        // cout << cost << endl;
+        if (u != nullptr && cost != -1) v->neighbor.push_back(u);
       }
     }
   }
@@ -65,82 +83,98 @@ Graph::Graph(const SharedEnvironment & env): V(Vertices()), width(env.cols), hei
 
 
 
-// to load graph
-static const std::regex r_height = std::regex(R"(height\s(\d+))");
-static const std::regex r_width = std::regex(R"(width\s(\d+))");
-static const std::regex r_map = std::regex(R"(map)");
+// // to load graph
+// static const std::regex r_height = std::regex(R"(height\s(\d+))");
+// static const std::regex r_width = std::regex(R"(width\s(\d+))");
+// static const std::regex r_map = std::regex(R"(map)");
 
-Graph::Graph(const std::string& filename) : V(Vertices()), width(0), height(0)
-{
-  std::ifstream file(filename);
-  if (!file) {
-    std::cout << "file " << filename << " is not found." << std::endl;
-    return;
-  }
-  std::string line;
-  std::smatch results;
+// Graph::Graph(const std::string& filename) : V(Vertices()), width(0), height(0)
+// {
+//   std::ifstream file(filename);
+//   if (!file) {
+//     std::cout << "file " << filename << " is not found." << std::endl;
+//     return;
+//   }
+//   std::string line;
+//   std::smatch results;
 
-  // read fundamental graph parameters
-  while (getline(file, line)) {
-    // for CRLF coding
-    if (*(line.end() - 1) == 0x0d) line.pop_back();
+//   // read fundamental graph parameters
+//   while (getline(file, line)) {
+//     // for CRLF coding
+//     if (*(line.end() - 1) == 0x0d) line.pop_back();
 
-    if (std::regex_match(line, results, r_height)) {
-      height = std::stoi(results[1].str());
-    }
-    if (std::regex_match(line, results, r_width)) {
-      width = std::stoi(results[1].str());
-    }
-    if (std::regex_match(line, results, r_map)) break;
-  }
+//     if (std::regex_match(line, results, r_height)) {
+//       height = std::stoi(results[1].str());
+//     }
+//     if (std::regex_match(line, results, r_width)) {
+//       width = std::stoi(results[1].str());
+//     }
+//     if (std::regex_match(line, results, r_map)) break;
+//   }
 
-  U = Vertices(width * height, nullptr);
+//   U = Vertices(width * height, nullptr);
 
-  // create vertices
-  uint y = 0;
-  while (getline(file, line)) {
-    // for CRLF coding
-    if (*(line.end() - 1) == 0x0d) line.pop_back();
-    for (uint x = 0; x < width; ++x) {
-      char s = line[x];
-      if (s == 'T' or s == '@') continue;  // object
-      auto index = width * y + x;
-      auto v = new Vertex(V.size(), index);
-      V.push_back(v);
-      U[index] = v;
-    }
-    ++y;
-  }
-  file.close();
+//   // create vertices
+//   uint y = 0;
+//   while (getline(file, line)) {
+//     // for CRLF coding
+//     if (*(line.end() - 1) == 0x0d) line.pop_back();
+//     for (uint x = 0; x < width; ++x) {
+//       char s = line[x];
+//       if (s == 'T' or s == '@') continue;  // object
+//       auto index = width * y + x;
+//       auto v = new Vertex(V.size(), index);
+//       V.push_back(v);
+//       U[index] = v;
+//     }
+//     ++y;
+//   }
+//   file.close();
 
-  // create edges
-  for (uint y = 0; y < height; ++y) {
-    for (uint x = 0; x < width; ++x) {
-      auto v = U[width * y + x];
-      if (v == nullptr) continue;
-      // left
-      if (x > 0) {
-        auto u = U[width * y + (x - 1)];
-        if (u != nullptr) v->neighbor.push_back(u);
-      }
-      // right
-      if (x < width - 1) {
-        auto u = U[width * y + (x + 1)];
-        if (u != nullptr) v->neighbor.push_back(u);
-      }
-      // up
-      if (y < height - 1) {
-        auto u = U[width * (y + 1) + x];
-        if (u != nullptr) v->neighbor.push_back(u);
-      }
-      // down
-      if (y > 0) {
-        auto u = U[width * (y - 1) + x];
-        if (u != nullptr) v->neighbor.push_back(u);
-      }
-    }
-  }
-}
+//   // create edges
+//   for (int y = 0; y < height; ++y) {
+//     for (int x = 0; x < width; ++x) {
+//       int pos = width * y + x;
+//       auto v = U[pos];
+//       int idx = pos * 5;
+//       if (v == nullptr) continue;
+//       // Add neighbors if the neighbor is not an obstacle and if the
+//       // map_weights allows it
+//       // left
+//       if (x > 0) {
+//         auto u = U[width * y + (x - 1)];
+//         // Edge cost from v to u
+//         auto cost = map_weights->at(idx + 2);
+//         // cout << cost << endl;
+//         if (u != nullptr && cost != -1) v->neighbor.push_back(u);
+//       }
+//       // right
+//       if (x < width - 1) {
+//         auto u = U[width * y + (x + 1)];
+//         // Edge cost from v to u
+//         auto cost = map_weights->at(idx);
+//         // cout << cost << endl;
+//         if (u != nullptr && cost != -1) v->neighbor.push_back(u);
+//       }
+//       // down
+//       if (y < height - 1) {
+//         auto u = U[width * (y + 1) + x];
+//         // Edge cost from v to u
+//         auto cost = map_weights->at(idx + 1);
+//         // cout << cost << endl;
+//         if (u != nullptr && cost != -1) v->neighbor.push_back(u);
+//       }
+//       // up
+//       if (y > 0) {
+//         auto u = U[width * (y - 1) + x];
+//         // Edge cost from v to u
+//         auto cost = map_weights->at(idx + 3);
+//         // cout << cost << endl;
+//         if (u != nullptr && cost != -1) v->neighbor.push_back(u);
+//       }
+//     }
+//   }
+// }
 
 uint Graph::size() const { return V.size(); }
 

@@ -38,7 +38,7 @@ void LaCAM2Solver::initialize(const SharedEnvironment & env) {
     }
     // action_costs.resize(env.num_of_agents);
     // total_actions.resize(env.num_of_agents);
-    G = std::make_shared<Graph>(env);
+    G = std::make_shared<Graph>(env, this->map_weights);
 }
 
 void LaCAM2Solver::disable_agents(const SharedEnvironment & env) {

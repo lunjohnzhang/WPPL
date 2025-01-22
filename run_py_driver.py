@@ -3,17 +3,8 @@ import sys
 sys.path.append('build')
 sys.path.append('scripts')
 import fire
-import gin
-from map import Map
 import json
 import numpy as np
-from env_search.warehouse import get_packages
-from env_search.warehouse.config import WarehouseConfig
-from env_search.utils import (
-    kiva_env_str2number, get_chute_loc, read_in_kiva_map,
-    read_in_sortation_map, sortation_env_str2number, get_n_valid_edges,
-    get_n_valid_vertices, DIRS, read_in_sortation_map, sortation_obj_types,
-    get_Manhattan_distance_coor, load_pibt_default_config, get_workstation_loc)
 import wppl_py_driver  # type: ignore # ignore pylance warning
 import json
 
@@ -106,67 +97,34 @@ def uncompress_edge_matrix(map, compressed_edge_matrix, fill_value=0):
     return edge_matrix
 
 
-def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
+def main(map_filepath, seed=0):
 
     np.random.seed(seed)
-
-    gin.parse_config_file(warehouse_config)
-    warehouse_config = WarehouseConfig()
 
     # Read in map
     with open(map_filepath, "r") as f:
         raw_env_json = json.load(f)
     map_json_str = json.dumps(raw_env_json)
-    map_str, _ = read_in_sortation_map(map_filepath)
-    map_np = sortation_env_str2number(map_str)
-    h, w = map_np.shape
 
-    # Read in packages, chute mapping
-    _, package_dist_weight_json = get_packages(
-        warehouse_config.package_mode,
-        warehouse_config.package_dist_type,
-        warehouse_config.package_path,
-        warehouse_config.n_destinations,
-    )
-    with open(chute_mapping_file, "r") as f:
-        chute_mapping_json = json.load(f)
-        chute_mapping_json = json.dumps(chute_mapping_json)
+    weights_jsonstr = ""
+    if raw_env_json["weight"]:
+        weights_matrix = raw_env_json["weights_matrix"]
+        weights_jsonstr = json.dumps(weights_matrix)
+
 
     config_path = "configs/pibt_default_no_rot.json"
     with open(config_path) as f:
         config = json.load(f)
         config_str = json.dumps(config)
 
-    # list of destinations
-    # n_destinations = 300
-    # packages = np.random.randint(0, n_destinations, size=100000).tolist()
-    # package_dist_weight = np.random.rand(n_destinations).tolist()
-    # print(packages)
-
-    all_chutes = get_chute_loc(map_np).tolist()
-    all_workstations = get_workstation_loc(map_np).tolist()
-    n_chutes = len(all_chutes)
-    print(all_chutes)
-    print(all_workstations)
-    n_valid_edges = get_n_valid_edges(map_np,
-                                      bi_directed=True,
-                                      domain="sortation")
-    n_valid_vertices = get_n_valid_vertices(map_np, domain="sortation")
-    compressed_weights_json_str = json.dumps(np.ones(n_valid_edges).tolist())
-    compressed_wait_costs_json_str = json.dumps(
-        np.ones(n_valid_vertices).tolist())
-
-    # Task assignment policy
-    task_assignment_params = np.random.rand(10).tolist()
-
     ret = wppl_py_driver.run(
-        scenario="SORTING",  # one of ["KIVA", "COMPETITION", "SORTING"]
+        scenario="KIVA",  # one of ["KIVA", "COMPETITION", "SORTING"]
         # For map, it uses map_path by default. If not provided, it'll use map_json
         # which contains json string of the map
         # map_path=map_path,
         map_json_str=map_json_str,
         # map_json_path=map_json_path,
-        simulation_steps=5000,
+        simulation_steps=2000,
         # for the problem instance we use:
         # if random then we need specify the number of agents and total tasks, also random seed,
         gen_random=True,
@@ -182,8 +140,8 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
         # tasks_path="example_problems/random.domain/tasks/random-32-32-20-600.tasks",
         # weights are the edge weights, wait_costs are the vertex wait costs
         # if not specified here, then the program will use the one specified in the config file.
-        weights=compressed_weights_json_str,
-        wait_costs=compressed_wait_costs_json_str,
+        weights=weights_jsonstr,
+        # wait_costs=compressed_wait_costs_json_str,
         # if we don't load config here, the program will load the default config file.
         config=config_str,
         # the following are some things we don't need to change in the weight optimization case.
@@ -196,21 +154,6 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
         task_assignment_strategy=
         "roundrobin",  # how to assign tasks to agents, no need to change
         num_tasks_reveal=1,  # how many new tasks are revealed, no need to change
-        # Chute mapping related
-        # packages=json.dumps(packages),
-        package_dist_weight=package_dist_weight_json,
-        package_mode="dist",
-        chute_mapping=chute_mapping_json,
-        task_assignment_cost="heuristic+num_agents",
-        task_assignment_params=json.dumps(task_assignment_params),
-        recirc_mechanism=True,
-        task_waiting_time=0,
-        workstation_waiting_time=0,
-        task_change_time=100,
-        task_gaussian_sigma=0.01,
-        time_sigma=1000,
-        time_dist=True,
-        # assign_C=15,
     )
 
     analysis = json.loads(ret)
@@ -222,10 +165,6 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
     # print(analysis["throughput"], analysis["edge_pair_usage_mean"],
     #   analysis["edge_pair_usage_std"])
     print("throughput", analysis["throughput"])
-    print(analysis["n_finish_task_plus_n_recirs"])
-    print(analysis["n_recirs"])
-    print(analysis["recirc_rate"])
-    print("Chute sleep count ", analysis["chute_sleep_count"])
 
     # ##### Only use the following for weight opt case #####
     # # because the order of orientation is different in competition code and weight opt code.

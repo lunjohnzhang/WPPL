@@ -177,27 +177,33 @@ std::string run(const py::kwargs& kwargs)
         planner->config=config;
     }
 
+
+
     if (kwargs.contains("weights")) {
         std::string weight_str=kwargs["weights"].cast<std::string>();
         nlohmann::json weight_json=nlohmann::json::parse(weight_str);
-        std::vector<float> weights;
+
+        const int max_weight = 100000;
+        std::shared_ptr<std::vector<float>> map_weights_ptr = std::make_shared<std::vector<float>>();
+
         for (auto & w:weight_json) {
-            weights.push_back(w.get<float>());
+            map_weights_ptr->push_back(w.get<float>());
         }
+        planner->map_weights = map_weights_ptr;
 
-        if (kwargs.contains("wait_costs")) {
-            std::string wait_costs_str=kwargs["wait_costs"].cast<std::string>();
-            nlohmann::json wait_costs_json=nlohmann::json::parse(wait_costs_str);
-            std::vector<float> wait_costs;
-            for (auto & w:wait_costs_json) {
-                wait_costs.push_back(w.get<float>());
-            }
+        // if (kwargs.contains("wait_costs")) {
+        //     std::string wait_costs_str=kwargs["wait_costs"].cast<std::string>();
+        //     nlohmann::json wait_costs_json=nlohmann::json::parse(wait_costs_str);
+        //     std::vector<float> wait_costs;
+        //     for (auto & w:wait_costs_json) {
+        //         wait_costs.push_back(w.get<float>());
+        //     }
 
 
-            planner->map_weights=weight_format_conversion_with_wait_costs(grid, weights, wait_costs);
-        } else {
-            planner->map_weights=weight_format_conversion(grid, weights);
-        }
+        //     planner->map_weights=weight_format_conversion_with_wait_costs(grid, weights, wait_costs);
+        // } else {
+        //     planner->map_weights=weight_format_conversion(grid, weights);
+        // }
 
     }
 

@@ -61,9 +61,10 @@ struct Graph {
   uint width;                          // grid width
   uint height;                         // grid height
   Graph();
-  Graph(const std::string& filename);  // taking map filename
+//   Graph(const std::string& filename);  // taking map filename
   // for competition
-  Graph(const SharedEnvironment & env);
+  Graph(const SharedEnvironment & env,
+        const std::shared_ptr<std::vector<float> > & map_weights);
   ~Graph();
 
   uint size() const;  // the number of vertices

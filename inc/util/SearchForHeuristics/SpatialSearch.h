@@ -91,7 +91,12 @@ public:
                 if (env.map[next_pos]==0) {
                     int weight_idx=pos*n_dirs;
                     // std::cerr<<"east: "<<next_pos<<" "<<curr->g<<" "<<weights[weight_idx]<<endl;
-                    add_successor(next_pos, -1, curr->g+weights[weight_idx], 0, curr);
+                    if (weights[weight_idx] != -1) // valid edge
+                    {
+                        add_successor(next_pos, -1,
+                                      curr->g+weights[weight_idx],
+                                      0, curr);
+                    }
                 }
             }
 
@@ -101,7 +106,12 @@ public:
                 if (env.map[next_pos]==0) {
                     int weight_idx=pos*n_dirs+1;
                     // std::cerr<<"south: "<<next_pos<<" "<<curr->g<<" "<<weights[weight_idx]<<endl;
-                    add_successor(next_pos, -1, curr->g+weights[weight_idx], 0, curr);
+                    if (weights[weight_idx] != -1) // valid edge
+                    {
+                        add_successor(next_pos, -1,
+                                      curr->g+weights[weight_idx],
+                                      0, curr);
+                    }
                 }
             }
 
@@ -111,7 +121,12 @@ public:
                 if (env.map[next_pos]==0) {
                     int weight_idx=pos*n_dirs+2;
                     // std::cerr<<"west: "<<next_pos<<" "<<curr->g<<" "<<weights[weight_idx]<<endl;
-                    add_successor(next_pos, -1, curr->g+weights[weight_idx], 0, curr);
+                    if (weights[weight_idx] != -1) // valid edge
+                    {
+                        add_successor(next_pos, -1,
+                                      curr->g+weights[weight_idx],
+                                      0, curr);
+                    }
                 }
             }
 
@@ -121,7 +136,12 @@ public:
                 if (env.map[next_pos]==0) {
                     int weight_idx=pos*n_dirs+3;
                     // std::cerr<<"north: "<<next_pos<<" "<<curr->g<<" "<<weights[weight_idx]<<endl;
-                    add_successor(next_pos, -1, curr->g+weights[weight_idx], 0, curr);
+                    if (weights[weight_idx] != -1) // valid edge
+                    {
+                        add_successor(next_pos, -1,
+                                      curr->g+weights[weight_idx],
+                                      0, curr);
+                    }
                 }
             }
         } else {
@@ -138,7 +158,7 @@ public:
                 if (x+1<env.cols){
                     next_pos=pos+1;
                     weight_idx=pos*n_dirs;
-                    if (env.map[next_pos]==0) {
+                    if (env.map[next_pos]==0 && weights[weight_idx] != -1) {
                         add_successor(next_pos, orient, curr->g+weights[weight_idx], 0, curr);
                     }
                 }
@@ -147,7 +167,7 @@ public:
                 if (y+1<env.rows) {
                     next_pos=pos+env.cols;
                     weight_idx=pos*n_dirs+1;
-                    if (env.map[next_pos]==0) {
+                    if (env.map[next_pos]==0 && weights[weight_idx] != -1) {
                         add_successor(next_pos, orient, curr->g+weights[weight_idx], 0, curr);
                     }
                 }
@@ -156,7 +176,7 @@ public:
                 if (x-1>=0) {
                     next_pos=pos-1;
                     weight_idx=pos*n_dirs+2;
-                    if (env.map[next_pos]==0) {
+                    if (env.map[next_pos]==0 && weights[weight_idx] != -1) {
                         add_successor(next_pos, orient, curr->g+weights[weight_idx], 0, curr);
                     }
                 }
@@ -165,7 +185,7 @@ public:
                 if (y-1>=0) {
                     next_pos=pos-env.cols;
                     weight_idx=pos*n_dirs+3;
-                    if (env.map[next_pos]==0) {
+                    if (env.map[next_pos]==0 && weights[weight_idx] != -1) {
                         add_successor(next_pos, orient, curr->g+weights[weight_idx], 0, curr);
                     }
                 }
