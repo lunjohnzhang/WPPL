@@ -210,6 +210,7 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
         task_gaussian_sigma=0.01,
         time_sigma=1000,
         time_dist=False,
+        sleep_time_factor=2.5,
         # assign_C=15,
     )
 

@@ -190,7 +190,8 @@ inline int _get_Manhattan_distance(int loc1, int loc2, int cols) {
 inline void compute_chute_sleep_time(
     const std::map<int, vector<int>> chute_mapping,
     boost::unordered_map<int, int>& chute_sleep_time,
-    int num_col
+    int num_col,
+    float factor = 2.0
 )
 {
     // For chutes of the same destinations, compute the centroid
@@ -220,7 +221,7 @@ inline void compute_chute_sleep_time(
         for (int chute : chutes)
         {
             chute_sleep_time[chute] = static_cast<int>(
-                2 * pow(avg_dist, 2) + 50);
+                2 * pow(avg_dist, factor) + 50);
         }
         // cout << "Destination " << dest << " avg dist: " << avg_dist
         //      <<  ", sleep time: " << chute_sleep_time[chutes[0]]

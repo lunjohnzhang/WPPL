@@ -26,6 +26,7 @@ public:
                     bool time_dist,
                     int time_sigma,
                     int total_simulation_steps,
+                    float sleep_time_factor,
                     int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), package_mode(package_mode), packages(packages), package_dist_weight(package_dist_weight),
                                                  init_package_dist_weight(package_dist_weight),
                                                  task_assignment_cost(task_assignment_cost),
@@ -114,7 +115,8 @@ public:
 
         // Compute chute sleep time
         compute_chute_sleep_time(
-            chute_mapping, this->chute_sleep_time, grid.cols);
+            chute_mapping, this->chute_sleep_time, grid.cols,
+            sleep_time_factor);
     };
 
     void simulate(int simulation_time) override;
