@@ -1647,10 +1647,12 @@ nlohmann::json BaseSystem::analyzeResults(bool online)
 
     // Save actual paths
     json apaths = json::array();
+    vector<vector<State>> s_paths(num_of_agents);
     for (int i = 0; i < num_of_agents; i++)
     {
         std::string path;
         bool first = true;
+        State prev_state = starts[i];
         for (const auto action : actual_movements[i])
         {
             if (!first)
@@ -1686,10 +1688,44 @@ nlohmann::json BaseSystem::analyzeResults(bool online)
             {
                 path+="X";
             }
+
+            // Record the state without considering waits
+            if (action != Action::W && action != Action::NA)
+            {
+                auto curr_state = this->model->result_state(prev_state, action);
+                s_paths[i].push_back(curr_state);
+                prev_state = curr_state;
+            }
         }
         apaths.push_back(path);
     }
     js["actualPaths"] = apaths;
+
+    // Compute average number of (shadow) rotations
+    float total_rots = 0;
+    for (int i = 0; i < num_of_agents; i++)
+    {
+        for (int j = 1; j < s_paths[i].size() - 1; j++)
+        {
+            auto prev_state = s_paths[i][j-1];
+            auto next_state = s_paths[i][j+1];
+            int prev_x = prev_state.location % map.cols;
+            int prev_y = prev_state.location / map.cols;
+            int next_x = next_state.location % map.cols;
+            int next_y = next_state.location / map.cols;
+            // Agent goes back the same location
+            if (prev_state.location == next_state.location)
+            {
+                total_rots += 2;
+            }
+            // Agent goes to a location that is on the diagonal
+            else if (abs(prev_x - next_x) == 1 && abs(prev_y - next_y) == 1)
+            {
+                total_rots += 1;
+            }
+        }
+    }
+    js["avgRotations"] = total_rots / num_of_agents;
 
     //planned paths
     json ppaths = json::array();

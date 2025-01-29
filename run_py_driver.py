@@ -165,6 +165,7 @@ def main(map_filepath, seed=0):
     # print(analysis["throughput"], analysis["edge_pair_usage_mean"],
     #   analysis["edge_pair_usage_std"])
     print("throughput", analysis["throughput"])
+    print("avg_rotations", analysis["avg_rotations"])
 
     # ##### Only use the following for weight opt case #####
     # # because the order of orientation is different in competition code and weight opt code.
