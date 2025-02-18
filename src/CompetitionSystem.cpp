@@ -1939,9 +1939,9 @@ void KivaSystem::initialize()
                 map.end_points.begin(), map.end_points.end(), end_pt);
             int idx = it - map.end_points.begin();
             endpoint_weights[idx] = probs[i];
-            cout << "endpoint " << end_pt << " with dist to w "
-                    << dist_to_workstation[i].second << " has weight "
-                    << probs[i] << endl;
+            // cout << "endpoint " << end_pt << " with dist to w "
+            //         << dist_to_workstation[i].second << " has weight "
+            //         << probs[i] << endl;
         }
         this->endpoint_dist = std::discrete_distribution<int>(
             endpoint_weights.begin(), endpoint_weights.end());

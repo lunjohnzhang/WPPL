@@ -129,7 +129,7 @@ def main(map_filepath, seed=0):
         # for the problem instance we use:
         # if random then we need specify the number of agents and total tasks, also random seed,
         gen_random=True,
-        num_agents=200,
+        num_agents=232,
         num_tasks=1000,
         seed=seed,
         save_paths=True,
@@ -171,7 +171,7 @@ def main(map_filepath, seed=0):
     print(analysis["finished_tasks"])
     finished_tasks = np.array(analysis["finished_tasks"]).reshape(33, 36)
     fig, ax = plt.subplots()
-    sns.heatmap(finished_tasks, ax=ax, vmax=1, cmap="Reds")
+    sns.heatmap(finished_tasks, ax=ax, vmax=10, cmap="Reds")
     fig.savefig("finished_tasks.png")
 
     # Visualize endpoints and the endpoint weights
