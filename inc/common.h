@@ -174,3 +174,50 @@ T read_param_json(nlohmann::json& data, std::string name, T default_value)
         exit(1);
     }
 }
+
+
+
+// 721 distribution taken from https://github.com/HarukiMoriarty/CAL-MAPF/blob/c3dd0359a88aa2f019718348d99c53dbcd9764ce/calmapf/src/graph.cpp#L5-L41
+inline double calculate_sum(int start, int end)
+{
+    double sum = 0.0;
+    for (int i = start; i <= end; ++i)
+    {
+        sum += 1.0 / (i + 1);
+    }
+    return sum;
+}
+
+inline std::vector<double> calculate_probabilities(int n)
+{
+    std::vector<double> probabilities(n);
+
+    // The first 10% of items
+    double sum_first_10 = calculate_sum(0, int(n * 0.1) - 1);
+    for (int i = 0; i < int(n * 0.1); ++i)
+    {
+        probabilities[i] = 0.7 / sum_first_10 * (1.0 / (i + 1));
+    }
+
+    // For item 10, it has the same probability as item 9
+    probabilities[int(n * 0.1)] = probabilities[int(n * 0.1) - 1];
+
+    // The next 20% of items
+    double sum_next_20 = calculate_sum(int(n * 0.1), int(n * 0.3) - 1);
+    for (int i = int(n * 0.1) + 1; i < int(n * 0.3); ++i)
+    {
+        probabilities[i] = 0.2 / sum_next_20 * (1.0 / (i + 1));
+    }
+
+    // For item 30, it has the same probability as item 29
+    probabilities[int(n * 0.3)] = probabilities[int(n * 0.3) - 1];
+
+    // The last 70% of items
+    double sum_last_70 = calculate_sum(int(n * 0.3), n - 1);
+    for (int i = int(n * 0.3) + 1; i < n; ++i)
+    {
+        probabilities[i] = 0.1 / sum_last_70 * (1.0 / (i + 1));
+    }
+
+    return probabilities;
+}

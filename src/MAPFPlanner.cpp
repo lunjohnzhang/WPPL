@@ -255,8 +255,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
             exit(-1);
         }
 
-        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,read_param_json<bool>(config["LaCAM2"],"use_orient_in_heuristic"));
-        heuristics->preprocess(suffix);
+        this->heuristics =std::make_shared<HeuristicTable>(env,map_weights,read_param_json<bool>(config["LaCAM2"],"use_orient_in_heuristic"));
+        this->heuristics->preprocess(suffix);
         int max_agents_in_use=read_param_json<int>(config,"max_agents_in_use",-1);
         if (max_agents_in_use==-1) {
             max_agents_in_use=env->num_of_agents;
@@ -271,8 +271,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
             std::cerr<<"In LNS, must not consider rotation when compiled with NO_ROT unset"<<std::endl;
             exit(-1);
         }
-        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,true);
-        heuristics->preprocess(suffix);
+        this->heuristics =std::make_shared<HeuristicTable>(env,map_weights,true);
+        this->heuristics->preprocess(suffix);
         //heuristics->preprocess();
         int max_agents_in_use=read_param_json<int>(config,"max_agents_in_use",-1);
         if (max_agents_in_use==-1) {
@@ -497,9 +497,13 @@ list<pair<int,int>> MAPFPlanner::getNeighbors(int location,int direction) {
 
 void MAPFPlanner::load_configs() {
     // load configs
-    char * config_root_path=getenv("CONFIG_ROOT_PATH");
-    if (config_root_path==NULL) {
+    const char * config_root_path_tmp=getenv("CONFIG_ROOT_PATH");
+    string config_root_path;
+    if (config_root_path_tmp==NULL) {
         config_root_path="configs/";
+    }
+    else {
+        config_root_path=string(config_root_path_tmp);
     }
 
 	string config_path=config_root_path+env->map_name.substr(0,env->map_name.find_last_of("."))+"_no_rot.json";
@@ -621,8 +625,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         }
         bool disable_corner_target_agents=read_param_json<bool>(config,"disable_corner_target_agents",false);
         int max_task_completed=read_param_json<int>(config,"max_task_completed",1000000);
-        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
-        heuristics->preprocess(suffix);
+        this->heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
+        this->heuristics->preprocess(suffix);
         lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(
             heuristics,
             env,
@@ -634,8 +638,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         lacam2_solver->initialize(*env);
         cout<<"LaCAMSolver2 initialized"<<endl;
     } else if (lifelong_solver_name=="LNS") {
-        auto heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
-        heuristics->preprocess(suffix);
+        this->heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
+        this->heuristics->preprocess(suffix);
         //heuristics->preprocess();
         int max_agents_in_use=read_param_json<int>(config,"max_agents_in_use",-1);
         if (max_agents_in_use==-1) {

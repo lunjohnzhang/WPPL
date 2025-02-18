@@ -101,7 +101,7 @@ protected:
     bool fast_mover_feasible = true;
 
 
-	void initialize();
+	virtual void initialize();
     bool planner_initialize();
 	virtual void update_tasks() = 0;
 
@@ -276,7 +276,9 @@ public:
     void savePaths(const string &fileName, int option) const; //option = 0: save actual movement, option = 1: save planner movement
     //void saveSimulationIssues(const string &fileName) const;
     void saveResults(const string &fileName) const;
+    void savePathsLoc(const string &fileName) const;
 
+    vector<double> endpoint_weights;
 #ifdef MAP_OPT
     nlohmann::json analyzeResults();
 #endif
@@ -324,7 +326,7 @@ protected:
     bool fast_mover_feasible = true;
 
 
-	void initialize();
+	virtual void initialize();
     bool planner_initialize();
 	virtual void update_tasks() = 0;
 
@@ -467,8 +469,9 @@ private:
 class KivaSystem: public BaseSystem 
 {
 public:
-    KivaSystem(Grid &grid, MAPFPlanner* planner, ActionModelWithRotate* model, int num_agents, uint seed):
-        BaseSystem(grid, planner, model), MT(seed), task_id(0)
+    KivaSystem(Grid &grid, MAPFPlanner* planner, ActionModelWithRotate* model, int num_agents, uint seed, string end_pt_dist = "uniform"):
+        BaseSystem(grid, planner, model), MT(seed), task_id(0),
+        end_pt_dist(end_pt_dist)
     {
         num_of_agents = num_agents;
         starts.resize(num_of_agents);
@@ -495,12 +498,16 @@ public:
 
     };
 
+protected:
+    void initialize() override;
 private:
     std::mt19937 MT;
     int task_id=0;
 
     void update_tasks();
+    string end_pt_dist;
     std::discrete_distribution<int> agent_home_loc_dist;
+    std::discrete_distribution<int> endpoint_dist;
 
     std::vector<int> prev_task_locs;
 

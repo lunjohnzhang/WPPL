@@ -311,13 +311,17 @@ nlohmann::json analyze_result_json(const nlohmann::json & result, Grid & grid) {
 
     nlohmann::json analysis;
     analysis = {
+        {"num_task_finished", throughput},
         {"throughput", avg_throughput},
         {"tile_usage", vertex_usage},
-        {"edge_pair_usage", edge_pair_usage},
-        {"edge_pair_usage_mean", edge_pair_usage_mean},
-        {"edge_pair_usage_std", edge_pair_usage_std},
+        // {"edge_pair_usage", edge_pair_usage},
+        // {"edge_pair_usage_mean", edge_pair_usage_mean},
+        // {"edge_pair_usage_std", edge_pair_usage_std},
         {"edge_usage_matrix", edge_usage_matrix},
-        {"vertex_wait_matrix", vertex_wait_matrix}
+        {"vertex_wait_matrix", vertex_wait_matrix},
+        {"finished_tasks", result["finished_tasks"]},
+        {"endpoint_weights", result["endpoint_weights"]},
+        {"endpoints", result["endpoints"]}
     };
     return analysis;
 }

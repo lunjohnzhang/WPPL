@@ -60,6 +60,8 @@ public:
     void rhcr_config_solver(std::shared_ptr<RHCR::RHCRSolver> & solver,nlohmann::json & config);
 
     int max_execution_steps;
+
+    std::shared_ptr<HeuristicTable> heuristics;
 };
 
 #else
@@ -98,6 +100,7 @@ public:
     std::string load_map_weights(string weights_path);
     
     int max_execution_steps;
+    std::shared_ptr<HeuristicTable> heuristics;
 };
 
 #endif

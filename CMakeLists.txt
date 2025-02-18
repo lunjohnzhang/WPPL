@@ -50,7 +50,7 @@ IF (MAP_OPT)
     add_subdirectory(pybind11)
 ENDIF()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconversion")
 
 # IF(PYTHON)
 #     include_directories("python")

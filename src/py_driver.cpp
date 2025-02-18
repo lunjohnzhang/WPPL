@@ -413,9 +413,15 @@ std::string run(const py::kwargs& kwargs)
 
         int num_agents=kwargs["num_agents"].cast<int>();
         std::cout << "using kiva system (random task generation) with "<<num_agents<<" agents"<<std::endl;
-        
+
         uint seed=kwargs["seed"].cast<uint>();
-        system_ptr = std::make_unique<KivaSystem>(grid,planner,model,num_agents,seed);
+        std::string end_pt_dist = "uniform";
+        if (kwargs.contains("end_pt_dist"))
+        {
+            end_pt_dist=kwargs["end_pt_dist"].cast<std::string>();
+        }
+        system_ptr = std::make_unique<KivaSystem>(grid,planner,model,num_agents,
+            seed, end_pt_dist);
     }
 
     system_ptr->set_logger(logger);
@@ -438,8 +444,9 @@ std::string run(const py::kwargs& kwargs)
     {
         boost::filesystem::path output_dir(kwargs["file_storage_path"].cast<std::string>());
         boost::filesystem::create_directories(output_dir);
-        boost::filesystem::path path_file = output_dir / "results.json";
-        system_ptr->saveResults(path_file.string());
+        boost::filesystem::path path_file = output_dir / "paths.txt";
+        // system_ptr->saveResults(path_file.string());
+        system_ptr->savePathsLoc(path_file.string());
     }
 
     // system_ptr->saveResults("debug.json");

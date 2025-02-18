@@ -1266,6 +1266,30 @@ void BaseSystem::savePaths(const string &fileName, int option) const
     output.close();
 }
 
+
+// Save path using the same format as RHCR code base
+void BaseSystem::savePathsLoc(const string &fileName) const
+{
+    std::ofstream output;
+
+    output.open(fileName, std::ios::out);
+    output << num_of_agents << std::endl;
+    for (int k = 0; k < num_of_agents; k++)
+    {
+        State prev_state = starts[k];
+        output << this->starts[k] << ";";
+        for (const auto t : actual_movements[k])
+        {
+            auto curr_state = this->model->result_state(prev_state, t);
+            output << curr_state << ";";
+            prev_state = curr_state;
+        }
+        output << std::endl;
+    }
+    output.close();
+}
+
+
 #ifdef MAP_OPT
 
 nlohmann::json BaseSystem::analyzeResults()
@@ -1472,6 +1496,17 @@ nlohmann::json BaseSystem::analyzeResults()
     }
     js["tasks"] = tasks;
 
+    std::vector<double> real_finished_tasks(this->map.rows*this->map.cols, 0);
+    for (auto& tasks: this->finished_tasks) {
+        for (auto& task: tasks) {
+            if (this->map.grid_types[task.location] != 'w')
+                real_finished_tasks[task.location] += 1;
+        }
+    }
+    js["finished_tasks"] = real_finished_tasks;
+
+    js["endpoint_weights"] = this->endpoint_weights;
+    js["endpoints"] = this->map.end_points;
     return analyze_result_json(js, map);
 }
 
@@ -1818,7 +1853,8 @@ void KivaSystem::update_tasks(){
             } else if (map.grid_types[prev_task_loc]=='w')
             {
                 // next task would e
-                int idx=MT()%map.end_points.size();
+                // int idx=MT()%map.end_points.size();
+                int idx = this->endpoint_dist(this->MT);
                 loc=map.end_points[idx];
             } else {
                 std::cout<<"unkonw grid type"<<std::endl;
@@ -1836,6 +1872,87 @@ void KivaSystem::update_tasks(){
     }
 }
 
+
+void KivaSystem::initialize()
+{
+    // Call parent initialize
+    BaseSystem::initialize();
+
+    // Initialize the endpoint task distribution
+    // Note: Since this depends on heuristics, we are forced to do it here
+    if (this->end_pt_dist == "uniform")
+    {
+        // Uniform distribution
+        vector<double> dist(map.end_points.size(), 1.0);
+        this->endpoint_dist = std::discrete_distribution<int>(
+            dist.begin(), dist.end());
+    }
+    else if (this->end_pt_dist == "dist_workstation_721")
+    {
+        // Bias the frequency of visiting the endpoints by the ranking of
+        // the distance to the closest workstation, following the 721
+        // distribution
+        // Top 10% workstations are visited 70% of the time
+        // The next 20% workstations are visited 20% of the time
+        // Top next 70% workstations are visited 10% of the time
+
+        // Get the distance to the closest workstation for each endpoint
+        vector<pair<int, double>> dist_to_workstation;
+        // vector<double> dist_to_workstation(map.end_points.size(), 0.0);
+        for (size_t i = 0; i < map.end_points.size(); i++)
+        {
+            // Loop through every workstation and get the distance from
+            // heuristic table
+            double min_dist = INT_MAX;
+            for (size_t j = 0; j < map.agent_home_locations.size(); j++)
+            {
+                double dist = this->planner->heuristics->get(
+                    map.end_points[i], map.agent_home_locations[j]);
+                if (dist < min_dist)
+                {
+                    min_dist = dist;
+                }
+            }
+            dist_to_workstation.push_back({map.end_points[i], min_dist});
+        }
+
+        // Sort the endpoints by distance to the closest workstation
+        sort(dist_to_workstation.begin(), dist_to_workstation.end(),
+            [](pair<int, double> a, pair<int, double> b) {
+                // Break ties by index
+                if (a.second == b.second)
+                    return a.first < b.first;
+                else
+                    return a.second < b.second;
+            });
+
+        // Get the frequency of visiting each endpoint
+        vector<double> endpoint_weights(map.end_points.size(), 0.0);
+        vector<double> probs = calculate_probabilities(
+            map.end_points.size());
+        for (size_t i = 0; i < dist_to_workstation.size(); i++)
+        {
+            // Find the index of the endpoint in the original vector
+            int end_pt = dist_to_workstation[i].first;
+            // Find the index of end_pt in map.end_points
+            auto it = find(
+                map.end_points.begin(), map.end_points.end(), end_pt);
+            int idx = it - map.end_points.begin();
+            endpoint_weights[idx] = probs[i];
+            cout << "endpoint " << end_pt << " with dist to w "
+                    << dist_to_workstation[i].second << " has weight "
+                    << probs[i] << endl;
+        }
+        this->endpoint_dist = std::discrete_distribution<int>(
+            endpoint_weights.begin(), endpoint_weights.end());
+        this->endpoint_weights = endpoint_weights;
+    }
+    else
+    {
+        cout << "Unknown end point distribution: " << this->end_pt_dist << endl;
+        exit(1);
+    }
+}
 
 void InfAssignSystem::resume_from_file(string snapshot_fp, int w){
     std::ifstream fin(snapshot_fp);

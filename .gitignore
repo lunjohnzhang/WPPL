@@ -15,6 +15,7 @@ my_viz/*.gif
 large_files
 offline_eval
 offline_eval/
+*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
