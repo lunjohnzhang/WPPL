@@ -324,6 +324,7 @@ py_sim::py_sim(py::kwargs kwargs)
         bool time_dist = kwargs["time_dist"].cast<bool>();
         int time_sigma = kwargs["time_sigma"].cast<int>();
         float sleep_time_factor = kwargs["sleep_time_factor"].cast<float>();
+        float sleep_time_noise_std = kwargs["sleep_time_noise_std"].cast<float>();
 
         this->system_ptr = std::make_unique<SortationSystem>(grid, planner,
             model, chute_mapping_int, package_mode, packages,
@@ -331,7 +332,7 @@ py_sim::py_sim(py::kwargs kwargs)
             assign_C, recirc_mechanism, task_waiting_time,
             workstation_waiting_time, task_gaussian_sigma, task_change_time,
             time_dist, time_sigma, simulation_steps, sleep_time_factor,
-            num_agents, seed);
+            sleep_time_noise_std, num_agents, seed);
     }
     else
     {

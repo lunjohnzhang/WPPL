@@ -684,10 +684,23 @@ void SortationSystem::update_chute_sleeping()
             // cout << "Chute " << chute.first << " is sleeping" << endl;
             // cout << "Number of packages in chute " << chute.first << ": " << this->packages_in_chutes[chute.first] << endl;
             // cout << endl;
+
+            // We are updating the sleeping time for the first time, compute
+            // the sleeping time for this chute by adding gaussian noise
+            if (this->chute_sleeping_time[chute.first] == 0)
+            {
+                std::normal_distribution<double> dist(
+                    0, this->chute_sleep_time[chute.first] * this->sleep_time_noise_std);
+                this->actual_chute_sleep_time[chute.first] = std::max(
+                    1, static_cast<int>(
+                        this->chute_sleep_time[chute.first] + dist(this->MT)));
+                // cout << "Chute " << chute.first << " is sleeping for " << this->actual_chute_sleep_time[chute.first] << " timesteps" << endl;
+            }
+
             this->chute_sleeping_time[chute.first]++;
             this->total_chute_sleep_time[chute.first]++;
             if (this->chute_sleeping_time[chute.first] >=
-                this->chute_sleep_time[chute.first])
+                this->actual_chute_sleep_time[chute.first])
             {
                 this->chute_sleeping[chute.first] = false;
                 this->chute_sleeping_time[chute.first] = 0;

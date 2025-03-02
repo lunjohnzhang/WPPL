@@ -27,6 +27,7 @@ public:
                     int time_sigma,
                     int total_simulation_steps,
                     float sleep_time_factor,
+                    float sleep_time_noise_std,
                     int num_agents, uint seed) : BaseSystem(grid, planner, model), MT(seed), task_id(0), chute_mapping(chute_mapping), package_mode(package_mode), packages(packages), package_dist_weight(package_dist_weight),
                                                  init_package_dist_weight(package_dist_weight),
                                                  task_assignment_cost(task_assignment_cost),
@@ -35,7 +36,8 @@ public:
                                                  task_waiting_time(task_waiting_time),
                                                  workstation_waiting_time(workstation_waiting_time),
                                                  task_gaussian_sigma(task_gaussian_sigma),
-                                                 task_change_time(task_change_time), time_dist(time_dist)
+                                                 task_change_time(task_change_time), time_dist(time_dist),
+                                                 sleep_time_noise_std(sleep_time_noise_std)
     {
         num_of_agents = num_agents;
         starts.resize(num_of_agents);
@@ -103,6 +105,7 @@ public:
             this->chute_sleep_count[chute] = 0;
             this->total_chute_sleep_time[chute] = 0;
             this->robots_in_chutes[chute] = 0;
+            this->actual_chute_sleep_time[chute] = 0;
         }
 
         // Task waiting mechanism
@@ -167,6 +170,7 @@ private:
     int n_recirs = 0;
     int n_finish_task_plus_n_recirs = 0;
     queue<int> recirc_packages;
+    float sleep_time_noise_std;
 
     // workstations and #robots that intends to go to this workstation
     boost::unordered_map<int, int> robots_in_workstations;
@@ -188,6 +192,9 @@ private:
     boost::unordered_map<int, int> chute_sleep_count;
     // Chute sleep time
     boost::unordered_map<int, int> chute_sleep_time;
+    // Actual sleep time for each chute, should be
+    // chute_sleep_time[chute] + gaussian noise
+    boost::unordered_map<int, int> actual_chute_sleep_time;
     // Number of timesteps each chute goes to sleep
     boost::unordered_map<int, int> total_chute_sleep_time;
 
