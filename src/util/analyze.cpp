@@ -163,11 +163,11 @@ nlohmann::json analyze_result_json(
                 if (prev_orient==0) { // right
                     edge_usage_matrix[prev_pos*4+0]+=1;
                 } else if (prev_orient==1) { // down
-                    edge_usage_matrix[prev_pos*4+3]+=1;
+                    edge_usage_matrix[prev_pos*4+1]+=1;
                 } else if (prev_orient==2) { // left
                     edge_usage_matrix[prev_pos*4+2]+=1;
                 } else if (prev_orient==3) { // up
-                    edge_usage_matrix[prev_pos*4+1]+=1;
+                    edge_usage_matrix[prev_pos*4+3]+=1;
                 } else {
                     std::cerr<<"unknown orientation: "<<prev_orient<<std::endl;
                     exit(-1);
@@ -638,11 +638,11 @@ nlohmann::json analyze_result_json(
             if (action=='R') {
                 edge_usage_matrix[prev_pos*4+0]+=1;
             } else if (action=='D') {
-                edge_usage_matrix[prev_pos*4+3]+=1;
+                edge_usage_matrix[prev_pos*4+1]+=1;
             } else if (action=='L') {
                 edge_usage_matrix[prev_pos*4+2]+=1;
             } else if (action=='U') {
-                edge_usage_matrix[prev_pos*4+1]+=1;
+                edge_usage_matrix[prev_pos*4+3]+=1;
             } else if (action=='W') {
                 vertex_wait_matrix[prev_pos]+=1;
             }
