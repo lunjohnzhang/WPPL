@@ -160,7 +160,7 @@ def main(map_filepath, seed=0):
     print(analysis.keys())
     print(np.array(analysis["tile_usage"]).shape)
     print(np.array(analysis["vertex_wait_matrix"]).shape)
-    # print(np.array(analysis["edge_pair_usage"]).shape)
+    print(np.array(analysis["edge_usage_matrix"]).shape)
 
     # print(analysis["throughput"], analysis["edge_pair_usage_mean"],
     #   analysis["edge_pair_usage_std"])
