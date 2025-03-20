@@ -1645,7 +1645,7 @@ nlohmann::json BaseSystem::analyzeResults(bool online)
     js["sumOfCost"] = sum_of_cost;
     js["makespan"] = makespan;
 
-    // Save actual paths
+    // Save actual paths and actual paths with no waits
     json apaths = json::array();
     vector<vector<State>> s_paths(num_of_agents);
     for (int i = 0; i < num_of_agents; i++)
@@ -1705,6 +1705,12 @@ nlohmann::json BaseSystem::analyzeResults(bool online)
     float total_rots = 0;
     for (int i = 0; i < num_of_agents; i++)
     {
+        if (s_paths[i].size() < 2)
+        {
+            // cout << "agent " << i << " is skipped" << endl;
+            // cout << "apath: " << apaths[i] << endl;
+            continue;
+        }
         for (int j = 1; j < s_paths[i].size() - 1; j++)
         {
             auto prev_state = s_paths[i][j-1];
