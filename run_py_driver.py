@@ -111,7 +111,6 @@ def main(map_filepath, seed=0):
         weights_matrix = raw_env_json["weights_matrix"]
         weights_jsonstr = json.dumps(weights_matrix)
 
-
     config_path = "configs/pibt_default_no_rot.json"
     with open(config_path) as f:
         config = json.load(f)
@@ -128,7 +127,7 @@ def main(map_filepath, seed=0):
         # for the problem instance we use:
         # if random then we need specify the number of agents and total tasks, also random seed,
         gen_random=True,
-        num_agents=800,
+        num_agents=400,
         num_tasks=100000,
         seed=seed,
         save_paths=True,
@@ -140,7 +139,7 @@ def main(map_filepath, seed=0):
         # tasks_path="example_problems/random.domain/tasks/random-32-32-20-600.tasks",
         # weights are the edge weights, wait_costs are the vertex wait costs
         # if not specified here, then the program will use the one specified in the config file.
-        weights=weights_jsonstr,
+        # weights=weights_jsonstr,
         # wait_costs=compressed_wait_costs_json_str,
         # if we don't load config here, the program will load the default config file.
         config=config_str,
@@ -166,6 +165,8 @@ def main(map_filepath, seed=0):
     #   analysis["edge_pair_usage_std"])
     print("throughput", analysis["throughput"])
     print("avg_rotations", analysis["avg_rotations"])
+    print("n_move_closer_to_goal", analysis["n_move_closer_to_goal"])
+    # n_move_closer_to_goal = np.array(analysis["n_move_closer_to_goal"])
 
     # ##### Only use the following for weight opt case #####
     # # because the order of orientation is different in competition code and weight opt code.

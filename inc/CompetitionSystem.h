@@ -320,6 +320,7 @@ protected:
     std::vector<Path> paths;
     std::vector<std::list<Task > > finished_tasks; // location + finish time
     std::vector<int> curr_finish_task_agents;
+    std::vector<double> n_move_closer_to_goal;
 
     vector<State> starts;
     int num_of_agents;
@@ -360,6 +361,7 @@ protected:
     void log_preprocessing(bool succ);
     void log_event_assigned(int agent_id, int task_id, int timestep);
     void log_event_finished(int agent_id, int task_id, int timestep);
+    void count_n_move_closer_to_goal(vector<Action> &actions);
 
 };
 

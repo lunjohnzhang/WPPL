@@ -1261,6 +1261,7 @@ void BaseSystem::simulate(int simulation_time)
         auto start = std::chrono::steady_clock::now();
 
         vector<Action> actions = plan();
+        count_n_move_closer_to_goal(actions);
 
         ONLYDEV(
             if (actions.size()==num_of_agents) {
@@ -1355,6 +1356,7 @@ void BaseSystem::initialize()
     env->cols = map.cols;
     env->map = map.map;
     finished_tasks.resize(num_of_agents);
+    n_move_closer_to_goal.resize(env->rows * env->cols, 0);
     // bool succ = load_records(); // continue simulating from the records
     timestep = 0;
     this->warmupstep = 0;
@@ -1431,6 +1433,23 @@ void BaseSystem::savePaths(const string &fileName, int option) const
     output.close();
 }
 
+
+void BaseSystem::count_n_move_closer_to_goal(vector<Action> &actions)
+{
+    for (int k = 0; k < num_of_agents; k++)
+    {
+        // Action takes the agent closer to the goal if after executing it, the
+        // agent move closer to the goal
+        auto curr_state = this->curr_states[k];
+        auto next_state = this->model->result_state(curr_state, actions[k]);
+        auto curr_goal = this->assigned_tasks[k].front();
+        if (this->planner->heuristics->get(curr_state.location, curr_goal.location) >
+            this->planner->heuristics->get(next_state.location, curr_goal.location))
+        {
+            n_move_closer_to_goal[curr_state.location]++;
+        }
+    }
+}
 
 // Save path using the same format as RHCR code base
 void BaseSystem::savePathsLoc(const string &fileName) const
@@ -1889,6 +1908,7 @@ nlohmann::json BaseSystem::analyzeResults(bool online)
         }
     }
     js["finished_tasks"] = real_finished_tasks;
+    js["n_move_closer_to_goal"] = n_move_closer_to_goal;
 
     return analyze_result_json(js, map, online);
 }

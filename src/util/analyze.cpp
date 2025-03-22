@@ -771,6 +771,7 @@ nlohmann::json analyze_result_json(
             {"vertex_wait_matrix", vertex_wait_matrix},
             {"finished_tasks", result["finished_tasks"]},
             {"avg_rotations", result["avgRotations"]},
+            {"n_move_closer_to_goal", result["n_move_closer_to_goal"]},
             // {"final_pos", result["final_pos"]},
             // {"final_tasks", result["final_tasks"]},
             // {"actual_paths", result["actualPaths"]},
