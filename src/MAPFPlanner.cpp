@@ -546,6 +546,20 @@ void MAPFPlanner::load_configs() {
     }
 }
 
+void MAPFPlanner::extract_ref_map_weight()
+{
+    this->ref_map_weights = std::make_shared<std::vector<float> >(env->rows*env->cols*5, -1);
+    // Loop through map_weights, if the corresponding entry is not -1, make the
+    // corresponding entry 1 in ref_map_weights.
+    for (int i = 0; i < map_weights->size(); i++)
+    {
+        if ((*map_weights)[i] != -1)
+        {
+            (*ref_map_weights)[i] = 1;
+        }
+    }
+}
+
 std::string MAPFPlanner::load_map_weights(string weights_path) {
     // TODO: make weights float
     // we have at least 5 weights for a location: right,down,left,up,stay
@@ -613,6 +627,10 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         suffix=load_map_weights(weights_path);
     }
 
+    // Creat ref_map_weights from map_weights s.t. edge directions are
+    // preserved but edge weights are set to 1.
+    this->extract_ref_map_weight();
+
     max_execution_steps = read_param_json<int>(config,"max_execution_steps",1000000);
     std::cout<<"max execution steps: "<<max_execution_steps<<std::endl;
 
@@ -626,8 +644,15 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
         }
         bool disable_corner_target_agents=read_param_json<bool>(config,"disable_corner_target_agents",false);
         int max_task_completed=read_param_json<int>(config,"max_task_completed",1000000);
+
+        // Actual heuristic
         this->heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
         this->heuristics->preprocess(suffix);
+
+        // Reference heuristic
+        this->ref_heuristics = std::make_shared<HeuristicTable>(env, ref_map_weights, false);
+        this->ref_heuristics->preprocess("");
+
         lacam2_solver = std::make_shared<LaCAM2::LaCAM2Solver>(
             heuristics,
             env,
@@ -641,6 +666,11 @@ void MAPFPlanner::initialize(int preprocess_time_limit) {
     } else if (lifelong_solver_name=="LNS") {
         this->heuristics =std::make_shared<HeuristicTable>(env,map_weights,false);
         this->heuristics->preprocess(suffix);
+
+        // Reference heuristic
+        this->ref_heuristics = std::make_shared<HeuristicTable>(env, ref_map_weights, false);
+        this->ref_heuristics->preprocess("");
+
         //heuristics->preprocess();
         int max_agents_in_use=read_param_json<int>(config,"max_agents_in_use",-1);
         if (max_agents_in_use==-1) {

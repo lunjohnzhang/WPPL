@@ -8,6 +8,10 @@ import numpy as np
 import wppl_py_driver  # type: ignore # ignore pylance warning
 import json
 
+from env_search.graph.convert import shrink_weights_matrix
+from env_search.graph.utils import N_DIRS
+from env_search.utils import (read_in_map_by_domain, block_idxs_from_domain)
+
 
 def compress_vertex_matrix(map, vertex_matrix):
     assert map.width * map.height == len(vertex_matrix)
@@ -97,7 +101,7 @@ def uncompress_edge_matrix(map, compressed_edge_matrix, fill_value=0):
     return edge_matrix
 
 
-def main(map_filepath, seed=0):
+def main(map_filepath, domain="kiva", seed=0):
 
     np.random.seed(seed)
 
@@ -106,9 +110,16 @@ def main(map_filepath, seed=0):
         raw_env_json = json.load(f)
     map_json_str = json.dumps(raw_env_json)
 
+    _, map_np, _ = read_in_map_by_domain(map_filepath, domain)
+    block_idxs = block_idxs_from_domain(domain)
+    h, w = map_np.shape
+
     weights_jsonstr = ""
     if raw_env_json["weight"]:
         weights_matrix = raw_env_json["weights_matrix"]
+        if len(weights_matrix) == h * w * N_DIRS:
+            weights_matrix = shrink_weights_matrix(map_np, block_idxs,
+                                                   weights_matrix)
         weights_jsonstr = json.dumps(weights_matrix)
 
     config_path = "configs/pibt_default_no_rot.json"
@@ -139,7 +150,7 @@ def main(map_filepath, seed=0):
         # tasks_path="example_problems/random.domain/tasks/random-32-32-20-600.tasks",
         # weights are the edge weights, wait_costs are the vertex wait costs
         # if not specified here, then the program will use the one specified in the config file.
-        # weights=weights_jsonstr,
+        weights=weights_jsonstr,
         # wait_costs=compressed_wait_costs_json_str,
         # if we don't load config here, the program will load the default config file.
         config=config_str,
@@ -157,15 +168,18 @@ def main(map_filepath, seed=0):
 
     analysis = json.loads(ret)
     print(analysis.keys())
-    print(np.array(analysis["tile_usage"]).shape)
-    print(np.array(analysis["vertex_wait_matrix"]).shape)
-    print(np.array(analysis["edge_usage_matrix"]).shape)
+    n_move_closer_to_goal = np.array(analysis["n_move_closer_to_goal"])
+    n_move_closer_to_goal_ref = np.array(analysis["n_move_closer_to_goal_ref"])
+    # print(np.array(analysis["tile_usage"]).shape)
+    # print(np.array(analysis["vertex_wait_matrix"]).shape)
+    # print(np.array(analysis["edge_usage_matrix"]).shape)
 
     # print(analysis["throughput"], analysis["edge_pair_usage_mean"],
     #   analysis["edge_pair_usage_std"])
     print("throughput", analysis["throughput"])
     print("avg_rotations", analysis["avg_rotations"])
-    print("n_move_closer_to_goal", analysis["n_move_closer_to_goal"])
+    print("avg n_move_closer_to_goal", np.mean(n_move_closer_to_goal))
+    print("avg n_move_closer_to_goal_ref", np.mean(n_move_closer_to_goal_ref))
     # n_move_closer_to_goal = np.array(analysis["n_move_closer_to_goal"])
 
     # ##### Only use the following for weight opt case #####

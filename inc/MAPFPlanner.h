@@ -100,13 +100,18 @@ public:
     std::shared_ptr<LNS::LNSSolver> lns_solver;
 
     std::shared_ptr<std::vector<float> > map_weights;
+    std::shared_ptr<std::vector<float> > ref_map_weights;
     nlohmann::json config;
     void load_configs();
     std::string load_map_weights(string weights_path);
-
+    void extract_ref_map_weight();
     int max_execution_steps;
 
+    // actual heuristic
     std::shared_ptr<HeuristicTable> heuristics;
+    // heuristic assuming all edge weights are 1, but edge directions are
+    // preserved
+    std::shared_ptr<HeuristicTable> ref_heuristics;
 };
 
 #endif

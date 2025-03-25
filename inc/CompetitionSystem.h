@@ -320,7 +320,8 @@ protected:
     std::vector<Path> paths;
     std::vector<std::list<Task > > finished_tasks; // location + finish time
     std::vector<int> curr_finish_task_agents;
-    std::vector<double> n_move_closer_to_goal;
+    std::vector<int> n_move_closer_to_goal;
+    std::vector<int> n_move_closer_to_goal_ref;
 
     vector<State> starts;
     int num_of_agents;
