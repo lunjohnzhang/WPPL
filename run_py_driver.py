@@ -211,7 +211,7 @@ def main(warehouse_config, map_filepath, chute_mapping_file, seed=0):
         time_sigma=1000,
         time_dist=False,
         sleep_time_factor=2,
-        sleep_time_noise_std=0.5,
+        sleep_time_noise_std=100,
         # assign_C=15,
     )
 
