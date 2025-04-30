@@ -689,14 +689,20 @@ void SortationSystem::update_chute_sleeping()
             // the sleeping time for this chute by adding gaussian noise
             if (this->chute_sleeping_time[chute.first] == 0)
             {
+                // Gaussian noise
                 // std::normal_distribution<double> dist(
                 //     0, this->chute_sleep_time[chute.first] * this->sleep_time_noise_std);
+                // this->actual_chute_sleep_time[chute.first] = std::max(
+                //     1, static_cast<int>(
+                //         this->chute_sleep_time[chute.first] + add_noise));
+
+                // Exponential noise
                 std::exponential_distribution<double> dist(
                     1 / this->sleep_time_noise_std);
                 double add_noise = dist(this->MT);
-                this->actual_chute_sleep_time[chute.first] = std::max(
-                    1, static_cast<int>(
-                        this->chute_sleep_time[chute.first] + add_noise));
+                this->actual_chute_sleep_time[chute.first] = static_cast<int>(
+                    this->chute_sleep_time[chute.first] + add_noise);
+
                 // cout << "Chute " << chute.first << " is sleeping for "
                 //      << this->chute_sleep_time[chute.first] << " + "
                 //      << add_noise << " = "
