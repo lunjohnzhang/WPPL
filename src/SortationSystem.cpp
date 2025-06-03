@@ -764,8 +764,10 @@ void SortationSystem::update_package_in_chute(Task task)
         this->packages_in_chutes[chute]++;
         // Put chute to sleep if it has too many packages
         // Recirculation chute never sleep
+        // If recirculation mechanism is disabled, then no chutes can sleep
         if (chute != this->recir_chute &&
-            this->packages_in_chutes[chute] >= MAX_PACKAGE_IN_CHUTE)
+            this->packages_in_chutes[chute] >= MAX_PACKAGE_IN_CHUTE &&
+            this->recirc_mechanism)
         {
             // cout << "Chute " << chute << " has too many packages" << endl;
             this->chute_sleeping[chute] = true;
@@ -854,7 +856,8 @@ void SortationSystem::process_finished_task_offline(Task task)
     bool chute_full = false;
     if (task.assigned_chute != -1 &&
         task.assigned_chute != this->recir_chute &&
-        this->packages_in_chutes[task.assigned_chute] >= MAX_PACKAGE_IN_CHUTE)
+        this->packages_in_chutes[task.assigned_chute] >= MAX_PACKAGE_IN_CHUTE &&
+        this->recirc_mechanism)
     {
         chute_full = true;
     }
@@ -899,7 +902,8 @@ void SortationSystem::process_finished_task_online(Task task, bool warmup)
     bool chute_full = false;
     if (task.assigned_chute != -1 &&
         task.assigned_chute != this->recir_chute &&
-        this->packages_in_chutes[task.assigned_chute] >= MAX_PACKAGE_IN_CHUTE)
+        this->packages_in_chutes[task.assigned_chute] >= MAX_PACKAGE_IN_CHUTE &&
+        this->recirc_mechanism)
     {
         chute_full = true;
     }
