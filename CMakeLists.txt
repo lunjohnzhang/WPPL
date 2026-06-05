@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
@@ -43,10 +43,16 @@ find_package( Boost 1.49.0 REQUIRED COMPONENTS program_options system filesystem
 
 include_directories( ${Boost_INCLUDE_DIRS} )
 
-find_package(OpenMP REQUIRED)
+find_package(OpenMP REQUIRED COMPONENTS CXX)
 find_package(spdlog REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Python 3.8 EXACT COMPONENTS Interpreter Development REQUIRED)
+find_package(Python COMPONENTS Interpreter Development REQUIRED)
+if(NOT Python_VERSION VERSION_GREATER_EQUAL "3.10" OR
+   NOT Python_VERSION VERSION_LESS "3.11")
+    message(FATAL_ERROR
+        "surrogate_ggo requires Python 3.10.x for WPPL builds, but CMake "
+        "resolved Python ${Python_VERSION} at ${Python_EXECUTABLE}")
+endif()
 
 IF (MAP_OPT)
     add_subdirectory(pybind11)
@@ -120,7 +126,7 @@ ENDIF()
 
 add_executable(lifelong_comp ${SOURCES} )
 target_link_libraries(lifelong_comp ${Boost_LIBRARIES})
-# target_link_libraries(lifelong_comp OpenMP::OpenMP_CXX)
+target_link_libraries(lifelong_comp OpenMP::OpenMP_CXX)
 target_link_libraries(lifelong_comp spdlog::spdlog)
 target_compile_definitions(lifelong_comp PRIVATE PYTHON=${PYTHON_FLAG})
 
@@ -128,9 +134,10 @@ IF (MAP_OPT)
     list(FILTER SOURCES EXCLUDE REGEX "src/driver\.cpp")
     pybind11_add_module(wppl_py_driver "src/py_driver.cpp" ${SOURCES})
     pybind11_add_module(wppl_py_sim "src/py_sim.cpp" "inc/py_sim.h" ${SOURCES})
-    # target_link_libraries(wppl_py_driver PRIVATE OpenMP::OpenMP_CXX)
+    target_link_libraries(wppl_py_driver PRIVATE OpenMP::OpenMP_CXX)
     target_link_libraries(wppl_py_driver PRIVATE spdlog::spdlog)
     target_link_libraries(wppl_py_driver PRIVATE ${Boost_LIBRARIES})
+    target_link_libraries(wppl_py_sim PRIVATE OpenMP::OpenMP_CXX)
     target_link_libraries(wppl_py_sim PRIVATE spdlog::spdlog)
     target_link_libraries(wppl_py_sim PRIVATE ${Boost_LIBRARIES})
 ENDIF()

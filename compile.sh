@@ -1,6 +1,8 @@
 #!/bin/bash
 
-mkdir build
+set -euo pipefail
+
+mkdir -p build
 
 # build exec for cpp
 
