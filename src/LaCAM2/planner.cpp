@@ -950,7 +950,11 @@ bool Planner::funcPIBT(Agent* ai, HNode * H)
   //   std::cout<<u->index<<" "<<ins->goals.locs[i]->index<<" "<<d2<<endl;
   // }
 
-  return d1<d2;
+  if (d1 != d2) return d1 < d2;
+  // These keys are sampled once per candidate before sorting. Reusing them
+  // randomizes equal-cost actions without extra RNG draws or an inconsistent
+  // comparator; priority inheritance still checks each candidate for conflicts.
+  return tie_breakers[v->id] < tie_breakers[u->id];
 
 #endif
 

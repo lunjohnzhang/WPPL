@@ -426,7 +426,14 @@ std::string run(const py::kwargs& kwargs)
         system_ptr->savePathsLoc(path_file.string());
     }
 
-    // system_ptr->saveResults("debug.json");
+    // Opt-in trajectory and task-event evidence for offline diagnostics.
+    // This runs after simulation and does not change planner RNG consumption.
+    if (kwargs.contains("save_results") && kwargs["save_results"].cast<bool>())
+    {
+        boost::filesystem::path output_dir(kwargs["file_storage_path"].cast<std::string>());
+        boost::filesystem::create_directories(output_dir);
+        system_ptr->saveResults((output_dir / "results.json").string());
+    }
     return analysis.dump(4);
 
     // if (!vm["evaluationMode"].as<bool>())
